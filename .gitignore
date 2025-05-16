@@ -1,13 +1,8 @@
 # Dependencies
 node_modules/
 client/node_modules/
-server/node_modules/
 
 # Build
-client/dist/
-client/build/
-server/dist/
-server/build/
 
 # Environment files
 .env
@@ -41,6 +36,8 @@ pnpm-debug.log*
 # Firebase
 .firebase/
 firebase-debug.log
+firestore-debug.log
+ui-debug.log
 
 # Testing
 coverage/
