@@ -5,6 +5,7 @@ import ProtectedRoute from './components/auth/ProtectedRoute';
 import SignIn from './components/auth/SignIn';
 import SignUp from './components/auth/SignUp';
 import Dashboard from './pages/Dashboard';
+import TripDetail from './pages/TripDetail';
 import HomePage from './pages/HomePage';
 
 function App() {
@@ -20,6 +21,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/trips/:tripId"
+            element={
+              <ProtectedRoute>
+                <TripDetail />
               </ProtectedRoute>
             }
           />
