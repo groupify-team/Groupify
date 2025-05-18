@@ -5,6 +5,11 @@ import { getUserTrips } from '../services/firebase/trips';
 import TripCard from '../components/trips/TripCard';
 import CreateTripModal from '../components/trips/CreateTripModal';
 import PhotoUpload from '../components/photos/PhotoUpload';
+import AddFriend from '../components/friends/AddFriend';
+import { getFriends, getPendingFriendRequests, acceptFriendRequest,
+  rejectFriendRequest, removeFriend } from '../services/firebase/users';
+import { getPendingInvites, acceptTripInvite, declineTripInvite } from "../services/firebase/trips";
+
 
 const Dashboard = () => {
   const { currentUser, logout } = useAuth();
@@ -15,74 +20,177 @@ const Dashboard = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedTrip, setSelectedTrip] = useState(null);
   const [showUploadSection, setShowUploadSection] = useState(false);
+  const [showAddFriendModal, setShowAddFriendModal] = useState(false);
+  const [friends, setFriends] = useState([]);
+  const [pendingRequests, setPendingRequests] = useState([]);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [pendingInvites, setPendingInvites] = useState([]);
 
 
-  useEffect(() => {
-    const fetchTrips = async () => {
-      try {
-        setLoading(true);
-        const userTrips = await getUserTrips(currentUser.uid);
-        setTrips(userTrips);
-      } catch (error) {
-        console.error('Error fetching trips:', error);
-        setError('Failed to load your trips. Please try again.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchTrips();
-  }, [currentUser]);
-
-  const handleLogout = async () => {
+useEffect(() => {
+  const fetchData = async () => {
     try {
-      await logout();
-      navigate('/');
+      setLoading(true);
+
+      const userTrips = await getUserTrips(currentUser.uid);
+      setTrips(userTrips);
+
+      const userFriends = await getFriends(currentUser.uid);
+      setFriends(userFriends);
+
+      const friendRequests = await getPendingFriendRequests(currentUser.uid);
+      setPendingRequests(friendRequests);
+
+      const invites = await getPendingInvites(currentUser.uid);
+      setPendingInvites(invites);
+
     } catch (error) {
-      console.error('Failed to log out:', error);
+      console.error("Error loading dashboard data:", error);
+      setError("Failed to load your data. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleTripCreated = (newTrip) => {
-    setTrips((prevTrips) => [...prevTrips, newTrip]);
-  };
+  if (currentUser?.uid) {
+    fetchData();
+  }
+}, [currentUser]);
 
-  const handlePhotoUploaded = (uploadedPhotos) => {
-    // Update trip's photoCount (optional)
-    if (selectedTrip && uploadedPhotos.length > 0) {
-      setTrips((prevTrips) => 
-        prevTrips.map((trip) => 
-          trip.id === selectedTrip 
-            ? { ...trip, photoCount: (trip.photoCount || 0) + uploadedPhotos.length }
-            : trip
-        )
-      );
-    }
-  };
+
+
+const handleLogout = async () => {
+  try {
+    await logout();
+    navigate('/');
+  } catch (error) {
+    console.error('Failed to log out:', error);
+  }
+};
+
+const handleTripCreated = (newTrip) => {
+  setTrips((prevTrips) => [...prevTrips, newTrip]);
+};
+
+const handleAccept = async (fromUid) => {
+  try {
+    await acceptFriendRequest(currentUser.uid, fromUid);
+    const updatedRequests = pendingRequests.filter((r) => r.from !== fromUid);
+    setPendingRequests(updatedRequests);
+    const updatedFriends = await getFriends(currentUser.uid);
+    setFriends(updatedFriends);
+  } catch (error) {
+    console.error('Error accepting friend request:', error);
+  }
+};
+
+
+
+const handleReject = async (senderUid) => {
+  await rejectFriendRequest(currentUser.uid, senderUid);
+  const updatedPending = await getPendingFriendRequests(currentUser.uid);
+  setPendingRequests(updatedPending);
+};
+
+const handleRemoveFriend = async (friendUid) => {
+  if (!window.confirm('Are you sure you want to remove this friend?')) return;
+
+  try {
+    await removeFriend(currentUser.uid, friendUid);
+    const updatedFriends = await getFriends(currentUser.uid);
+    setFriends(updatedFriends);
+    console.log(`✅ Removed friend: ${friendUid}`);
+  } catch (error) {
+    console.error('❌ Error removing friend:', error);
+  }
+};
+
+
+const handlePhotoUploaded = (uploadedPhotos) => {
+  if (selectedTrip && uploadedPhotos.length > 0) {
+    setTrips((prevTrips) =>
+      prevTrips.map((trip) =>
+        trip.id === selectedTrip
+          ? { ...trip, photoCount: (trip.photoCount || 0) + uploadedPhotos.length }
+          : trip
+      )
+    );
+  }
+};
+
+
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      {/* Navigation */}
-      <nav className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <h1 className="text-xl font-semibold">Groupify Dashboard</h1>
-            </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-gray-700">
-                Welcome, {currentUser?.displayName || currentUser?.email}
-              </span>
-              <button
-                onClick={handleLogout}
-                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium"
-              >
-                Logout
-              </button>
-            </div>
+  <div className="min-h-screen bg-gray-100">
+    {/* Navigation */}
+    <nav className="bg-white shadow">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between h-16">
+          <div className="flex items-center">
+            <h1 className="text-xl font-semibold">Groupify Dashboard</h1>
+          </div>
+
+          <div className="flex items-center space-x-4 relative">
+            <span className="text-gray-700">
+              Welcome, {currentUser?.displayName || currentUser?.email}
+            </span>
+
+            {/* Notification Bell */}
+            <button
+  onClick={() => setShowNotifications(!showNotifications)}
+  className="relative focus:outline-none"
+>
+  <svg
+    className="w-6 h-6 text-gray-600 hover:text-gray-800"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M15 17h5l-1.405-1.405C18.21 15.21 18 14.698 18 14.172V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.172c0 .526-.21 1.038-.595 1.423L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+    />
+  </svg>
+
+  {pendingRequests.length > 0 && (
+    <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-600 rounded-full"></span>
+  )}
+</button>
+
+
+            <button
+              onClick={handleLogout}
+              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+            >
+              Logout
+            </button>
+
+            {/* Notification Dropdown */}
+            {showNotifications && (
+              <div className="absolute top-10 right-0 w-64 bg-white shadow-lg rounded-md border z-50">
+                <div className="p-4 border-b font-semibold text-gray-700">
+                  Notifications
+                </div>
+                <ul className="max-h-64 overflow-y-auto">
+                  <li className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 cursor-pointer">
+                    Friend request from Alice
+                  </li>
+                  <li className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 cursor-pointer">
+                    Trip update from "Rome Trip"
+                  </li>
+                  <li className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 cursor-pointer">
+                    New comment on your photo
+                  </li>
+                </ul>
+              </div>
+            )}
           </div>
         </div>
-      </nav>
+      </div>
+    </nav>
+
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
@@ -142,6 +250,135 @@ const Dashboard = () => {
             </div>
           )}
         </div>
+
+
+        {/* Notifications Section */}
+        {pendingInvites.length > 0 && (
+  <div className="bg-white p-4 rounded shadow mb-6">
+    <h2 className="text-lg font-bold mb-3">Trip Invitations</h2>
+    <ul className="space-y-2">
+      {pendingInvites.map((invite) => (
+        <li key={invite.id} className="flex justify-between items-center">
+          <span>
+             {invite.inviterName} invited you to join trip <strong>{invite.tripName}</strong>
+          </span>
+          <div className="space-x-2">
+<button
+  onClick={async () => {
+    await acceptTripInvite(invite.id, currentUser.uid);
+    setPendingInvites((prev) => prev.filter((i) => i.id !== invite.id));
+  }}
+  className="bg-green-500 text-white px-3 py-1 rounded text-sm"
+>
+  Accept
+</button>
+
+            <button
+              onClick={async () => {
+                await declineTripInvite(invite.id);
+                setPendingInvites((prev) => prev.filter((i) => i.id !== invite.id));
+              }}
+              className="bg-red-500 text-white px-3 py-1 rounded text-sm"
+            >
+              Decline
+            </button>
+          </div>
+        </li>
+      ))}
+    </ul>
+  </div>
+)}
+
+
+        {/* Add Friend Button + Modal */}
+<div className="px-4 sm:px-0 mb-8">
+  <button
+    onClick={() => setShowAddFriendModal(true)}
+    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+  >
+    Add Friend
+  </button>
+
+  {showAddFriendModal && (
+    <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+      <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-bold">Find Friends</h2>
+          <button
+            onClick={() => setShowAddFriendModal(false)}
+            className="text-gray-500 hover:text-gray-700"
+          >
+            ✕
+          </button>
+        </div>
+        <AddFriend />
+      </div>
+    </div>
+  )}
+</div>
+
+
+{/* My Friends Section */}
+<div className="px-4 sm:px-0 mb-8">
+  <h2 className="text-2xl font-bold text-gray-900 mb-4">My Friends</h2>
+  {friends.length === 0 ? (
+    <div className="bg-white rounded-lg shadow p-4">
+      <p className="text-gray-500">You have no friends yet.</p>
+    </div>
+  ) : (
+    <div className="bg-white rounded-lg shadow p-4">
+      <ul className="divide-y divide-gray-200">
+        {friends.map((friend) => (
+          <li key={friend.uid || friend.id} className="py-2 flex justify-between items-center">
+            <span>{friend.displayName || friend.email || friend.uid || friend.id}</span>
+            <button
+              onClick={() => handleRemoveFriend(friend.uid || friend.id)}
+              className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm"
+            >
+              Remove
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )}
+</div>
+
+
+{/* Pending Requests Section */}
+<div className="px-4 sm:px-0 mb-8">
+  <h2 className="text-2xl font-bold text-gray-900 mb-4">Pending Friend Requests</h2>
+  {pendingRequests.length === 0 ? (
+    <div className="bg-white rounded-lg shadow p-4">
+      <p className="text-gray-500">No pending requests.</p>
+    </div>
+  ) : (
+    <div className="bg-white rounded-lg shadow p-4">
+      <ul className="divide-y divide-gray-200">
+        {pendingRequests.map((req) => (
+          <li key={req.from} className="py-2 flex justify-between items-center">
+            <span>{req.displayName || req.email || req.from}</span>
+            <div className="space-x-2">
+              <button
+                onClick={() => handleAccept(req.from)}
+                className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm"
+              >
+                Accept
+              </button>
+              <button
+                onClick={() => handleReject(req.from)}
+                className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm"
+              >
+                Reject
+              </button>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )}
+</div>
+
 
         {/* Photo Upload Section */}
         {trips.length > 0 && (
@@ -204,4 +441,9 @@ const Dashboard = () => {
   );
 };
 
+
+
 export default Dashboard;
+
+
+

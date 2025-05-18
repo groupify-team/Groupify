@@ -95,19 +95,21 @@ const SignIn = () => {
           <div className="flex-grow border-t border-gray-300" />
         </div>
 
-        <button
-          type="button"
-          onClick={handleGoogleSignIn}
-          disabled={loading}
-          className="w-full flex items-center justify-center gap-3 py-2 px-4 border border-gray-300 rounded-md bg-white hover:bg-gray-50 transition disabled:opacity-50"
-        >
-          <img
-            src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg"
-            alt="Google"
-            className="w-5 h-5"
-          />
-          <span className="text-sm text-gray-700 font-medium">Sign in with Google</span>
-        </button>
+        <div className="mt-6">
+  <button
+    type="button"
+    onClick={handleGoogleSignIn}
+    disabled={loading}
+    className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+  >
+    <img
+      className="h-5 w-5 mr-2"
+      src="https://www.svgrepo.com/show/475656/google-color.svg"
+      alt="Google logo"
+    />
+    Sign in with Google
+  </button>
+</div>
 
         <p className="text-sm text-center text-gray-600">
           Don't have an account?{' '}

@@ -1,4 +1,5 @@
-import { collection, addDoc, doc, getDoc, updateDoc, deleteDoc, query, where, getDocs } from 'firebase/firestore';
+import { collection, addDoc, doc, getDoc, updateDoc, deleteDoc, 
+  query, where, getDocs, arrayUnion, serverTimestamp } from 'firebase/firestore';
 import { db } from './config';
 
 // Create a new trip
@@ -122,4 +123,114 @@ export const addTripMember = async (tripId, userId) => {
     console.error('Error adding trip member:', error);
     throw error;
   }
+};
+
+
+export const inviteUserToTripByUid = async (tripId, userId) => {
+  try {
+    const tripRef = doc(db, "trips", tripId);
+    await updateDoc(tripRef, {
+      members: arrayUnion(userId),
+    });
+    console.log("✅ User invited to trip");
+  } catch (error) {
+    console.error("❌ Error inviting user:", error);
+    throw error;
+  }
+};
+
+
+export const sendTripInvite = async (tripId, inviterUid, inviteeUid) => {
+  await addDoc(collection(db, "tripInvites"), {
+    tripId,
+    inviterUid,
+    inviteeUid,
+    status: "pending",
+    createdAt: serverTimestamp()
+  });
+};
+
+
+
+export const getPendingInvites = async (uid) => {
+  const q = query(
+    collection(db, "tripInvites"),
+    where("inviteeUid", "==", uid),
+    where("status", "==", "pending")
+  );
+
+  const snapshot = await getDocs(q);
+  const invites = [];
+
+  for (const docSnap of snapshot.docs) {
+    const invite = docSnap.data();
+
+    let tripName = invite.tripId;
+    let inviterName = invite.inviterUid;
+
+    try {
+      const tripRef = doc(db, "trips", invite.tripId);
+      const tripSnap = await getDoc(tripRef);
+      if (tripSnap.exists()) {
+        tripName = tripSnap.data().name?.trim() || tripName;
+      }
+    } catch (e) {
+      console.warn("⚠️ Failed to fetch trip name:", invite.tripId);
+    }
+
+    try {
+      const inviterRef = doc(db, "users", invite.inviterUid);
+      const inviterSnap = await getDoc(inviterRef);
+      if (inviterSnap.exists()) {
+        inviterName = inviterSnap.data().displayName || inviterName;
+      }
+    } catch (e) {
+      console.warn("⚠️ Failed to fetch inviter:", invite.inviterUid);
+    }
+
+    invites.push({
+      id: docSnap.id,
+      ...invite,
+      tripName,
+      inviterName,
+    });
+
+    console.log("✅ invite loaded:", {
+      tripName,
+      inviterName,
+      tripId: invite.tripId,
+    });
+  }
+
+  return invites;
+};
+
+
+
+
+
+export const acceptTripInvite = async (inviteId, userId) => {
+  console.log("🔁 Accepting invite:", { inviteId, userId });
+
+  const inviteRef = doc(db, "tripInvites", inviteId);
+  const inviteSnap = await getDoc(inviteRef);
+  if (!inviteSnap.exists()) throw new Error("Invite not found");
+
+  const { tripId } = inviteSnap.data();
+  const tripRef = doc(db, "trips", tripId);
+
+  await updateDoc(tripRef, {
+    members: arrayUnion(userId),
+  });
+
+  await deleteDoc(inviteRef);
+  console.log("✅ Invite accepted and user added to trip");
+};
+
+
+
+export const declineTripInvite = async (inviteId) => {
+  await updateDoc(doc(db, "tripInvites", inviteId), {
+    status: "declined"
+  });
 };

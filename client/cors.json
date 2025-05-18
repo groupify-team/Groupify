@@ -1,7 +1,8 @@
 [
   {
     "origin": ["http://localhost:5173"],
-    "method": ["GET", "POST", "PUT", "DELETE", "HEAD"],
+    "method": ["GET", "POST", "PUT", "OPTIONS"],
+    "responseHeader": ["Content-Type", "Authorization", "X-Firebase-AppCheck"],
     "maxAgeSeconds": 3600
   }
 ]

@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { uploadPhoto } from '../../services/firebase/storage';
+import { storage } from '../../services/firebase/config';
+console.log('🔍 STORAGE:', storage);
 
 const PhotoUpload = ({ tripId, onPhotoUploaded }) => {
   const [selectedFiles, setSelectedFiles] = useState([]);
@@ -25,45 +27,43 @@ const PhotoUpload = ({ tripId, onPhotoUploaded }) => {
     try {
       setUploading(true);
       setError(null);
-      
+
       const uploadedPhotos = [];
       let completed = 0;
 
-      // Upload each file
       for (const file of selectedFiles) {
-        // Check file type (only allow images)
         if (!file.type.startsWith('image/')) {
           setError(`File ${file.name} is not an image. Only images are allowed.`);
           continue;
         }
 
-        // Upload the file with metadata
-        const uploadedPhoto = await uploadPhoto(
-          file,
-          tripId,
-          currentUser.uid,
-          {
-            originalName: file.name,
-            size: file.size,
-            type: file.type,
-            lastModified: file.lastModified
-          }
-        );
+const uploadedPhoto = await uploadPhoto(
+  file,
+  tripId,
+  currentUser.uid,
+  {
+    originalName: file.name,
+    size: file.size,
+    type: file.type,
+    lastModified: file.lastModified
+  },
+  (percent) => {
+    const overall = Math.round(((completed + percent / 100) / selectedFiles.length) * 100);
+    setUploadProgress(overall);
+  }
+);
 
         uploadedPhotos.push(uploadedPhoto);
         completed++;
         setUploadProgress(Math.round((completed / selectedFiles.length) * 100));
       }
 
-      // Reset the form
       setSelectedFiles([]);
       setUploadProgress(0);
-      
-      // Notify parent component
+
       if (onPhotoUploaded && uploadedPhotos.length > 0) {
         onPhotoUploaded(uploadedPhotos);
       }
-      
     } catch (error) {
       console.error('Error uploading photos:', error);
       setError('Failed to upload photos. Please try again.');
@@ -75,17 +75,15 @@ const PhotoUpload = ({ tripId, onPhotoUploaded }) => {
   return (
     <div className="bg-white shadow rounded-lg p-4">
       <h3 className="text-lg font-medium mb-4">Upload Photos</h3>
-      
+
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
           {error}
         </div>
       )}
-      
+
       <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Select Photos
-        </label>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Select Photos</label>
         <input
           type="file"
           accept="image/*"
@@ -100,12 +98,12 @@ const PhotoUpload = ({ tripId, onPhotoUploaded }) => {
           disabled={uploading}
         />
         <p className="mt-1 text-sm text-gray-500">
-          {selectedFiles.length > 0 
-            ? `${selectedFiles.length} file(s) selected` 
+          {selectedFiles.length > 0
+            ? `${selectedFiles.length} file(s) selected`
             : 'JPG, PNG, or GIF files up to 10MB'}
         </p>
       </div>
-      
+
       {selectedFiles.length > 0 && (
         <div className="mb-4">
           <h4 className="text-sm font-medium mb-2">Selected Files:</h4>
@@ -119,19 +117,19 @@ const PhotoUpload = ({ tripId, onPhotoUploaded }) => {
           </ul>
         </div>
       )}
-      
+
       {uploading && (
         <div className="mb-4">
           <div className="w-full bg-gray-200 rounded-full h-2.5">
-            <div 
-              className="bg-indigo-600 h-2.5 rounded-full" 
+            <div
+              className="bg-indigo-600 h-2.5 rounded-full"
               style={{ width: `${uploadProgress}%` }}
             ></div>
           </div>
           <p className="text-sm text-gray-600 mt-1">Uploading: {uploadProgress}%</p>
         </div>
       )}
-      
+
       <button
         onClick={handleUpload}
         disabled={selectedFiles.length === 0 || uploading}

@@ -49,9 +49,10 @@ const SignUp = () => {
     }
   };
 
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="max-w-md w-full space-y-8">
+return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 to-blue-300 px-4">
+    <div className="max-w-md w-full bg-white p-8 rounded shadow">
+      <div className="space-y-8">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
             Create your account
@@ -64,6 +65,7 @@ const SignUp = () => {
             </div>
           )}
           <div className="space-y-4">
+            {/* Full Name */}
             <div>
               <label htmlFor="display-name" className="block text-sm font-medium text-gray-700">
                 Full Name
@@ -80,6 +82,8 @@ const SignUp = () => {
                 onChange={(e) => setDisplayName(e.target.value)}
               />
             </div>
+
+            {/* Email */}
             <div>
               <label htmlFor="email-address" className="block text-sm font-medium text-gray-700">
                 Email Address
@@ -96,6 +100,8 @@ const SignUp = () => {
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>
+
+            {/* Password */}
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                 Password
@@ -112,6 +118,8 @@ const SignUp = () => {
                 onChange={(e) => setPassword(e.target.value)}
               />
             </div>
+
+            {/* Confirm Password */}
             <div>
               <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700">
                 Confirm Password
@@ -130,6 +138,7 @@ const SignUp = () => {
             </div>
           </div>
 
+          {/* Submit */}
           <div>
             <button
               type="submit"
@@ -140,13 +149,14 @@ const SignUp = () => {
             </button>
           </div>
 
+          {/* Google */}
           <div className="mt-6">
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-gray-300" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-gray-50 text-gray-500">Or continue with</span>
+                <span className="px-2 bg-white text-gray-500">Or continue with</span>
               </div>
             </div>
 
@@ -167,6 +177,7 @@ const SignUp = () => {
             </div>
           </div>
 
+          {/* Link to Sign In */}
           <div className="text-center">
             <span className="text-sm text-gray-600">
               Already have an account?{' '}
@@ -178,7 +189,8 @@ const SignUp = () => {
         </form>
       </div>
     </div>
-  );
-};
+  </div>
+);
+}
 
 export default SignUp;
