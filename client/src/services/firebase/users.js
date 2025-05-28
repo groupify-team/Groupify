@@ -1,10 +1,22 @@
-import { doc, setDoc, getDoc, updateDoc, collection, query, where, getDocs, deleteDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
-import { db } from './config';
+import {
+  doc,
+  setDoc,
+  getDoc,
+  updateDoc,
+  collection,
+  query,
+  where,
+  getDocs,
+  deleteDoc,
+  arrayUnion,
+  arrayRemove,
+} from "firebase/firestore";
+import { db } from "./config";
 
 // Create or update user profile in Firestore
 export const createUserProfile = async (uid, userData) => {
   try {
-    const userRef = doc(db, 'users', uid);
+    const userRef = doc(db, "users", uid);
     const userSnapshot = await getDoc(userRef);
 
     if (!userSnapshot.exists()) {
@@ -12,98 +24,94 @@ export const createUserProfile = async (uid, userData) => {
       const createdAt = new Date().toISOString();
       await setDoc(userRef, {
         uid,
+        gender: userData.gender || "male", // default fallback
         ...userData,
         createdAt,
         trips: [],
         photoCount: 0,
-        friends: []  
+        friends: [],
       });
     }
 
     return userRef;
   } catch (error) {
-    console.error('Error creating user profile:', error);
+    console.error("Error creating user profile:", error);
     throw error;
   }
 };
 
-
 // Get user profile
 export const getUserProfile = async (uid) => {
   try {
-    const userRef = doc(db, 'users', uid);
+    const userRef = doc(db, "users", uid);
     const userSnapshot = await getDoc(userRef);
-    
+
     if (userSnapshot.exists()) {
       return userSnapshot.data();
     }
     return null;
   } catch (error) {
-    console.error('Error getting user profile:', error);
+    console.error("Error getting user profile:", error);
     throw error;
   }
 };
-
 
 // Update user profile
 export const updateUserProfile = async (uid, updates) => {
   try {
-    const userRef = doc(db, 'users', uid);
+    const userRef = doc(db, "users", uid);
     await updateDoc(userRef, {
       ...updates,
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
     });
   } catch (error) {
-    console.error('Error updating user profile:', error);
+    console.error("Error updating user profile:", error);
     throw error;
   }
 };
-
 
 // Find users by email
 export const findUsersByEmail = async (email) => {
   try {
-    const usersRef = collection(db, 'users');
-    const q = query(usersRef, where('email', '==', email));
+    const usersRef = collection(db, "users");
+    const q = query(usersRef, where("email", "==", email));
     const querySnapshot = await getDocs(q);
-    
+
     const users = [];
     querySnapshot.forEach((doc) => {
       users.push({ id: doc.id, ...doc.data() });
     });
-    
+
     return users;
   } catch (error) {
-    console.error('Error finding users:', error);
+    console.error("Error finding users:", error);
     throw error;
   }
 };
-
 
 // Sending a friend request
 export const sendFriendRequest = async (fromUid, toUid) => {
   try {
-    const requestRef = doc(db, 'friendRequests', `${fromUid}_${toUid}`);
+    const requestRef = doc(db, "friendRequests", `${fromUid}_${toUid}`);
     await setDoc(requestRef, {
       from: fromUid,
       to: toUid,
-      status: 'pending',
-      createdAt: new Date().toISOString()
+      status: "pending",
+      createdAt: new Date().toISOString(),
     });
   } catch (error) {
-    console.error('Error sending friend request:', error);
+    console.error("Error sending friend request:", error);
     throw error;
   }
 };
-
 
 // Receive all requests waiting for the user
 export const getPendingFriendRequests = async (uid) => {
   try {
     const q = query(
-      collection(db, 'friendRequests'),
-      where('to', '==', uid),
-      where('status', '==', 'pending')
+      collection(db, "friendRequests"),
+      where("to", "==", uid),
+      where("status", "==", "pending")
     );
     const snapshot = await getDocs(q);
 
@@ -112,74 +120,70 @@ export const getPendingFriendRequests = async (uid) => {
     for (const docSnap of snapshot.docs) {
       const data = docSnap.data();
 
-      const senderRef = doc(db, 'users', data.from);
+      const senderRef = doc(db, "users", data.from);
       const senderSnap = await getDoc(senderRef);
 
       requests.push({
         id: docSnap.id,
         from: data.from,
-        displayName: senderSnap.exists() ? senderSnap.data().displayName : '',
-        email: senderSnap.exists() ? senderSnap.data().email : '',
+        displayName: senderSnap.exists() ? senderSnap.data().displayName : "",
+        email: senderSnap.exists() ? senderSnap.data().email : "",
         createdAt: data.createdAt,
       });
     }
 
     return requests;
   } catch (error) {
-    console.error('Error getting friend requests:', error);
+    console.error("Error getting friend requests:", error);
     return [];
   }
 };
-
 
 // Membership request approval
 export const acceptFriendRequest = async (uid, senderUid) => {
   try {
     const requestId = `${senderUid}_${uid}`;
-    const requestRef = doc(db, 'friendRequests', requestId);
+    const requestRef = doc(db, "friendRequests", requestId);
 
     await deleteDoc(requestRef);
 
-    const userRef = doc(db, 'users', uid);
-    const senderRef = doc(db, 'users', senderUid);
+    const userRef = doc(db, "users", uid);
+    const senderRef = doc(db, "users", senderUid);
 
     await updateDoc(userRef, {
-      friends: arrayUnion(senderUid)
+      friends: arrayUnion(senderUid),
     });
 
     await updateDoc(senderRef, {
-      friends: arrayUnion(uid)
+      friends: arrayUnion(uid),
     });
 
     console.log(`Friend request accepted: ${senderUid} <-> ${uid}`);
   } catch (error) {
-    console.error('Error accepting friend request:', error);
+    console.error("Error accepting friend request:", error);
     throw error;
   }
 };
-
 
 // Declining membership request
 export const rejectFriendRequest = async (uid, senderUid) => {
   try {
     const requestId = `${senderUid}_${uid}`;
-    const requestRef = doc(db, 'friendRequests', requestId);
+    const requestRef = doc(db, "friendRequests", requestId);
     await deleteDoc(requestRef);
 
     console.log(`❌ Friend request rejected: ${senderUid} -> ${uid}`);
   } catch (error) {
-    console.error('Error rejecting friend request:', error);
+    console.error("Error rejecting friend request:", error);
     throw error;
   }
 };
-
-
 
 // Retrieve all members
 export const getFriends = async (uid) => {
   console.log("🔍 getFriends called with UID:", uid);
   try {
-    const userRef = doc(db, 'users', uid);
+    const userRef = doc(db, "users", uid);
     const userSnap = await getDoc(userRef);
 
     if (!userSnap.exists()) {
@@ -197,7 +201,7 @@ export const getFriends = async (uid) => {
         continue;
       }
 
-      const fRef = doc(db, 'users', fid);
+      const fRef = doc(db, "users", fid);
       const fSnap = await getDoc(fRef);
 
       if (fSnap.exists()) {
@@ -205,8 +209,8 @@ export const getFriends = async (uid) => {
         friends.push({
           uid: fid,
           displayName: fData.displayName || fData.email || fid,
-          email: fData.email || '',
-          photoURL: fData.photoURL || '',
+          email: fData.email || "",
+          photoURL: fData.photoURL || "",
         });
       } else {
         console.warn("⚠️ Friend doc not found for ID:", fid);
@@ -215,27 +219,25 @@ export const getFriends = async (uid) => {
 
     return friends;
   } catch (error) {
-    console.error('❌ Error getting friends:', error);
+    console.error("❌ Error getting friends:", error);
     throw error;
   }
 };
-
 
 export const removeFriend = async (uid, friendUid) => {
   try {
-    const userRef = doc(db, 'users', uid);
-    const friendRef = doc(db, 'users', friendUid);
+    const userRef = doc(db, "users", uid);
+    const friendRef = doc(db, "users", friendUid);
 
     await updateDoc(userRef, {
-      friends: arrayRemove(friendUid)
+      friends: arrayRemove(friendUid),
     });
 
     await updateDoc(friendRef, {
-      friends: arrayRemove(uid)
+      friends: arrayRemove(uid),
     });
   } catch (error) {
-    console.error('Error removing friend:', error);
+    console.error("Error removing friend:", error);
     throw error;
   }
 };
-
