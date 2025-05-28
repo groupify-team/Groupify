@@ -1,5 +1,6 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
-import { 
+// AuthContext.jsx
+import React, { createContext, useState, useEffect, useContext } from "react";
+import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut,
@@ -7,37 +8,44 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
   sendPasswordResetEmail,
-  updateProfile
-} from 'firebase/auth';
-import { auth } from '../services/firebase/config';
+  updateProfile,
+} from "firebase/auth";
+import { auth } from "../services/firebase/config";
+import { createUserProfile } from "../services/firebase/users"; // ✅ Regular import
 
 const AuthContext = createContext({});
 
-export const useAuth = () => useContext(AuthContext);
+// Exported hook for using the auth context in components
+function useAuthContext() {
+  return useContext(AuthContext);
+}
+export { useAuthContext as useAuth };
 
 export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Sign up with email and password
-  const signup = async (email, password, displayName) => {
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+  // ✅ Sign up with email, password, displayName, and gender
+  const signup = async (email, password, displayName, gender) => {
+    const userCredential = await createUserWithEmailAndPassword(
+      auth,
+      email,
+      password
+    );
+
+    // Optionally set display name in Firebase Auth
     if (displayName) {
       await updateProfile(userCredential.user, { displayName });
     }
-    
-    // Create user profile in Firestore (we'll add this later)
-    try {
-      const { createUserProfile } = await import('../services/firebase/users');
-      await createUserProfile(userCredential.user.uid, {
-        email: userCredential.user.email,
-        displayName: displayName || '',
-        photoURL: userCredential.user.photoURL || ''
-      });
-    } catch (error) {
-      console.log('User profile creation will be added later');
-    }
-    
+
+    // ✅ Create user profile in Firestore
+    await createUserProfile(userCredential.user.uid, {
+      email: userCredential.user.email,
+      displayName: displayName || "",
+      photoURL: userCredential.user.photoURL || "",
+      gender: gender || ""
+    });
+
     return userCredential;
   };
 
@@ -46,75 +54,30 @@ export const AuthProvider = ({ children }) => {
     return signInWithEmailAndPassword(auth, email, password);
   };
 
-  // Sign in with Google
+    // Sign in with Google
   const signInWithGoogle = async () => {
-    try {
-      const provider = new GoogleAuthProvider();
-      
-      // Add specific client ID if needed
-      // Uncomment and add your OAuth client ID from Google Cloud Console
-      // provider.setCustomParameters({
-      //   client_id: 'YOUR_GOOGLE_CLOUD_CLIENT_ID'
-      // });
-      
-      // Add scopes
-      provider.addScope('https://www.googleapis.com/auth/userinfo.profile');
-      provider.addScope('https://www.googleapis.com/auth/userinfo.email');
-      
-      // Force account selection even when already signed in
-      provider.setCustomParameters({
-        prompt: 'select_account'
-      });
-      
-      // Debug - print which provider we're using
-      console.log("Starting Google sign-in process...");
-      
-      const result = await signInWithPopup(auth, provider);
-      console.log("Google sign-in successful", result.user.email);
-      
-      // Create user profile if it doesn't exist (we'll add this later)
-      try {
-        const { createUserProfile } = await import('../services/firebase/users');
-        await createUserProfile(result.user.uid, {
-          email: result.user.email,
-          displayName: result.user.displayName || '',
-          photoURL: result.user.photoURL || ''
-        });
-      } catch (error) {
-        console.log('User profile creation will be added later');
-      }
-      
-      return result;
-    } catch (error) {
-      console.error('Google Sign In Error:', error);
-      // More detailed error information
-      console.error(`Error Code: ${error.code}`);
-      console.error(`Error Message: ${error.message}`);
-      
-      // Firebase auth error
-      if (error.code === 'auth/unauthorized-domain') {
-        console.error('The domain is not authorized. Add it in Firebase console.');
-      }
-      
-      throw error;
-    }
+    const provider = new GoogleAuthProvider();
+    return await signInWithPopup(auth, provider);
   };
 
-  // Sign out
+  // Log out the current user
   const logout = () => {
     return signOut(auth);
   };
 
-  // Reset password
+  // Send password reset email
   const resetPassword = (email) => {
     return sendPasswordResetEmail(auth, email);
   };
 
-  // Update user profile
-  const updateUserProfile = (updates) => {
-    return updateProfile(auth.currentUser, updates);
+  // Update user profile in Firebase Auth
+  const updateUserProfile = async (profileUpdates) => {
+    if (auth.currentUser) {
+      await updateProfile(auth.currentUser, profileUpdates);
+    }
   };
 
+  // Listen for auth state changes
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user);
@@ -124,14 +87,16 @@ export const AuthProvider = ({ children }) => {
     return unsubscribe;
   }, []);
 
+  // Provide all context values
   const value = {
     currentUser,
+    setCurrentUser,
     signup,
     login,
     logout,
     signInWithGoogle,
     resetPassword,
-    updateUserProfile
+    updateUserProfile,
   };
 
   return (
