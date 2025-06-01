@@ -138,41 +138,53 @@ const Dashboard = () => {
     };
 
     // --- Live Friends Listener ---
-    const userDocRef = doc(db, "users", currentUser.uid);
-    const unsubscribeFriends = onSnapshot(userDocRef, async (docSnap) => {
-      if (!docSnap.exists()) return;
-      console.log("🔁 Friends snapshot triggered");
+    let unsubscribeFriends = () => {};
 
-      const data = docSnap.data();
-      const friendIds = data.friends || [];
-      const friendsData = [];
+    if (currentUser?.uid) {
+      const userDocRef = doc(db, "users", currentUser.uid);
 
-      for (const fid of friendIds) {
-        if (!fid || typeof fid !== "string" || fid.trim() === "") {
-          console.warn("⚠️ Skipping invalid friend ID:", fid);
-          continue;
+      getDoc(userDocRef).then((snap) => {
+        if (!snap.exists()) {
+          console.warn("⚠️ userDoc does not exist yet:", currentUser.uid);
+          return;
         }
 
-        try {
-          const friendRef = doc(db, "users", fid);
-          const friendSnap = await getDoc(friendRef);
+        unsubscribeFriends = onSnapshot(userDocRef, async (docSnap) => {
+          if (!docSnap.exists()) return;
+          console.log("🔁 Friends snapshot triggered");
 
-          if (friendSnap.exists()) {
-            const fData = friendSnap.data();
-            friendsData.push({
-              uid: fid,
-              displayName: fData.displayName || fData.email || fid,
-              email: fData.email || "",
-              photoURL: fData.photoURL || "",
-            });
+          const data = docSnap.data();
+          const friendIds = data.friends || [];
+          const friendsData = [];
+
+          for (const fid of friendIds) {
+            if (!fid || typeof fid !== "string" || fid.trim() === "") {
+              console.warn("⚠️ Skipping invalid friend ID:", fid);
+              continue;
+            }
+
+            try {
+              const friendRef = doc(db, "users", fid);
+              const friendSnap = await getDoc(friendRef);
+
+              if (friendSnap.exists()) {
+                const fData = friendSnap.data();
+                friendsData.push({
+                  uid: fid,
+                  displayName: fData.displayName || fData.email || fid,
+                  email: fData.email || "",
+                  photoURL: fData.photoURL || "",
+                });
+              }
+            } catch (err) {
+              console.error(`❌ Error fetching friend ${fid}:`, err);
+            }
           }
-        } catch (err) {
-          console.error(`❌ Error fetching friend ${fid}:`, err);
-        }
-      }
 
-      setFriends(friendsData);
-    });
+          setFriends(friendsData);
+        });
+      });
+    }
 
     // --- Live Pending Friend Requests Listener ---
     const pendingRequestsQuery = query(
@@ -225,9 +237,7 @@ const Dashboard = () => {
     };
   }, [currentUser]);
 
-
- //  **************************  Event Handlers  **************************
-
+  //  **************************  Event Handlers  **************************
 
   // 🔧 Event Handlers
   const handleLogout = async () => {

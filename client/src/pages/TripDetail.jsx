@@ -11,6 +11,15 @@ import PhotoUpload from "../components/photos/PhotoUpload";
 import { getUserProfile } from "../services/firebase/users";
 import InviteFriendDropdown from "../components/trips/InviteFriendDropdown";
 import { getFriends } from "../services/firebase/users";
+import {
+  collection,
+  getDocs,
+  getDoc,
+  query,
+  where,
+  doc,
+} from "firebase/firestore";
+import { db } from "../services/firebase/config";
 
 const TripDetail = () => {
   const { tripId } = useParams();
@@ -76,6 +85,10 @@ const TripDetail = () => {
 
   const handleInviteFriend = async (friend) => {
     try {
+      console.log("📨 Trying to send invite with values:");
+      console.log("tripId:", tripId);
+      console.log("inviterUid (currentUser.uid):", currentUser?.uid);
+      console.log("inviteeUid (friend.uid):", friend?.uid);
       const q = query(
         collection(db, "tripInvites"),
         where("tripId", "==", tripId),
@@ -87,8 +100,12 @@ const TripDetail = () => {
         alert(`${friend.displayName} already has a pending invite.`);
         return;
       }
+      console.log("📨 Sending invite", {
+        tripId,
+        inviterUid: currentUser.uid,
+        inviteeUid: friend.uid,
+      });
 
-      // 📨 שליחת ההזמנה
       await sendTripInvite(tripId, currentUser.uid, friend.uid);
       alert(`Invitation sent to ${friend.displayName}.`);
     } catch (error) {
