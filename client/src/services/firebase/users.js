@@ -141,20 +141,31 @@ export const getPendingFriendRequests = async (uid) => {
 
 // Membership request approval
 
+// Replace the acceptFriendRequest function in client/src/services/firebase/users.js
+
 export const acceptFriendRequest = async (uid, senderUid) => {
   try {
     const requestId = `${senderUid}_${uid}`;
     const requestRef = doc(db, "friendRequests", requestId);
 
+    // Delete the friend request first
     await deleteDoc(requestRef);
 
-    const userRef = doc(db, "users", uid);
+    // Add each user to the other's friends list (MUTUAL FRIENDSHIP)
+    const userRef = doc(db, "users", uid);          // Person accepting the request
+    const senderRef = doc(db, "users", senderUid);  // Person who sent the request
 
+    // Add sender to receiver's friends list
     await updateDoc(userRef, {
       friends: arrayUnion(senderUid),
     });
 
-    console.log(`✅ Friend request accepted: ${senderUid} added to ${uid}`);
+    // Add receiver to sender's friends list (THIS WAS MISSING!)
+    await updateDoc(senderRef, {
+      friends: arrayUnion(uid),
+    });
+
+    console.log(`✅ Mutual friendship created between ${uid} and ${senderUid}`);
   } catch (error) {
     console.error("❌ Error accepting friend request:", error);
     throw error;
