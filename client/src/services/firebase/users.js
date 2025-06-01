@@ -140,6 +140,7 @@ export const getPendingFriendRequests = async (uid) => {
 };
 
 // Membership request approval
+
 export const acceptFriendRequest = async (uid, senderUid) => {
   try {
     const requestId = `${senderUid}_${uid}`;
@@ -148,19 +149,14 @@ export const acceptFriendRequest = async (uid, senderUid) => {
     await deleteDoc(requestRef);
 
     const userRef = doc(db, "users", uid);
-    const senderRef = doc(db, "users", senderUid);
 
     await updateDoc(userRef, {
       friends: arrayUnion(senderUid),
     });
 
-    await updateDoc(senderRef, {
-      friends: arrayUnion(uid),
-    });
-
-    console.log(`Friend request accepted: ${senderUid} <-> ${uid}`);
+    console.log(`✅ Friend request accepted: ${senderUid} added to ${uid}`);
   } catch (error) {
-    console.error("Error accepting friend request:", error);
+    console.error("❌ Error accepting friend request:", error);
     throw error;
   }
 };

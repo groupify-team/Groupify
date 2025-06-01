@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import { getTrip, addTripMember } from "../services/firebase/trips";
+import {
+  getTrip,
+  addTripMember,
+  sendTripInvite,
+} from "../services/firebase/trips";
 import { getTripPhotos } from "../services/firebase/storage";
 import PhotoUpload from "../components/photos/PhotoUpload";
 import { getUserProfile } from "../services/firebase/users";
-import { sendTripInvite } from "../services/firebase/trips";
 import InviteFriendDropdown from "../components/trips/InviteFriendDropdown";
-
+import { getFriends } from "../services/firebase/users";
 
 const TripDetail = () => {
   const { tripId } = useParams();
@@ -19,9 +22,6 @@ const TripDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showUploadForm, setShowUploadForm] = useState(false);
-  const [inviteEmail, setInviteEmail] = useState("");
-  const [inviteLoading, setInviteLoading] = useState(false);
-  const [inviteError, setInviteError] = useState(null);
   const [inviteSuccess, setInviteSuccess] = useState(false);
   const [memberProfiles, setMemberProfiles] = useState([]);
   const [selectedPhoto, setSelectedPhoto] = useState(null);
@@ -30,23 +30,18 @@ const TripDetail = () => {
     const fetchTripAndPhotos = async () => {
       try {
         setLoading(true);
-
-        // Fetch trip details
         const tripData = await getTrip(tripId);
         setTrip(tripData);
 
-        // Check if current user is a member of this trip
         if (!tripData.members.includes(currentUser.uid)) {
           setError("You do not have access to this trip");
           setLoading(false);
           return;
         }
 
-        // Fetch photos
         const tripPhotos = await getTripPhotos(tripId);
         setPhotos(tripPhotos);
 
-        // Fetch member profiles
         if (tripData.members && tripData.members.length > 0) {
           const memberData = await Promise.all(
             tripData.members.map((uid) => getUserProfile(uid))
@@ -67,10 +62,8 @@ const TripDetail = () => {
   }, [tripId, currentUser]);
 
   const handlePhotoUploaded = (uploadedPhotos) => {
-    // Add new photos to the list
-    setPhotos((prevPhotos) => [...uploadedPhotos, ...prevPhotos]);
+    setPhotos((prev) => [...uploadedPhotos, ...prev]);
 
-    // Update trip photo count
     if (trip) {
       setTrip((prevTrip) => ({
         ...prevTrip,
@@ -78,40 +71,24 @@ const TripDetail = () => {
       }));
     }
 
-    // Hide the upload form
     setShowUploadForm(false);
   };
 
-  const handleInvite = async (e) => {
-    e.preventDefault();
-
-    if (!inviteEmail.trim()) {
-      setInviteError("Please enter an email address");
-      return;
-    }
-
-    try {
-      setInviteLoading(true);
-      setInviteError(null);
-      setInviteSuccess(false);
-
-      // In a real app, you would send an invitation email
-      // For now, we'll just show a success message
-
-      setInviteSuccess(true);
-      setInviteEmail("");
-    } catch (error) {
-      console.error("Error inviting user:", error);
-      setInviteError("Failed to send invitation. Please try again.");
-    } finally {
-      setInviteLoading(false);
-    }
-  };
-
   const handleInviteFriend = async (friend) => {
-    console.log("🔍 Sending invite to:", friend);
-
     try {
+      const q = query(
+        collection(db, "tripInvites"),
+        where("tripId", "==", tripId),
+        where("inviteeUid", "==", friend.uid),
+        where("status", "==", "pending")
+      );
+      const existing = await getDocs(q);
+      if (!existing.empty) {
+        alert(`${friend.displayName} already has a pending invite.`);
+        return;
+      }
+
+      // 📨 שליחת ההזמנה
       await sendTripInvite(tripId, currentUser.uid, friend.uid);
       alert(`Invitation sent to ${friend.displayName}.`);
     } catch (error) {
@@ -126,7 +103,6 @@ const TripDetail = () => {
         <div className="text-center">
           <svg
             className="animate-spin h-12 w-12 text-indigo-600 mx-auto"
-            xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
           >
@@ -137,12 +113,12 @@ const TripDetail = () => {
               r="10"
               stroke="currentColor"
               strokeWidth="4"
-            ></circle>
+            />
             <path
               className="opacity-75"
               fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-            ></path>
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+            />
           </svg>
           <p className="mt-4 text-lg text-gray-600">Loading trip details...</p>
         </div>
@@ -155,7 +131,6 @@ const TripDetail = () => {
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <div className="text-center max-w-md mx-auto p-6 bg-white rounded-lg shadow-lg">
           <svg
-            xmlns="http://www.w3.org/2000/svg"
             className="h-16 w-16 text-red-500 mx-auto mb-4"
             fill="none"
             viewBox="0 0 24 24"
@@ -165,7 +140,7 @@ const TripDetail = () => {
               strokeLinecap="round"
               strokeLinejoin="round"
               strokeWidth={2}
-              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+              d="M12 9v2m0 4h.01M6.062 20h11.876c1.54 0 2.502-1.667 1.732-3L13.732 4a2 2 0 00-3.464 0L3.34 17c-.77 1.333.192 3 1.732 3z"
             />
           </svg>
           <h2 className="text-2xl font-bold text-red-700 mb-2">Error</h2>
@@ -182,28 +157,22 @@ const TripDetail = () => {
   }
 
   if (!trip) return null;
-
   return (
     <div className="min-h-screen bg-gray-100">
-      {/* Header */}
+      {/* 🧭 Trip Header */}
       <div className="bg-indigo-700 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-3xl font-bold">{trip.name}</h1>
-
               <p className="text-indigo-200 mt-1">
                 {trip.location || "No location specified"}
               </p>
               <div className="flex mt-2 text-sm">
-                <span className="mr-4">
-                  <span className="font-medium">
-                    {trip.startDate || "No start date"}
-                  </span>
+                <span className="mr-4 font-medium">
+                  {trip.startDate || "No start date"}
                   {trip.startDate && trip.endDate && " - "}
-                  {trip.endDate && (
-                    <span className="font-medium">{trip.endDate}</span>
-                  )}
+                  {trip.endDate}
                 </span>
                 <span>{trip.members?.length || 1} members</span>
               </div>
@@ -218,33 +187,28 @@ const TripDetail = () => {
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Trip Details */}
-          <div className="md:col-span-2">
+      {/* 🔄 Trip Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* 📸 Left: Trip Info & Photos */}
+          <div className="lg:col-span-2 space-y-6">
             <div className="bg-white rounded-lg shadow p-6">
               <h2 className="text-xl font-bold mb-4">Trip Details</h2>
               {trip.description ? (
-                <p className="text-gray-700 mb-4">{trip.description}</p>
+                <p className="text-gray-700">{trip.description}</p>
               ) : (
-                <p className="text-gray-500 italic mb-4">
-                  No description provided
-                </p>
+                <p className="text-gray-500 italic">No description provided</p>
               )}
 
               <div className="flex justify-between items-center mt-6">
-                <div>
-                  <span className="text-sm text-gray-500">
-                    {photos.length} photos
-                  </span>
-                </div>
+                <span className="text-sm text-gray-500">
+                  {photos.length} photos
+                </span>
                 <button
                   onClick={() => setShowUploadForm(!showUploadForm)}
                   className="flex items-center bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium"
                 >
                   <svg
-                    xmlns="http://www.w3.org/2000/svg"
                     className="h-5 w-5 mr-2"
                     fill="none"
                     viewBox="0 0 24 24"
@@ -261,133 +225,112 @@ const TripDetail = () => {
                 </button>
               </div>
             </div>
-          </div>
 
-          {/* Invite People */}
-          <div>
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-bold mb-4">Invite People</h2>
-              <div className="mb-2">
-                <h3 className="text-md font-semibold mb-2">Invite a Friend</h3>
-                <InviteFriendDropdown
-                  currentUser={currentUser}
-                  onSelect={handleInviteFriend}
+            {showUploadForm && (
+              <div className="bg-white rounded-lg shadow p-6">
+                <h2 className="text-xl font-bold mb-4">Upload Photos</h2>
+                <PhotoUpload
+                  tripId={tripId}
+                  onPhotoUploaded={handlePhotoUploaded}
                 />
               </div>
+            )}
+
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-xl font-bold mb-4">Photos</h2>
+              {photos.length === 0 ? (
+                <div className="text-center text-gray-500">No photos yet.</div>
+              ) : (
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {photos.map((photo) => (
+                    <div
+                      key={photo.id}
+                      className="cursor-pointer"
+                      onClick={() => setSelectedPhoto(photo)}
+                    >
+                      <img
+                        src={photo.downloadURL.replace(
+                          "groupify-77202.appspot.com",
+                          "groupify-77202.firebasestorage.app"
+                        )}
+                        alt={photo.fileName}
+                        className="w-full h-32 object-cover rounded-lg shadow"
+                      />
+                      <div className="text-xs text-gray-500 mt-1">
+                        Uploaded{" "}
+                        {new Date(photo.uploadedAt).toLocaleDateString()}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* 🙋‍♂️ Right: Invite & Members */}
+          <div className="space-y-6">
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-xl font-bold mb-4">Invite People</h2>
+              <InviteFriendDropdown
+                currentUser={currentUser}
+                onSelect={handleInviteFriend}
+                excludedUserIds={trip.members}
+              />
+            </div>
+
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-xl font-bold mb-4">Trip Members</h2>
+              {memberProfiles.length === 0 ? (
+                <p className="text-gray-500 text-sm">No members found.</p>
+              ) : (
+                <ul className="space-y-3">
+                  {memberProfiles
+                    .slice()
+                    .sort((a, b) => {
+                      if (a.uid === currentUser.uid) return -1;
+                      if (b.uid === currentUser.uid) return 1;
+                      return (a.displayName || a.email || "").localeCompare(
+                        b.displayName || b.email || ""
+                      );
+                    })
+                    .map((member) => (
+                      <li key={member.uid} className="flex items-center">
+                        <img
+                          src={
+                            member.photoURL ||
+                            "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg"
+                          }
+                          alt="Avatar"
+                          className="w-8 h-8 rounded-full object-cover border mr-3"
+                        />
+                        <span className="text-sm font-medium text-gray-700">
+                          {member.displayName || member.email || member.uid}
+                          {member.uid === currentUser.uid && " (Me)"}
+                        </span>
+                      </li>
+                    ))}
+                </ul>
+              )}
             </div>
           </div>
         </div>
 
-        {/* Trip Members */}
-        <div className="bg-white rounded-lg shadow p-6 mt-6">
-          <h2 className="text-xl font-bold mb-4">Trip Members</h2>
-          {memberProfiles.length === 0 ? (
-            <p className="text-gray-500 text-sm">No members found.</p>
-          ) : (
-            <ul className="space-y-2">
-              {memberProfiles.map((member) => (
-                <li key={member.uid} className="flex items-center">
-                  <div className="w-8 h-8 bg-indigo-100 text-indigo-700 flex items-center justify-center rounded-full mr-3 text-sm font-bold">
-                    {member.displayName?.[0]?.toUpperCase() || "?"}
-                  </div>
-                  <span className="text-sm text-gray-700">
-                    {member.displayName || member.email || member.uid}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-
-{showUploadForm && (
-  <div className="mt-6">
-    <div className="bg-white rounded-lg shadow p-6">
-      <h2 className="text-xl font-bold mb-4">Upload Photos</h2>
-      <PhotoUpload
-        tripId={tripId}
-        onPhotoUploaded={handlePhotoUploaded}
-      />
-    </div>
-  </div>
-)}
-
-
-        {/* Photo Gallery */}
-<div className="bg-white rounded-lg shadow p-6 mt-6">
-  <h2 className="text-xl font-bold mb-4">Photos</h2>
-
-  {photos.length === 0 ? (
-    <div className="p-12 text-center">
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        className="h-16 w-16 text-gray-400 mx-auto mb-4"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-        />
-      </svg>
-      <h3 className="text-lg font-medium text-gray-900 mb-2">No Photos Yet</h3>
-      <p className="text-gray-500 mb-4">Upload photos to share them with your trip members</p>
-      <button
-        onClick={() => setShowUploadForm(true)}
-        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700"
-      >
-        Upload Photos
-      </button>
-    </div>
-  ) : (
-    <>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {photos.map((photo) => (
+        {/* 🖼️ Modal: Full-Screen Photo */}
+        {selectedPhoto && (
           <div
-            key={photo.id}
-            className="bg-white rounded-lg shadow overflow-hidden cursor-pointer"
-            onClick={() => setSelectedPhoto(photo)}
+            className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50"
+            onClick={() => setSelectedPhoto(null)}
           >
             <img
-              src={photo.downloadURL.replace(
+              src={selectedPhoto.downloadURL.replace(
                 "groupify-77202.appspot.com",
                 "groupify-77202.firebasestorage.app"
               )}
-              alt={photo.fileName}
-              className="w-full h-32 object-cover"
+              alt="Full view"
+              className="max-w-4xl max-h-[90vh] object-contain rounded-lg"
             />
-            <div className="p-2 text-xs text-gray-500">
-              Uploaded {new Date(photo.uploadedAt).toLocaleDateString()}
-            </div>
           </div>
-        ))}
-      </div>
-
-      {/* Modal */}
-      {selectedPhoto && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50"
-          onClick={() => setSelectedPhoto(null)}
-        >
-          <img
-            src={selectedPhoto.downloadURL.replace(
-              "groupify-77202.appspot.com",
-              "groupify-77202.firebasestorage.app"
-            )}
-            alt="Full view"
-            className="max-w-4xl max-h-[90vh] object-contain rounded-lg"
-          />
-        </div>
-      )}
-    </>
-  )}
-</div>
-
-
-
-
+        )}
       </div>
     </div>
   );

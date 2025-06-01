@@ -1,23 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { getFriends } from '../../services/firebase/users';
 
-const InviteFriendDropdown = ({ currentUser, onSelect }) => {
+// 🧩 Component for inviting friends to a trip, with exclusion support
+const InviteFriendDropdown = ({ currentUser, onSelect, excludedUserIds = [] }) => {
   const [friends, setFriends] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredFriends, setFilteredFriends] = useState([]);
 
-useEffect(() => {
-  const fetchFriends = async () => {
-    if (currentUser?.uid) {
-      const results = await getFriends(currentUser.uid);
-      console.log("📥 friends loaded:", results); 
-      setFriends(results);
-    }
-  };
-  fetchFriends();
-}, [currentUser]);
+  // 📥 Load and filter friends (excluding trip members)
+  useEffect(() => {
+    const fetchFriends = async () => {
+      if (currentUser?.uid) {
+        const results = await getFriends(currentUser.uid);
+        const filtered = results.filter(friend => !excludedUserIds.includes(friend.uid));
+        setFriends(filtered);
+      }
+    };
+    fetchFriends();
+  }, [currentUser, excludedUserIds]);
 
-
+  // 🔍 Filter by search term
   useEffect(() => {
     const term = searchTerm.toLowerCase();
     setFilteredFriends(
@@ -29,6 +31,7 @@ useEffect(() => {
     );
   }, [searchTerm, friends]);
 
+  // 🧾 Render search input and filtered friend list
   return (
     <div className="w-full">
       <input
