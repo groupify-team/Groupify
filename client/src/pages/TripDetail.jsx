@@ -12,7 +12,7 @@ import {
   getFriends,
   getUserProfile,
   sendFriendRequest,
-  removeFriend,
+  removeFriend
 } from "../services/firebase/users";
 import InviteFriendDropdown from "../components/trips/InviteFriendDropdown";
 import {
