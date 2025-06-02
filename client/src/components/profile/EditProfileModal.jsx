@@ -6,7 +6,7 @@ import { auth, db, storage } from "../../services/firebase/config";
 import { updateEmail, updatePassword } from "firebase/auth";
 import ProfileImageCropper from "./ProfileImageCropper";
 import { useAuth } from "../../contexts/AuthContext";
-import { useRef } from "react"; // ודא שזה למעלה
+import { useRef } from "react";
 import { CameraIcon, PlusIcon } from "@heroicons/react/24/outline";
 
 const EditProfileModal = ({ isOpen, onClose }) => {
@@ -203,32 +203,31 @@ const EditProfileModal = ({ isOpen, onClose }) => {
   return (
     <>
       {showCamera && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]">
-          <div className="bg-white rounded-lg p-6 shadow-md flex flex-col items-center space-y-4 w-[300px]">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[9999]">
+          <div className="bg-white rounded-2xl p-6 shadow-xl flex flex-col items-center space-y-4 w-[320px]">
             <video
               ref={videoRef}
               autoPlay
               playsInline
               muted
-              className="w-full h-48 rounded-md object-cover border bg-black"
+              className="w-full h-48 rounded-xl object-cover border bg-black"
             />
             <button
               onClick={capturePhoto}
-              className="bg-blue-600 text-white px-4 py-2 rounded w-full"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-md shadow transition"
             >
-              📸 Capture
+              📸 Capture Photo
             </button>
             <button
               onClick={cancelCamera}
-              className="text-sm text-gray-500 underline"
+              className="text-sm text-gray-500 underline hover:text-gray-700"
             >
-              ❌ Cancel
+              Cancel
             </button>
           </div>
         </div>
       )}
 
-      {/* Image Cropper Overlay */}
       {cropping && (
         <ProfileImageCropper
           imageSrc={rawImage}
@@ -237,40 +236,45 @@ const EditProfileModal = ({ isOpen, onClose }) => {
         />
       )}
 
-      {/* Main Edit Modal */}
-      <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
-        <div className="bg-white rounded-lg shadow p-6 w-full max-w-md">
-          <h2 className="text-xl font-bold mb-4 text-center">Edit Profile</h2>
-          {error && <p className="text-red-500 text-sm mb-2">{error}</p>}
+      <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+        <div className="bg-white shadow-2xl rounded-2xl px-8 py-6 w-full max-w-md relative animate-fade-in">
+          <h2 className="text-2xl font-bold text-center text-gray-800 mb-5">
+            Edit Your Profile
+          </h2>
 
-          {/* Profile Image Preview + Upload & Camera Buttons */}
-          <div className="flex flex-col items-center mb-4 space-y-3">
-            <img
-              src={
-                previewUrl ||
-                "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg"
-              }
-              alt="Profile Preview"
-              className="w-24 h-24 rounded-full object-cover border"
-            />
+          {error && (
+            <p className="text-red-500 text-sm mb-4 text-center">{error}</p>
+          )}
 
-            <div className="flex items-center space-x-4">
-              {/* Upload from file */}
+          {/* Profile Image Section */}
+          <div className="flex flex-col items-center mb-6 space-y-3">
+            <div className="relative w-28 h-28">
+              <img
+                src={
+                  previewUrl ||
+                  "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg"
+                }
+                alt="Profile"
+                className="w-full h-full object-cover rounded-full border-4 border-gray-200 shadow-sm"
+              />
+            </div>
+
+            {/* Upload and Camera Buttons */}
+            <div className="flex items-center space-x-3">
               <button
                 type="button"
                 onClick={() => document.getElementById("fileInput").click()}
-                className="w-10 h-10 flex items-center justify-center bg-indigo-600 rounded-full hover:bg-indigo-700 transition"
+                className="w-10 h-10 bg-indigo-600 hover:bg-indigo-700 rounded-full flex items-center justify-center shadow-md transition"
                 title="Upload from device"
               >
                 <PlusIcon className="w-5 h-5 text-white" />
               </button>
 
-              {/* Take photo from camera */}
               <button
                 type="button"
                 onClick={handleCaptureFromCamera}
-                className="w-10 h-10 flex items-center justify-center bg-green-600 rounded-full hover:bg-green-700 transition"
-                title="Take photo from camera"
+                className="w-10 h-10 bg-green-600 hover:bg-green-700 rounded-full flex items-center justify-center shadow-md transition"
+                title="Take a photo"
               >
                 <CameraIcon className="w-5 h-5 text-white" />
               </button>
@@ -284,93 +288,95 @@ const EditProfileModal = ({ isOpen, onClose }) => {
               />
             </div>
           </div>
-
           {/* Form Fields */}
-          <form onSubmit={handleSave} className="space-y-4">
+          <form onSubmit={handleSave} className="space-y-3">
             <div>
-              <label className="block text-sm font-medium">Full Name</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">
+                Full Name
+              </label>
               <input
                 type="text"
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
-                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                className="w-full px-4 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium">Email</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">
+                Email
+              </label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                className="w-full px-4 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium">Password</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">
+                Password
+              </label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
                 placeholder="Leave empty to keep current"
+                className="w-full px-4 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
 
-            {/* Gender */}
-            <div className="flex justify-center">
-              <div className="flex items-center space-x-4">
-                {/* Label */}
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Gender
-                </label>
-
-                {/* Button group */}
-                <div className="flex space-x-2">
-                  {["male", "female", "other"].map((option) => (
-                    <button
-                      key={option}
-                      type="button"
-                      onClick={() => setGender(option)}
-                      className={`px-4 py-1 rounded-full border text-sm transition ${
-                        gender === option
-                          ? "bg-indigo-600 text-white"
-                          : "bg-white text-gray-700 border-gray-300"
-                      }`}
-                    >
-                      {option.charAt(0).toUpperCase() + option.slice(1)}
-                    </button>
-                  ))}
-                </div>
+            {/* Gender Selection */}
+            <div className="flex items-center justify-between w-full">
+              <label className="text-sm font-semibold text-gray-700">
+                Gender
+              </label>
+              <div className="flex space-x-3 justify-center flex-1 ml-[-20px]">
+                {["male", "female", "other"].map((option) => (
+                  <button
+                    key={option}
+                    type="button"
+                    onClick={() => setGender(option)}
+                    className={`px-4 py-1 rounded-full border text-sm font-medium transition-all ${
+                      gender === option
+                        ? "bg-indigo-600 text-white shadow-md"
+                        : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
+                    }`}
+                  >
+                    {option.charAt(0).toUpperCase() + option.slice(1)}
+                  </button>
+                ))}
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium">Birthdate</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">
+                Birthdate
+              </label>
               <input
                 type="date"
                 value={birthdate}
                 onChange={(e) => setBirthdate(e.target.value)}
-                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                className="w-full px-4 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
 
             {/* Action Buttons */}
-            <div className="flex justify-end space-x-2 pt-4">
+            <div className="flex justify-end space-x-3 pt-4">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md"
+                className="px-4 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-md transition"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={loading}
-                className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50"
+                className="px-4 py-2 bg-indigo-600 text-white font-medium rounded-md hover:bg-indigo-700 transition disabled:opacity-50"
               >
                 {loading ? "Saving..." : "Save"}
               </button>
@@ -381,5 +387,4 @@ const EditProfileModal = ({ isOpen, onClose }) => {
     </>
   );
 };
-
 export default EditProfileModal;
