@@ -24,7 +24,8 @@ import {
   deleteDoc,
 } from "firebase/firestore";
 import { db } from "../services/firebase/config";
-import { compareFaces } from "../services/rekognitionService";
+// FIXED: Import from faceRecognition instead of rekognitionService
+import { filterPhotosByFace } from "../services/faceRecognition";
 import logo from "../assets/logo/3.png";
 import UserProfileModal from "../components/profile/UserProfileModal";
 
@@ -44,6 +45,7 @@ const TripDetail = () => {
   const [filteredPhotos, setFilteredPhotos] = useState([]);
   const [loadingFaces, setLoadingFaces] = useState(false);
   const [filterActive, setFilterActive] = useState(false);
+  const [faceRecognitionProgress, setFaceRecognitionProgress] = useState({ current: 0, total: 0 });
 
   const isMember = trip?.members?.includes(currentUser?.uid);
   const canFilterByFace = isMember && !!currentUser?.photoURL;
@@ -97,27 +99,65 @@ const TripDetail = () => {
     }
   }, [tripId, currentUser]);
 
+  // FIXED: Use the new client-side face recognition
   useEffect(() => {
-    const filterPhotosByFace = async () => {
-      if (!canFilterByFace || !photos.length || !filterActive) return;
-
-      setLoadingFaces(true);
-      const result = [];
-
-      for (const photo of photos) {
-        const isMatch = await compareFaces(
-          currentUser.photoURL,
-          photo.downloadURL
-        );
-        if (isMatch) result.push(photo);
+    const processPhotosByFace = async () => {
+      if (!canFilterByFace || !photos.length || !filterActive) {
+        setFilteredPhotos([]);
+        return;
       }
 
-      setFilteredPhotos(result);
-      setLoadingFaces(false);
+      console.log('🔄 Starting face recognition process...');
+      console.log('👤 Current user:', currentUser);
+      console.log('📷 User photo URL:', currentUser.photoURL);
+      console.log('📸 Number of photos to process:', photos.length);
+      console.log('📸 First photo sample:', photos[0]);
+
+      setLoadingFaces(true);
+      
+      try {
+        const matchingPhotos = await filterPhotosByFace(
+          photos, 
+          currentUser.photoURL,
+          (current, total) => {
+            console.log(`📊 Progress: ${current}/${total}`);
+            setFaceRecognitionProgress({ current, total });
+          }
+        );
+        
+        console.log(`🎯 Found ${matchingPhotos.length} matching photos`);
+        setFilteredPhotos(matchingPhotos);
+        
+        if (matchingPhotos.length === 0) {
+          console.log('🔍 No photos found containing your face');
+        }
+      } catch (error) {
+        console.error('❌ Face recognition failed:', error);
+        setFilteredPhotos([]);
+      } finally {
+        setLoadingFaces(false);
+        setFaceRecognitionProgress({ current: 0, total: 0 });
+      }
     };
 
-    filterPhotosByFace();
-  }, [currentUser, photos, filterActive]);
+    processPhotosByFace();
+  }, [currentUser, photos, filterActive, canFilterByFace]);
+
+  // Get pending friend requests helper function
+  const getPendingFriendRequests = async (uid) => {
+    try {
+      const q = query(
+        collection(db, "friendRequests"),
+        where("fromUid", "==", uid),
+        where("status", "==", "pending")
+      );
+      const querySnapshot = await getDocs(q);
+      return querySnapshot.docs.map(doc => ({ uid: doc.data().toUid, ...doc.data() }));
+    } catch (error) {
+      console.error("Error fetching pending requests:", error);
+      return [];
+    }
+  };
 
   useEffect(() => {
     const fetchFriendsAndPending = async () => {
@@ -387,9 +427,21 @@ const TripDetail = () => {
               </div>
 
               {loadingFaces ? (
-                <p className="text-sm text-gray-500 mb-4">
-                  Scanning photos for your face...
-                </p>
+                <div className="mb-4">
+                  <p className="text-sm text-gray-500 mb-2">
+                    Scanning photos for your face... ({faceRecognitionProgress.current}/{faceRecognitionProgress.total})
+                  </p>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div 
+                      className="bg-indigo-600 h-2 rounded-full transition-all duration-300"
+                      style={{ 
+                        width: faceRecognitionProgress.total > 0 
+                          ? `${(faceRecognitionProgress.current / faceRecognitionProgress.total) * 100}%` 
+                          : '0%' 
+                      }}
+                    ></div>
+                  </div>
+                </div>
               ) : filterActive && filteredPhotos.length === 0 ? (
                 <p className="text-sm text-gray-500 italic">
                   No matching photos found.

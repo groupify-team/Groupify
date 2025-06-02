@@ -17,6 +17,7 @@
     "@mui/material": "^7.1.0",
     "date-fns": "^4.1.0",
     "dom": "^0.0.3",
+    "face-api.js": "^0.22.2",
     "firebase": "^11.7.3",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
