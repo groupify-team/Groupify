@@ -2,17 +2,16 @@ import React, { useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import {
   findUsersByEmail,
-  sendFriendRequest,
   getUserProfile,
 } from "../../services/firebase/users";
 
-const AddFriend = () => {
+const AddFriend = ({ onUserSelect }) => {
   const { currentUser } = useAuth();
   const [input, setInput] = useState("");
   const [status, setStatus] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const handleSearchAndSend = async () => {
+  const handleSearch = async () => {
     setLoading(true);
     setStatus(null);
 
@@ -26,14 +25,12 @@ const AddFriend = () => {
       const users = await findUsersByEmail(input.trim());
       const targetUser = users.find((u) => u.uid !== currentUser.uid);
 
-      // Case 1: No user found with that email
       if (!targetUser) {
         setStatus({ type: "error", message: "User not found." });
         setLoading(false);
         return;
       }
 
-      // Case 2: User is trying to add themselves
       if (targetUser.uid === currentUser.uid) {
         setStatus({
           type: "error",
@@ -43,19 +40,10 @@ const AddFriend = () => {
         return;
       }
 
-      // Case 3: User is already a friend
-      const myProfile = await getUserProfile(currentUser.uid);
-      if (myProfile.friends && myProfile.friends.includes(targetUser.uid)) {
-        setStatus({ type: "error", message: "User is already your friend." });
-        setLoading(false);
-        return;
-      }
-
-      await sendFriendRequest(currentUser.uid, targetUser.uid);
-      setStatus({ type: "success", message: "Friend request sent!" });
-      setInput("");
+      onUserSelect && onUserSelect(targetUser.uid);
+      setInput(""); 
     } catch (error) {
-      console.error("Error sending friend request:", error);
+      console.error("Error:", error);
       setStatus({
         type: "error",
         message: "Something went wrong. Please try again.",
@@ -75,11 +63,11 @@ const AddFriend = () => {
         className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
       />
       <button
-        onClick={handleSearchAndSend}
+        onClick={handleSearch}
         disabled={loading}
         className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-md font-medium"
       >
-        {loading ? "Sending..." : "Send Friend Request"}
+        {loading ? "Searching..." : "Find User"}
       </button>
       {status && (
         <div

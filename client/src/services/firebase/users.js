@@ -139,6 +139,18 @@ export const getPendingFriendRequests = async (uid) => {
   }
 };
 
+export async function cancelFriendRequest(fromUid, toUid) {
+  const requestRef = doc(db, "friendRequests", `${fromUid}_${toUid}`);
+  await deleteDoc(requestRef);
+}
+
+export const didISendRequest = async (fromUid, toUid) => {
+  const requestRef = doc(db, "friendRequests", `${fromUid}_${toUid}`);
+  const snapshot = await getDoc(requestRef);
+  return snapshot.exists();
+};
+
+
 // Membership request approval
 
 // Replace the acceptFriendRequest function in client/src/services/firebase/users.js
@@ -152,8 +164,8 @@ export const acceptFriendRequest = async (uid, senderUid) => {
     await deleteDoc(requestRef);
 
     // Add each user to the other's friends list (MUTUAL FRIENDSHIP)
-    const userRef = doc(db, "users", uid);          // Person accepting the request
-    const senderRef = doc(db, "users", senderUid);  // Person who sent the request
+    const userRef = doc(db, "users", uid); // Person accepting the request
+    const senderRef = doc(db, "users", senderUid); // Person who sent the request
 
     // Add sender to receiver's friends list
     await updateDoc(userRef, {
