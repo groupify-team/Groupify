@@ -10,16 +10,9 @@ import { getTripPhotos } from "../services/firebase/storage";
 import PhotoUpload from "../components/photos/PhotoUpload";
 import { getUserProfile } from "../services/firebase/users";
 import InviteFriendDropdown from "../components/trips/InviteFriendDropdown";
-import { getFriends } from "../services/firebase/users";
-import {
-  collection,
-  getDocs,
-  getDoc,
-  query,
-  where,
-  doc,
-} from "firebase/firestore";
+import { collection, getDocs, query, where, doc } from "firebase/firestore";
 import { db } from "../services/firebase/config";
+import { compareFaces } from "../services/rekognitionService";
 
 const TripDetail = () => {
   const { tripId } = useParams();
@@ -34,6 +27,21 @@ const TripDetail = () => {
   const [inviteSuccess, setInviteSuccess] = useState(false);
   const [memberProfiles, setMemberProfiles] = useState([]);
   const [selectedPhoto, setSelectedPhoto] = useState(null);
+  const [filteredPhotos, setFilteredPhotos] = useState([]);
+  const [loadingFaces, setLoadingFaces] = useState(false);
+  const [filterActive, setFilterActive] = useState(false);
+
+  const isMember = trip?.members?.includes(currentUser?.uid);
+  const canFilterByFace = isMember && !!currentUser?.photoURL;
+  const [showAllPhotosModal, setShowAllPhotosModal] = useState(false);
+
+  const handleToggleFaceFilter = () => {
+    if (!canFilterByFace) {
+      alert("Face filtering is only available for registered trip members.");
+      return;
+    }
+    setFilterActive((prev) => !prev);
+  };
 
   useEffect(() => {
     const fetchTripAndPhotos = async () => {
@@ -48,10 +56,10 @@ const TripDetail = () => {
           return;
         }
 
-        const tripPhotos = await getTripPhotos(tripId);
-        setPhotos(tripPhotos);
+        const photos = await getTripPhotos(tripId);
+        setPhotos(photos);
 
-        if (tripData.members && tripData.members.length > 0) {
+        if (tripData.members.length > 0) {
           const memberData = await Promise.all(
             tripData.members.map((uid) => getUserProfile(uid))
           );
@@ -70,6 +78,28 @@ const TripDetail = () => {
     }
   }, [tripId, currentUser]);
 
+  useEffect(() => {
+    const filterPhotosByFace = async () => {
+      if (!canFilterByFace || !photos.length || !filterActive) return;
+
+      setLoadingFaces(true);
+      const result = [];
+
+      for (const photo of photos) {
+        const isMatch = await compareFaces(
+          currentUser.photoURL,
+          photo.downloadURL
+        );
+        if (isMatch) result.push(photo);
+      }
+
+      setFilteredPhotos(result);
+      setLoadingFaces(false);
+    };
+
+    filterPhotosByFace();
+  }, [currentUser, photos, filterActive]);
+
   const handlePhotoUploaded = (uploadedPhotos) => {
     setPhotos((prev) => [...uploadedPhotos, ...prev]);
 
@@ -85,10 +115,6 @@ const TripDetail = () => {
 
   const handleInviteFriend = async (friend) => {
     try {
-      console.log("📨 Trying to send invite with values:");
-      console.log("tripId:", tripId);
-      console.log("inviterUid (currentUser.uid):", currentUser?.uid);
-      console.log("inviteeUid (friend.uid):", friend?.uid);
       const q = query(
         collection(db, "tripInvites"),
         where("tripId", "==", tripId),
@@ -100,11 +126,6 @@ const TripDetail = () => {
         alert(`${friend.displayName} already has a pending invite.`);
         return;
       }
-      console.log("📨 Sending invite", {
-        tripId,
-        inviterUid: currentUser.uid,
-        inviteeUid: friend.uid,
-      });
 
       await sendTripInvite(tripId, currentUser.uid, friend.uid);
       alert(`Invitation sent to ${friend.displayName}.`);
@@ -117,28 +138,7 @@ const TripDetail = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="text-center">
-          <svg
-            className="animate-spin h-12 w-12 text-indigo-600 mx-auto"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <circle
-              className="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              strokeWidth="4"
-            />
-            <path
-              className="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-            />
-          </svg>
-          <p className="mt-4 text-lg text-gray-600">Loading trip details...</p>
-        </div>
+        <p className="text-lg text-gray-600">Loading trip details...</p>
       </div>
     );
   }
@@ -147,19 +147,6 @@ const TripDetail = () => {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <div className="text-center max-w-md mx-auto p-6 bg-white rounded-lg shadow-lg">
-          <svg
-            className="h-16 w-16 text-red-500 mx-auto mb-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 9v2m0 4h.01M6.062 20h11.876c1.54 0 2.502-1.667 1.732-3L13.732 4a2 2 0 00-3.464 0L3.34 17c-.77 1.333.192 3 1.732 3z"
-            />
-          </svg>
           <h2 className="text-2xl font-bold text-red-700 mb-2">Error</h2>
           <p className="text-gray-600 mb-4">{error}</p>
           <button
@@ -174,9 +161,9 @@ const TripDetail = () => {
   }
 
   if (!trip) return null;
+
   return (
     <div className="min-h-screen bg-gray-100">
-      {/* 🧭 Trip Header */}
       <div className="bg-indigo-700 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex justify-between items-center">
@@ -204,42 +191,28 @@ const TripDetail = () => {
         </div>
       </div>
 
-      {/* 🔄 Trip Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* 📸 Left: Trip Info & Photos */}
           <div className="lg:col-span-2 space-y-6">
             <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-bold mb-4">Trip Details</h2>
+              <div className="flex justify-between items-center">
+                <h2 className="text-xl font-bold">Trip Details</h2>
+                <button
+                  onClick={() => setShowUploadForm(!showUploadForm)}
+                  className="flex items-center bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+                >
+                  {showUploadForm ? "Cancel Upload" : "Add Photos"}
+                </button>
+              </div>
+
               {trip.description ? (
                 <p className="text-gray-700">{trip.description}</p>
               ) : (
                 <p className="text-gray-500 italic">No description provided</p>
               )}
 
-              <div className="flex justify-between items-center mt-6">
-                <span className="text-sm text-gray-500">
-                  {photos.length} photos
-                </span>
-                <button
-                  onClick={() => setShowUploadForm(!showUploadForm)}
-                  className="flex items-center bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium"
-                >
-                  <svg
-                    className="h-5 w-5 mr-2"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 4v16m8-8H4"
-                    />
-                  </svg>
-                  {showUploadForm ? "Cancel Upload" : "Add Photos"}
-                </button>
+              <div className="text-sm text-gray-500 mt-2">
+                {photos.length} photos
               </div>
             </div>
 
@@ -253,15 +226,67 @@ const TripDetail = () => {
               </div>
             )}
 
+            <div className="bg-white rounded-lg shadow p-6 mb-8">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold">All Trip Photos</h2>
+                <button
+                  onClick={() => setShowAllPhotosModal(true)}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+                >
+                  All Photos
+                </button>
+              </div>
+              <div className="flex overflow-x-auto space-x-4 pb-2">
+                {photos.map((photo) => (
+                  <div
+                    key={`all-${photo.id}`}
+                    className="flex-shrink-0 w-64 cursor-pointer"
+                    onClick={() => setSelectedPhoto(photo)}
+                  >
+                    <img
+                      src={photo.downloadURL.replace(
+                        "groupify-77202.appspot.com",
+                        "groupify-77202.firebasestorage.app"
+                      )}
+                      alt={photo.fileName}
+                      className="w-full h-40 object-cover rounded-lg shadow"
+                    />
+                    <div className="text-xs text-gray-500 mt-1">
+                      Uploaded {new Date(photo.uploadedAt).toLocaleDateString()}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
             <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-bold mb-4">Photos</h2>
-              {photos.length === 0 ? (
-                <div className="text-center text-gray-500">No photos yet.</div>
-              ) : (
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold">Photos With Me</h2>
+                <button
+                  onClick={handleToggleFaceFilter}
+                  className={`px-4 py-2 text-sm rounded-md ${
+                    canFilterByFace
+                      ? "bg-indigo-600 text-white hover:bg-indigo-700"
+                      : "bg-gray-300 text-gray-600 cursor-not-allowed"
+                  }`}
+                >
+                  {filterActive ? "Hide Filter" : "Show Only My Face"}
+                </button>
+              </div>
+
+              {loadingFaces ? (
+                <p className="text-sm text-gray-500 mb-4">
+                  Scanning photos for your face...
+                </p>
+              ) : filterActive && filteredPhotos.length === 0 ? (
+                <p className="text-sm text-gray-500 italic">
+                  No matching photos found.
+                </p>
+              ) : filterActive ? (
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {photos.map((photo) => (
+                  {filteredPhotos.map((photo) => (
                     <div
-                      key={photo.id}
+                      key={`filtered-${photo.id}`}
                       className="cursor-pointer"
                       onClick={() => setSelectedPhoto(photo)}
                     >
@@ -280,11 +305,14 @@ const TripDetail = () => {
                     </div>
                   ))}
                 </div>
+              ) : (
+                <p className="text-sm text-gray-400 italic">
+                  Click the button to filter photos that include your face.
+                </p>
               )}
             </div>
           </div>
 
-          {/* 🙋‍♂️ Right: Invite & Members */}
           <div className="space-y-6">
             <div className="bg-white rounded-lg shadow p-6">
               <h2 className="text-xl font-bold mb-4">Invite People</h2>
@@ -332,7 +360,6 @@ const TripDetail = () => {
           </div>
         </div>
 
-        {/* 🖼️ Modal: Full-Screen Photo */}
         {selectedPhoto && (
           <div
             className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50"
@@ -346,6 +373,53 @@ const TripDetail = () => {
               alt="Full view"
               className="max-w-4xl max-h-[90vh] object-contain rounded-lg"
             />
+          </div>
+        )}
+
+        {showAllPhotosModal && (
+          <div
+            className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50"
+            onClick={() => setShowAllPhotosModal(false)}
+          >
+            <div
+              className="bg-white rounded-lg shadow-lg max-w-6xl max-h-[90vh] overflow-y-auto p-6"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-bold">All Trip Photos</h3>
+                <button
+                  onClick={() => setShowAllPhotosModal(false)}
+                  className="text-sm text-gray-600 hover:text-black"
+                >
+                  Close
+                </button>
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {photos.map((photo) => (
+                  <div
+                    key={`modal-${photo.id}`}
+                    className="cursor-pointer"
+                    onClick={() => {
+                      setSelectedPhoto(photo);
+                      setShowAllPhotosModal(false);
+                    }}
+                  >
+                    <img
+                      src={photo.downloadURL.replace(
+                        "groupify-77202.appspot.com",
+                        "groupify-77202.firebasestorage.app"
+                      )}
+                      alt={photo.fileName}
+                      className="w-full h-40 object-cover rounded-lg shadow"
+                    />
+                    <div className="text-xs text-gray-500 mt-1">
+                      Uploaded {new Date(photo.uploadedAt).toLocaleDateString()}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         )}
       </div>
