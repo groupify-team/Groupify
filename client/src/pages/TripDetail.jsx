@@ -12,6 +12,7 @@ import {
   getFriends,
   getUserProfile,
   sendFriendRequest,
+  removeFriend,
 } from "../services/firebase/users";
 import InviteFriendDropdown from "../components/trips/InviteFriendDropdown";
 import {
@@ -45,7 +46,10 @@ const TripDetail = () => {
   const [filteredPhotos, setFilteredPhotos] = useState([]);
   const [loadingFaces, setLoadingFaces] = useState(false);
   const [filterActive, setFilterActive] = useState(false);
-  const [faceRecognitionProgress, setFaceRecognitionProgress] = useState({ current: 0, total: 0 });
+  const [faceRecognitionProgress, setFaceRecognitionProgress] = useState({
+    current: 0,
+    total: 0,
+  });
 
   const isMember = trip?.members?.includes(currentUser?.uid);
   const canFilterByFace = isMember && !!currentUser?.photoURL;
@@ -107,32 +111,32 @@ const TripDetail = () => {
         return;
       }
 
-      console.log('🔄 Starting face recognition process...');
-      console.log('👤 Current user:', currentUser);
-      console.log('📷 User photo URL:', currentUser.photoURL);
-      console.log('📸 Number of photos to process:', photos.length);
-      console.log('📸 First photo sample:', photos[0]);
+      console.log("🔄 Starting face recognition process...");
+      console.log("👤 Current user:", currentUser);
+      console.log("📷 User photo URL:", currentUser.photoURL);
+      console.log("📸 Number of photos to process:", photos.length);
+      console.log("📸 First photo sample:", photos[0]);
 
       setLoadingFaces(true);
-      
+
       try {
         const matchingPhotos = await filterPhotosByFace(
-          photos, 
+          photos,
           currentUser.photoURL,
           (current, total) => {
             console.log(`📊 Progress: ${current}/${total}`);
             setFaceRecognitionProgress({ current, total });
           }
         );
-        
+
         console.log(`🎯 Found ${matchingPhotos.length} matching photos`);
         setFilteredPhotos(matchingPhotos);
-        
+
         if (matchingPhotos.length === 0) {
-          console.log('🔍 No photos found containing your face');
+          console.log("🔍 No photos found containing your face");
         }
       } catch (error) {
-        console.error('❌ Face recognition failed:', error);
+        console.error("❌ Face recognition failed:", error);
         setFilteredPhotos([]);
       } finally {
         setLoadingFaces(false);
@@ -152,7 +156,10 @@ const TripDetail = () => {
         where("status", "==", "pending")
       );
       const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map(doc => ({ uid: doc.data().toUid, ...doc.data() }));
+      return querySnapshot.docs.map((doc) => ({
+        uid: doc.data().toUid,
+        ...doc.data(),
+      }));
     } catch (error) {
       console.error("Error fetching pending requests:", error);
       return [];
@@ -207,6 +214,20 @@ const TripDetail = () => {
       }));
     } catch (error) {
       console.error("❌ Failed to send friend request:", error);
+    }
+  };
+
+  const handleRemoveFriend = async (targetUid) => {
+    try {
+      await removeFriend(currentUser.uid, targetUid);
+      setFriends((prev) => prev.filter((uid) => uid !== targetUid));
+      setSelectedUser((prevUser) => ({
+        ...prevUser,
+        __isFriend: false,
+      }));
+      console.log("🗑️ Removed friend:", targetUid);
+    } catch (error) {
+      console.error("❌ Failed to remove friend:", error);
     }
   };
 
@@ -429,15 +450,22 @@ const TripDetail = () => {
               {loadingFaces ? (
                 <div className="mb-4">
                   <p className="text-sm text-gray-500 mb-2">
-                    Scanning photos for your face... ({faceRecognitionProgress.current}/{faceRecognitionProgress.total})
+                    Scanning photos for your face... (
+                    {faceRecognitionProgress.current}/
+                    {faceRecognitionProgress.total})
                   </p>
                   <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div 
+                    <div
                       className="bg-indigo-600 h-2 rounded-full transition-all duration-300"
-                      style={{ 
-                        width: faceRecognitionProgress.total > 0 
-                          ? `${(faceRecognitionProgress.current / faceRecognitionProgress.total) * 100}%` 
-                          : '0%' 
+                      style={{
+                        width:
+                          faceRecognitionProgress.total > 0
+                            ? `${
+                                (faceRecognitionProgress.current /
+                                  faceRecognitionProgress.total) *
+                                100
+                              }%`
+                            : "0%",
                       }}
                     ></div>
                   </div>
@@ -569,6 +597,7 @@ const TripDetail = () => {
             currentUserId={currentUser.uid}
             onAddFriend={handleAddFriend}
             onCancelRequest={handleCancelFriendRequest}
+            onRemoveFriend={handleRemoveFriend}
           />
         )}
 
