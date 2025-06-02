@@ -8,6 +8,8 @@ import EditProfileModal from "../components/profile/EditProfileModal";
 import SettingsModal from "../components/settings/SettingsModal";
 import ModernNavbar from "../components/layout/Navbar";
 import UserProfileModal from "../components/profile/UserProfileModal";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 import {
   collection,
@@ -356,6 +358,12 @@ const Dashboard = () => {
         setShowSettingsModal={setShowSettingsModal}
       />
 
+      <ToastContainer
+        position="bottom-center"
+        autoClose={2000}
+        hideProgressBar
+      />
+
       {/* *************** Main - Trips & Invites trips ****************** */}
 
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
@@ -618,11 +626,12 @@ const Dashboard = () => {
           currentUserId={currentUser.uid}
           onAddFriend={async (uid) => {
             await sendFriendRequest(currentUser.uid, uid);
-            setPendingRequests((prev) => [...prev, { from: uid }]);
+            toast.success("Friend request sent");
           }}
           onCancelRequest={async (uid) => {
             await cancelFriendRequest(currentUser.uid, uid);
             setPendingRequests((prev) => prev.filter((r) => r.from !== uid));
+            toast.info("Friend request cancelled");
           }}
           onRemoveFriend={async (uid) => {
             await removeFriend(currentUser.uid, uid);
