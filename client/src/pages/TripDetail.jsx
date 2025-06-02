@@ -8,11 +8,25 @@ import {
 } from "../services/firebase/trips";
 import { getTripPhotos } from "../services/firebase/storage";
 import PhotoUpload from "../components/photos/PhotoUpload";
-import { getUserProfile } from "../services/firebase/users";
+import {
+  getFriends,
+  getUserProfile,
+  sendFriendRequest,
+} from "../services/firebase/users";
 import InviteFriendDropdown from "../components/trips/InviteFriendDropdown";
-import { collection, getDocs, query, where, doc } from "firebase/firestore";
+import {
+  collection,
+  getDoc,
+  getDocs,
+  query,
+  where,
+  doc,
+  deleteDoc,
+} from "firebase/firestore";
 import { db } from "../services/firebase/config";
 import { compareFaces } from "../services/rekognitionService";
+import logo from "../assets/logo/3.png";
+import UserProfileModal from "../components/profile/UserProfileModal";
 
 const TripDetail = () => {
   const { tripId } = useParams();
@@ -34,6 +48,11 @@ const TripDetail = () => {
   const isMember = trip?.members?.includes(currentUser?.uid);
   const canFilterByFace = isMember && !!currentUser?.photoURL;
   const [showAllPhotosModal, setShowAllPhotosModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [friends, setFriends] = useState([]);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [pendingFriendRequests, setPendingFriendRequests] = useState([]);
+  const [cancelSuccess, setCancelSuccess] = useState(null);
 
   const handleToggleFaceFilter = () => {
     if (!canFilterByFace) {
@@ -100,6 +119,27 @@ const TripDetail = () => {
     filterPhotosByFace();
   }, [currentUser, photos, filterActive]);
 
+  useEffect(() => {
+    const fetchFriendsAndPending = async () => {
+      if (!currentUser?.uid) return;
+      try {
+        const userFriends = await getFriends(currentUser.uid);
+        const friendIds = userFriends.map((f) => f.uid);
+        setFriends(friendIds);
+        console.log("✅ Loaded friends:", friendIds);
+
+        const pending = await getPendingFriendRequests(currentUser.uid);
+        const pendingIds = pending.map((r) => r.uid);
+        setPendingFriendRequests(pendingIds);
+        console.log("🕒 Pending requests:", pendingIds);
+      } catch (error) {
+        console.error("❌ Failed to fetch friends or pending:", error);
+      }
+    };
+
+    fetchFriendsAndPending();
+  }, [currentUser]);
+
   const handlePhotoUploaded = (uploadedPhotos) => {
     setPhotos((prev) => [...uploadedPhotos, ...prev]);
 
@@ -111,6 +151,58 @@ const TripDetail = () => {
     }
 
     setShowUploadForm(false);
+  };
+
+  const handleAddFriend = async (targetUid) => {
+    try {
+      await sendFriendRequest(currentUser.uid, targetUid);
+      setPendingFriendRequests((prev) => [...prev, targetUid]);
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 3000);
+      console.log("✅ Friend request sent to:", targetUid);
+
+      setSelectedUser((prevUser) => ({
+        ...prevUser,
+        __isPending: true,
+      }));
+    } catch (error) {
+      console.error("❌ Failed to send friend request:", error);
+    }
+  };
+
+  const checkFriendStatus = async (myUid, otherUid) => {
+    const ref = doc(db, "friendRequests", `${myUid}_${otherUid}`);
+    const docSnap = await getDoc(ref);
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      return data.status === "pending" ? "pending" : "none";
+    }
+    return "none";
+  };
+
+  const handleCancelFriendRequest = async (targetUid) => {
+    try {
+      const ref = doc(db, "friendRequests", `${currentUser.uid}_${targetUid}`);
+      await deleteDoc(ref);
+      setPendingFriendRequests((prev) =>
+        prev.filter((uid) => uid !== targetUid)
+      );
+      setCancelSuccess(
+        `Friend request to ${
+          selectedUser.displayName || selectedUser.email
+        } was cancelled.`
+      );
+      setTimeout(() => setCancelSuccess(null), 3000);
+
+      setSelectedUser((prevUser) => ({
+        ...prevUser,
+        __isPending: false,
+      }));
+
+      console.log("🗑️ Friend request canceled:", targetUid);
+    } catch (error) {
+      console.error("❌ Failed to cancel friend request:", error);
+    }
   };
 
   const handleInviteFriend = async (friend) => {
@@ -164,28 +256,48 @@ const TripDetail = () => {
 
   return (
     <div className="min-h-screen bg-gray-100">
-      <div className="bg-indigo-700 text-white">
+      <div className="bg-gradient-to-r from-indigo-600 to-purple-700 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-bold">{trip.name}</h1>
-              <p className="text-indigo-200 mt-1">
-                {trip.location || "No location specified"}
-              </p>
-              <div className="flex mt-2 text-sm">
-                <span className="mr-4 font-medium">
-                  {trip.startDate || "No start date"}
-                  {trip.startDate && trip.endDate && " - "}
-                  {trip.endDate}
-                </span>
-                <span>{trip.members?.length || 1} members</span>
+          <div className="flex flex-col sm:flex-row justify-between items-center sm:items-start">
+            {/* Left side: Trip thumbnail + details */}
+            <div className="flex items-center space-x-4 mb-4 sm:mb-0">
+              {photos.length > 0 && (
+                <img
+                  src={photos[0].downloadURL.replace(
+                    "groupify-77202.appspot.com",
+                    "groupify-77202.firebasestorage.app"
+                  )}
+                  alt="Trip Thumbnail"
+                  className="w-20 h-20 rounded-full object-cover border-2 border-white transform hover:scale-105 transition duration-300"
+                />
+              )}
+              <div>
+                <h1 className="text-3xl font-bold tracking-tight">
+                  {trip.name}
+                </h1>
+                <p className="text-indigo-100 mt-1">
+                  {trip.location || "No location specified"}
+                </p>
+                <div className="flex mt-2 text-sm text-indigo-200">
+                  <span className="mr-4 font-medium">
+                    {trip.startDate || "No start date"}
+                    {trip.startDate && trip.endDate && " - "}
+                    {trip.endDate}
+                  </span>
+                  <span>{trip.members?.length || 1} members</span>
+                </div>
               </div>
             </div>
-            <Link
-              to="/dashboard"
-              className="bg-white text-indigo-700 px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-50"
-            >
-              Back to Dashboard
+
+            {/* Right side: Logo with rounded background */}
+            <Link to="/dashboard" title="Go to Dashboard">
+              <div className="bg-white bg-opacity-20 rounded-full p-2 hover:bg-opacity-30 transition">
+                <img
+                  src={logo}
+                  alt="Logo"
+                  className="w-16 h-16 rounded-full object-contain"
+                />
+              </div>
             </Link>
           </div>
         </div>
@@ -325,33 +437,67 @@ const TripDetail = () => {
 
             <div className="bg-white rounded-lg shadow p-6">
               <h2 className="text-xl font-bold mb-4">Trip Members</h2>
+
               {memberProfiles.length === 0 ? (
                 <p className="text-gray-500 text-sm">No members found.</p>
               ) : (
                 <ul className="space-y-3">
-                  {memberProfiles
-                    .slice()
+                  {[...memberProfiles]
                     .sort((a, b) => {
+                      // 1. Current user first
                       if (a.uid === currentUser.uid) return -1;
                       if (b.uid === currentUser.uid) return 1;
+
+                      // 2. Admin second
+                      if (a.uid === trip.createdBy) return -1;
+                      if (b.uid === trip.createdBy) return 1;
+
+                      // 3. Alphabetical for the rest
                       return (a.displayName || a.email || "").localeCompare(
                         b.displayName || b.email || ""
                       );
                     })
                     .map((member) => (
-                      <li key={member.uid} className="flex items-center">
-                        <img
-                          src={
-                            member.photoURL ||
-                            "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg"
-                          }
-                          alt="Avatar"
-                          className="w-8 h-8 rounded-full object-cover border mr-3"
-                        />
-                        <span className="text-sm font-medium text-gray-700">
-                          {member.displayName || member.email || member.uid}
-                          {member.uid === currentUser.uid && " (Me)"}
-                        </span>
+                      <li
+                        key={member.uid}
+                        className="flex items-center justify-between"
+                      >
+                        <div className="flex items-center">
+                          <img
+                            src={
+                              member.photoURL ||
+                              "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg"
+                            }
+                            alt="Avatar"
+                            className="w-8 h-8 rounded-full object-cover border mr-3"
+                          />
+                          <span
+                            className="text-sm font-medium text-gray-700 hover:underline cursor-pointer"
+                            onClick={async () => {
+                              const isFriendNow = friends.includes(member.uid);
+                              const status = await checkFriendStatus(
+                                currentUser.uid,
+                                member.uid
+                              );
+                              const isPendingNow = status === "pending";
+                              setSelectedUser({
+                                ...member,
+                                __isFriend: isFriendNow,
+                                __isPending: isPendingNow,
+                              });
+                            }}
+                          >
+                            {member.displayName || member.email || member.uid}
+                            {member.uid === currentUser.uid && " (Me)"}
+                          </span>
+                        </div>
+
+                        {/* Admin Badge */}
+                        {member.uid === trip.createdBy && (
+                          <span className="bg-gray-200 text-gray-700 text-xs font-semibold px-2 py-0.5 rounded-full">
+                            Group Admin
+                          </span>
+                        )}
                       </li>
                     ))}
                 </ul>
@@ -359,6 +505,20 @@ const TripDetail = () => {
             </div>
           </div>
         </div>
+
+        {console.log("friends", friends)}
+
+        {selectedUser && (
+          <UserProfileModal
+            user={selectedUser}
+            onClose={() => setSelectedUser(null)}
+            isFriend={selectedUser.__isFriend}
+            isPending={selectedUser.__isPending}
+            currentUserId={currentUser.uid}
+            onAddFriend={handleAddFriend}
+            onCancelRequest={handleCancelFriendRequest}
+          />
+        )}
 
         {selectedPhoto && (
           <div
@@ -373,6 +533,17 @@ const TripDetail = () => {
               alt="Full view"
               className="max-w-4xl max-h-[90vh] object-contain rounded-lg"
             />
+          </div>
+        )}
+
+        {showSuccess && (
+          <div className="fixed top-5 right-5 bg-green-600 text-white px-4 py-2 rounded shadow-lg z-50">
+            Friend request sent ✅
+          </div>
+        )}
+        {cancelSuccess && (
+          <div className="fixed top-5 right-5 bg-red-600 text-white px-4 py-2 rounded shadow-lg z-50">
+            {cancelSuccess}
           </div>
         )}
 
