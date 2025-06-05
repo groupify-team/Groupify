@@ -230,6 +230,9 @@ async createFaceProfile(userId, faceImages, onProgress = null) {
   console.log(`🔍 Creating face profile for user ${userId} with ${faceImages.length} images`);
   
   try {
+    // Clear any existing profile first
+    this.deleteFaceProfile(userId);
+    
     await this.loadModels();
     
     const faceDescriptors = [];
@@ -240,23 +243,26 @@ async createFaceProfile(userId, faceImages, onProgress = null) {
       methods: []
     };
 
-    for (let i = 0; i < faceImages.length; i++) {
+    const imageUrls = faceImages.map(img => img.url || img);
+    console.log(`🔄 Processing ${imageUrls.length} images for face profile...`);
+
+    // Process each image for face detection
+    for (let i = 0; i < imageUrls.length; i++) {
       if (this.shouldCancel) throw new Error('CANCELLED');
 
       if (onProgress) {
         onProgress({
           type: 'processing_profile',
           current: i + 1,
-          total: faceImages.length,
-          phase: `Analyzing face image ${i + 1}/${faceImages.length}...`
+          total: imageUrls.length,
+          phase: `Analyzing face image ${i + 1}/${imageUrls.length}...`
         });
       }
 
-      const imageUrl = faceImages[i].url || faceImages[i];
+      const imageUrl = imageUrls[i];
       const descriptor = await this.getFaceDescriptor(imageUrl);
       
       if (descriptor && descriptor.descriptor) {
-        // Store original image URL for management
         const descriptorWithUrl = {
           ...descriptor,
           originalImageUrl: imageUrl,
@@ -271,11 +277,11 @@ async createFaceProfile(userId, faceImages, onProgress = null) {
         console.warn(`⚠️ Could not detect face in image ${i + 1}`);
       }
 
-      await new Promise(resolve => setTimeout(resolve, 50)); // Small delay
+      await new Promise(resolve => setTimeout(resolve, 50));
     }
 
     if (faceDescriptors.length === 0) {
-      throw new Error('No faces detected in any of the provided images');
+      throw new Error('No faces detected in any of the provided images. Please try with clearer photos where your face is clearly visible.');
     }
 
     // Calculate average descriptor for better matching
@@ -287,7 +293,7 @@ async createFaceProfile(userId, faceImages, onProgress = null) {
       metadata: {
         ...metadata,
         avgQuality: metadata.qualityScores.reduce((a, b) => a + b, 0) / metadata.qualityScores.length,
-        successRate: (faceDescriptors.length / faceImages.length * 100).toFixed(1)
+        successRate: (faceDescriptors.length / imageUrls.length * 100).toFixed(1)
       }
     };
 
@@ -304,18 +310,19 @@ async createFaceProfile(userId, faceImages, onProgress = null) {
     }
 
     console.log(`🎯 Face profile created for ${userId}:`);
-    console.log(`   Descriptors: ${faceDescriptors.length}/${faceImages.length}`);
+    console.log(`   Descriptors: ${faceDescriptors.length}/${imageUrls.length}`);
     console.log(`   Avg quality: ${(profile.metadata.avgQuality * 100).toFixed(1)}%`);
     console.log(`   Success rate: ${profile.metadata.successRate}%`);
 
     return profile;
     
   } catch (error) {
+    // Clean up on error
+    this.deleteFaceProfile(userId);
     console.error('❌ Failed to create face profile:', error);
     throw error;
   }
 }
-
 // Replace your existing calculateAverageDescriptor method with this updated version:
 
 calculateAverageDescriptor(descriptors) {
@@ -350,6 +357,28 @@ calculateAverageDescriptor(descriptors) {
     addedAt: Date.now()
   };
 }
+validateProfileIntegrity(userId) {
+  const profile = this.getFaceProfile(userId);
+  if (!profile) return false;
+  
+  // Check if profile has valid descriptors
+  if (!profile.descriptors || profile.descriptors.length === 0) {
+    console.warn(`⚠️ Profile for ${userId} has no descriptors`);
+    return false;
+  }
+  
+  // Check if descriptors have valid data
+  const validDescriptors = profile.descriptors.filter(desc => 
+    desc.descriptor && desc.descriptor.length === 128
+  );
+  
+  if (validDescriptors.length === 0) {
+    console.warn(`⚠️ Profile for ${userId} has no valid descriptors`);
+    return false;
+  }
+  
+  return true;
+}
   getFaceProfile(userId) {
     return this.userFaceProfiles.get(userId);
   }
@@ -359,12 +388,33 @@ calculateAverageDescriptor(descriptors) {
   }
 
   deleteFaceProfile(userId) {
-    const deleted = this.userFaceProfiles.delete(userId);
-    if (deleted) {
-      console.log(`🗑️ Deleted face profile for user ${userId}`);
+  const deleted = this.userFaceProfiles.delete(userId);
+  
+  // Also clear any cached data related to this user
+  const keysToDelete = [];
+  for (const [key, value] of this.faceDescriptorCache.entries()) {
+    if (key.includes(userId) || (value && value.userId === userId)) {
+      keysToDelete.push(key);
     }
-    return deleted;
   }
+  
+  keysToDelete.forEach(key => this.faceDescriptorCache.delete(key));
+  
+  // Clear comparison cache entries
+  const comparisonKeysToDelete = [];
+  for (const [key, value] of this.comparisonCache.entries()) {
+    if (key.includes(userId)) {
+      comparisonKeysToDelete.push(key);
+    }
+  }
+  
+  comparisonKeysToDelete.forEach(key => this.comparisonCache.delete(key));
+  
+  if (deleted) {
+    console.log(`🗑️ Deleted face profile and cleared cache for user ${userId}`);
+  }
+  return deleted;
+}
 
   // Enhanced multi-reference face comparison
   compareWithFaceProfile(userProfile, photoFace, userPhotoURL = '', tripPhotoURL = '') {

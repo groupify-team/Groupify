@@ -39,7 +39,7 @@ import {
   optimizeProfile,
   deleteFaceProfile
 } from "../services/faceRecognition";
-import { getFaceProfileFromStorage } from "../services/firebase/faceProfiles";
+import { deleteFaceProfileFromStorage, getFaceProfileFromStorage } from "../services/firebase/faceProfiles";
 import FaceProfileManager from "../components/faceProfile/FaceProfileManager";
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from "../services/firebase/config";
@@ -221,28 +221,43 @@ const TripDetail = () => {
 
   // Delete entire profile
   const deleteCurrentProfile = async () => {
-    if (!window.confirm('Are you sure you want to delete your face profile? This cannot be undone.')) {
-      return;
-    }
+  if (!window.confirm('Are you sure you want to delete your face profile? This cannot be undone.')) {
+    return;
+  }
 
-    setIsManagingProfile(true);
+  setIsManagingProfile(true);
+  
+  try {
+    // Delete from memory
+    deleteFaceProfile(currentUser.uid);
     
+    // Delete from Firebase Storage
     try {
-      deleteFaceProfile(currentUser.uid);
-      setHasProfile(false);
-      setProfile(null);
-      setProfilePhotos([]);
-      setShowProfileManagement(false);
-      
-      alert('Face profile deleted');
-    } catch (error) {
-      console.error('Failed to delete profile:', error);
-      alert('Failed to delete profile');
-    } finally {
-      setIsManagingProfile(false);
+      await deleteFaceProfileFromStorage(currentUser.uid);
+      console.log('✅ Face profile deleted from Firebase Storage');
+    } catch (storageError) {
+      console.warn('⚠️ Could not delete from Firebase Storage:', storageError);
+      // Continue anyway since memory is cleared
     }
-  };
-
+    
+    // Update local state
+    setHasProfile(false);
+    setProfile(null);
+    setProfilePhotos([]);
+    setShowProfileManagement(false);
+    
+    // Clear any filtered photos
+    setFilterActive(false);
+    setFilteredPhotos([]);
+    
+    alert('Face profile deleted successfully');
+  } catch (error) {
+    console.error('Failed to delete profile:', error);
+    alert('Failed to delete profile: ' + error.message);
+  } finally {
+    setIsManagingProfile(false);
+  }
+};
   // Toggle photo selection for removal
   const togglePhotoSelection = (photoUrl) => {
     setSelectedPhotosToRemove(prev => 
@@ -266,48 +281,64 @@ const TripDetail = () => {
     }
   }, [hasProfile, currentUser]);
 
-  const loadUserFaceProfile = async () => {
-    if (!currentUser?.uid) return;
+  // Updated loadUserFaceProfile function with CORS workaround
+const loadUserFaceProfile = async () => {
+  if (!currentUser?.uid) return;
+  
+  setIsLoadingProfile(true);
+  try {
+    // First, clear any existing profile to start fresh
+    deleteFaceProfile(currentUser.uid);
     
-    setIsLoadingProfile(true);
-    try {
-      // Check if profile exists in memory first
-      if (hasFaceProfile(currentUser.uid)) {
-        setHasProfile(true);
-        console.log('✅ Face profile already loaded in memory');
-        return;
-      }
+    // Check if profile exists in memory first
+    if (hasFaceProfile(currentUser.uid)) {
+      setHasProfile(true);
+      console.log('✅ Face profile already loaded in memory');
+      return;
+    }
 
-      // Try to load from Firebase Storage automatically
-      console.log('🔍 Checking for stored face profile...');
-      const storedProfile = await getFaceProfileFromStorage(currentUser.uid);
+    // Try to load from Firebase Storage automatically
+    console.log('🔍 Checking for stored face profile...');
+    const storedProfile = await getFaceProfileFromStorage(currentUser.uid);
+    
+    if (storedProfile && storedProfile.images && storedProfile.images.length > 0) {
+      console.log('📥 Found stored face profile, loading automatically...');
       
-      if (storedProfile) {
-        console.log('📥 Found stored face profile, loading automatically...');
+      try {
+        const imageUrls = storedProfile.images.map(img => img.url);
         
+        // Skip CORS accessibility test in development - just try to create the profile
+        // The createFaceProfile function will handle CORS errors gracefully
+        await createFaceProfile(currentUser.uid, imageUrls);
+        
+        setHasProfile(true);
+        console.log('✅ Face profile loaded automatically from storage');
+        
+      } catch (error) {
+        console.error('❌ Failed to auto-load face profile:', error);
+        console.log('🗑️ Cleaning up corrupted profile data...');
+        
+        // Clean up corrupted profile
         try {
-          const imageUrls = storedProfile.images.map(img => img.url);
-          await createFaceProfile(currentUser.uid, imageUrls);
-          
-          setHasProfile(true);
-          console.log('✅ Face profile loaded automatically from storage');
-          
-        } catch (error) {
-          console.error('❌ Failed to auto-load face profile:', error);
-          setHasProfile(false);
+          await deleteFaceProfileFromStorage(currentUser.uid);
+        } catch (cleanupError) {
+          console.warn('⚠️ Could not clean up stored profile:', cleanupError);
         }
-      } else {
-        console.log('ℹ️ No face profile found');
+        
         setHasProfile(false);
       }
-      
-    } catch (error) {
-      console.error('❌ Error checking for face profile:', error);
+    } else {
+      console.log('ℹ️ No face profile found');
       setHasProfile(false);
-    } finally {
-      setIsLoadingProfile(false);
     }
-  };
+    
+  } catch (error) {
+    console.error('❌ Error checking for face profile:', error);
+    setHasProfile(false);
+  } finally {
+    setIsLoadingProfile(false);
+  }
+};
 
   // Enhanced progress handler with real-time updates
   const handleFaceRecognitionProgress = (progressData) => {
@@ -492,8 +523,7 @@ const TripDetail = () => {
     setHasProfile(loaded);
     if (loaded) {
       setShowProfileManager(false);
-      // Auto-start face recognition after profile is created
-      setTimeout(handleFindMyPhotos, 1000);
+      console.log('✅ Face profile created successfully');
     }
   };
 
