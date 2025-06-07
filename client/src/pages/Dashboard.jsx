@@ -284,6 +284,7 @@ const Dashboard = () => {
         const userData = userDoc.data();
         setSelectedUserProfile({ uid, ...userData });
         setIsUserProfileOpen(true);
+        setShowAddFriendModal(false); // ← הוסף את זה פה
       }
     } catch (err) {
       console.error("Error fetching user profile:", err);
@@ -616,28 +617,41 @@ const Dashboard = () => {
       />
 
       {/* User Profile Modal */}
-      {isUserProfileOpen && selectedUserProfile && (
+      {selectedUserProfile && (
         <UserProfileModal
           user={selectedUserProfile}
-          isFriend={friends.some((f) => f.uid === selectedUserProfile.uid)}
-          isPending={pendingRequests.some(
-            (r) => r.from === selectedUserProfile.uid
-          )}
           currentUserId={currentUser.uid}
+          isFriend={friends.some((f) => f.uid === selectedUserProfile.uid)}
+          isPending={
+            pendingRequests.some((r) => r.from === selectedUserProfile.uid) ||
+            pendingFriendRequests.some((r) => r.to === selectedUserProfile.uid)
+          }
+          onlyTripMembers={false}
           onAddFriend={async (uid) => {
             await sendFriendRequest(currentUser.uid, uid);
             toast.success("Friend request sent");
+
+            setPendingFriendRequests((prev) => [
+              ...prev,
+              { from: currentUser.uid, to: uid },
+            ]);
           }}
           onCancelRequest={async (uid) => {
             await cancelFriendRequest(currentUser.uid, uid);
-            setPendingRequests((prev) => prev.filter((r) => r.from !== uid));
+            setPendingFriendRequests((prev) =>
+              prev.filter((r) => r.to !== uid && r.from !== uid)
+            );
             toast.info("Friend request cancelled");
           }}
           onRemoveFriend={async (uid) => {
             await removeFriend(currentUser.uid, uid);
             setFriends((prev) => prev.filter((f) => f.uid !== uid));
+            toast.success("Friend removed");
           }}
-          onClose={() => setIsUserProfileOpen(false)}
+          onClose={() => {
+            setIsUserProfileOpen(false);
+            setSelectedUserProfile(null);
+          }}
         />
       )}
     </div>

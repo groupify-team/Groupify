@@ -771,7 +771,7 @@ const TripDetail = () => {
         );
         setTripMembers(memberProfiles);
       } else {
-        setTripMembers([]); // מנקה אם אין חברים
+        setTripMembers([]);
       }
     };
 
@@ -793,13 +793,11 @@ const TripDetail = () => {
 
       await updateTrip(trip.id, updatedTrip);
 
-      // שלב קריטי: לעדכן קודם את המשתמשים המוצגים
       const memberProfiles = await Promise.all(
         updatedMembers.map((id) => getUserProfile(id))
       );
       setTripMembers(memberProfiles);
 
-      // רק אחר כך לעדכן את trip עצמו
       setTrip(updatedTrip);
 
       toast.success(
@@ -1679,6 +1677,7 @@ const TripDetail = () => {
             onPromoteToAdmin={handlePromoteToAdmin}
             onDemoteFromAdmin={handleDemoteFromAdmin}
             onRemoveFromTrip={handleRemoveFromTrip}
+            onlyTripMembers={true}
           />
         )}
 

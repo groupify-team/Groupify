@@ -14,6 +14,8 @@ const UserProfileModal = ({
   user,
   currentUserId,
   isAdmin,
+  isFriend,
+  isPending,
   onAddFriend,
   onRemoveFriend,
   onCancelRequest,
@@ -25,14 +27,15 @@ const UserProfileModal = ({
   onDemoteFromAdmin,
   tripMembers,
   setTripMembers,
+  onlyTripMembers = true,
 }) => {
   if (!user) return null;
-
-  if (!tripMembers?.some((m) => m.uid === user.uid)) return null;
+  if (onlyTripMembers && !tripMembers?.some((m) => m.uid === user.uid))
+    return null;
 
   const [friendStatus, setFriendStatus] = useState(() => {
-    if (user.__isFriend) return "friend";
-    if (user.__isPending) return "pending";
+    if (typeof isFriend !== "undefined") return isFriend ? "friend" : "none";
+    if (typeof isPending !== "undefined" && isPending) return "pending";
     return "none";
   });
 
