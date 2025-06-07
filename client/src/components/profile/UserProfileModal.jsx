@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { updateTrip } from "../../services/firebase/trips";
+import { toast } from "react-hot-toast";
 
 import {
   UserCircleIcon,
@@ -16,13 +17,18 @@ const UserProfileModal = ({
   onAddFriend,
   onRemoveFriend,
   onCancelRequest,
+  onRemoveFromTrip,
   onClose,
   trip,
   setTrip,
   onPromoteToAdmin,
   onDemoteFromAdmin,
+  tripMembers,
+  setTripMembers,
 }) => {
   if (!user) return null;
+
+  if (!tripMembers?.some((m) => m.uid === user.uid)) return null;
 
   const [friendStatus, setFriendStatus] = useState(() => {
     if (user.__isFriend) return "friend";
@@ -91,13 +97,10 @@ const UserProfileModal = ({
   const handleRemoveFromTrip = async (uid) => {
     try {
       await onRemoveFromTrip(uid);
-      setShowSuccess("User removed from the trip ✅");
-      setTimeout(() => setShowSuccess(null), 3000);
       onClose();
     } catch (error) {
       console.error("Error removing user:", error);
-      setShowError("❌ Failed to remove user from trip");
-      setTimeout(() => setShowError(null), 3000);
+      toast.error("❌ Failed to remove user from trip", { duration: 4000 });
     }
   };
 
