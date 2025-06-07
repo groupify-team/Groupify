@@ -41,6 +41,7 @@ import {
   getUserProfile,
   sendFriendRequest,
   removeFriend,
+  getPendingFriendRequests,
 } from "../services/firebase/users";
 import {
   deleteFaceProfileFromStorage,
@@ -126,6 +127,7 @@ const TripDetail = () => {
   const [selectedPhotos, setSelectedPhotos] = useState([]);
   const [tripMembers, setTripMembers] = useState([]);
   const [showUserModal, setShowUserModal] = useState(false);
+  const [pendingRequests, setPendingRequests] = useState([]);
 
   // Helper function for uploading files to Firebase Storage
   const uploadProfilePhotos = async (files, userId) => {
@@ -325,6 +327,24 @@ const TripDetail = () => {
       loadProfileData();
     }
   }, [hasProfile, currentUser]);
+
+  // Fetch friends and pending requests when currentUser changes
+  useEffect(() => {
+    const fetchFriendData = async () => {
+      try {
+        const friendList = await getFriends(currentUser.uid);
+        const pendingList = await getPendingFriendRequests(currentUser.uid);
+        setFriends(friendList || []);
+        setPendingRequests(pendingList || []);
+      } catch (err) {
+        console.error("❌ Failed to fetch friend data:", err);
+      }
+    };
+
+    if (currentUser?.uid) {
+      fetchFriendData();
+    }
+  }, [currentUser]);
 
   // Updated loadUserFaceProfile function with CORS workaround
   const loadUserFaceProfile = async () => {
@@ -801,7 +821,7 @@ const TripDetail = () => {
       setTrip(updatedTrip);
 
       toast.success(
-        `User ${userToRemove?.displayName || uid} was removed from the trip ✅`,
+        `User ${userToRemove?.displayName || uid} was removed from the trip`,
         { duration: 4000 }
       );
 
@@ -1665,6 +1685,8 @@ const TripDetail = () => {
             user={selectedUser}
             currentUserId={currentUser?.uid}
             isAdmin={isAdmin}
+            isFriend={friends.some((f) => f.uid === selectedUser.uid)} // ✅ נוסף
+            isPending={pendingRequests.some((r) => r.from === selectedUser.uid)} // ✅ נוסף
             onAddFriend={handleAddFriend}
             onRemoveFriend={handleRemoveFriend}
             onCancelRequest={handleCancelFriendRequest}

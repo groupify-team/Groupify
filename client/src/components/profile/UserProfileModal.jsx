@@ -8,6 +8,7 @@ import {
   GiftIcon,
   UsersIcon,
   MapPinIcon,
+  MoreVertical,
 } from "lucide-react";
 
 const UserProfileModal = ({
@@ -42,6 +43,7 @@ const UserProfileModal = ({
   const isTripAdmin = trip?.admins?.includes(currentUserId);
   const [showSuccess, setShowSuccess] = useState(null);
   const [showError, setShowError] = useState(null);
+  const [showMenu, setShowMenu] = useState(false);
 
   const handleSetAsAdmin = async (uid) => {
     try {
@@ -116,7 +118,7 @@ const UserProfileModal = ({
         className="bg-gradient-to-br from-white via-indigo-100 to-indigo-200 rounded-2xl shadow-xl w-full max-w-md p-8 relative animate-fade-in border border-gray-200"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Close button */}
+        {/* Close button (Right side) */}
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-gray-400 hover:text-black text-xl"
@@ -124,37 +126,44 @@ const UserProfileModal = ({
           ✕
         </button>
 
-        <div className="relative rounded-lg p-6 w-full max-w-md">
-          {isAdmin && user.uid !== currentUserId && (
-            <div className="mt-4 flex justify-center gap-4">
-              {/* Toggle Admin Button */}
-              <button
-                onClick={() =>
-                  trip.admins?.includes(user.uid)
-                    ? handleDemoteFromAdmin(user.uid)
-                    : handleSetAsAdmin(user.uid)
-                }
-                className={`${
-                  trip.admins?.includes(user.uid)
-                    ? "bg-yellow-500 hover:bg-yellow-600"
-                    : "bg-blue-600 hover:bg-blue-700"
-                } text-white px-4 py-2 rounded-lg text-sm shadow transition`}
-              >
-                {trip.admins?.includes(user.uid)
-                  ? "⬇️ Revoke Admin"
-                  : "👑 Make Admin"}
-              </button>
+        {/* Admin menu (Left side) */}
+        {isAdmin && user.uid !== currentUserId && (
+          <div className="absolute top-4 left-4 z-10">
+            <button
+              onClick={() => setShowMenu((prev) => !prev)}
+              className="text-gray-500 hover:text-black p-1"
+            >
+              <MoreVertical className="w-5 h-5" />
+            </button>
 
-              {/* Remove From Trip Button */}
-              <button
-                onClick={() => handleRemoveFromTrip(user.uid)}
-                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm shadow transition"
-              >
-                ❌ Remove from Trip
-              </button>
-            </div>
-          )}
-        </div>
+            {showMenu && (
+              <div className="mt-2 bg-white shadow-lg rounded-lg border w-44 absolute left-0 top-8 z-50">
+                <button
+                  onClick={() => {
+                    trip.admins?.includes(user.uid)
+                      ? handleDemoteFromAdmin(user.uid)
+                      : handleSetAsAdmin(user.uid);
+                    setShowMenu(false);
+                  }}
+                  className="w-full px-4 py-2 text-left hover:bg-gray-100 text-sm"
+                >
+                  {trip.admins?.includes(user.uid)
+                    ? "⬇️ Revoke Admin"
+                    : "👑 Make Admin"}
+                </button>
+                <button
+                  onClick={() => {
+                    handleRemoveFromTrip(user.uid);
+                    setShowMenu(false);
+                  }}
+                  className="w-full px-4 py-2 text-left text-red-600 hover:bg-gray-100 text-sm"
+                >
+                  ❌ Remove from Trip
+                </button>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Profile Header */}
         <div className="flex flex-col items-center text-center">
