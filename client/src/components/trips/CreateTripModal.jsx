@@ -1,30 +1,30 @@
-import React, { useState } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
-import { createTrip } from '../../services/firebase/trips';
+import React, { useState } from "react";
+import { useAuth } from "../../contexts/AuthContext";
+import { createTrip } from "../../services/firebase/trips";
 
 const CreateTripModal = ({ isOpen, onClose, onTripCreated }) => {
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [location, setLocation] = useState('');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [location, setLocation] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-  
+
   const { currentUser } = useAuth();
-  
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!name.trim()) {
-      setError('Trip name is required');
+      setError("Trip name is required");
       return;
     }
-    
+
     try {
       setLoading(true);
       setError(null);
-      
+
       const newTrip = await createTrip({
         name,
         description,
@@ -33,50 +33,53 @@ const CreateTripModal = ({ isOpen, onClose, onTripCreated }) => {
         endDate: endDate || null,
         createdBy: currentUser.uid,
         members: [currentUser.uid],
-        photoCount: 0
+        admins: [currentUser.uid], 
+        photoCount: 0,
       });
-      
+
       // Reset form
-      setName('');
-      setDescription('');
-      setLocation('');
-      setStartDate('');
-      setEndDate('');
-      
+      setName("");
+      setDescription("");
+      setLocation("");
+      setStartDate("");
+      setEndDate("");
+
       // Notify parent component
       if (onTripCreated) {
         onTripCreated(newTrip);
       }
-      
+
       // Close modal
       onClose();
-      
     } catch (error) {
-      console.error('Error creating trip:', error);
-      setError('Failed to create trip. Please try again.');
+      console.error("Error creating trip:", error);
+      setError("Failed to create trip. Please try again.");
     } finally {
       setLoading(false);
     }
   };
-  
+
   if (!isOpen) return null;
-  
+
   return (
     <div className="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-lg overflow-hidden shadow-xl max-w-md w-full">
         <div className="px-6 py-4 bg-indigo-600">
           <h3 className="text-lg font-medium text-white">Create New Trip</h3>
         </div>
-        
+
         <form onSubmit={handleSubmit} className="p-6">
           {error && (
             <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
               {error}
             </div>
           )}
-          
+
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="name">
+            <label
+              className="block text-sm font-medium text-gray-700 mb-2"
+              htmlFor="name"
+            >
               Trip Name*
             </label>
             <input
@@ -89,9 +92,12 @@ const CreateTripModal = ({ isOpen, onClose, onTripCreated }) => {
               required
             />
           </div>
-          
+
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="description">
+            <label
+              className="block text-sm font-medium text-gray-700 mb-2"
+              htmlFor="description"
+            >
               Description
             </label>
             <textarea
@@ -103,9 +109,12 @@ const CreateTripModal = ({ isOpen, onClose, onTripCreated }) => {
               placeholder="A brief description of your trip"
             ></textarea>
           </div>
-          
+
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="location">
+            <label
+              className="block text-sm font-medium text-gray-700 mb-2"
+              htmlFor="location"
+            >
               Location
             </label>
             <input
@@ -117,10 +126,13 @@ const CreateTripModal = ({ isOpen, onClose, onTripCreated }) => {
               placeholder="Paris, France"
             />
           </div>
-          
+
           <div className="grid grid-cols-2 gap-4 mb-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="startDate">
+              <label
+                className="block text-sm font-medium text-gray-700 mb-2"
+                htmlFor="startDate"
+              >
                 Start Date
               </label>
               <input
@@ -131,9 +143,12 @@ const CreateTripModal = ({ isOpen, onClose, onTripCreated }) => {
                 className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
               />
             </div>
-            
+
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="endDate">
+              <label
+                className="block text-sm font-medium text-gray-700 mb-2"
+                htmlFor="endDate"
+              >
                 End Date
               </label>
               <input
@@ -146,7 +161,7 @@ const CreateTripModal = ({ isOpen, onClose, onTripCreated }) => {
               />
             </div>
           </div>
-          
+
           <div className="flex justify-end mt-6 space-x-3">
             <button
               type="button"
@@ -160,7 +175,7 @@ const CreateTripModal = ({ isOpen, onClose, onTripCreated }) => {
               disabled={loading}
               className="bg-indigo-600 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
             >
-              {loading ? 'Creating...' : 'Create Trip'}
+              {loading ? "Creating..." : "Create Trip"}
             </button>
           </div>
         </form>

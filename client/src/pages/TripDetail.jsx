@@ -1,18 +1,23 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { db, storage } from "../services/firebase/config";
+import { filterPhotosByFace } from "../services/faceRecognition";
+import logo from "../assets/logo/3.png";
+import UserProfileModal from "../components/profile/UserProfileModal";
 import {
   getTrip,
   addTripMember,
   sendTripInvite,
 } from "../services/firebase/trips";
 import { getTripPhotos } from "../services/firebase/storage";
+import { ref, deleteObject } from "firebase/storage";
 import PhotoUpload from "../components/photos/PhotoUpload";
 import {
   getFriends,
   getUserProfile,
   sendFriendRequest,
-  removeFriend
+  removeFriend,
 } from "../services/firebase/users";
 import InviteFriendDropdown from "../components/trips/InviteFriendDropdown";
 import {
@@ -24,11 +29,6 @@ import {
   doc,
   deleteDoc,
 } from "firebase/firestore";
-import { db } from "../services/firebase/config";
-// FIXED: Import from faceRecognition instead of rekognitionService
-import { filterPhotosByFace } from "../services/faceRecognition";
-import logo from "../assets/logo/3.png";
-import UserProfileModal from "../components/profile/UserProfileModal";
 
 const TripDetail = () => {
   const { tripId } = useParams();
@@ -36,6 +36,7 @@ const TripDetail = () => {
   const { currentUser } = useAuth();
 
   const [trip, setTrip] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [photos, setPhotos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -59,6 +60,8 @@ const TripDetail = () => {
   const [showSuccess, setShowSuccess] = useState(false);
   const [pendingFriendRequests, setPendingFriendRequests] = useState([]);
   const [cancelSuccess, setCancelSuccess] = useState(null);
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedPhotos, setSelectedPhotos] = useState([]);
 
   const handleToggleFaceFilter = () => {
     if (!canFilterByFace) {
@@ -68,12 +71,50 @@ const TripDetail = () => {
     setFilterActive((prev) => !prev);
   };
 
+  const togglePhotoSelection = (photoId) => {
+    setSelectedPhotos((prev) =>
+      prev.includes(photoId)
+        ? prev.filter((id) => id !== photoId)
+        : [...prev, photoId]
+    );
+  };
+
+  const handleDeleteSelectedPhotos = async () => {
+    const confirmed = window.confirm(
+      `Are you sure you want to delete ${selectedPhotos.length} selected photo(s)?`
+    );
+    if (!confirmed) return;
+
+    try {
+      for (const photoId of selectedPhotos) {
+        const photo = photos.find((p) => p.id === photoId);
+        if (!photo) continue;
+
+        const photoRef = ref(storage, `photos/${tripId}/${photo.fileName}`);
+        await deleteObject(photoRef);
+
+        const docRef = doc(db, "tripPhotos", photoId);
+        await deleteDoc(docRef);
+      }
+
+      setPhotos((prev) => prev.filter((p) => !selectedPhotos.includes(p.id)));
+      alert(`${selectedPhotos.length} photos deleted successfully ✅`);
+      setSelectedPhotos([]);
+
+      setSelectMode(false);
+    } catch (error) {
+      console.error("Failed to delete selected photos:", error);
+      alert("An error occurred while deleting photos.");
+    }
+  };
+
   useEffect(() => {
     const fetchTripAndPhotos = async () => {
       try {
         setLoading(true);
         const tripData = await getTrip(tripId);
         setTrip(tripData);
+        setIsAdmin(tripData?.admins?.includes(currentUser?.uid));
 
         if (!tripData.members.includes(currentUser.uid)) {
           setError("You do not have access to this trip");
@@ -241,6 +282,49 @@ const TripDetail = () => {
     return "none";
   };
 
+  const handlePromoteToAdmin = (uid) => {
+    setTrip((prevTrip) => ({
+      ...prevTrip,
+      admins: [...(prevTrip.admins || []), uid],
+    }));
+  };
+
+  const handleDemoteFromAdmin = (uid) => {
+    setTrip((prevTrip) => {
+      const isLastAdmin =
+        prevTrip.admins?.length === 1 && prevTrip.admins[0] === uid;
+
+      if (isLastAdmin) {
+        alert(
+          "❌ You are the only Group Admin. Either delete the trip or assign another admin first."
+        );
+        return prevTrip;
+      }
+      return {
+        ...prevTrip,
+        admins: prevTrip.admins?.filter((id) => id !== uid),
+      };
+    });
+  };
+
+  const handleRemoveFromTrip = async (uid) => {
+    try {
+      const updatedTrip = {
+        ...trip,
+        members: trip.members?.filter((id) => id !== uid),
+        admins: trip.admins?.filter((id) => id !== uid),
+      };
+
+      await updateTrip(trip.id, updatedTrip);
+      setTrip(updatedTrip);
+
+      toast.success("User removed from trip ✅");
+    } catch (error) {
+      console.error("Failed to remove user from trip:", error);
+      toast.error("❌ Failed to remove user from trip");
+    }
+  };
+
   const handleCancelFriendRequest = async (targetUid) => {
     try {
       const ref = doc(db, "friendRequests", `${currentUser.uid}_${targetUid}`);
@@ -370,12 +454,23 @@ const TripDetail = () => {
             <div className="bg-white rounded-lg shadow p-6">
               <div className="flex justify-between items-center">
                 <h2 className="text-xl font-bold">Trip Details</h2>
-                <button
-                  onClick={() => setShowUploadForm(!showUploadForm)}
-                  className="flex items-center bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium"
-                >
-                  {showUploadForm ? "Cancel Upload" : "Add Photos"}
-                </button>
+
+                <div className="flex gap-2">
+                  {isAdmin && (
+                    <button
+                      onClick={() => alert("Edit Trip modal will open here")}
+                      className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+                    >
+                      Edit Trip
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setShowUploadForm(!showUploadForm)}
+                    className="flex items-center bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+                  >
+                    {showUploadForm ? "Cancel Upload" : "Add Photos"}
+                  </button>
+                </div>
               </div>
 
               {trip.description ? (
@@ -402,18 +497,21 @@ const TripDetail = () => {
             <div className="bg-white rounded-lg shadow p-6 mb-8">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-bold">All Trip Photos</h2>
-                <button
-                  onClick={() => setShowAllPhotosModal(true)}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium"
-                >
-                  All Photos
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setShowAllPhotosModal(true)}
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+                  >
+                    All Photos
+                  </button>
+                </div>
               </div>
+
               <div className="flex overflow-x-auto space-x-4 pb-2">
                 {photos.map((photo) => (
                   <div
                     key={`all-${photo.id}`}
-                    className="flex-shrink-0 w-64 cursor-pointer"
+                    className="flex-shrink-0 w-64 cursor-pointer relative"
                     onClick={() => setSelectedPhoto(photo)}
                   >
                     <img
@@ -573,11 +671,15 @@ const TripDetail = () => {
                         </div>
 
                         {/* Admin Badge */}
-                        {member.uid === trip.createdBy && (
+                        {member.uid === trip.createdBy ? (
+                          <span className="bg-gray-300 text-gray-800 text-xs font-semibold px-2 py-0.5 rounded-full">
+                            Trip Creator
+                          </span>
+                        ) : trip.admins?.includes(member.uid) ? (
                           <span className="bg-gray-200 text-gray-700 text-xs font-semibold px-2 py-0.5 rounded-full">
                             Group Admin
                           </span>
-                        )}
+                        ) : null}
                       </li>
                     ))}
                 </ul>
@@ -591,13 +693,17 @@ const TripDetail = () => {
         {selectedUser && (
           <UserProfileModal
             user={selectedUser}
-            onClose={() => setSelectedUser(null)}
-            isFriend={selectedUser.__isFriend}
-            isPending={selectedUser.__isPending}
-            currentUserId={currentUser.uid}
+            currentUserId={currentUser?.uid}
+            isAdmin={isAdmin}
             onAddFriend={handleAddFriend}
-            onCancelRequest={handleCancelFriendRequest}
             onRemoveFriend={handleRemoveFriend}
+            onCancelRequest={handleCancelFriendRequest}
+            onClose={() => setSelectedUser(null)}
+            trip={trip}
+            setTrip={setTrip}
+            onPromoteToAdmin={handlePromoteToAdmin}
+            onDemoteFromAdmin={handleDemoteFromAdmin}
+            onRemoveFromTrip={handleRemoveFromTrip}
           />
         )}
 
@@ -639,37 +745,76 @@ const TripDetail = () => {
             >
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-xl font-bold">All Trip Photos</h3>
-                <button
-                  onClick={() => setShowAllPhotosModal(false)}
-                  className="text-sm text-gray-600 hover:text-black"
-                >
-                  Close
-                </button>
+                <div className="flex items-center gap-2">
+                  {selectMode && selectedPhotos.length > 0 && (
+                    <button
+                      onClick={handleDeleteSelectedPhotos}
+                      className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm flex items-center"
+                    >
+                      <span className="mr-2">🗑️</span>
+                      Delete {selectedPhotos.length}
+                    </button>
+                  )}
+                  {isAdmin && (
+                    <button
+                      onClick={() => {
+                        setSelectMode(!selectMode);
+                        setSelectedPhotos([]);
+                      }}
+                      className="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 text-sm"
+                    >
+                      {selectMode ? "Cancel Selection" : "Select Photos"}
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setShowAllPhotosModal(false)}
+                    className="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400 text-sm"
+                  >
+                    Close
+                  </button>
+                </div>
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {photos.map((photo) => (
-                  <div
-                    key={`modal-${photo.id}`}
-                    className="cursor-pointer"
-                    onClick={() => {
-                      setSelectedPhoto(photo);
-                      setShowAllPhotosModal(false);
-                    }}
-                  >
-                    <img
-                      src={photo.downloadURL.replace(
-                        "groupify-77202.appspot.com",
-                        "groupify-77202.firebasestorage.app"
+                {photos.map((photo) => {
+                  const isSelected = selectedPhotos.includes(photo.id);
+                  return (
+                    <div
+                      key={`modal-${photo.id}`}
+                      className={`relative cursor-pointer rounded-lg overflow-hidden shadow ${
+                        selectMode && !isSelected ? "opacity-60" : ""
+                      }`}
+                      onClick={() => {
+                        if (selectMode) {
+                          togglePhotoSelection(photo.id);
+                        } else {
+                          setSelectedPhoto(photo);
+                          setShowAllPhotosModal(false);
+                        }
+                      }}
+                    >
+                      <img
+                        src={photo.downloadURL.replace(
+                          "groupify-77202.appspot.com",
+                          "groupify-77202.firebasestorage.app"
+                        )}
+                        alt={photo.fileName}
+                        className="w-full h-40 object-cover"
+                      />
+                      {selectMode && (
+                        <div className="absolute top-2 right-2 w-5 h-5 border-2 border-white rounded bg-white flex items-center justify-center">
+                          {isSelected && (
+                            <span className="text-green-600 font-bold">✓</span>
+                          )}
+                        </div>
                       )}
-                      alt={photo.fileName}
-                      className="w-full h-40 object-cover rounded-lg shadow"
-                    />
-                    <div className="text-xs text-gray-500 mt-1">
-                      Uploaded {new Date(photo.uploadedAt).toLocaleDateString()}
+                      <div className="text-xs text-gray-500 mt-1">
+                        Uploaded{" "}
+                        {new Date(photo.uploadedAt).toLocaleDateString()}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>

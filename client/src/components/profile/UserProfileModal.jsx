@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import { updateTrip } from "../../services/firebase/trips";
+
 import {
   UserCircleIcon,
   MailIcon,
@@ -9,21 +11,95 @@ import {
 
 const UserProfileModal = ({
   user,
-  onClose,
-  isFriend,
-  isPending,
-  onAddFriend,
-  onCancelRequest,
-  onRemoveFriend,
   currentUserId,
+  isAdmin,
+  onAddFriend,
+  onRemoveFriend,
+  onCancelRequest,
+  onClose,
+  trip,
+  setTrip,
+  onPromoteToAdmin,
+  onDemoteFromAdmin,
 }) => {
   if (!user) return null;
 
   const [friendStatus, setFriendStatus] = useState(() => {
-    if (isFriend) return "friend";
-    if (isPending) return "pending";
+    if (user.__isFriend) return "friend";
+    if (user.__isPending) return "pending";
     return "none";
   });
+
+  const isTripAdmin = trip?.admins?.includes(currentUserId);
+  const [showSuccess, setShowSuccess] = useState(null);
+  const [showError, setShowError] = useState(null);
+
+  const handleSetAsAdmin = async (uid) => {
+    try {
+      const updatedTrip = {
+        ...trip,
+        admins: [...(trip.admins || []), uid],
+      };
+      await updateTrip(trip.id, updatedTrip);
+
+      if (onPromoteToAdmin) {
+        onPromoteToAdmin(uid);
+      }
+
+      setShowSuccess("User promoted to Group Admin ✅");
+      setTimeout(() => setShowSuccess(null), 3000);
+    } catch (error) {
+      console.error("Failed to set as admin:", error);
+      setShowError("Failed to update admin status ❌");
+      setTimeout(() => setShowError(null), 3000);
+    }
+  };
+
+  const handleDemoteFromAdmin = async (uid) => {
+    const isLastAdmin = trip.admins?.length === 1 && trip.admins[0] === uid;
+
+    if (isLastAdmin) {
+      setShowError(
+        "❌ You are the only Group Admin. Either delete the trip or assign another admin first."
+      );
+      setTimeout(() => setShowError(null), 4000);
+      return;
+    }
+
+    try {
+      const updatedTrip = {
+        ...trip,
+        admins: trip.admins?.filter((id) => id !== uid),
+      };
+      await updateTrip(trip.id, updatedTrip);
+
+      setTrip(updatedTrip);
+
+      if (onDemoteFromAdmin) {
+        onDemoteFromAdmin(uid);
+      }
+
+      setShowSuccess("User removed from Group Admin ✅");
+      setTimeout(() => setShowSuccess(null), 3000);
+    } catch (error) {
+      console.error("Failed to remove admin:", error);
+      setShowError("Failed to update admin status ❌");
+      setTimeout(() => setShowError(null), 3000);
+    }
+  };
+
+  const handleRemoveFromTrip = async (uid) => {
+    try {
+      await onRemoveFromTrip(uid);
+      setShowSuccess("User removed from the trip ✅");
+      setTimeout(() => setShowSuccess(null), 3000);
+      onClose();
+    } catch (error) {
+      console.error("Error removing user:", error);
+      setShowError("❌ Failed to remove user from trip");
+      setTimeout(() => setShowError(null), 3000);
+    }
+  };
 
   return (
     <div
@@ -41,6 +117,38 @@ const UserProfileModal = ({
         >
           ✕
         </button>
+
+        <div className="relative rounded-lg p-6 w-full max-w-md">
+          {isAdmin && user.uid !== currentUserId && (
+            <div className="mt-4 flex justify-center gap-4">
+              {/* Toggle Admin Button */}
+              <button
+                onClick={() =>
+                  trip.admins?.includes(user.uid)
+                    ? handleDemoteFromAdmin(user.uid)
+                    : handleSetAsAdmin(user.uid)
+                }
+                className={`${
+                  trip.admins?.includes(user.uid)
+                    ? "bg-yellow-500 hover:bg-yellow-600"
+                    : "bg-blue-600 hover:bg-blue-700"
+                } text-white px-4 py-2 rounded-lg text-sm shadow transition`}
+              >
+                {trip.admins?.includes(user.uid)
+                  ? "⬇️ Revoke Admin"
+                  : "👑 Make Admin"}
+              </button>
+
+              {/* Remove From Trip Button */}
+              <button
+                onClick={() => handleRemoveFromTrip(user.uid)}
+                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm shadow transition"
+              >
+                ❌ Remove from Trip
+              </button>
+            </div>
+          )}
+        </div>
 
         {/* Profile Header */}
         <div className="flex flex-col items-center text-center">
@@ -137,6 +245,17 @@ const UserProfileModal = ({
           )}
         </div>
       </div>
+
+      {showSuccess && (
+        <div className="fixed top-5 right-5 bg-green-500 text-white px-4 py-2 rounded shadow-lg z-50">
+          {showSuccess}
+        </div>
+      )}
+      {showError && (
+        <div className="fixed top-5 right-5 bg-red-500 text-white px-4 py-2 rounded shadow-lg z-50">
+          {showError}
+        </div>
+      )}
     </div>
   );
 };

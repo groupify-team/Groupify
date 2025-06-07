@@ -5,11 +5,12 @@ import { db } from './config';
 // Create a new trip
 export const createTrip = async (tripData) => {
   try {
-    const tripRef = await addDoc(collection(db, 'trips'), {
+    const tripRef = await addDoc(collection(db, "trips"), {
       ...tripData,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      admins: tripData.admins || [tripData.createdBy], 
+      createdAt: serverTimestamp(),
     });
+
     
     return {
       id: tripRef.id,
