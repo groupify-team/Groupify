@@ -1,3 +1,5 @@
+// client/src/pages/TripDetail.jsx
+
 // **************** 🔹 Imports  ****************
 
 // 🔹 React & Router
@@ -61,6 +63,13 @@ import {
 import PhotoUpload from "../components/photos/PhotoUpload";
 import InviteFriendDropdown from "../components/trips/InviteFriendDropdown";
 import UserProfileModal from "../components/profile/UserProfileModal";
+import Sidebar from "../components/layout/Sidebar";
+
+// 🔹 Hooks
+import { useSidebar } from "../hooks/useSidebar";
+
+// 🔹 Icons
+import { Bars3Icon } from "@heroicons/react/24/outline";
 
 // 🔹 Assets
 import logo from "../assets/logo/3.png";
@@ -69,6 +78,9 @@ const TripDetail = () => {
   const { tripId } = useParams();
   const navigate = useNavigate();
   const { currentUser } = useAuth();
+  
+  // Sidebar state
+  const sidebar = useSidebar();
 
   const [trip, setTrip] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -767,652 +779,134 @@ const TripDetail = () => {
   if (!trip) return null;
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <div className="bg-gradient-to-r from-indigo-600 to-purple-700 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex flex-col sm:flex-row justify-between items-center sm:items-start">
-            {/* Left side: Trip thumbnail + details */}
-            <div className="flex items-center space-x-4 mb-4 sm:mb-0">
-              {photos.length > 0 && (
-                <img
-                  src={photos[0].downloadURL.replace(
-                    "groupify-77202.appspot.com",
-                    "groupify-77202.firebasestorage.app"
-                  )}
-                  alt="Trip Thumbnail"
-                  className="w-20 h-20 rounded-full object-cover border-2 border-white transform hover:scale-105 transition duration-300"
-                />
-              )}
-              <div>
-                <h1 className="text-3xl font-bold tracking-tight">
-                  {trip.name}
-                </h1>
-                <p className="text-indigo-100 mt-1">
-                  {trip.location || "No location specified"}
-                </p>
-                <div className="flex mt-2 text-sm text-indigo-200">
-                  <span className="mr-4 font-medium">
-                    {trip.startDate || "No start date"}
-                    {trip.startDate && trip.endDate && " - "}
-                    {trip.endDate}
-                  </span>
-                  <span>{trip.members?.length || 1} members</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Right side: Logo with rounded background */}
-            <Link to="/dashboard" title="Go to Dashboard">
-              <div className="bg-white bg-opacity-20 rounded-full p-2 hover:bg-opacity-30 transition">
-                <img
-                  src={logo}
-                  alt="Logo"
-                  className="w-16 h-16 rounded-full object-contain"
-                />
-              </div>
-            </Link>
-          </div>
-        </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-6">
-            <div className="bg-white rounded-lg shadow p-6">
-              <div className="flex justify-between items-center">
-                <h2 className="text-xl font-bold">Trip Details</h2>
-
-                <div className="flex gap-2">
-                  {isAdmin && (
-                    <button
-                      onClick={() => toast.info("Edit Trip feature coming soon!")}
-                      className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-                    >
-                      Edit Trip
-                    </button>
-                  )}
-                  <button
-                    onClick={() => setShowUploadForm(!showUploadForm)}
-                    className="flex items-center bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium"
-                  >
-                    {showUploadForm ? "Cancel Upload" : "Add Photos"}
-                  </button>
-                </div>
-              </div>
-
-              {trip.description ? (
-                <p className="text-gray-700">{trip.description}</p>
-              ) : (
-                <p className="text-gray-500 italic">No description provided</p>
-              )}
-
-              <div className="text-sm text-gray-500 mt-2">
-                {photos.length} photos
-              </div>
-            </div>
-
-            {showUploadForm && (
-              <div className="bg-white rounded-lg shadow p-6">
-                <h2 className="text-xl font-bold mb-4">Upload Photos</h2>
-                <PhotoUpload
-                  tripId={tripId}
-                  onPhotoUploaded={handlePhotoUploaded}
-                />
-              </div>
-            )}
-
-            <div className="bg-white rounded-lg shadow p-6 mb-8">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold">All Trip Photos</h2>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setShowAllPhotosModal(true)}
-                    className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium"
-                  >
-                    All Photos
-                  </button>
-                </div>
-              </div>
-
-              <div className="flex overflow-x-auto space-x-4 pb-2">
-                {photos.map((photo) => (
-                  <div
-                    key={`all-${photo.id}`}
-                    className="flex-shrink-0 w-64 cursor-pointer relative"
-                    onClick={() => setSelectedPhoto(photo)}
-                  >
-                    <img
-                      src={photo.downloadURL.replace(
-                        "groupify-77202.appspot.com",
-                        "groupify-77202.firebasestorage.app"
-                      )}
-                      alt={photo.fileName}
-                      className="w-full h-40 object-cover rounded-lg shadow"
-                    />
-                    <div className="text-xs text-gray-500 mt-1">
-                      Uploaded {new Date(photo.uploadedAt).toLocaleDateString()}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Simplified Face Recognition Section */}
-            <div className="bg-white rounded-lg shadow p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold">Photos With Me</h2>
-
-                {/* Simplified Face Recognition Controls */}
-                {!isProcessingFaces ? (
-                  <div className="flex items-center gap-3">
-                    {/* Profile Status Indicator */}
-                    {isLoadingProfile ? (
-                      <div className="flex items-center gap-2 text-sm text-gray-500">
-                        <div className="animate-spin w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full"></div>
-                        Loading profile...
-                      </div>
-                    ) : hasProfile ? (
-                      <div className="flex items-center gap-2 text-sm text-green-600">
-                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                        Profile Ready
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-2 text-sm text-orange-600">
-                        <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-                        No Profile
-                      </div>
+    <div className="min-h-screen bg-gray-100 flex">
+      {/* Sidebar */}
+      <Sidebar isOpen={sidebar.isOpen} onClose={sidebar.close} />
+      
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col lg:ml-0">
+        {/* Header with menu button */}
+        <div className="bg-gradient-to-r from-indigo-600 to-purple-700 text-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="flex flex-col sm:flex-row justify-between items-center sm:items-start">
+              {/* Left side: Menu button + Trip thumbnail + details */}
+              <div className="flex items-center space-x-4 mb-4 sm:mb-0">
+                {/* Mobile menu button */}
+                <button
+                  onClick={sidebar.toggle}
+                  className="lg:hidden p-2 rounded-md hover:bg-white hover:bg-opacity-20 transition-colors"
+                >
+                  <Bars3Icon className="w-6 h-6" />
+                </button>
+                
+                {photos.length > 0 && (
+                  <img
+                    src={photos[0].downloadURL.replace(
+                      "groupify-77202.appspot.com",
+                      "groupify-77202.firebasestorage.app"
                     )}
-
-                    {/* 📚 Cache Status Indicator */}
-                    {hasCachedResults() && (
-                      <div className="flex items-center gap-2 text-sm text-blue-600">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h8a2 2 0 002-2V8m-9 4h4" />
-                        </svg>
-                        Previous scan available
-                      </div>
-                    )}
-
-                    {/* Action Buttons */}
-                    <div className="flex gap-2">
-                      {/* 📚 Show Cached Results Button (if available) */}
-                      {hasCachedResults() && !filterActive && (
-                        <button
-                          onClick={showCachedResults}
-                          disabled={!canFilterByFace || isLoadingProfile}
-                          className="px-3 py-2 text-sm bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707" />
-                          </svg>
-                          Show Previous ({cachedResults.length})
-                        </button>
-                      )}
-
-                      {/* Main Action Button */}
-                      <button
-                        onClick={() => {
-                          if (filterActive) {
-                            setFilterActive(false);
-                            setFilteredPhotos([]);
-                          } else if (hasCachedResults()) {
-                            // Force rescan
-                            handleFindMyPhotos(true);
-                          } else {
-                            // Normal scan
-                            handleFindMyPhotos(false);
-                          }
-                        }}
-                        disabled={!canFilterByFace || isLoadingProfile}
-                        className={`px-4 py-2 text-sm rounded-md flex items-center gap-2 ${
-                          canFilterByFace && !isLoadingProfile
-                            ? filterActive
-                              ? "bg-red-500 text-white hover:bg-red-600"
-                              : hasProfile
-                              ? hasCachedResults()
-                                ? "bg-green-600 text-white hover:bg-green-700"
-                                : "bg-indigo-600 text-white hover:bg-indigo-700"
-                              : "bg-orange-500 text-white hover:bg-orange-600"
-                            : "bg-gray-300 text-gray-600 cursor-not-allowed"
-                        }`}
-                      >
-                        <svg
-                          className="w-4 h-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                          />
-                        </svg>
-                        {filterActive
-                          ? "Hide My Photos"
-                          : hasProfile
-                          ? hasCachedResults()
-                            ? `Scan Again (${photos.length})`
-                            : `Find My Photos (${photos.length})`
-                          : `Need Profile First`}
-                      </button>
-                    </div>
-                  </div>
-                ) : null}
-              </div>
-
-              {/* Processing UI */}
-              {isProcessingFaces ? (
-                <div className="space-y-4">
-                  {/* Progress Bar */}
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-gray-600">Processing Photos</span>
-                      <span className="font-medium">
-                        {getProgressPercentage()}%
-                      </span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-3">
-                      <div
-                        className="bg-indigo-600 h-3 rounded-full transition-all duration-300 ease-out"
-                        style={{ width: `${getProgressPercentage()}%` }}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Status Information */}
-                  <div className="bg-gray-50 rounded-lg p-4 space-y-2">
-                    <div className="text-sm font-medium text-gray-800">
-                      {faceRecognitionProgress.phase || "Processing..."}
-                    </div>
-
-                    {faceRecognitionProgress.profileInfo && (
-                      <div className="text-xs text-blue-600">
-                        Using profile with{" "}
-                        {faceRecognitionProgress.profileInfo.references}{" "}
-                        reference photos
-                      </div>
-                    )}
-
-                    {faceRecognitionProgress.currentPhoto && (
-                      <div className="text-xs text-gray-600">
-                        Current: {faceRecognitionProgress.currentPhoto}
-                      </div>
-                    )}
-
-                    {faceRecognitionProgress.estimatedTimeRemaining && (
-                      <div className="text-xs text-indigo-600 font-medium">
-                        {formatTimeRemaining(
-                          faceRecognitionProgress.estimatedTimeRemaining
-                        )}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Live Match Counter */}
-                  {faceRecognitionProgress.matches?.length > 0 && (
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                      <div className="text-sm font-medium text-green-800">
-                        ✅ Found {faceRecognitionProgress.matches.length}{" "}
-                        matches so far
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Cancel Button */}
-                  <button
-                    onClick={handleCancelFaceRecognition}
-                    className="w-full bg-red-500 hover:bg-red-600 text-white font-medium 
-                               py-2 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
-                  >
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M6 18L18 6M6 6l12 12"
-                      />
-                    </svg>
-                    Cancel Processing
-                  </button>
-                </div>
-              ) : filterActive && filteredPhotos.length === 0 ? (
-                <p className="text-sm text-gray-500 italic">
-                  No matching photos found using your face profile.
-                </p>
-              ) : filterActive ? (
-                <div>
-                  {/* 📚 Cache Information Banner */}
-                  {hasCachedResults() && cachedResults === filteredPhotos && (
-                    <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 text-sm text-blue-800">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                          <span className="font-medium">Showing previous results</span>
-                          <span className="text-blue-600">
-                            (scanned {new Date(lastScanTimestamp).toLocaleDateString()} at {new Date(lastScanTimestamp).toLocaleTimeString()})
-                          </span>
-                        </div>
-                        <button
-                          onClick={() => handleFindMyPhotos(true)}
-                          className="text-xs bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700"
-                        >
-                          Scan Again
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    {filteredPhotos.map((photo) => (
-                      <div
-                        key={`filtered-${photo.id}`}
-                        className="cursor-pointer"
-                        onClick={() => setSelectedPhoto(photo)}
-                      >
-                        <img
-                          src={photo.downloadURL.replace(
-                            "groupify-77202.appspot.com",
-                            "groupify-77202.firebasestorage.app"
-                          )}
-                          alt={photo.fileName}
-                          className="w-full h-32 object-cover rounded-lg shadow"
-                        />
-                        <div className="text-xs text-gray-500 mt-1">
-                          {photo.faceMatch && (
-                            <div className="flex justify-between items-center">
-                              <span
-                                className={`font-medium ${
-                                  photo.faceMatch.matchType === "strong"
-                                    ? "text-green-600"
-                                    : "text-blue-600"
-                                }`}
-                              >
-                                {(photo.faceMatch.confidence * 100).toFixed(1)}%
-                                match
-                              </span>
-                              {photo.faceMatch.consensus && (
-                                <span className="text-xs text-gray-400">
-                                  {photo.faceMatch.consensus}
-                                </span>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <div className="text-sm text-gray-400 italic mb-4">
-                    {hasProfile
-                      ? 'Click "Find My Photos" to automatically identify photos containing you using your face profile.'
-                      : "You need to create a face profile in your Dashboard before you can find photos with yourself."}
-                  </div>
-                  {!hasProfile && (
-                    <button
-                      onClick={() => navigate("/dashboard")}
-                      className="text-blue-600 hover:text-blue-700 text-sm font-medium underline"
-                    >
-                      Go to Dashboard to Setup Face Profile
-                    </button>
-                  )}
-                </div>
-              )}
-
-              {/* Completion Summary */}
-              {!isProcessingFaces &&
-                faceRecognitionProgress.totalMatches !== undefined && (
-                  <div className="mt-4 p-4 bg-indigo-50 rounded-lg border border-indigo-200">
-                    <div className="text-sm font-medium text-indigo-800 mb-2">
-                      🎯 Face Recognition Complete!
-                    </div>
-                    <div className="text-xs text-indigo-600 space-y-1">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <div>
-                            Total matches:{" "}
-                            {faceRecognitionProgress.totalMatches}
-                          </div>
-                          <div>
-                            Strong matches:{" "}
-                            {faceRecognitionProgress.strongMatches}
-                          </div>
-                          <div>
-                            Weak matches: {faceRecognitionProgress.weakMatches}
-                          </div>
-                        </div>
-                        <div>
-                          <div>
-                            Average confidence:{" "}
-                            {faceRecognitionProgress.averageConfidence}%
-                          </div>
-                          {faceRecognitionProgress.processingTime && (
-                            <div>
-                              Processing time:{" "}
-                              {faceRecognitionProgress.processingTime}s
-                            </div>
-                          )}
-                          <div className="text-blue-600 font-medium">
-                            📚 Results cached for quick access
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                    alt="Trip Thumbnail"
+                    className="w-20 h-20 rounded-full object-cover border-2 border-white transform hover:scale-105 transition duration-300"
+                  />
                 )}
-            </div>
-          </div>
+                <div>
+                  <h1 className="text-3xl font-bold tracking-tight">
+                    {trip.name}
+                  </h1>
+                  <p className="text-indigo-100 mt-1">
+                    {trip.location || "No location specified"}
+                  </p>
+                  <div className="flex mt-2 text-sm text-indigo-200">
+                    <span className="mr-4 font-medium">
+                      {trip.startDate || "No start date"}
+                      {trip.startDate && trip.endDate && " - "}
+                      {trip.endDate}
+                    </span>
+                    <span>{trip.members?.length || 1} members</span>
+                  </div>
+                </div>
+              </div>
 
-          <div className="space-y-6">
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-bold mb-4">Invite People</h2>
-              <InviteFriendDropdown
-                currentUser={currentUser}
-                onSelect={handleInviteFriend}
-                excludedUserIds={trip.members}
-              />
-            </div>
-
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-bold mb-4">Trip Members</h2>
-
-              {tripMembers.length === 0 ? (
-                <p className="text-gray-500 text-sm">No members found.</p>
-              ) : (
-                <ul className="space-y-3">
-                  {[...tripMembers]
-                    .sort((a, b) => {
-                      // 1. Current user first
-                      if (a.uid === currentUser.uid) return -1;
-                      if (b.uid === currentUser.uid) return 1;
-
-                      // 2. Admin second
-                      if (a.uid === trip.createdBy) return -1;
-                      if (b.uid === trip.createdBy) return 1;
-
-                      // 3. Alphabetical for the rest
-                      return (a.displayName || a.email || "").localeCompare(
-                        b.displayName || b.email || ""
-                      );
-                    })
-                    .map((member) => (
-                      <li
-                        key={member.uid}
-                        className="flex items-center justify-between"
-                      >
-                        <div className="flex items-center">
-                          <img
-                            src={
-                              member.photoURL ||
-                              "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg"
-                            }
-                            alt="Avatar"
-                            className="w-8 h-8 rounded-full object-cover border mr-3"
-                          />
-                          <span
-                            className="text-sm font-medium text-gray-700 hover:underline cursor-pointer"
-                            onClick={async () => {
-                              const isFriendNow = friends.includes(member.uid);
-                              const status = await checkFriendStatus(
-                                currentUser.uid,
-                                member.uid
-                              );
-                              const isPendingNow = status === "pending";
-                              setSelectedUser({
-                                ...member,
-                                __isFriend: isFriendNow,
-                                __isPending: isPendingNow,
-                              });
-                            }}
-                          >
-                            {member.displayName || member.email || member.uid}
-                            {member.uid === currentUser.uid && " (Me)"}
-                          </span>
-                        </div>
-
-                        {/* Admin Badge */}
-                        {member.uid === trip.createdBy ? (
-                          <span className="bg-gray-300 text-gray-800 text-xs font-semibold px-2 py-0.5 rounded-full">
-                            Trip Creator
-                          </span>
-                        ) : trip.admins?.includes(member.uid) ? (
-                          <span className="bg-gray-200 text-gray-700 text-xs font-semibold px-2 py-0.5 rounded-full">
-                            Group Admin
-                          </span>
-                        ) : null}
-                      </li>
-                    ))}
-                </ul>
-              )}
+              {/* Right side: Logo with rounded background */}
+              <Link to="/dashboard" title="Go to Dashboard">
+                <div className="bg-white bg-opacity-20 rounded-full p-2 hover:bg-opacity-30 transition">
+                  <img
+                    src={logo}
+                    alt="Logo"
+                    className="w-16 h-16 rounded-full object-contain"
+                  />
+                </div>
+              </Link>
             </div>
           </div>
         </div>
 
-        {selectedUser && (
-          <UserProfileModal
-            user={selectedUser}
-            currentUserId={currentUser?.uid}
-            isAdmin={isAdmin}
-            isFriend={friends.some((f) => f.uid === selectedUser.uid)}
-            isPending={pendingRequests.some((r) => r.from === selectedUser.uid)}
-            onAddFriend={handleAddFriend}
-            onRemoveFriend={handleRemoveFriend}
-            onCancelRequest={handleCancelFriendRequest}
-            onClose={() => setSelectedUser(null)}
-            trip={trip}
-            setTrip={setTrip}
-            tripMembers={tripMembers}
-            setTripMembers={setTripMembers}
-            setSelectedUser={setSelectedUser}
-            onPromoteToAdmin={handlePromoteToAdmin}
-            onDemoteFromAdmin={handleDemoteFromAdmin}
-            onRemoveFromTrip={handleRemoveFromTrip}
-            onlyTripMembers={true}
-          />
-        )}
+        {/* Content */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2 space-y-6">
+              <div className="bg-white rounded-lg shadow p-6">
+                <div className="flex justify-between items-center">
+                  <h2 className="text-xl font-bold">Trip Details</h2>
 
-        {selectedPhoto && (
-          <div
-            className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50"
-            onClick={() => setSelectedPhoto(null)}
-          >
-            <img
-              src={selectedPhoto.downloadURL.replace(
-                "groupify-77202.appspot.com",
-                "groupify-77202.firebasestorage.app"
-              )}
-              alt="Full view"
-              className="max-w-4xl max-h-[90vh] object-contain rounded-lg"
-            />
-          </div>
-        )}
-
-        {showSuccess && (
-          <div className="fixed top-5 right-5 bg-green-600 text-white px-4 py-2 rounded shadow-lg z-50">
-            Friend request sent ✅
-          </div>
-        )}
-        {cancelSuccess && (
-          <div className="fixed top-5 right-5 bg-red-600 text-white px-4 py-2 rounded shadow-lg z-50">
-            {cancelSuccess}
-          </div>
-        )}
-
-        {showAllPhotosModal && (
-          <div
-            className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50"
-            onClick={() => setShowAllPhotosModal(false)}
-          >
-            <div
-              className="bg-white rounded-lg shadow-lg max-w-6xl max-h-[90vh] overflow-y-auto p-6"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-bold">All Trip Photos</h3>
-                <div className="flex items-center gap-2">
-                  {selectMode && selectedPhotos.length > 0 && (
+                  <div className="flex gap-2">
+                    {isAdmin && (
+                      <button
+                        onClick={() => toast.info("Edit Trip feature coming soon!")}
+                        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+                      >
+                        Edit Trip
+                      </button>
+                    )}
                     <button
-                      onClick={handleDeleteSelectedPhotos}
-                      className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm flex items-center"
+                      onClick={() => setShowUploadForm(!showUploadForm)}
+                      className="flex items-center bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium"
                     >
-                      <span className="mr-2">🗑️</span>
-                      Delete {selectedPhotos.length}
+                      {showUploadForm ? "Cancel Upload" : "Add Photos"}
                     </button>
-                  )}
-                  {isAdmin && (
-                    <button
-                      onClick={() => {
-                        setSelectMode(!selectMode);
-                        setSelectedPhotos([]);
-                      }}
-                      className="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 text-sm"
-                    >
-                      {selectMode ? "Cancel Selection" : "Select Photos"}
-                    </button>
-                  )}
-                  <button
-                    onClick={() => setShowAllPhotosModal(false)}
-                    className="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400 text-sm"
-                  >
-                    Close
-                  </button>
+                  </div>
+                </div>
+
+                {trip.description ? (
+                  <p className="text-gray-700">{trip.description}</p>
+                ) : (
+                  <p className="text-gray-500 italic">No description provided</p>
+                )}
+
+                <div className="text-sm text-gray-500 mt-2">
+                  {photos.length} photos
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {photos.map((photo) => {
-                  const isSelected = selectedPhotos.includes(photo.id);
-                  return (
+              {showUploadForm && (
+                <div className="bg-white rounded-lg shadow p-6">
+                  <h2 className="text-xl font-bold mb-4">Upload Photos</h2>
+                  <PhotoUpload
+                    tripId={tripId}
+                    onPhotoUploaded={handlePhotoUploaded}
+                  />
+                </div>
+              )}
+
+              <div className="bg-white rounded-lg shadow p-6 mb-8">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold">All Trip Photos</h2>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setShowAllPhotosModal(true)}
+                      className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+                    >
+                      All Photos
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex overflow-x-auto space-x-4 pb-2">
+                  {photos.map((photo) => (
                     <div
-                      key={`modal-${photo.id}`}
-                      className={`relative cursor-pointer rounded-lg overflow-hidden shadow ${
-                        selectMode && !isSelected ? "opacity-60" : ""
-                      }`}
-                      onClick={() => {
-                        if (selectMode) {
-                          const togglePhotoSelection = (photoId) => {
-                            setSelectedPhotos((prev) =>
-                              prev.includes(photoId)
-                                ? prev.filter((id) => id !== photoId)
-                                : [...prev, photoId]
-                            );
-                          };
-                          togglePhotoSelection(photo.id);
-                        } else {
-                          setSelectedPhoto(photo);
-                          setShowAllPhotosModal(false);
-                        }
-                      }}
+                      key={`all-${photo.id}`}
+                      className="flex-shrink-0 w-64 cursor-pointer relative"
+                      onClick={() => setSelectedPhoto(photo)}
                     >
                       <img
                         src={photo.downloadURL.replace(
@@ -1420,26 +914,560 @@ const TripDetail = () => {
                           "groupify-77202.firebasestorage.app"
                         )}
                         alt={photo.fileName}
-                        className="w-full h-40 object-cover"
+                        className="w-full h-40 object-cover rounded-lg shadow"
                       />
-                      {selectMode && (
-                        <div className="absolute top-2 right-2 w-5 h-5 border-2 border-white rounded bg-white flex items-center justify-center">
-                          {isSelected && (
-                            <span className="text-green-600 font-bold">✓</span>
+                      <div className="text-xs text-gray-500 mt-1">
+                        Uploaded {new Date(photo.uploadedAt).toLocaleDateString()}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Simplified Face Recognition Section */}
+              <div className="bg-white rounded-lg shadow p-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold">Photos With Me</h2>
+
+                  {/* Simplified Face Recognition Controls */}
+                  {!isProcessingFaces ? (
+                    <div className="flex items-center gap-3">
+                      {/* Profile Status Indicator */}
+                      {isLoadingProfile ? (
+                        <div className="flex items-center gap-2 text-sm text-gray-500">
+                          <div className="animate-spin w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full"></div>
+                          Loading profile...
+                        </div>
+                      ) : hasProfile ? (
+                        <div className="flex items-center gap-2 text-sm text-green-600">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          Profile Ready
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 text-sm text-orange-600">
+                          <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                          No Profile
+                        </div>
+                      )}
+
+                      {/* 📚 Cache Status Indicator */}
+                      {hasCachedResults() && (
+                        <div className="flex items-center gap-2 text-sm text-blue-600">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h8a2 2 0 002-2V8m-9 4h4" />
+                          </svg>
+                          Previous scan available
+                        </div>
+                      )}
+
+                      {/* Action Buttons */}
+                      <div className="flex gap-2">
+                        {/* 📚 Show Cached Results Button (if available) */}
+                        {hasCachedResults() && !filterActive && (
+                          <button
+                            onClick={showCachedResults}
+                            disabled={!canFilterByFace || isLoadingProfile}
+                            className="px-3 py-2 text-sm bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707" />
+                            </svg>
+                            Show Previous ({cachedResults.length})
+                          </button>
+                        )}
+
+                        {/* Main Action Button */}
+                        <button
+                          onClick={() => {
+                            if (filterActive) {
+                              setFilterActive(false);
+                              setFilteredPhotos([]);
+                            } else if (hasCachedResults()) {
+                              // Force rescan
+                              handleFindMyPhotos(true);
+                            } else {
+                              // Normal scan
+                              handleFindMyPhotos(false);
+                            }
+                          }}
+                          disabled={!canFilterByFace || isLoadingProfile}
+                          className={`px-4 py-2 text-sm rounded-md flex items-center gap-2 ${
+                            canFilterByFace && !isLoadingProfile
+                              ? filterActive
+                                ? "bg-red-500 text-white hover:bg-red-600"
+                                : hasProfile
+                                ? hasCachedResults()
+                                  ? "bg-green-600 text-white hover:bg-green-700"
+                                  : "bg-indigo-600 text-white hover:bg-indigo-700"
+                                : "bg-orange-500 text-white hover:bg-orange-600"
+                              : "bg-gray-300 text-gray-600 cursor-not-allowed"
+                          }`}
+                        >
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                            />
+                          </svg>
+                          {filterActive
+                            ? "Hide My Photos"
+                            : hasProfile
+                            ? hasCachedResults()
+                              ? `Scan Again (${photos.length})`
+                              : `Find My Photos (${photos.length})`
+                            : `Need Profile First`}
+                        </button>
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+
+                {/* Processing UI */}
+                {isProcessingFaces ? (
+                  <div className="space-y-4">
+                    {/* Progress Bar */}
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-gray-600">Processing Photos</span>
+                        <span className="font-medium">
+                          {getProgressPercentage()}%
+                        </span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-3">
+                        <div
+                          className="bg-indigo-600 h-3 rounded-full transition-all duration-300 ease-out"
+                          style={{ width: `${getProgressPercentage()}%` }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Status Information */}
+                    <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                      <div className="text-sm font-medium text-gray-800">
+                        {faceRecognitionProgress.phase || "Processing..."}
+                      </div>
+
+                      {faceRecognitionProgress.profileInfo && (
+                        <div className="text-xs text-blue-600">
+                          Using profile with{" "}
+                          {faceRecognitionProgress.profileInfo.references}{" "}
+                          reference photos
+                        </div>
+                      )}
+
+                      {faceRecognitionProgress.currentPhoto && (
+                        <div className="text-xs text-gray-600">
+                          Current: {faceRecognitionProgress.currentPhoto}
+                        </div>
+                      )}
+
+                      {faceRecognitionProgress.estimatedTimeRemaining && (
+                        <div className="text-xs text-indigo-600 font-medium">
+                          {formatTimeRemaining(
+                            faceRecognitionProgress.estimatedTimeRemaining
                           )}
                         </div>
                       )}
-                      <div className="text-xs text-gray-500 mt-1">
-                        Uploaded{" "}
-                        {new Date(photo.uploadedAt).toLocaleDateString()}
+                    </div>
+
+                    {/* Live Match Counter */}
+                    {faceRecognitionProgress.matches?.length > 0 && (
+                      <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                        <div className="text-sm font-medium text-green-800">
+                          ✅ Found {faceRecognitionProgress.matches.length}{" "}
+                          matches so far
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Cancel Button */}
+                    <button
+                      onClick={handleCancelFaceRecognition}
+                      className="w-full bg-red-500 hover:bg-red-600 text-white font-medium 
+                                 py-2 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
+                    >
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
+                      Cancel Processing
+                    </button>
+                  </div>
+                ) : filterActive && filteredPhotos.length === 0 ? (
+                  <p className="text-sm text-gray-500 italic">
+                    No matching photos found using your face profile.
+                  </p>
+                ) : filterActive ? (
+                  <div>
+                    {/* 📚 Cache Information Banner */}
+                    {hasCachedResults() && cachedResults === filteredPhotos && (
+                      <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2 text-sm text-blue-800">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span className="font-medium">Showing previous results</span>
+                            <span className="text-blue-600">
+                              (scanned {new Date(lastScanTimestamp).toLocaleDateString()} at {new Date(lastScanTimestamp).toLocaleTimeString()})
+                            </span>
+                          </div>
+                          <button
+                            onClick={() => handleFindMyPhotos(true)}
+                            className="text-xs bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700"
+                          >
+                            Scan Again
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                      {filteredPhotos.map((photo) => (
+                        <div
+                          key={`filtered-${photo.id}`}
+                          className="cursor-pointer"
+                          onClick={() => setSelectedPhoto(photo)}
+                        >
+                          <img
+                            src={photo.downloadURL.replace(
+                              "groupify-77202.appspot.com",
+                              "groupify-77202.firebasestorage.app"
+                            )}
+                            alt={photo.fileName}
+                            className="w-full h-32 object-cover rounded-lg shadow"
+                          />
+                          <div className="text-xs text-gray-500 mt-1">
+                            {photo.faceMatch && (
+                              <div className="flex justify-between items-center">
+                                <span
+                                  className={`font-medium ${
+                                    photo.faceMatch.matchType === "strong"
+                                      ? "text-green-600"
+                                      : "text-blue-600"
+                                  }`}
+                                >
+                                  {(photo.faceMatch.confidence * 100).toFixed(1)}%
+                                  match
+                                </span>
+                                {photo.faceMatch.consensus && (
+                                  <span className="text-xs text-gray-400">
+                                    {photo.faceMatch.consensus}
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <div className="text-sm text-gray-400 italic mb-4">
+                      {hasProfile
+                        ? 'Click "Find My Photos" to automatically identify photos containing you using your face profile.'
+                        : "You need to create a face profile in your Dashboard before you can find photos with yourself."}
+                    </div>
+                    {!hasProfile && (
+                      <button
+                        onClick={() => navigate("/dashboard")}
+                        className="text-blue-600 hover:text-blue-700 text-sm font-medium underline"
+                      >
+                        Go to Dashboard to Setup Face Profile
+                      </button>
+                    )}
+                  </div>
+                )}
+
+                {/* Completion Summary */}
+                {!isProcessingFaces &&
+                  faceRecognitionProgress.totalMatches !== undefined && (
+                    <div className="mt-4 p-4 bg-indigo-50 rounded-lg border border-indigo-200">
+                      <div className="text-sm font-medium text-indigo-800 mb-2">
+                        🎯 Face Recognition Complete!
+                      </div>
+                      <div className="text-xs text-indigo-600 space-y-1">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <div>
+                              Total matches:{" "}
+                              {faceRecognitionProgress.totalMatches}
+                            </div>
+                            <div>
+                              Strong matches:{" "}
+                              {faceRecognitionProgress.strongMatches}
+                            </div>
+                            <div>
+                              Weak matches: {faceRecognitionProgress.weakMatches}
+                            </div>
+                          </div>
+                          <div>
+                            <div>
+                              Average confidence:{" "}
+                              {faceRecognitionProgress.averageConfidence}%
+                            </div>
+                            {faceRecognitionProgress.processingTime && (
+                              <div>
+                                Processing time:{" "}
+                                {faceRecognitionProgress.processingTime}s
+                              </div>
+                            )}
+                            <div className="text-blue-600 font-medium">
+                              📚 Results cached for quick access
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  );
-                })}
+                  )}
+              </div>
+            </div>
+
+            <div className="space-y-6">
+              <div className="bg-white rounded-lg shadow p-6">
+                <h2 className="text-xl font-bold mb-4">Invite People</h2>
+                <InviteFriendDropdown
+                  currentUser={currentUser}
+                  onSelect={handleInviteFriend}
+                  excludedUserIds={trip.members}
+                />
+              </div>
+
+              <div className="bg-white rounded-lg shadow p-6">
+                <h2 className="text-xl font-bold mb-4">Trip Members</h2>
+
+                {tripMembers.length === 0 ? (
+                  <p className="text-gray-500 text-sm">No members found.</p>
+                ) : (
+                  <ul className="space-y-3">
+                    {[...tripMembers]
+                      .sort((a, b) => {
+                        // 1. Current user first
+                        if (a.uid === currentUser.uid) return -1;
+                        if (b.uid === currentUser.uid) return 1;
+
+                        // 2. Admin second
+                        if (a.uid === trip.createdBy) return -1;
+                        if (b.uid === trip.createdBy) return 1;
+
+                        // 3. Alphabetical for the rest
+                        return (a.displayName || a.email || "").localeCompare(
+                          b.displayName || b.email || ""
+                        );
+                      })
+                      .map((member) => (
+                        <li
+                          key={member.uid}
+                          className="flex items-center justify-between"
+                        >
+                          <div className="flex items-center">
+                            <img
+                              src={
+                                member.photoURL ||
+                                "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg"
+                              }
+                              alt="Avatar"
+                              className="w-8 h-8 rounded-full object-cover border mr-3"
+                            />
+                            <span
+                              className="text-sm font-medium text-gray-700 hover:underline cursor-pointer"
+                              onClick={async () => {
+                                const isFriendNow = friends.includes(member.uid);
+                                const status = await checkFriendStatus(
+                                  currentUser.uid,
+                                  member.uid
+                                );
+                                const isPendingNow = status === "pending";
+                                setSelectedUser({
+                                  ...member,
+                                  __isFriend: isFriendNow,
+                                  __isPending: isPendingNow,
+                                });
+                              }}
+                            >
+                              {member.displayName || member.email || member.uid}
+                              {member.uid === currentUser.uid && " (Me)"}
+                            </span>
+                          </div>
+
+                          {/* Admin Badge */}
+                          {member.uid === trip.createdBy ? (
+                            <span className="bg-gray-300 text-gray-800 text-xs font-semibold px-2 py-0.5 rounded-full">
+                              Trip Creator
+                            </span>
+                          ) : trip.admins?.includes(member.uid) ? (
+                            <span className="bg-gray-200 text-gray-700 text-xs font-semibold px-2 py-0.5 rounded-full">
+                              Group Admin
+                            </span>
+                          ) : null}
+                        </li>
+                      ))}
+                  </ul>
+                )}
               </div>
             </div>
           </div>
-        )}
+
+          {selectedUser && (
+            <UserProfileModal
+              user={selectedUser}
+              currentUserId={currentUser?.uid}
+              isAdmin={isAdmin}
+              isFriend={friends.some((f) => f.uid === selectedUser.uid)}
+              isPending={pendingRequests.some((r) => r.from === selectedUser.uid)}
+              onAddFriend={handleAddFriend}
+              onRemoveFriend={handleRemoveFriend}
+              onCancelRequest={handleCancelFriendRequest}
+              onClose={() => setSelectedUser(null)}
+              trip={trip}
+              setTrip={setTrip}
+              tripMembers={tripMembers}
+              setTripMembers={setTripMembers}
+              setSelectedUser={setSelectedUser}
+              onPromoteToAdmin={handlePromoteToAdmin}
+              onDemoteFromAdmin={handleDemoteFromAdmin}
+              onRemoveFromTrip={handleRemoveFromTrip}
+              onlyTripMembers={true}
+            />
+          )}
+
+          {selectedPhoto && (
+            <div
+              className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50"
+              onClick={() => setSelectedPhoto(null)}
+            >
+              <img
+                src={selectedPhoto.downloadURL.replace(
+                  "groupify-77202.appspot.com",
+                  "groupify-77202.firebasestorage.app"
+                )}
+                alt="Full view"
+                className="max-w-4xl max-h-[90vh] object-contain rounded-lg"
+              />
+            </div>
+          )}
+
+          {showSuccess && (
+            <div className="fixed top-5 right-5 bg-green-600 text-white px-4 py-2 rounded shadow-lg z-50">
+              Friend request sent ✅
+            </div>
+          )}
+          {cancelSuccess && (
+            <div className="fixed top-5 right-5 bg-red-600 text-white px-4 py-2 rounded shadow-lg z-50">
+              {cancelSuccess}
+            </div>
+          )}
+
+          {showAllPhotosModal && (
+            <div
+              className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50"
+              onClick={() => setShowAllPhotosModal(false)}
+            >
+              <div
+                className="bg-white rounded-lg shadow-lg max-w-6xl max-h-[90vh] overflow-y-auto p-6"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-xl font-bold">All Trip Photos</h3>
+                  <div className="flex items-center gap-2">
+                    {selectMode && selectedPhotos.length > 0 && (
+                      <button
+                        onClick={handleDeleteSelectedPhotos}
+                        className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm flex items-center"
+                      >
+                        <span className="mr-2">🗑️</span>
+                        Delete {selectedPhotos.length}
+                      </button>
+                    )}
+                    {isAdmin && (
+                      <button
+                        onClick={() => {
+                          setSelectMode(!selectMode);
+                          setSelectedPhotos([]);
+                        }}
+                        className="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 text-sm"
+                      >
+                        {selectMode ? "Cancel Selection" : "Select Photos"}
+                      </button>
+                    )}
+                    <button
+                      onClick={() => setShowAllPhotosModal(false)}
+                      className="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400 text-sm"
+                    >
+                      Close
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {photos.map((photo) => {
+                    const isSelected = selectedPhotos.includes(photo.id);
+                    return (
+                      <div
+                        key={`modal-${photo.id}`}
+                        className={`relative cursor-pointer rounded-lg overflow-hidden shadow ${
+                          selectMode && !isSelected ? "opacity-60" : ""
+                        }`}
+                        onClick={() => {
+                          if (selectMode) {
+                            const togglePhotoSelection = (photoId) => {
+                              setSelectedPhotos((prev) =>
+                                prev.includes(photoId)
+                                  ? prev.filter((id) => id !== photoId)
+                                  : [...prev, photoId]
+                              );
+                            };
+                            togglePhotoSelection(photo.id);
+                          } else {
+                            setSelectedPhoto(photo);
+                            setShowAllPhotosModal(false);
+                          }
+                        }}
+                      >
+                        <img
+                          src={photo.downloadURL.replace(
+                            "groupify-77202.appspot.com",
+                            "groupify-77202.firebasestorage.app"
+                          )}
+                          alt={photo.fileName}
+                          className="w-full h-40 object-cover"
+                        />
+                        {selectMode && (
+                          <div className="absolute top-2 right-2 w-5 h-5 border-2 border-white rounded bg-white flex items-center justify-center">
+                            {isSelected && (
+                              <span className="text-green-600 font-bold">✓</span>
+                            )}
+                          </div>
+                        )}
+                        <div className="text-xs text-gray-500 mt-1">
+                          Uploaded{" "}
+                          {new Date(photo.uploadedAt).toLocaleDateString()}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

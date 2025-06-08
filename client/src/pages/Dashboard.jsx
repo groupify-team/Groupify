@@ -1,3 +1,4 @@
+// client/src/pages/Dashboard.jsx
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -9,8 +10,15 @@ import SettingsModal from "../components/settings/SettingsModal";
 import ModernNavbar from "../components/layout/Navbar";
 import UserProfileModal from "../components/profile/UserProfileModal";
 import FaceProfileManager from "../components/faceProfile/FaceProfileManager";
+import Sidebar from "../components/layout/Sidebar";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+
+// Hooks
+import { useSidebar } from "../hooks/useSidebar";
+
+// Icons
+import { Bars3Icon } from "@heroicons/react/24/outline";
 
 import {
   collection,
@@ -58,6 +66,9 @@ const Dashboard = () => {
   // 🔐 Authentication & Navigation
   const { currentUser, logout } = useAuth();
   const navigate = useNavigate();
+  
+  // Sidebar state
+  const sidebar = useSidebar();
 
   // 📊 State Management
   const [trips, setTrips] = useState([]);
@@ -630,565 +641,670 @@ const Dashboard = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <ModernNavbar
-        userData={userData}
-        currentUser={currentUser}
-        showUserMenu={showUserMenu}
-        setShowUserMenu={setShowUserMenu}
-        showNotifications={showNotifications}
-        setShowNotifications={setShowNotifications}
-        pendingRequests={pendingFriendRequests}
-        handleLogout={handleLogout}
-        setShowEditProfileModal={setShowEditProfileModal}
-        setShowSettingsModal={setShowSettingsModal}
-      />
+    <div className="min-h-screen bg-gray-100 flex">
+      {/* Sidebar */}
+      <Sidebar isOpen={sidebar.isOpen} onClose={sidebar.close} />
+      
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col lg:ml-0">
+        {/* Header with menu button */}
+        <div className="bg-white shadow-md">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between h-16 items-center">
+              {/* Left section – Menu button + Profile + Dropdown */}
+              <div className="flex items-center space-x-4">
+                {/* Mobile menu button */}
+                <button
+                  onClick={sidebar.toggle}
+                  className="lg:hidden p-2 rounded-md hover:bg-gray-100 transition-colors"
+                >
+                  <Bars3Icon className="w-6 h-6 text-gray-600" />
+                </button>
 
-      <ToastContainer
-        position="bottom-center"
-        autoClose={2000}
-        hideProgressBar
-      />
-
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* 🧭 Left Side (2/3 width) – My Trips */}
-          <div className="lg:col-span-2">
-            <div className="flex justify-between items-center mb-4 px-2">
-              <h2 className="text-2xl font-bold text-gray-900">My Trips</h2>
-              <button
-                onClick={() => setIsCreateModalOpen(true)}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium"
-              >
-                Create New Trip
-              </button>
-            </div>
-
-            {error && (
-              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 mx-2">
-                {error}
-              </div>
-            )}
-
-            {loading ? (
-              <div className="text-center py-8">
-                <p className="text-gray-600">Loading your trips...</p>
-              </div>
-            ) : (
-              <>
-                {trips.length === 0 ? (
-                  <div className="text-center py-12 bg-white rounded-lg shadow mx-2">
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">
-                      No trips yet
-                    </h3>
-                    <p className="text-gray-600 mb-4">
-                      Create your first trip to start organizing your photos
-                    </p>
-                    <button
-                      onClick={() => setIsCreateModalOpen(true)}
-                      className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium"
-                    >
-                      Create New Trip
-                    </button>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 px-2">
-                    {trips.map((trip) => (
-                      <TripCard
-                        key={trip.id}
-                        trip={trip}
-                        onClick={() => setSelectedTrip(trip.id)}
-                      />
-                    ))}
-                  </div>
-                )}
-
-                {/* Always show pending invites */}
-                <div className="bg-white rounded-lg shadow p-4 mt-6 mx-2">
-                  <h2 className="text-xl font-bold text-gray-900 mb-3">
-                    Pending Trip Invites
-                  </h2>
-
-                  {tripInvites.length === 0 ? (
-                    <p className="text-gray-500">
-                      No trip invites at the moment.
-                    </p>
-                  ) : (
-                    <ul className="divide-y divide-gray-200">
-                      {tripInvites.map((invite) => (
-                        <li
-                          key={invite.id}
-                          className="py-3 flex flex-col md:flex-row md:justify-between md:items-center space-y-3 md:space-y-0"
-                        >
-                          <div className="space-y-1">
-                            <p className="text-lg font-semibold text-indigo-700">
-                              {invite.tripName || "Unknown Trip"}
-                            </p>
-                            <p className="text-sm text-gray-500">
-                              Invited by:{" "}
-                              <span className="font-medium text-gray-700">
-                                {invite.inviterName || invite.inviterUid}
-                              </span>
-                            </p>
-                          </div>
-                          <div className="flex space-x-2">
-                            <button
-                              onClick={async () => {
-                                await acceptTripInvite(
-                                  invite.id,
-                                  currentUser.uid
-                                );
-                                setTripInvites(
-                                  tripInvites.filter((i) => i.id !== invite.id)
-                                );
-                                const refreshedTrips = await getUserTrips(
-                                  currentUser.uid
-                                );
-                                setTrips(refreshedTrips);
-                              }}
-                              className="bg-green-500 hover:bg-green-600 text-white px-4 py-1.5 rounded text-sm font-medium"
-                            >
-                              Accept
-                            </button>
-                            <button
-                              onClick={async () => {
-                                await declineTripInvite(invite.id);
-                                setTripInvites(
-                                  tripInvites.filter((i) => i.id !== invite.id)
-                                );
-                              }}
-                              className="bg-red-500 hover:bg-red-600 text-white px-4 py-1.5 rounded text-sm font-medium"
-                            >
-                              Decline
-                            </button>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              </>
-            )}
-          </div>
-
-          {/* ************* Right Side (1/3 width) – Face Profile & Friends ************* */}
-          <div className="space-y-6">
-            {/* 🎭 Face Profile Management Section */}
-            <div className="bg-white rounded-2xl shadow-md p-5">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold text-gray-800">
-                  Face Profile
-                </h2>
-                
-                {/* Profile Status Indicator */}
-                {isLoadingProfile ? (
-                  <div className="flex items-center gap-2 text-sm text-gray-500">
-                    <div className="animate-spin w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full"></div>
-                    Loading...
-                  </div>
-                ) : hasProfile ? (
-                  <div className="flex items-center gap-2 text-sm text-green-600">
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    Ready ({profilePhotos.length} photos)
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2 text-sm text-orange-600">
-                    <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-                    Not Set Up
-                  </div>
-                )}
-              </div>
-
-              {/* Profile Actions */}
-              <div className="flex flex-wrap gap-2 mb-4">
-                {!hasProfile ? (
+                <div className="flex items-center space-x-4 relative">
                   <button
-                    onClick={() => setShowProfileManager(true)}
-                    disabled={isLoadingProfile}
-                    className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-md text-sm font-medium"
+                    onClick={() => setShowUserMenu(!showUserMenu)}
+                    className="relative"
                   >
-                    Create Face Profile
+                    <img
+                      src={
+                        userData?.photoURL ||
+                        "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg"
+                      }
+                      alt="Profile"
+                      className="w-11 h-11 rounded-full object-cover border-2"
+                    />
+                    <span className="absolute bottom-0 right-[-6px] bg-white/80 rounded-full p-0.5 shadow">
+                      <svg
+                        className={`w-3 h-3 text-gray-700 transition-transform ${
+                          showUserMenu ? "rotate-180" : ""
+                        }`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 9l-7 7-7-7"
+                        />
+                      </svg>
+                    </span>
                   </button>
+
+                  {showUserMenu && (
+                    <div className="absolute left-0 top-14 w-48 bg-white text-gray-800 border rounded-lg shadow z-50">
+                      <button
+                        onClick={() => {
+                          setShowEditProfileModal(true);
+                          setShowUserMenu(false);
+                        }}
+                        className="flex items-center gap-2 w-full px-4 py-2 hover:bg-gray-100"
+                      >
+                        Edit Profile
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowSettingsModal(true);
+                          setShowUserMenu(false);
+                        }}
+                        className="flex items-center gap-2 w-full px-4 py-2 hover:bg-gray-100"
+                      >
+                        Settings
+                      </button>
+                      <button
+                        onClick={handleLogout}
+                        className="flex items-center gap-2 w-full px-4 py-2 text-red-500 hover:bg-gray-100"
+                      >
+                        Logout
+                      </button>
+                    </div>
+                  )}
+
+                  <span className="text-gray-700 text-base font-medium">
+                    Welcome,{" "}
+                    {userData?.displayName ||
+                      currentUser?.displayName ||
+                      currentUser?.email}
+                  </span>
+                </div>
+              </div>
+
+              {/* Center – Logo/Title */}
+              <div className="absolute left-1/2 transform -translate-x-1/2">
+                <h1 className="text-xl font-semibold text-gray-800">
+                  Groupify Dashboard
+                </h1>
+              </div>
+
+              {/* Right section – Notifications + Theme Toggle */}
+              <div className="flex items-center space-x-4">
+                <button
+                  onClick={() => setShowNotifications(!showNotifications)}
+                  className="relative"
+                >
+                  <svg className="w-6 h-6 text-gray-600 hover:text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5v-5zm-5 0H5l5 5v-5zM7.07 6.93A9.98 9.98 0 0112 4a9.98 9.98 0 014.93 1.07M12 1v3m0 16v3" />
+                  </svg>
+                  {pendingRequests?.length > 0 && (
+                    <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-600 rounded-full animate-ping"></span>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1">
+          <ToastContainer
+            position="bottom-center"
+            autoClose={2000}
+            hideProgressBar
+          />
+
+          <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* 🧭 Left Side (2/3 width) – My Trips */}
+              <div className="lg:col-span-2">
+                <div className="flex justify-between items-center mb-4 px-2">
+                  <h2 className="text-2xl font-bold text-gray-900">My Trips</h2>
+                  <button
+                    onClick={() => setIsCreateModalOpen(true)}
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+                  >
+                    Create New Trip
+                  </button>
+                </div>
+
+                {error && (
+                  <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 mx-2">
+                    {error}
+                  </div>
+                )}
+
+                {loading ? (
+                  <div className="text-center py-8">
+                    <p className="text-gray-600">Loading your trips...</p>
+                  </div>
                 ) : (
                   <>
-                    <button
-                      onClick={() => setShowProfileManagement(!showProfileManagement)}
-                      className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-md text-sm"
-                    >
-                      Manage Profile
-                    </button>
-                    <button
-                      onClick={deleteCurrentProfile}
-                      disabled={isManagingProfile}
-                      className="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-md text-sm disabled:opacity-50"
-                    >
-                      Delete Profile
-                    </button>
+                    {trips.length === 0 ? (
+                      <div className="text-center py-12 bg-white rounded-lg shadow mx-2">
+                        <h3 className="text-lg font-medium text-gray-900 mb-2">
+                          No trips yet
+                        </h3>
+                        <p className="text-gray-600 mb-4">
+                          Create your first trip to start organizing your photos
+                        </p>
+                        <button
+                          onClick={() => setIsCreateModalOpen(true)}
+                          className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+                        >
+                          Create New Trip
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 px-2">
+                        {trips.map((trip) => (
+                          <TripCard
+                            key={trip.id}
+                            trip={trip}
+                            onClick={() => setSelectedTrip(trip.id)}
+                          />
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Always show pending invites */}
+                    <div className="bg-white rounded-lg shadow p-4 mt-6 mx-2">
+                      <h2 className="text-xl font-bold text-gray-900 mb-3">
+                        Pending Trip Invites
+                      </h2>
+
+                      {tripInvites.length === 0 ? (
+                        <p className="text-gray-500">
+                          No trip invites at the moment.
+                        </p>
+                      ) : (
+                        <ul className="divide-y divide-gray-200">
+                          {tripInvites.map((invite) => (
+                            <li
+                              key={invite.id}
+                              className="py-3 flex flex-col md:flex-row md:justify-between md:items-center space-y-3 md:space-y-0"
+                            >
+                              <div className="space-y-1">
+                                <p className="text-lg font-semibold text-indigo-700">
+                                  {invite.tripName || "Unknown Trip"}
+                                </p>
+                                <p className="text-sm text-gray-500">
+                                  Invited by:{" "}
+                                  <span className="font-medium text-gray-700">
+                                    {invite.inviterName || invite.inviterUid}
+                                  </span>
+                                </p>
+                              </div>
+                              <div className="flex space-x-2">
+                                <button
+                                  onClick={async () => {
+                                    await acceptTripInvite(
+                                      invite.id,
+                                      currentUser.uid
+                                    );
+                                    setTripInvites(
+                                      tripInvites.filter((i) => i.id !== invite.id)
+                                    );
+                                    const refreshedTrips = await getUserTrips(
+                                      currentUser.uid
+                                    );
+                                    setTrips(refreshedTrips);
+                                  }}
+                                  className="bg-green-500 hover:bg-green-600 text-white px-4 py-1.5 rounded text-sm font-medium"
+                                >
+                                  Accept
+                                </button>
+                                <button
+                                  onClick={async () => {
+                                    await declineTripInvite(invite.id);
+                                    setTripInvites(
+                                      tripInvites.filter((i) => i.id !== invite.id)
+                                    );
+                                  }}
+                                  className="bg-red-500 hover:bg-red-600 text-white px-4 py-1.5 rounded text-sm font-medium"
+                                >
+                                  Decline
+                                </button>
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
                   </>
                 )}
               </div>
 
-              {/* Profile Management Options */}
-              {showProfileManagement && hasProfile && (
-                <div className="bg-gray-50 rounded-lg p-4 mb-4 border border-gray-200">
-                  <div className="flex flex-wrap gap-2 mb-3">
-                    <button
-                      onClick={optimizeCurrentProfile}
-                      disabled={isManagingProfile}
-                      className="bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 rounded-md text-sm disabled:opacity-50"
-                    >
-                      {isManagingProfile ? "Optimizing..." : "Optimize"}
-                    </button>
+              {/* ************* Right Side (1/3 width) – Face Profile & Friends ************* */}
+              <div className="space-y-6">
+                {/* 🎭 Face Profile Management Section */}
+                <div className="bg-white rounded-2xl shadow-md p-5">
+                  <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-xl font-semibold text-gray-800">
+                      Face Profile
+                    </h2>
+                    
+                    {/* Profile Status Indicator */}
+                    {isLoadingProfile ? (
+                      <div className="flex items-center gap-2 text-sm text-gray-500">
+                        <div className="animate-spin w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full"></div>
+                        Loading...
+                      </div>
+                    ) : hasProfile ? (
+                      <div className="flex items-center gap-2 text-sm text-green-600">
+                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        Ready ({profilePhotos.length} photos)
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2 text-sm text-orange-600">
+                        <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                        Not Set Up
+                      </div>
+                    )}
                   </div>
 
-                  {profile && (
-                    <div className="text-sm text-gray-600 grid grid-cols-2 gap-4 mb-4">
-                      <div>
-                        <div>Photos: {profilePhotos.length}</div>
-                        <div>
-                          Avg Quality:{" "}
-                          {(profile.metadata.avgQuality * 100).toFixed(1)}%
+                  {/* Profile Actions */}
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {!hasProfile ? (
+                      <button
+                        onClick={() => setShowProfileManager(true)}
+                        disabled={isLoadingProfile}
+                        className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-md text-sm font-medium"
+                      >
+                        Create Face Profile
+                      </button>
+                    ) : (
+                      <>
+                        <button
+                          onClick={() => setShowProfileManagement(!showProfileManagement)}
+                          className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-md text-sm"
+                        >
+                          Manage Profile
+                        </button>
+                        <button
+                          onClick={deleteCurrentProfile}
+                          disabled={isManagingProfile}
+                          className="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-md text-sm disabled:opacity-50"
+                        >
+                          Delete Profile
+                        </button>
+                      </>
+                    )}
+                  </div>
+
+                  {/* Profile Management Options */}
+                  {showProfileManagement && hasProfile && (
+                    <div className="bg-gray-50 rounded-lg p-4 mb-4 border border-gray-200">
+                      <div className="flex flex-wrap gap-2 mb-3">
+                        <button
+                          onClick={optimizeCurrentProfile}
+                          disabled={isManagingProfile}
+                          className="bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 rounded-md text-sm disabled:opacity-50"
+                        >
+                          {isManagingProfile ? "Optimizing..." : "Optimize"}
+                        </button>
+                      </div>
+
+                      {profile && (
+                        <div className="text-sm text-gray-600 grid grid-cols-2 gap-4 mb-4">
+                          <div>
+                            <div>Photos: {profilePhotos.length}</div>
+                            <div>
+                              Avg Quality:{" "}
+                              {(profile.metadata.avgQuality * 100).toFixed(1)}%
+                            </div>
+                          </div>
+                          <div>
+                            <div>Success Rate: {profile.metadata.successRate}%</div>
+                            <div>
+                              Created:{" "}
+                              {new Date(
+                                profile.metadata.createdAt
+                              ).toLocaleDateString()}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Add Photos Section */}
+                      <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Add More Photos
+                        </label>
+                        <div className="flex gap-2">
+                          <input
+                            type="file"
+                            multiple
+                            accept="image/*"
+                            onChange={handleProfilePhotoSelect}
+                            className="flex-1 text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                          />
+                          {uploadingProfilePhotos.length > 0 && (
+                            <button
+                              onClick={addMorePhotosToProfile}
+                              disabled={isManagingProfile}
+                              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm disabled:opacity-50"
+                            >
+                              {isManagingProfile
+                                ? "Adding..."
+                                : `Add ${uploadingProfilePhotos.length}`}
+                            </button>
+                          )}
                         </div>
                       </div>
+
+                      {/* Current Profile Photos */}
                       <div>
-                        <div>Success Rate: {profile.metadata.successRate}%</div>
-                        <div>
-                          Created:{" "}
-                          {new Date(
-                            profile.metadata.createdAt
-                          ).toLocaleDateString()}
+                        <div className="flex justify-between items-center mb-2">
+                          <label className="block text-sm font-medium text-gray-700">
+                            Profile Photos ({profilePhotos.length})
+                          </label>
+                          {selectedPhotosToRemove.length > 0 && (
+                            <button
+                              onClick={removeSelectedPhotos}
+                              disabled={isManagingProfile}
+                              className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md text-sm disabled:opacity-50"
+                            >
+                              {isManagingProfile
+                                ? "Removing..."
+                                : `Remove ${selectedPhotosToRemove.length}`}
+                            </button>
+                          )}
+                        </div>
+
+                        <div className="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto">
+                          {profilePhotos.map((photo) => (
+                            <div key={photo.id} className="relative">
+                              <div
+                                className={`cursor-pointer border-2 rounded-lg overflow-hidden ${
+                                  selectedPhotosToRemove.includes(photo.url)
+                                    ? "border-red-500 bg-red-100"
+                                    : "border-gray-200 hover:border-blue-400"
+                                }`}
+                                onClick={() => togglePhotoSelection(photo.url)}
+                              >
+                                <img
+                                  src={photo.url}
+                                  alt="Profile"
+                                  className="w-full h-16 object-cover"
+                                />
+                                <div
+                                  className={`absolute inset-0 flex items-center justify-center ${
+                                    selectedPhotosToRemove.includes(photo.url)
+                                      ? "bg-red-500 bg-opacity-50"
+                                      : "bg-transparent"
+                                  }`}
+                                >
+                                  {selectedPhotosToRemove.includes(photo.url) && (
+                                    <svg
+                                      className="w-6 h-6 text-white"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M5 13l4 4L19 7"
+                                      />
+                                    </svg>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="text-xs text-center mt-1">
+                                <span
+                                  className={`inline-block px-1 py-0.5 rounded text-white text-xs ${
+                                    photo.qualityTier === "high"
+                                      ? "bg-green-500"
+                                      : photo.qualityTier === "medium"
+                                      ? "bg-yellow-500"
+                                      : "bg-red-500"
+                                  }`}
+                                >
+                                  {(photo.confidence * 100).toFixed(0)}%
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+
+                        <div className="text-xs text-gray-600 mt-2">
+                          Click photos to select for removal. Higher confidence
+                          (green) photos give better results.
                         </div>
                       </div>
                     </div>
                   )}
 
-                  {/* Add Photos Section */}
-                  <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Add More Photos
-                    </label>
-                    <div className="flex gap-2">
-                      <input
-                        type="file"
-                        multiple
-                        accept="image/*"
-                        onChange={handleProfilePhotoSelect}
-                        className="flex-1 text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                      />
-                      {uploadingProfilePhotos.length > 0 && (
-                        <button
-                          onClick={addMorePhotosToProfile}
-                          disabled={isManagingProfile}
-                          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm disabled:opacity-50"
-                        >
-                          {isManagingProfile
-                            ? "Adding..."
-                            : `Add ${uploadingProfilePhotos.length}`}
-                        </button>
-                      )}
-                    </div>
+                  {/* Profile Info */}
+                  <div className="text-center py-4">
+                    {!hasProfile ? (
+                      <div className="text-sm text-gray-500 italic">
+                        Create a face profile to automatically find photos containing you in your trips.
+                      </div>
+                    ) : (
+                      <div className="text-sm text-green-600">
+                        ✅ Face profile ready! Visit your trips to find photos with you.
+                      </div>
+                    )}
                   </div>
+                </div>
 
-                  {/* Current Profile Photos */}
-                  <div>
-                    <div className="flex justify-between items-center mb-2">
-                      <label className="block text-sm font-medium text-gray-700">
-                        Profile Photos ({profilePhotos.length})
-                      </label>
-                      {selectedPhotosToRemove.length > 0 && (
-                        <button
-                          onClick={removeSelectedPhotos}
-                          disabled={isManagingProfile}
-                          className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md text-sm disabled:opacity-50"
+                {/* My Friends */}
+                <div className="bg-white rounded-2xl shadow-md p-5 mb-6">
+                  <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-xl font-semibold text-gray-800">
+                      My Friends
+                    </h2>
+                    <button
+                      onClick={() => setShowAddFriendModal(true)}
+                      className="bg-indigo-500 hover:bg-indigo-600 text-white text-sm px-4 py-1.5 rounded-full transition shadow"
+                    >
+                      + Add Friend
+                    </button>
+                  </div>
+                  {sortedFriends.length === 0 ? (
+                    <p className="text-gray-500 text-sm">
+                      You have no friends yet.
+                    </p>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-64 overflow-y-auto">
+                      {sortedFriends.map((friend) => (
+                        <div
+                          key={friend.uid || friend.id}
+                          className="flex items-center bg-gray-50 hover:bg-gray-100 p-3 rounded-xl shadow-sm transition cursor-pointer"
+                          onClick={() => handleOpenUserProfile(friend.uid)}
                         >
-                          {isManagingProfile
-                            ? "Removing..."
-                            : `Remove ${selectedPhotosToRemove.length}`}
-                        </button>
-                      )}
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto">
-                      {profilePhotos.map((photo) => (
-                        <div key={photo.id} className="relative">
-                          <div
-                            className={`cursor-pointer border-2 rounded-lg overflow-hidden ${
-                              selectedPhotosToRemove.includes(photo.url)
-                                ? "border-red-500 bg-red-100"
-                                : "border-gray-200 hover:border-blue-400"
-                            }`}
-                            onClick={() => togglePhotoSelection(photo.url)}
-                          >
-                            <img
-                              src={photo.url}
-                              alt="Profile"
-                              className="w-full h-16 object-cover"
-                            />
-                            <div
-                              className={`absolute inset-0 flex items-center justify-center ${
-                                selectedPhotosToRemove.includes(photo.url)
-                                  ? "bg-red-500 bg-opacity-50"
-                                  : "bg-transparent"
-                              }`}
-                            >
-                              {selectedPhotosToRemove.includes(photo.url) && (
-                                <svg
-                                  className="w-6 h-6 text-white"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M5 13l4 4L19 7"
-                                  />
-                                </svg>
-                              )}
-                            </div>
-                          </div>
-                          <div className="text-xs text-center mt-1">
-                            <span
-                              className={`inline-block px-1 py-0.5 rounded text-white text-xs ${
-                                photo.qualityTier === "high"
-                                  ? "bg-green-500"
-                                  : photo.qualityTier === "medium"
-                                  ? "bg-yellow-500"
-                                  : "bg-red-500"
-                              }`}
-                            >
-                              {(photo.confidence * 100).toFixed(0)}%
-                            </span>
+                          <img
+                            src={
+                              friend.photoURL ||
+                              "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg"
+                            }
+                            alt="Friend"
+                            className="w-10 h-10 rounded-full object-cover border mr-3"
+                          />
+                          <div className="text-sm font-medium text-gray-800">
+                            {friend.displayName || friend.email || friend.uid}
                           </div>
                         </div>
                       ))}
                     </div>
-
-                    <div className="text-xs text-gray-600 mt-2">
-                      Click photos to select for removal. Higher confidence
-                      (green) photos give better results.
-                    </div>
-                  </div>
+                  )}
                 </div>
-              )}
 
-              {/* Profile Info */}
-              <div className="text-center py-4">
-                {!hasProfile ? (
-                  <div className="text-sm text-gray-500 italic">
-                    Create a face profile to automatically find photos containing you in your trips.
-                  </div>
-                ) : (
-                  <div className="text-sm text-green-600">
-                    ✅ Face profile ready! Visit your trips to find photos with you.
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* My Friends */}
-            <div className="bg-white rounded-2xl shadow-md p-5 mb-6">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold text-gray-800">
-                  My Friends
-                </h2>
-                <button
-                  onClick={() => setShowAddFriendModal(true)}
-                  className="bg-indigo-500 hover:bg-indigo-600 text-white text-sm px-4 py-1.5 rounded-full transition shadow"
-                >
-                  + Add Friend
-                </button>
-              </div>
-              {sortedFriends.length === 0 ? (
-                <p className="text-gray-500 text-sm">
-                  You have no friends yet.
-                </p>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-64 overflow-y-auto">
-                  {sortedFriends.map((friend) => (
-                    <div
-                      key={friend.uid || friend.id}
-                      className="flex items-center bg-gray-50 hover:bg-gray-100 p-3 rounded-xl shadow-sm transition cursor-pointer"
-                      onClick={() => handleOpenUserProfile(friend.uid)}
-                    >
-                      <img
-                        src={
-                          friend.photoURL ||
-                          "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg"
-                        }
-                        alt="Friend"
-                        className="w-10 h-10 rounded-full object-cover border mr-3"
-                      />
-                      <div className="text-sm font-medium text-gray-800">
-                        {friend.displayName || friend.email || friend.uid}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Pending Friend Requests */}
-            <div className="bg-white rounded-2xl shadow-md p-5">
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">
-                Pending Friend Requests
-              </h2>
-              {pendingRequests.length === 0 ? (
-                <p className="text-gray-500 text-sm">No pending requests.</p>
-              ) : (
-                <div className="space-y-3">
-                  {pendingRequests.map((req) => (
-                    <div
-                      key={req.from}
-                      className="flex items-center justify-between bg-gray-50 hover:bg-gray-100 p-3 rounded-xl shadow-sm transition"
-                    >
-                      <div
-                        onClick={() => handleOpenUserProfile(req.from)}
-                        className="cursor-pointer font-medium text-sm text-gray-800"
-                      >
-                        {req.displayName || req.email || req.from}
-                      </div>
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => handleAccept(req.from)}
-                          className="bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 rounded-full text-sm shadow"
-                        >
-                          Accept
-                        </button>
-                        <button
-                          onClick={() => handleReject(req.from)}
-                          className="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-full text-sm shadow"
-                        >
-                          Reject
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </main>
-
-      {/* Face Profile Manager Modal */}
-      {showProfileManager && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-6">
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-800">
-                    Create Face Profile
+                {/* Pending Friend Requests */}
+                <div className="bg-white rounded-2xl shadow-md p-5">
+                  <h2 className="text-xl font-semibold text-gray-800 mb-4">
+                    Pending Friend Requests
                   </h2>
-                  <p className="text-sm text-gray-600 mt-1">
-                    Upload photos of yourself for automatic photo recognition in trips
-                  </p>
+                  {pendingRequests.length === 0 ? (
+                    <p className="text-gray-500 text-sm">No pending requests.</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {pendingRequests.map((req) => (
+                        <div
+                          key={req.from}
+                          className="flex items-center justify-between bg-gray-50 hover:bg-gray-100 p-3 rounded-xl shadow-sm transition"
+                        >
+                          <div
+                            onClick={() => handleOpenUserProfile(req.from)}
+                            className="cursor-pointer font-medium text-sm text-gray-800"
+                          >
+                            {req.displayName || req.email || req.from}
+                          </div>
+                          <div className="flex space-x-2">
+                            <button
+                              onClick={() => handleAccept(req.from)}
+                              className="bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 rounded-full text-sm shadow"
+                            >
+                              Accept
+                            </button>
+                            <button
+                              onClick={() => handleReject(req.from)}
+                              className="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-full text-sm shadow"
+                            >
+                              Reject
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
-                <button
-                  onClick={() => setShowProfileManager(false)}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  <svg
-                    className="w-6 h-6"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
-                </button>
               </div>
-
-              <FaceProfileManager onProfileLoaded={handleProfileLoaded} />
             </div>
-          </div>
-        </div>
-      )}
+          </main>
 
-      {/* Modals & Upload Section */}
+          {/* Face Profile Manager Modal */}
+          {showProfileManager && (
+            <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+              <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+                <div className="p-6">
+                  <div className="flex justify-between items-center mb-6">
+                    <div>
+                      <h2 className="text-2xl font-bold text-gray-800">
+                        Create Face Profile
+                      </h2>
+                      <p className="text-sm text-gray-600 mt-1">
+                        Upload photos of yourself for automatic photo recognition in trips
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setShowProfileManager(false)}
+                      className="text-gray-400 hover:text-gray-600"
+                    >
+                      <svg
+                        className="w-6 h-6"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
+                    </button>
+                  </div>
 
-      {/* Add Friend Modal */}
-      {showAddFriendModal && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold">Find Friends</h2>
-              <button
-                onClick={() => setShowAddFriendModal(false)}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                ✕
-              </button>
+                  <FaceProfileManager onProfileLoaded={handleProfileLoaded} />
+                </div>
+              </div>
             </div>
-            <AddFriend onUserSelect={handleOpenUserProfile} />
-          </div>
+          )}
+
+          {/* Modals & Upload Section */}
+
+          {/* Add Friend Modal */}
+          {showAddFriendModal && (
+            <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+              <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold">Find Friends</h2>
+                  <button
+                    onClick={() => setShowAddFriendModal(false)}
+                    className="text-gray-500 hover:text-gray-700"
+                  >
+                    ✕
+                  </button>
+                </div>
+                <AddFriend onUserSelect={handleOpenUserProfile} />
+              </div>
+            </div>
+          )}
+
+          {/* Edit Profile Modal */}
+          <EditProfileModal
+            isOpen={showEditProfileModal}
+            onClose={() => setShowEditProfileModal(false)}
+          />
+
+          {/* Create Trip Modal */}
+          <CreateTripModal
+            isOpen={isCreateModalOpen}
+            onClose={() => setIsCreateModalOpen(false)}
+            onTripCreated={handleTripCreated}
+          />
+
+          {/* Settings Modal */}
+          <SettingsModal
+            isOpen={showSettingsModal}
+            onClose={() => setShowSettingsModal(false)}
+          />
+
+          {/* User Profile Modal */}
+          {selectedUserProfile && (
+            <UserProfileModal
+              user={selectedUserProfile}
+              currentUserId={currentUser.uid}
+              isFriend={friends.some((f) => f.uid === selectedUserProfile.uid)}
+              isPending={
+                pendingRequests.some((r) => r.from === selectedUserProfile.uid) ||
+                pendingFriendRequests.some((r) => r.to === selectedUserProfile.uid)
+              }
+              onlyTripMembers={false}
+              onAddFriend={async (uid) => {
+                await sendFriendRequest(currentUser.uid, uid);
+                toast.success("Friend request sent");
+
+                setPendingFriendRequests((prev) => [
+                  ...prev,
+                  { from: currentUser.uid, to: uid },
+                ]);
+              }}
+              onCancelRequest={async (uid) => {
+                await cancelFriendRequest(currentUser.uid, uid);
+                setPendingFriendRequests((prev) =>
+                  prev.filter((r) => r.to !== uid && r.from !== uid)
+                );
+                toast.info("Friend request cancelled");
+              }}
+              onRemoveFriend={async (uid) => {
+                await removeFriend(currentUser.uid, uid);
+                setFriends((prev) => prev.filter((f) => f.uid !== uid));
+                toast.success("Friend removed");
+              }}
+              onClose={() => {
+                setIsUserProfileOpen(false);
+                setSelectedUserProfile(null);
+              }}
+            />
+          )}
         </div>
-      )}
-
-      {/* Edit Profile Modal */}
-      <EditProfileModal
-        isOpen={showEditProfileModal}
-        onClose={() => setShowEditProfileModal(false)}
-      />
-
-      {/* Create Trip Modal */}
-      <CreateTripModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        onTripCreated={handleTripCreated}
-      />
-
-      {/* Settings Modal */}
-      <SettingsModal
-        isOpen={showSettingsModal}
-        onClose={() => setShowSettingsModal(false)}
-      />
-
-      {/* User Profile Modal */}
-      {selectedUserProfile && (
-        <UserProfileModal
-          user={selectedUserProfile}
-          currentUserId={currentUser.uid}
-          isFriend={friends.some((f) => f.uid === selectedUserProfile.uid)}
-          isPending={
-            pendingRequests.some((r) => r.from === selectedUserProfile.uid) ||
-            pendingFriendRequests.some((r) => r.to === selectedUserProfile.uid)
-          }
-          onlyTripMembers={false}
-          onAddFriend={async (uid) => {
-            await sendFriendRequest(currentUser.uid, uid);
-            toast.success("Friend request sent");
-
-            setPendingFriendRequests((prev) => [
-              ...prev,
-              { from: currentUser.uid, to: uid },
-            ]);
-          }}
-          onCancelRequest={async (uid) => {
-            await cancelFriendRequest(currentUser.uid, uid);
-            setPendingFriendRequests((prev) =>
-              prev.filter((r) => r.to !== uid && r.from !== uid)
-            );
-            toast.info("Friend request cancelled");
-          }}
-          onRemoveFriend={async (uid) => {
-            await removeFriend(currentUser.uid, uid);
-            setFriends((prev) => prev.filter((f) => f.uid !== uid));
-            toast.success("Friend removed");
-          }}
-          onClose={() => {
-            setIsUserProfileOpen(false);
-            setSelectedUserProfile(null);
-          }}
-        />
-      )}
+      </div>
     </div>
   );
 };
