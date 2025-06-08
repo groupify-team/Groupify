@@ -45,9 +45,7 @@ import {
   removeFriend,
   getPendingFriendRequests,
 } from "../services/firebase/users";
-import {
-  getFaceProfileFromStorage,
-} from "../services/firebase/faceProfiles";
+import { getFaceProfileFromStorage } from "../services/firebase/faceProfiles";
 
 // 🔹 Face Recognition (Simplified)
 import {
@@ -78,7 +76,7 @@ const TripDetail = () => {
   const { tripId } = useParams();
   const navigate = useNavigate();
   const { currentUser } = useAuth();
-  
+
   // Sidebar state
   const sidebar = useSidebar();
 
@@ -139,16 +137,16 @@ const TripDetail = () => {
   // 📚 Clear cache when photos change
   useEffect(() => {
     if (photosHaveChanged() && cachedResults) {
-      console.log('📚 Photos changed, clearing cached results');
+      console.log("📚 Photos changed, clearing cached results");
       setCachedResults(null);
       setLastScannedPhotos(null);
       setLastScanTimestamp(null);
-      
+
       // If filter is currently active with old cached results, turn it off
       if (filterActive) {
         setFilterActive(false);
         setFilteredPhotos([]);
-        toast.info('Photos changed - previous scan results cleared');
+        toast.info("Photos changed - previous scan results cleared");
       }
     }
   }, [photos]);
@@ -156,31 +154,33 @@ const TripDetail = () => {
   // 📚 Check if photos have changed since last scan
   const photosHaveChanged = () => {
     if (!lastScannedPhotos || !photos) return true;
-    
+
     // Quick check: compare counts
     if (lastScannedPhotos.length !== photos.length) return true;
-    
+
     // More thorough check: compare photo IDs and upload times
     const currentPhotoSignature = photos
-      .map(p => `${p.id}-${p.uploadedAt}`)
+      .map((p) => `${p.id}-${p.uploadedAt}`)
       .sort()
-      .join('|');
-    
+      .join("|");
+
     const lastPhotoSignature = lastScannedPhotos
-      .map(p => `${p.id}-${p.uploadedAt}`)
-      .sort()  
-      .join('|');
-    
+      .map((p) => `${p.id}-${p.uploadedAt}`)
+      .sort()
+      .join("|");
+
     return currentPhotoSignature !== lastPhotoSignature;
   };
 
   // 📚 Check if cached results are still valid
   const hasCachedResults = () => {
-    return cachedResults && 
-           lastScannedPhotos && 
-           lastScanTimestamp && 
-           !photosHaveChanged() &&
-           hasProfile;
+    return (
+      cachedResults &&
+      lastScannedPhotos &&
+      lastScanTimestamp &&
+      !photosHaveChanged() &&
+      hasProfile
+    );
   };
 
   // 📚 Show cached results without scanning
@@ -189,7 +189,11 @@ const TripDetail = () => {
       setFilteredPhotos(cachedResults);
       setFilterActive(true);
       toast.success(`Showing ${cachedResults.length} previously found photos`);
-      console.log(`📚 Loaded ${cachedResults.length} cached results from ${new Date(lastScanTimestamp).toLocaleString()}`);
+      console.log(
+        `📚 Loaded ${cachedResults.length} cached results from ${new Date(
+          lastScanTimestamp
+        ).toLocaleString()}`
+      );
     }
   };
 
@@ -343,7 +347,9 @@ const TripDetail = () => {
 
     // Check if user has a face profile
     if (!hasProfile) {
-      toast.error("No face profile found. Please create one in your Dashboard first.");
+      toast.error(
+        "No face profile found. Please create one in your Dashboard first."
+      );
       return;
     }
 
@@ -383,26 +389,28 @@ const TripDetail = () => {
       if (matches.length > 0) {
         setFilteredPhotos(matches);
         setFilterActive(true);
-        
+
         // 📚 Save results to cache
         saveScanResults(matches);
-        
+
         toast.success(`Found ${matches.length} matching photos!`);
         console.log(`✅ Found ${matches.length} matching photos`);
       } else {
         console.log("ℹ️ No matching photos found");
         setFilteredPhotos([]);
         setFilterActive(true); // Still show the section but with "no matches" message
-        
+
         // 📚 Save empty results to cache
         saveScanResults([]);
-        
+
         toast.info("No matching photos found");
       }
     } catch (error) {
       console.error("❌ Face recognition error:", error);
       if (error.message.includes("No face profile found")) {
-        toast.error("No face profile found. Please create one in your Dashboard first.");
+        toast.error(
+          "No face profile found. Please create one in your Dashboard first."
+        );
       } else {
         toast.error("Face recognition failed: " + error.message);
       }
@@ -431,7 +439,9 @@ const TripDetail = () => {
 
   const handleToggleFaceFilter = () => {
     if (!canFilterByFace) {
-      toast.error("Face filtering is only available for registered trip members.");
+      toast.error(
+        "Face filtering is only available for registered trip members."
+      );
       return;
     }
 
@@ -484,7 +494,16 @@ const TripDetail = () => {
     const fetchTripAndPhotos = async () => {
       try {
         setLoading(true);
-        const tripData = await getTrip(tripId);
+        let tripData = await getTrip(tripId);
+
+        if (!tripData.admins?.includes(tripData.createdBy)) {
+          tripData = {
+            ...tripData,
+            admins: [...(tripData.admins || []), tripData.createdBy],
+          };
+          await updateTrip(tripId, tripData);
+        }
+
         setTrip(tripData);
         setIsAdmin(tripData?.admins?.includes(currentUser?.uid));
 
@@ -716,9 +735,18 @@ const TripDetail = () => {
         where("inviteeUid", "==", friend.uid),
         where("status", "==", "pending")
       );
+
       const existing = await getDocs(q);
+
       if (!existing.empty) {
-        toast.warning(`${friend.displayName} already has a pending invite.`);
+        toast.warning(`${friend.displayName} already has a pending invite.`, {
+          style: {
+            borderRadius: "10px",
+            background: "#fdf6e3",
+            color: "#333",
+          },
+        });
+
         return;
       }
 
@@ -726,6 +754,7 @@ const TripDetail = () => {
       toast.success(`Invitation sent to ${friend.displayName}.`);
     } catch (error) {
       console.error("Error sending trip invite:", error);
+
       toast.error("Failed to send invitation.");
     }
   };
@@ -753,21 +782,33 @@ const TripDetail = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <p className="text-lg text-gray-600">Loading trip details...</p>
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="relative">
+            <div className="w-20 h-20 border-4 border-purple-200 border-t-white rounded-full animate-spin mx-auto mb-6"></div>
+            <div className="absolute inset-0 w-20 h-20 border-4 border-transparent border-t-purple-500 rounded-full animate-pulse mx-auto"></div>
+          </div>
+          <p className="text-xl text-white/80 font-medium">Loading your amazing trip...</p>
+          <p className="text-purple-300 mt-2">Getting everything ready</p>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="text-center max-w-md mx-auto p-6 bg-white rounded-lg shadow-lg">
-          <h2 className="text-2xl font-bold text-red-700 mb-2">Error</h2>
-          <p className="text-gray-600 mb-4">{error}</p>
+      <div className="min-h-screen bg-gradient-to-br from-red-900 via-red-800 to-slate-900 flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto p-8 bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl border border-white/20">
+          <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+            <svg className="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+          <h2 className="text-2xl font-bold text-white mb-4">Oops! Something went wrong</h2>
+          <p className="text-red-100 mb-6">{error}</p>
           <button
             onClick={() => navigate("/dashboard")}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+            className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 shadow-lg"
           >
             Back to Dashboard
           </button>
@@ -779,552 +820,700 @@ const TripDetail = () => {
   if (!trip) return null;
 
   return (
-    <div className="min-h-screen bg-gray-100 flex">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex overflow-x-auto">
       {/* Sidebar */}
       <Sidebar isOpen={sidebar.isOpen} onClose={sidebar.close} />
-      
+
       {/* Main Content */}
-      <div className="flex-1 flex flex-col lg:ml-0">
-        {/* Header with menu button */}
-        <div className="bg-gradient-to-r from-indigo-600 to-purple-700 text-white">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div className="flex flex-col sm:flex-row justify-between items-center sm:items-start">
-              {/* Left side: Menu button + Trip thumbnail + details */}
-              <div className="flex items-center space-x-4 mb-4 sm:mb-0">
+      <div className="flex-1 flex flex-col lg:ml-0 min-w-0">
+        {/* Modern Hero Header */}
+        <div className="relative overflow-hidden">
+          {/* Animated background */}
+          <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600">
+            <div className="absolute inset-0 bg-black/20"></div>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
+          </div>
+          
+          {/* Floating shapes */}
+          <div className="absolute top-10 left-10 w-32 h-32 bg-white/10 rounded-full blur-xl animate-pulse"></div>
+          <div className="absolute bottom-10 right-10 w-48 h-48 bg-purple-400/20 rounded-full blur-2xl animate-bounce"></div>
+          
+          <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8">
+              {/* Left side: Trip info */}
+              <div className="flex items-center space-x-6 flex-1">
                 {/* Mobile menu button */}
                 <button
                   onClick={sidebar.toggle}
-                  className="lg:hidden p-2 rounded-md hover:bg-white hover:bg-opacity-20 transition-colors"
+                  className="lg:hidden p-3 rounded-2xl bg-white/10 backdrop-blur-sm hover:bg-white/20 transition-all duration-300 transform hover:scale-110"
                 >
-                  <Bars3Icon className="w-6 h-6" />
+                  <Bars3Icon className="w-6 h-6 text-white" />
                 </button>
-                
+
+                {/* Trip thumbnail with modern styling */}
                 {photos.length > 0 && (
-                  <img
-                    src={photos[0].downloadURL.replace(
-                      "groupify-77202.appspot.com",
-                      "groupify-77202.firebasestorage.app"
-                    )}
-                    alt="Trip Thumbnail"
-                    className="w-20 h-20 rounded-full object-cover border-2 border-white transform hover:scale-105 transition duration-300"
-                  />
+                  <div className="relative group">
+                    <div className="absolute -inset-1 bg-gradient-to-r from-pink-600 to-purple-600 rounded-3xl blur opacity-75 group-hover:opacity-100 transition duration-300"></div>
+                    <img
+                      src={photos[0].downloadURL.replace(
+                        "groupify-77202.appspot.com",
+                        "groupify-77202.firebasestorage.app"
+                      )}
+                      alt="Trip Thumbnail"
+                      className="relative w-24 h-24 rounded-2xl object-cover border-2 border-white/20 shadow-2xl transform group-hover:scale-105 transition-all duration-500"
+                    />
+                    <div className="absolute inset-0 rounded-2xl bg-gradient-to-t from-black/50 to-transparent"></div>
+                  </div>
                 )}
-                <div>
-                  <h1 className="text-3xl font-bold tracking-tight">
+                
+                <div className="flex-1">
+                  <h1 className="text-3xl lg:text-4xl font-bold text-white tracking-tight mb-2 drop-shadow-lg">
                     {trip.name}
                   </h1>
-                  <p className="text-indigo-100 mt-1">
-                    {trip.location || "No location specified"}
-                  </p>
-                  <div className="flex mt-2 text-sm text-indigo-200">
-                    <span className="mr-4 font-medium">
-                      {trip.startDate || "No start date"}
-                      {trip.startDate && trip.endDate && " - "}
-                      {trip.endDate}
-                    </span>
-                    <span>{trip.members?.length || 1} members</span>
+                  <div className="flex items-center gap-2 text-white/90 mb-3">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <p className="text-lg font-medium">
+                      {trip.location || "No location specified"}
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-4 text-sm text-white/80">
+                    <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-3 py-1">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <span className="font-medium">
+                        {trip.startDate || "No start date"}
+                        {trip.startDate && trip.endDate && " - "}
+                        {trip.endDate}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-3 py-1">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                      </svg>
+                      <span className="font-medium">{trip.members?.length || 1} members</span>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              {/* Right side: Logo with rounded background */}
-              <Link to="/dashboard" title="Go to Dashboard">
-                <div className="bg-white bg-opacity-20 rounded-full p-2 hover:bg-opacity-30 transition">
-                  <img
-                    src={logo}
-                    alt="Logo"
-                    className="w-16 h-16 rounded-full object-contain"
-                  />
+              {/* Right side: Logo with glass morphism */}
+              <Link to="/dashboard" title="Go to Dashboard" className="group">
+                <div className="relative">
+                  <div className="absolute -inset-2 bg-gradient-to-r from-white/20 to-white/10 rounded-3xl blur opacity-75 group-hover:opacity-100 transition duration-300"></div>
+                  <div className="relative bg-white/10 backdrop-blur-lg rounded-2xl p-4 border border-white/20 group-hover:bg-white/20 transition-all duration-300 transform group-hover:scale-110">
+                    <img
+                      src={logo}
+                      alt="Groupify"
+                      className="w-16 h-16 rounded-xl object-contain"
+                    />
+                  </div>
                 </div>
               </Link>
             </div>
           </div>
         </div>
 
-        {/* Content */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2 space-y-6">
-              <div className="bg-white rounded-lg shadow p-6">
-                <div className="flex justify-between items-center">
-                  <h2 className="text-xl font-bold">Trip Details</h2>
+        {/* Content with modern cards */}
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            {/* Main Content - 3 columns */}
+            <div className="lg:col-span-3 space-y-6">
+              {/* Trip Details Card */}
+              <div className="group relative">
+                <div className="absolute -inset-1 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-3xl blur opacity-25 group-hover:opacity-40 transition duration-300"></div>
+                <div className="relative bg-white/70 backdrop-blur-xl rounded-2xl shadow-xl p-6 border border-white/20">
+                  <div className="flex justify-between items-start mb-6">
+                    <div>
+                      <h2 className="text-3xl font-bold text-gray-800 mb-2">Trip Details</h2>
+                      <div className="flex items-center gap-2 text-gray-600">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <span className="font-medium">{photos.length} photos</span>
+                      </div>
+                    </div>
 
-                  <div className="flex gap-2">
-                    {isAdmin && (
+                    <div className="flex gap-3">
+                      {isAdmin && (
+                        <button
+                          onClick={() => toast.info("Edit Trip feature coming soon!")}
+                          className="group relative px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-medium transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                        >
+                          <div className="absolute inset-0 bg-gradient-to-r from-blue-700 to-blue-800 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                          <span className="relative flex items-center gap-2">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                            Edit Trip
+                          </span>
+                        </button>
+                      )}
                       <button
-                        onClick={() => toast.info("Edit Trip feature coming soon!")}
-                        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+                        onClick={() => setShowUploadForm(!showUploadForm)}
+                        className="group relative px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-medium transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
                       >
-                        Edit Trip
+                        <div className="absolute inset-0 bg-gradient-to-r from-indigo-700 to-purple-700 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        <span className="relative flex items-center gap-2">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                          </svg>
+                          {showUploadForm ? "Cancel Upload" : "Add Photos"}
+                        </span>
                       </button>
-                    )}
-                    <button
-                      onClick={() => setShowUploadForm(!showUploadForm)}
-                      className="flex items-center bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium"
-                    >
-                      {showUploadForm ? "Cancel Upload" : "Add Photos"}
-                    </button>
+                    </div>
                   </div>
-                </div>
 
-                {trip.description ? (
-                  <p className="text-gray-700">{trip.description}</p>
-                ) : (
-                  <p className="text-gray-500 italic">No description provided</p>
-                )}
-
-                <div className="text-sm text-gray-500 mt-2">
-                  {photos.length} photos
+                  {trip.description ? (
+                    <p className="text-gray-700 text-lg leading-relaxed">{trip.description}</p>
+                  ) : (
+                    <p className="text-gray-500 italic text-lg">No description provided</p>
+                  )}
                 </div>
               </div>
 
+              {/* Upload Form */}
               {showUploadForm && (
-                <div className="bg-white rounded-lg shadow p-6">
-                  <h2 className="text-xl font-bold mb-4">Upload Photos</h2>
-                  <PhotoUpload
-                    tripId={tripId}
-                    onPhotoUploaded={handlePhotoUploaded}
-                  />
+                <div className="group relative">
+                  <div className="absolute -inset-1 bg-gradient-to-r from-green-600 to-blue-600 rounded-3xl blur opacity-25 group-hover:opacity-40 transition duration-300"></div>
+                  <div className="relative bg-white/70 backdrop-blur-xl rounded-2xl shadow-xl p-6 border border-white/20">
+                    <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-3">
+                      <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-blue-500 rounded-lg flex items-center justify-center">
+                        <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                        </svg>
+                      </div>
+                      Upload New Photos
+                    </h2>
+                    <PhotoUpload
+                      tripId={tripId}
+                      onPhotoUploaded={handlePhotoUploaded}
+                    />
+                  </div>
                 </div>
               )}
 
-              <div className="bg-white rounded-lg shadow p-6 mb-8">
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-xl font-bold">All Trip Photos</h2>
-                  <div className="flex gap-2">
+              {/* All Photos Section */}
+              <div className="group relative">
+                <div className="absolute -inset-1 bg-gradient-to-r from-purple-600 to-pink-600 rounded-3xl blur opacity-25 group-hover:opacity-40 transition duration-300"></div>
+                <div className="relative bg-white/70 backdrop-blur-xl rounded-2xl shadow-xl p-6 border border-white/20">
+                  <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-3">
+                      <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
+                        <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                      All Trip Photos
+                      <span className="text-lg text-purple-600 bg-purple-100 px-3 py-1 rounded-full">
+                        {photos.length}
+                      </span>
+                    </h2>
                     <button
                       onClick={() => setShowAllPhotosModal(true)}
-                      className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+                      className="group relative px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-medium transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
                     >
-                      All Photos
+                      <div className="absolute inset-0 bg-gradient-to-r from-purple-700 to-pink-700 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                      <span className="relative flex items-center gap-2">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                        </svg>
+                        View All
+                      </span>
                     </button>
                   </div>
-                </div>
 
-                <div className="flex overflow-x-auto space-x-4 pb-2">
-                  {photos.map((photo) => (
-                    <div
-                      key={`all-${photo.id}`}
-                      className="flex-shrink-0 w-64 cursor-pointer relative"
-                      onClick={() => setSelectedPhoto(photo)}
-                    >
-                      <img
-                        src={photo.downloadURL.replace(
-                          "groupify-77202.appspot.com",
-                          "groupify-77202.firebasestorage.app"
-                        )}
-                        alt={photo.fileName}
-                        className="w-full h-40 object-cover rounded-lg shadow"
-                      />
-                      <div className="text-xs text-gray-500 mt-1">
-                        Uploaded {new Date(photo.uploadedAt).toLocaleDateString()}
+                  {photos.length === 0 ? (
+                    <div className="text-center py-16">
+                      <div className="w-24 h-24 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                        <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
                       </div>
+                      <h3 className="text-xl font-semibold text-gray-600 mb-2">No photos yet</h3>
+                      <p className="text-gray-500">Start by uploading some amazing memories!</p>
                     </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Simplified Face Recognition Section */}
-              <div className="bg-white rounded-lg shadow p-6">
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-xl font-bold">Photos With Me</h2>
-
-                  {/* Simplified Face Recognition Controls */}
-                  {!isProcessingFaces ? (
-                    <div className="flex items-center gap-3">
-                      {/* Profile Status Indicator */}
-                      {isLoadingProfile ? (
-                        <div className="flex items-center gap-2 text-sm text-gray-500">
-                          <div className="animate-spin w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full"></div>
-                          Loading profile...
-                        </div>
-                      ) : hasProfile ? (
-                        <div className="flex items-center gap-2 text-sm text-green-600">
-                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                          Profile Ready
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-2 text-sm text-orange-600">
-                          <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-                          No Profile
-                        </div>
-                      )}
-
-                      {/* 📚 Cache Status Indicator */}
-                      {hasCachedResults() && (
-                        <div className="flex items-center gap-2 text-sm text-blue-600">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h8a2 2 0 002-2V8m-9 4h4" />
-                          </svg>
-                          Previous scan available
-                        </div>
-                      )}
-
-                      {/* Action Buttons */}
-                      <div className="flex gap-2">
-                        {/* 📚 Show Cached Results Button (if available) */}
-                        {hasCachedResults() && !filterActive && (
-                          <button
-                            onClick={showCachedResults}
-                            disabled={!canFilterByFace || isLoadingProfile}
-                            className="px-3 py-2 text-sm bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707" />
-                            </svg>
-                            Show Previous ({cachedResults.length})
-                          </button>
-                        )}
-
-                        {/* Main Action Button */}
-                        <button
-                          onClick={() => {
-                            if (filterActive) {
-                              setFilterActive(false);
-                              setFilteredPhotos([]);
-                            } else if (hasCachedResults()) {
-                              // Force rescan
-                              handleFindMyPhotos(true);
-                            } else {
-                              // Normal scan
-                              handleFindMyPhotos(false);
-                            }
-                          }}
-                          disabled={!canFilterByFace || isLoadingProfile}
-                          className={`px-4 py-2 text-sm rounded-md flex items-center gap-2 ${
-                            canFilterByFace && !isLoadingProfile
-                              ? filterActive
-                                ? "bg-red-500 text-white hover:bg-red-600"
-                                : hasProfile
-                                ? hasCachedResults()
-                                  ? "bg-green-600 text-white hover:bg-green-700"
-                                  : "bg-indigo-600 text-white hover:bg-indigo-700"
-                                : "bg-orange-500 text-white hover:bg-orange-600"
-                              : "bg-gray-300 text-gray-600 cursor-not-allowed"
-                          }`}
-                        >
-                          <svg
-                            className="w-4 h-4"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                            />
-                          </svg>
-                          {filterActive
-                            ? "Hide My Photos"
-                            : hasProfile
-                            ? hasCachedResults()
-                              ? `Scan Again (${photos.length})`
-                              : `Find My Photos (${photos.length})`
-                            : `Need Profile First`}
-                        </button>
-                      </div>
-                    </div>
-                  ) : null}
-                </div>
-
-                {/* Processing UI */}
-                {isProcessingFaces ? (
-                  <div className="space-y-4">
-                    {/* Progress Bar */}
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center text-sm">
-                        <span className="text-gray-600">Processing Photos</span>
-                        <span className="font-medium">
-                          {getProgressPercentage()}%
-                        </span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-3">
+                  ) : (
+                    <div className="flex overflow-x-auto space-x-4 pb-4 scrollbar-hide">
+                      {photos.slice(0, 8).map((photo, index) => (
                         <div
-                          className="bg-indigo-600 h-3 rounded-full transition-all duration-300 ease-out"
-                          style={{ width: `${getProgressPercentage()}%` }}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Status Information */}
-                    <div className="bg-gray-50 rounded-lg p-4 space-y-2">
-                      <div className="text-sm font-medium text-gray-800">
-                        {faceRecognitionProgress.phase || "Processing..."}
-                      </div>
-
-                      {faceRecognitionProgress.profileInfo && (
-                        <div className="text-xs text-blue-600">
-                          Using profile with{" "}
-                          {faceRecognitionProgress.profileInfo.references}{" "}
-                          reference photos
-                        </div>
-                      )}
-
-                      {faceRecognitionProgress.currentPhoto && (
-                        <div className="text-xs text-gray-600">
-                          Current: {faceRecognitionProgress.currentPhoto}
-                        </div>
-                      )}
-
-                      {faceRecognitionProgress.estimatedTimeRemaining && (
-                        <div className="text-xs text-indigo-600 font-medium">
-                          {formatTimeRemaining(
-                            faceRecognitionProgress.estimatedTimeRemaining
-                          )}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Live Match Counter */}
-                    {faceRecognitionProgress.matches?.length > 0 && (
-                      <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                        <div className="text-sm font-medium text-green-800">
-                          ✅ Found {faceRecognitionProgress.matches.length}{" "}
-                          matches so far
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Cancel Button */}
-                    <button
-                      onClick={handleCancelFaceRecognition}
-                      className="w-full bg-red-500 hover:bg-red-600 text-white font-medium 
-                                 py-2 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
-                    >
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M6 18L18 6M6 6l12 12"
-                        />
-                      </svg>
-                      Cancel Processing
-                    </button>
-                  </div>
-                ) : filterActive && filteredPhotos.length === 0 ? (
-                  <p className="text-sm text-gray-500 italic">
-                    No matching photos found using your face profile.
-                  </p>
-                ) : filterActive ? (
-                  <div>
-                    {/* 📚 Cache Information Banner */}
-                    {hasCachedResults() && cachedResults === filteredPhotos && (
-                      <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2 text-sm text-blue-800">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            <span className="font-medium">Showing previous results</span>
-                            <span className="text-blue-600">
-                              (scanned {new Date(lastScanTimestamp).toLocaleDateString()} at {new Date(lastScanTimestamp).toLocaleTimeString()})
-                            </span>
-                          </div>
-                          <button
-                            onClick={() => handleFindMyPhotos(true)}
-                            className="text-xs bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700"
-                          >
-                            Scan Again
-                          </button>
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                      {filteredPhotos.map((photo) => (
-                        <div
-                          key={`filtered-${photo.id}`}
-                          className="cursor-pointer"
+                          key={`preview-${photo.id}`}
+                          className="flex-shrink-0 w-56 cursor-pointer group relative"
                           onClick={() => setSelectedPhoto(photo)}
                         >
-                          <img
-                            src={photo.downloadURL.replace(
-                              "groupify-77202.appspot.com",
-                              "groupify-77202.firebasestorage.app"
-                            )}
-                            alt={photo.fileName}
-                            className="w-full h-32 object-cover rounded-lg shadow"
-                          />
-                          <div className="text-xs text-gray-500 mt-1">
-                            {photo.faceMatch && (
-                              <div className="flex justify-between items-center">
-                                <span
-                                  className={`font-medium ${
-                                    photo.faceMatch.matchType === "strong"
-                                      ? "text-green-600"
-                                      : "text-blue-600"
-                                  }`}
-                                >
-                                  {(photo.faceMatch.confidence * 100).toFixed(1)}%
-                                  match
-                                </span>
-                                {photo.faceMatch.consensus && (
-                                  <span className="text-xs text-gray-400">
-                                    {photo.faceMatch.consensus}
-                                  </span>
-                                )}
-                              </div>
-                            )}
+                          <div className="relative overflow-hidden rounded-2xl shadow-lg transform group-hover:scale-105 transition-all duration-500">
+                            <img
+                              src={photo.downloadURL.replace(
+                                "groupify-77202.appspot.com",
+                                "groupify-77202.firebasestorage.app"
+                              )}
+                              alt={photo.fileName}
+                              className="w-full h-36 object-cover"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                            <div className="absolute bottom-4 left-4 right-4 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 opacity-0 group-hover:opacity-100">
+                              <p className="text-white text-sm font-medium">
+                                {new Date(photo.uploadedAt).toLocaleDateString()}
+                              </p>
+                            </div>
                           </div>
                         </div>
                       ))}
+                      {photos.length > 8 && (
+                        <div 
+                          className="flex-shrink-0 w-56 h-36 bg-gradient-to-br from-purple-100 to-indigo-100 rounded-2xl border-2 border-dashed border-purple-300 flex items-center justify-center cursor-pointer hover:from-purple-200 hover:to-indigo-200 transition-all duration-300"
+                          onClick={() => setShowAllPhotosModal(true)}
+                        >
+                          <div className="text-center">
+                            <div className="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center mx-auto mb-3">
+                              <span className="text-white font-bold text-lg">+{photos.length - 8}</span>
+                            </div>
+                            <p className="text-purple-700 font-medium">View all photos</p>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <div className="text-sm text-gray-400 italic mb-4">
-                      {hasProfile
-                        ? 'Click "Find My Photos" to automatically identify photos containing you using your face profile.'
-                        : "You need to create a face profile in your Dashboard before you can find photos with yourself."}
+                  )}
+                </div>
+              </div>
+
+              {/* Enhanced Face Recognition Section */}
+              <div className="group relative">
+                <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-3xl blur opacity-25 group-hover:opacity-40 transition duration-300"></div>
+                <div className="relative bg-white/70 backdrop-blur-xl rounded-2xl shadow-xl p-6 border border-white/20">
+                  <div className="flex justify-between items-start mb-6">
+                    <div>
+                      <h2 className="text-2xl font-bold text-gray-800 mb-2 flex items-center gap-3">
+                        <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center">
+                          <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                          </svg>
+                        </div>
+                        Photos With Me
+                      </h2>
+                      <p className="text-gray-600">AI-powered face recognition to find photos containing you</p>
                     </div>
-                    {!hasProfile && (
-                      <button
-                        onClick={() => navigate("/dashboard")}
-                        className="text-blue-600 hover:text-blue-700 text-sm font-medium underline"
-                      >
-                        Go to Dashboard to Setup Face Profile
-                      </button>
+
+                    {!isProcessingFaces && (
+                      <div className="flex items-center gap-4">
+                        {/* Status Indicators */}
+                        <div className="flex items-center gap-3">
+                          {isLoadingProfile ? (
+                            <div className="flex items-center gap-2 bg-gray-100 px-3 py-2 rounded-full">
+                              <div className="animate-spin w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full"></div>
+                              <span className="text-sm text-gray-600">Loading...</span>
+                            </div>
+                          ) : hasProfile ? (
+                            <div className="flex items-center gap-2 bg-green-100 px-3 py-2 rounded-full">
+                              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                              <span className="text-sm text-green-700 font-medium">Profile Ready</span>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-2 bg-orange-100 px-3 py-2 rounded-full">
+                              <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                              <span className="text-sm text-orange-700 font-medium">No Profile</span>
+                            </div>
+                          )}
+
+                          {hasCachedResults() && (
+                            <div className="flex items-center gap-2 bg-blue-100 px-3 py-2 rounded-full">
+                              <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h8a2 2 0 002-2V8m-9 4h4" />
+                              </svg>
+                              <span className="text-sm text-blue-700 font-medium">Previous scan</span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="flex gap-3">
+                          {hasCachedResults() && !filterActive && (
+                            <button
+                              onClick={showCachedResults}
+                              disabled={!canFilterByFace || isLoadingProfile}
+                              className="px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-xl font-medium transition-all duration-300 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707" />
+                              </svg>
+                              Show Previous ({cachedResults.length})
+                            </button>
+                          )}
+
+                          <button
+                            onClick={() => {
+                              if (filterActive) {
+                                setFilterActive(false);
+                                setFilteredPhotos([]);
+                              } else if (hasCachedResults()) {
+                                handleFindMyPhotos(true);
+                              } else {
+                                handleFindMyPhotos(false);
+                              }
+                            }}
+                            disabled={!canFilterByFace || isLoadingProfile}
+                            className={`group relative px-6 py-3 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center gap-2 ${
+                              canFilterByFace && !isLoadingProfile
+                                ? filterActive
+                                  ? "bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700"
+                                  : hasProfile
+                                  ? hasCachedResults()
+                                    ? "bg-gradient-to-r from-green-600 to-green-700 text-white hover:from-green-700 hover:to-green-800"
+                                    : "bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:from-blue-700 hover:to-cyan-700"
+                                  : "bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700"
+                                : "bg-gray-300 text-gray-600 cursor-not-allowed"
+                            }`}
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                            {filterActive
+                              ? "Hide My Photos"
+                              : hasProfile
+                              ? hasCachedResults()
+                                ? `Scan Again (${photos.length})`
+                                : `Find My Photos (${photos.length})`
+                              : `Need Profile First`}
+                          </button>
+                        </div>
+                      </div>
                     )}
                   </div>
-                )}
 
-                {/* Completion Summary */}
-                {!isProcessingFaces &&
-                  faceRecognitionProgress.totalMatches !== undefined && (
-                    <div className="mt-4 p-4 bg-indigo-50 rounded-lg border border-indigo-200">
-                      <div className="text-sm font-medium text-indigo-800 mb-2">
-                        🎯 Face Recognition Complete!
+                  {/* Processing UI with modern design */}
+                  {isProcessingFaces ? (
+                    <div className="space-y-6">
+                      {/* Modern Progress Bar */}
+                      <div className="space-y-4">
+                        <div className="flex justify-between items-center">
+                          <span className="text-lg font-semibold text-gray-700">Processing Photos</span>
+                          <span className="text-2xl font-bold text-blue-600">{getProgressPercentage()}%</span>
+                        </div>
+                        <div className="relative w-full h-4 bg-gray-200 rounded-full overflow-hidden">
+                          <div 
+                            className="absolute top-0 left-0 h-full bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full transition-all duration-500 ease-out shadow-lg"
+                            style={{ width: `${getProgressPercentage()}%` }}
+                          >
+                            <div className="absolute inset-0 bg-white/30 rounded-full animate-pulse"></div>
+                          </div>
+                        </div>
                       </div>
-                      <div className="text-xs text-indigo-600 space-y-1">
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <div>
-                              Total matches:{" "}
-                              {faceRecognitionProgress.totalMatches}
-                            </div>
-                            <div>
-                              Strong matches:{" "}
-                              {faceRecognitionProgress.strongMatches}
-                            </div>
-                            <div>
-                              Weak matches: {faceRecognitionProgress.weakMatches}
-                            </div>
+
+                      {/* Status Cards */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="bg-blue-50 border border-blue-200 rounded-2xl p-6">
+                          <h4 className="font-semibold text-blue-800 mb-3 flex items-center gap-2">
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            Status
+                          </h4>
+                          <p className="text-blue-700 font-medium">
+                            {faceRecognitionProgress.phase || "Processing..."}
+                          </p>
+                          {faceRecognitionProgress.currentPhoto && (
+                            <p className="text-blue-600 text-sm mt-2 truncate">
+                              Current: {faceRecognitionProgress.currentPhoto}
+                            </p>
+                          )}
+                          {faceRecognitionProgress.estimatedTimeRemaining && (
+                            <p className="text-blue-600 font-medium text-sm mt-2">
+                              ⏱️ {formatTimeRemaining(faceRecognitionProgress.estimatedTimeRemaining)}
+                            </p>
+                          )}
+                        </div>
+
+                        {faceRecognitionProgress.matches?.length > 0 && (
+                          <div className="bg-green-50 border border-green-200 rounded-2xl p-6">
+                            <h4 className="font-semibold text-green-800 mb-3 flex items-center gap-2">
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                              Matches Found
+                            </h4>
+                            <p className="text-green-700 text-2xl font-bold">
+                              {faceRecognitionProgress.matches.length}
+                            </p>
+                            <p className="text-green-600 text-sm">
+                              Found so far...
+                            </p>
                           </div>
-                          <div>
-                            <div>
-                              Average confidence:{" "}
-                              {faceRecognitionProgress.averageConfidence}%
-                            </div>
-                            {faceRecognitionProgress.processingTime && (
+                        )}
+                      </div>
+
+                      {/* Cancel Button */}
+                      <button
+                        onClick={handleCancelFaceRecognition}
+                        className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-semibold py-4 px-6 rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center justify-center gap-3"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                        Cancel Processing
+                      </button>
+                    </div>
+                  ) : filterActive && filteredPhotos.length === 0 ? (
+                    <div className="text-center py-16">
+                      <div className="w-24 h-24 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                        <svg className="w-12 h-12 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                      </div>
+                      <h3 className="text-xl font-semibold text-gray-600 mb-2">No matches found</h3>
+                      <p className="text-gray-500">No photos containing you were found using your face profile.</p>
+                    </div>
+                  ) : filterActive ? (
+                    <div className="space-y-6">
+                      {/* Cache Information Banner */}
+                      {hasCachedResults() && cachedResults === filteredPhotos && (
+                        <div className="bg-blue-50 border border-blue-200 rounded-2xl p-6">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
                               <div>
-                                Processing time:{" "}
-                                {faceRecognitionProgress.processingTime}s
+                                <p className="font-semibold text-blue-800">Showing previous results</p>
+                                <p className="text-blue-600 text-sm">
+                                  Scanned on {new Date(lastScanTimestamp).toLocaleDateString()} at{" "}
+                                  {new Date(lastScanTimestamp).toLocaleTimeString()}
+                                </p>
                               </div>
-                            )}
-                            <div className="text-blue-600 font-medium">
-                              📚 Results cached for quick access
+                            </div>
+                            <button
+                              onClick={() => handleFindMyPhotos(true)}
+                              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors"
+                            >
+                              Scan Again
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Photos Grid */}
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                        {filteredPhotos.map((photo) => (
+                          <div
+                            key={`filtered-${photo.id}`}
+                            className="group cursor-pointer"
+                            onClick={() => setSelectedPhoto(photo)}
+                          >
+                            <div className="relative overflow-hidden rounded-2xl shadow-lg transform group-hover:scale-105 transition-all duration-500">
+                              <img
+                                src={photo.downloadURL.replace(
+                                  "groupify-77202.appspot.com",
+                                  "groupify-77202.firebasestorage.app"
+                                )}
+                                alt={photo.fileName}
+                                className="w-full h-40 object-cover"
+                              />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                              
+                              {/* Match confidence badge */}
+                              {photo.faceMatch && (
+                                <div className="absolute top-3 right-3">
+                                  <div className={`px-2 py-1 rounded-full text-xs font-bold text-white ${
+                                    photo.faceMatch.matchType === "strong" 
+                                      ? "bg-green-500" 
+                                      : "bg-blue-500"
+                                  }`}>
+                                    {(photo.faceMatch.confidence * 100).toFixed(1)}%
+                                  </div>
+                                </div>
+                              )}
                             </div>
                           </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center py-16">
+                      <div className="w-24 h-24 bg-gradient-to-br from-blue-100 to-cyan-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                        <svg className="w-12 h-12 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                      </div>
+                      <h3 className="text-xl font-semibold text-gray-600 mb-3">
+                        {hasProfile ? "Ready to find your photos!" : "Setup your face profile"}
+                      </h3>
+                      <p className="text-gray-500 mb-6 max-w-md mx-auto">
+                        {hasProfile
+                          ? 'Click "Find My Photos" to automatically identify photos containing you using AI face recognition.'
+                          : "You need to create a face profile in your Dashboard before you can find photos with yourself."}
+                      </p>
+                      {!hasProfile && (
+                        <button
+                          onClick={() => navigate("/dashboard")}
+                          className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 shadow-lg"
+                        >
+                          Setup Face Profile
+                        </button>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Completion Summary */}
+                  {!isProcessingFaces && faceRecognitionProgress.totalMatches !== undefined && (
+                    <div className="mt-8 bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200 rounded-2xl p-6">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-8 h-8 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg flex items-center justify-center">
+                          <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                        </div>
+                        <h4 className="text-lg font-bold text-indigo-800">Face Recognition Complete!</h4>
+                      </div>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                        <div className="bg-white/50 rounded-xl p-3 text-center">
+                          <div className="text-2xl font-bold text-indigo-600">{faceRecognitionProgress.totalMatches}</div>
+                          <div className="text-indigo-700">Total matches</div>
+                        </div>
+                        <div className="bg-white/50 rounded-xl p-3 text-center">
+                          <div className="text-2xl font-bold text-green-600">{faceRecognitionProgress.strongMatches}</div>
+                          <div className="text-green-700">Strong matches</div>
+                        </div>
+                        <div className="bg-white/50 rounded-xl p-3 text-center">
+                          <div className="text-2xl font-bold text-blue-600">{faceRecognitionProgress.averageConfidence}%</div>
+                          <div className="text-blue-700">Avg confidence</div>
+                        </div>
+                        <div className="bg-white/50 rounded-xl p-3 text-center">
+                          <div className="text-2xl font-bold text-purple-600">📚</div>
+                          <div className="text-purple-700">Results cached</div>
                         </div>
                       </div>
                     </div>
                   )}
+                </div>
               </div>
             </div>
 
-            <div className="space-y-6">
-              <div className="bg-white rounded-lg shadow p-6">
-                <h2 className="text-xl font-bold mb-4">Invite People</h2>
-                <InviteFriendDropdown
-                  currentUser={currentUser}
-                  onSelect={handleInviteFriend}
-                  excludedUserIds={trip.members}
-                />
+            {/* Sidebar - 1 column */}
+            <div className="lg:col-span-1 space-y-6">
+              {/* Invite People Card */}
+              <div className="group relative">
+                <div className="absolute -inset-1 bg-gradient-to-r from-green-600 to-emerald-600 rounded-3xl blur opacity-25 group-hover:opacity-40 transition duration-300"></div>
+                <div className="relative bg-white/70 backdrop-blur-xl rounded-2xl shadow-xl p-6 border border-white/20">
+                  <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-3">
+                    <div className="w-7 h-7 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg flex items-center justify-center">
+                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      </svg>
+                    </div>
+                    Invite People
+                  </h2>
+                  <InviteFriendDropdown
+                    currentUser={currentUser}
+                    onSelect={handleInviteFriend}
+                    excludedUserIds={trip.members}
+                  />
+                </div>
               </div>
 
-              <div className="bg-white rounded-lg shadow p-6">
-                <h2 className="text-xl font-bold mb-4">Trip Members</h2>
+              {/* Trip Members Card */}
+              <div className="group relative">
+                <div className="absolute -inset-1 bg-gradient-to-r from-orange-600 to-red-600 rounded-3xl blur opacity-25 group-hover:opacity-40 transition duration-300"></div>
+                <div className="relative bg-white/70 backdrop-blur-xl rounded-2xl shadow-xl p-6 border border-white/20">
+                  <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-3">
+                    <div className="w-7 h-7 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg flex items-center justify-center">
+                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                      </svg>
+                    </div>
+                    Trip Members
+                    <span className="text-sm text-orange-600 bg-orange-100 px-2 py-1 rounded-full">
+                      {tripMembers.length}
+                    </span>
+                  </h2>
 
-                {tripMembers.length === 0 ? (
-                  <p className="text-gray-500 text-sm">No members found.</p>
-                ) : (
-                  <ul className="space-y-3">
-                    {[...tripMembers]
-                      .sort((a, b) => {
-                        // 1. Current user first
-                        if (a.uid === currentUser.uid) return -1;
-                        if (b.uid === currentUser.uid) return 1;
+                  {tripMembers.length === 0 ? (
+                    <div className="text-center py-8">
+                      <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                        </svg>
+                      </div>
+                      <p className="text-gray-500 text-sm">No members found</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {[...tripMembers]
+                        .sort((a, b) => {
+                          if (a.uid === currentUser.uid) return -1;
+                          if (b.uid === currentUser.uid) return 1;
+                          if (a.uid === trip.createdBy) return -1;
+                          if (b.uid === trip.createdBy) return 1;
+                          return (a.displayName || a.email || "").localeCompare(
+                            b.displayName || b.email || ""
+                          );
+                        })
+                        .map((member) => (
+                          <div
+                            key={member.uid}
+                            className="group flex items-center justify-between p-3 rounded-xl bg-white/50 hover:bg-white/80 transition-all duration-300 cursor-pointer"
+                            onClick={async () => {
+                              const isFriendNow = friends.includes(member.uid);
+                              const status = await checkFriendStatus(currentUser.uid, member.uid);
+                              const isPendingNow = status === "pending";
+                              setSelectedUser({
+                                ...member,
+                                __isFriend: isFriendNow,
+                                __isPending: isPendingNow,
+                              });
+                            }}
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="relative">
+                                <img
+                                  src={
+                                    member.photoURL ||
+                                    "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg"
+                                  }
+                                  alt="Avatar"
+                                  className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm"
+                                />
+                                {member.uid === currentUser.uid && (
+                                  <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white rounded-full"></div>
+                                )}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium text-gray-800 truncate">
+                                  {member.displayName || member.email || member.uid}
+                                  {member.uid === currentUser.uid && (
+                                    <span className="text-green-600 ml-1">(You)</span>
+                                  )}
+                                </p>
+                              </div>
+                            </div>
 
-                        // 2. Admin second
-                        if (a.uid === trip.createdBy) return -1;
-                        if (b.uid === trip.createdBy) return 1;
-
-                        // 3. Alphabetical for the rest
-                        return (a.displayName || a.email || "").localeCompare(
-                          b.displayName || b.email || ""
-                        );
-                      })
-                      .map((member) => (
-                        <li
-                          key={member.uid}
-                          className="flex items-center justify-between"
-                        >
-                          <div className="flex items-center">
-                            <img
-                              src={
-                                member.photoURL ||
-                                "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg"
-                              }
-                              alt="Avatar"
-                              className="w-8 h-8 rounded-full object-cover border mr-3"
-                            />
-                            <span
-                              className="text-sm font-medium text-gray-700 hover:underline cursor-pointer"
-                              onClick={async () => {
-                                const isFriendNow = friends.includes(member.uid);
-                                const status = await checkFriendStatus(
-                                  currentUser.uid,
-                                  member.uid
-                                );
-                                const isPendingNow = status === "pending";
-                                setSelectedUser({
-                                  ...member,
-                                  __isFriend: isFriendNow,
-                                  __isPending: isPendingNow,
-                                });
-                              }}
-                            >
-                              {member.displayName || member.email || member.uid}
-                              {member.uid === currentUser.uid && " (Me)"}
-                            </span>
+                            {/* Role Badge */}
+                            <div className="flex-shrink-0">
+                              {member.uid === trip.createdBy ? (
+                                <span className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-semibold px-3 py-1 rounded-full">
+                                  Creator
+                                </span>
+                              ) : trip.admins?.includes(member.uid) ? (
+                                <span className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white text-xs font-semibold px-3 py-1 rounded-full">
+                                  Admin
+                                </span>
+                              ) : (
+                                <span className="bg-gray-200 text-gray-700 text-xs font-semibold px-3 py-1 rounded-full">
+                                  Member
+                                </span>
+                              )}
+                            </div>
                           </div>
-
-                          {/* Admin Badge */}
-                          {member.uid === trip.createdBy ? (
-                            <span className="bg-gray-300 text-gray-800 text-xs font-semibold px-2 py-0.5 rounded-full">
-                              Trip Creator
-                            </span>
-                          ) : trip.admins?.includes(member.uid) ? (
-                            <span className="bg-gray-200 text-gray-700 text-xs font-semibold px-2 py-0.5 rounded-full">
-                              Group Admin
-                            </span>
-                          ) : null}
-                        </li>
-                      ))}
-                  </ul>
-                )}
+                        ))}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
 
+          {/* Modals and overlays remain the same but with enhanced styling */}
           {selectedUser && (
             <UserProfileModal
               user={selectedUser}
@@ -1348,122 +1537,166 @@ const TripDetail = () => {
             />
           )}
 
+          {/* Enhanced Photo Modal */}
           {selectedPhoto && (
             <div
-              className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50"
+              className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4"
               onClick={() => setSelectedPhoto(null)}
             >
-              <img
-                src={selectedPhoto.downloadURL.replace(
-                  "groupify-77202.appspot.com",
-                  "groupify-77202.firebasestorage.app"
-                )}
-                alt="Full view"
-                className="max-w-4xl max-h-[90vh] object-contain rounded-lg"
-              />
+              <div className="relative max-w-6xl max-h-[90vh] rounded-3xl overflow-hidden shadow-2xl">
+                <img
+                  src={selectedPhoto.downloadURL.replace(
+                    "groupify-77202.appspot.com",
+                    "groupify-77202.firebasestorage.app"
+                  )}
+                  alt="Full view"
+                  className="max-w-full max-h-full object-contain"
+                />
+                <button
+                  onClick={() => setSelectedPhoto(null)}
+                  className="absolute top-4 right-4 w-10 h-10 bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-black/70 transition-colors"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
             </div>
           )}
 
-          {showSuccess && (
-            <div className="fixed top-5 right-5 bg-green-600 text-white px-4 py-2 rounded shadow-lg z-50">
-              Friend request sent ✅
-            </div>
-          )}
-          {cancelSuccess && (
-            <div className="fixed top-5 right-5 bg-red-600 text-white px-4 py-2 rounded shadow-lg z-50">
-              {cancelSuccess}
-            </div>
-          )}
-
+          {/* Enhanced All Photos Modal */}
           {showAllPhotosModal && (
             <div
-              className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50"
+              className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4"
               onClick={() => setShowAllPhotosModal(false)}
             >
               <div
-                className="bg-white rounded-lg shadow-lg max-w-6xl max-h-[90vh] overflow-y-auto p-6"
+                className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl max-w-6xl max-h-[85vh] overflow-hidden border border-white/20"
                 onClick={(e) => e.stopPropagation()}
               >
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-xl font-bold">All Trip Photos</h3>
-                  <div className="flex items-center gap-2">
-                    {selectMode && selectedPhotos.length > 0 && (
+                <div className="p-6">
+                  <div className="flex justify-between items-center mb-8">
+                    <h3 className="text-3xl font-bold text-gray-800 flex items-center gap-3">
+                      <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
+                        <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                      All Trip Photos
+                      <span className="text-lg text-purple-600 bg-purple-100 px-3 py-1 rounded-full">
+                        {photos.length}
+                      </span>
+                    </h3>
+                    <div className="flex items-center gap-3">
+                      {selectMode && selectedPhotos.length > 0 && (
+                        <button
+                          onClick={handleDeleteSelectedPhotos}
+                          className="px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-xl font-medium transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center gap-2"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                          Delete {selectedPhotos.length}
+                        </button>
+                      )}
+                      {isAdmin && (
+                        <button
+                          onClick={() => {
+                            setSelectMode(!selectMode);
+                            setSelectedPhotos([]);
+                          }}
+                          className={`px-6 py-3 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 shadow-lg ${
+                            selectMode 
+                              ? "bg-gradient-to-r from-gray-600 to-gray-700 text-white"
+                              : "bg-gradient-to-r from-yellow-500 to-orange-500 text-white"
+                          }`}
+                        >
+                          {selectMode ? "Cancel" : "Select Photos"}
+                        </button>
+                      )}
                       <button
-                        onClick={handleDeleteSelectedPhotos}
-                        className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm flex items-center"
+                        onClick={() => setShowAllPhotosModal(false)}
+                        className="px-6 py-3 bg-gradient-to-r from-gray-600 to-gray-700 text-white rounded-xl font-medium transition-all duration-300 transform hover:scale-105 shadow-lg"
                       >
-                        <span className="mr-2">🗑️</span>
-                        Delete {selectedPhotos.length}
+                        Close
                       </button>
-                    )}
-                    {isAdmin && (
-                      <button
-                        onClick={() => {
-                          setSelectMode(!selectMode);
-                          setSelectedPhotos([]);
-                        }}
-                        className="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 text-sm"
-                      >
-                        {selectMode ? "Cancel Selection" : "Select Photos"}
-                      </button>
-                    )}
-                    <button
-                      onClick={() => setShowAllPhotosModal(false)}
-                      className="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400 text-sm"
-                    >
-                      Close
-                    </button>
+                    </div>
+                  </div>
+
+                  <div className="max-h-[55vh] overflow-y-auto">
+                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
+                      {photos.map((photo) => {
+                        const isSelected = selectedPhotos.includes(photo.id);
+                        return (
+                          <div
+                            key={`modal-${photo.id}`}
+                            className={`relative cursor-pointer rounded-2xl overflow-hidden shadow-lg transform transition-all duration-300 hover:scale-105 ${
+                              selectMode && !isSelected ? "opacity-60" : ""
+                            }`}
+                            onClick={() => {
+                              if (selectMode) {
+                                setSelectedPhotos((prev) =>
+                                  prev.includes(photo.id)
+                                    ? prev.filter((id) => id !== photo.id)
+                                    : [...prev, photo.id]
+                                );
+                              } else {
+                                setSelectedPhoto(photo);
+                                setShowAllPhotosModal(false);
+                              }
+                            }}
+                          >
+                            <img
+                              src={photo.downloadURL.replace(
+                                "groupify-77202.appspot.com",
+                                "groupify-77202.firebasestorage.app"
+                              )}
+                              alt={photo.fileName}
+                              className="w-full h-32 object-cover"
+                            />
+                            {selectMode && (
+                              <div className="absolute top-2 right-2 w-6 h-6 border-2 border-white rounded-full bg-white flex items-center justify-center shadow-lg">
+                                {isSelected && (
+                                  <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                  </svg>
+                                )}
+                              </div>
+                            )}
+                            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2">
+                              <p className="text-white text-xs font-medium">
+                                {new Date(photo.uploadedAt).toLocaleDateString()}
+                              </p>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
+              </div>
+            </div>
+          )}
 
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {photos.map((photo) => {
-                    const isSelected = selectedPhotos.includes(photo.id);
-                    return (
-                      <div
-                        key={`modal-${photo.id}`}
-                        className={`relative cursor-pointer rounded-lg overflow-hidden shadow ${
-                          selectMode && !isSelected ? "opacity-60" : ""
-                        }`}
-                        onClick={() => {
-                          if (selectMode) {
-                            const togglePhotoSelection = (photoId) => {
-                              setSelectedPhotos((prev) =>
-                                prev.includes(photoId)
-                                  ? prev.filter((id) => id !== photoId)
-                                  : [...prev, photoId]
-                              );
-                            };
-                            togglePhotoSelection(photo.id);
-                          } else {
-                            setSelectedPhoto(photo);
-                            setShowAllPhotosModal(false);
-                          }
-                        }}
-                      >
-                        <img
-                          src={photo.downloadURL.replace(
-                            "groupify-77202.appspot.com",
-                            "groupify-77202.firebasestorage.app"
-                          )}
-                          alt={photo.fileName}
-                          className="w-full h-40 object-cover"
-                        />
-                        {selectMode && (
-                          <div className="absolute top-2 right-2 w-5 h-5 border-2 border-white rounded bg-white flex items-center justify-center">
-                            {isSelected && (
-                              <span className="text-green-600 font-bold">✓</span>
-                            )}
-                          </div>
-                        )}
-                        <div className="text-xs text-gray-500 mt-1">
-                          Uploaded{" "}
-                          {new Date(photo.uploadedAt).toLocaleDateString()}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+          {/* Enhanced Toast Notifications */}
+          {showSuccess && (
+            <div className="fixed top-8 right-8 bg-gradient-to-r from-green-500 to-emerald-500 text-white px-6 py-4 rounded-2xl shadow-2xl z-50 transform animate-bounce">
+              <div className="flex items-center gap-3">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Friend request sent successfully!
+              </div>
+            </div>
+          )}
+          
+          {cancelSuccess && (
+            <div className="fixed top-8 right-8 bg-gradient-to-r from-red-500 to-red-600 text-white px-6 py-4 rounded-2xl shadow-2xl z-50 transform animate-bounce">
+              <div className="flex items-center gap-3">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                {cancelSuccess}
               </div>
             </div>
           )}
