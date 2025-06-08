@@ -8,6 +8,7 @@ import EditProfileModal from "../components/profile/EditProfileModal";
 import SettingsModal from "../components/settings/SettingsModal";
 import ModernNavbar from "../components/layout/Navbar";
 import UserProfileModal from "../components/profile/UserProfileModal";
+import FaceProfileManager from "../components/faceProfile/FaceProfileManager";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -20,7 +21,8 @@ import {
   doc,
   onSnapshot,
 } from "firebase/firestore";
-import { db } from "../services/firebase/config";
+import { db, storage } from "../services/firebase/config";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import {
   getUserTrips,
   getPendingInvites,
@@ -37,6 +39,20 @@ import {
   removeFriend,
   cancelFriendRequest,
 } from "../services/firebase/users";
+import {
+  deleteFaceProfileFromStorage,
+  getFaceProfileFromStorage,
+} from "../services/firebase/faceProfiles";
+import {
+  hasFaceProfile,
+  getFaceProfile,
+  createFaceProfile,
+  deleteFaceProfile,
+  addPhotosToProfile,
+  removePhotosFromProfile,
+  getProfilePhotos,
+  optimizeProfile,
+} from "../services/faceRecognition";
 
 const Dashboard = () => {
   // 🔐 Authentication & Navigation
@@ -62,6 +78,17 @@ const Dashboard = () => {
   const [selectedUserProfile, setSelectedUserProfile] = useState(null);
   const [isUserProfileOpen, setIsUserProfileOpen] = useState(false);
 
+  // 🎭 Face Profile Management States
+  const [hasProfile, setHasProfile] = useState(false);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(false);
+  const [showProfileManager, setShowProfileManager] = useState(false);
+  const [showProfileManagement, setShowProfileManagement] = useState(false);
+  const [profilePhotos, setProfilePhotos] = useState([]);
+  const [selectedPhotosToRemove, setSelectedPhotosToRemove] = useState([]);
+  const [uploadingProfilePhotos, setUploadingProfilePhotos] = useState([]);
+  const [isManagingProfile, setIsManagingProfile] = useState(false);
+  const [profile, setProfile] = useState(null);
+
   const checkFriendStatus = async () => {
     if (user.uid === currentUserId) {
       setFriendStatus("self");
@@ -74,6 +101,266 @@ const Dashboard = () => {
       } else {
         setFriendStatus("none");
       }
+    }
+  };
+
+  // Helper function for uploading files to Firebase Storage
+  const uploadProfilePhotos = async (files, userId) => {
+    const uploadPromises = files.map(async (file, index) => {
+      const timestamp = Date.now();
+      const fileName = `profile_photos/${userId}/${timestamp}_${index}_${file.name}`;
+      const storageRef = ref(storage, fileName);
+      const snapshot = await uploadBytes(storageRef, file);
+      const downloadURL = await getDownloadURL(snapshot.ref);
+      return downloadURL;
+    });
+
+    return await Promise.all(uploadPromises);
+  };
+
+  // Load profile data when profile exists
+  const loadProfileData = () => {
+    if (!currentUser?.uid || !hasProfile) return;
+
+    try {
+      const profileData = getFaceProfile(currentUser.uid);
+      const photos = getProfilePhotos(currentUser.uid);
+      setProfile(profileData);
+      setProfilePhotos(photos);
+    } catch (error) {
+      console.error("Error loading profile data:", error);
+    }
+  };
+
+  // Auto-load face profile on component mount
+  useEffect(() => {
+    if (currentUser?.uid) {
+      loadUserFaceProfile();
+    }
+  }, [currentUser]);
+
+  // Load profile data when hasProfile changes
+  useEffect(() => {
+    if (hasProfile && currentUser?.uid) {
+      loadProfileData();
+    }
+  }, [hasProfile, currentUser]);
+
+  // Updated loadUserFaceProfile function
+  const loadUserFaceProfile = async () => {
+    if (!currentUser?.uid) return;
+
+    setIsLoadingProfile(true);
+    try {
+      // First, clear any existing profile to start fresh
+      deleteFaceProfile(currentUser.uid);
+
+      // Check if profile exists in memory first
+      if (hasFaceProfile(currentUser.uid)) {
+        setHasProfile(true);
+        console.log("✅ Face profile already loaded in memory");
+        return;
+      }
+
+      // Try to load from Firebase Storage automatically
+      console.log("🔍 Checking for stored face profile...");
+      const storedProfile = await getFaceProfileFromStorage(currentUser.uid);
+
+      if (
+        storedProfile &&
+        storedProfile.images &&
+        storedProfile.images.length > 0
+      ) {
+        console.log("📥 Found stored face profile, loading automatically...");
+
+        try {
+          const imageUrls = storedProfile.images.map((img) => img.url);
+          await createFaceProfile(currentUser.uid, imageUrls);
+          setHasProfile(true);
+          console.log("✅ Face profile loaded automatically from storage");
+        } catch (error) {
+          console.error("❌ Failed to auto-load face profile:", error);
+          console.log("🗑️ Cleaning up corrupted profile data...");
+
+          try {
+            await deleteFaceProfileFromStorage(currentUser.uid);
+          } catch (cleanupError) {
+            console.warn("⚠️ Could not clean up stored profile:", cleanupError);
+          }
+
+          setHasProfile(false);
+        }
+      } else {
+        console.log("ℹ️ No face profile found");
+        setHasProfile(false);
+      }
+    } catch (error) {
+      console.error("❌ Error checking for face profile:", error);
+      setHasProfile(false);
+    } finally {
+      setIsLoadingProfile(false);
+    }
+  };
+
+  // Handle profile photo file selection
+  const handleProfilePhotoSelect = (event) => {
+    const files = Array.from(event.target.files);
+    if (files.length === 0) return;
+
+    const validFiles = files.filter((file) => file.type.startsWith("image/"));
+    if (validFiles.length !== files.length) {
+      alert("Only image files are allowed");
+    }
+
+    setUploadingProfilePhotos(validFiles);
+  };
+
+  // Add more photos to existing profile
+  const addMorePhotosToProfile = async () => {
+    if (uploadingProfilePhotos.length === 0) {
+      alert("Please select images to add");
+      return;
+    }
+
+    setIsManagingProfile(true);
+
+    try {
+      console.log("🔄 Uploading new profile photos...");
+      const imageUrls = await uploadProfilePhotos(
+        uploadingProfilePhotos,
+        currentUser.uid
+      );
+
+      const updatedProfile = await addPhotosToProfile(
+        currentUser.uid,
+        imageUrls,
+        (progress) => console.log("Adding photos progress:", progress)
+      );
+
+      setProfile(updatedProfile);
+      setProfilePhotos(getProfilePhotos(currentUser.uid));
+      setUploadingProfilePhotos([]);
+
+      toast.success(`Added ${uploadingProfilePhotos.length} photos to your profile!`);
+    } catch (error) {
+      console.error("Failed to add photos:", error);
+      toast.error(error.message || "Failed to add photos to profile");
+    } finally {
+      setIsManagingProfile(false);
+    }
+  };
+
+  // Remove selected photos from profile
+  const removeSelectedPhotos = async () => {
+    if (selectedPhotosToRemove.length === 0) {
+      alert("Please select photos to remove");
+      return;
+    }
+
+    setIsManagingProfile(true);
+
+    try {
+      const updatedProfile = removePhotosFromProfile(
+        currentUser.uid,
+        selectedPhotosToRemove
+      );
+
+      setProfile(updatedProfile);
+      setProfilePhotos(getProfilePhotos(currentUser.uid));
+      setSelectedPhotosToRemove([]);
+
+      toast.success(`Removed ${selectedPhotosToRemove.length} photos from profile`);
+    } catch (error) {
+      console.error("Failed to remove photos:", error);
+      toast.error(error.message || "Failed to remove photos");
+    } finally {
+      setIsManagingProfile(false);
+    }
+  };
+
+  // Optimize profile by removing low quality photos
+  const optimizeCurrentProfile = async () => {
+    if (
+      !window.confirm(
+        "This will remove low quality photos from your profile. Continue?"
+      )
+    ) {
+      return;
+    }
+
+    setIsManagingProfile(true);
+
+    try {
+      const optimizedProfile = optimizeProfile(currentUser.uid, 0.5);
+      setProfile(optimizedProfile);
+      setProfilePhotos(getProfilePhotos(currentUser.uid));
+
+      toast.success("Profile optimized - removed low quality photos");
+    } catch (error) {
+      console.error("Failed to optimize profile:", error);
+      toast.error(error.message || "Failed to optimize profile");
+    } finally {
+      setIsManagingProfile(false);
+    }
+  };
+
+  // Delete entire profile
+  const deleteCurrentProfile = async () => {
+    if (
+      !window.confirm(
+        "Are you sure you want to delete your face profile? This cannot be undone."
+      )
+    ) {
+      return;
+    }
+
+    setIsManagingProfile(true);
+
+    try {
+      // Delete from memory
+      deleteFaceProfile(currentUser.uid);
+
+      // Delete from Firebase Storage
+      try {
+        await deleteFaceProfileFromStorage(currentUser.uid);
+        console.log("✅ Face profile deleted from Firebase Storage");
+      } catch (storageError) {
+        console.warn(
+          "⚠️ Could not delete from Firebase Storage:",
+          storageError
+        );
+      }
+
+      // Update local state
+      setHasProfile(false);
+      setProfile(null);
+      setProfilePhotos([]);
+      setShowProfileManagement(false);
+
+      toast.success("Face profile deleted successfully");
+    } catch (error) {
+      console.error("Failed to delete profile:", error);
+      toast.error("Failed to delete profile: " + error.message);
+    } finally {
+      setIsManagingProfile(false);
+    }
+  };
+
+  // Toggle photo selection for removal
+  const togglePhotoSelection = (photoUrl) => {
+    setSelectedPhotosToRemove((prev) =>
+      prev.includes(photoUrl)
+        ? prev.filter((url) => url !== photoUrl)
+        : [...prev, photoUrl]
+    );
+  };
+
+  const handleProfileLoaded = (loaded) => {
+    setHasProfile(loaded);
+    if (loaded) {
+      setShowProfileManager(false);
+      toast.success("Face profile created successfully!");
+      console.log("✅ Face profile created successfully");
     }
   };
 
@@ -284,7 +571,7 @@ const Dashboard = () => {
         const userData = userDoc.data();
         setSelectedUserProfile({ uid, ...userData });
         setIsUserProfileOpen(true);
-        setShowAddFriendModal(false); // ← הוסף את זה פה
+        setShowAddFriendModal(false);
       }
     } catch (err) {
       console.error("Error fetching user profile:", err);
@@ -342,8 +629,6 @@ const Dashboard = () => {
     (a.displayName || "").localeCompare(b.displayName || "")
   );
 
-  // ****************** Navigation Bar ********************
-
   return (
     <div className="min-h-screen bg-gray-100">
       <ModernNavbar
@@ -364,8 +649,6 @@ const Dashboard = () => {
         autoClose={2000}
         hideProgressBar
       />
-
-      {/* *************** Main - Trips & Invites trips ****************** */}
 
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -421,7 +704,6 @@ const Dashboard = () => {
                 )}
 
                 {/* Always show pending invites */}
-
                 <div className="bg-white rounded-lg shadow p-4 mt-6 mx-2">
                   <h2 className="text-xl font-bold text-gray-900 mb-3">
                     Pending Trip Invites
@@ -489,9 +771,222 @@ const Dashboard = () => {
             )}
           </div>
 
-          {/* ************* Right Side (1/3 width) – Friends & Requests ************* */}
-
+          {/* ************* Right Side (1/3 width) – Face Profile & Friends ************* */}
           <div className="space-y-6">
+            {/* 🎭 Face Profile Management Section */}
+            <div className="bg-white rounded-2xl shadow-md p-5">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold text-gray-800">
+                  Face Profile
+                </h2>
+                
+                {/* Profile Status Indicator */}
+                {isLoadingProfile ? (
+                  <div className="flex items-center gap-2 text-sm text-gray-500">
+                    <div className="animate-spin w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full"></div>
+                    Loading...
+                  </div>
+                ) : hasProfile ? (
+                  <div className="flex items-center gap-2 text-sm text-green-600">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    Ready ({profilePhotos.length} photos)
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 text-sm text-orange-600">
+                    <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                    Not Set Up
+                  </div>
+                )}
+              </div>
+
+              {/* Profile Actions */}
+              <div className="flex flex-wrap gap-2 mb-4">
+                {!hasProfile ? (
+                  <button
+                    onClick={() => setShowProfileManager(true)}
+                    disabled={isLoadingProfile}
+                    className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-md text-sm font-medium"
+                  >
+                    Create Face Profile
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => setShowProfileManagement(!showProfileManagement)}
+                      className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-md text-sm"
+                    >
+                      Manage Profile
+                    </button>
+                    <button
+                      onClick={deleteCurrentProfile}
+                      disabled={isManagingProfile}
+                      className="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-md text-sm disabled:opacity-50"
+                    >
+                      Delete Profile
+                    </button>
+                  </>
+                )}
+              </div>
+
+              {/* Profile Management Options */}
+              {showProfileManagement && hasProfile && (
+                <div className="bg-gray-50 rounded-lg p-4 mb-4 border border-gray-200">
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    <button
+                      onClick={optimizeCurrentProfile}
+                      disabled={isManagingProfile}
+                      className="bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 rounded-md text-sm disabled:opacity-50"
+                    >
+                      {isManagingProfile ? "Optimizing..." : "Optimize"}
+                    </button>
+                  </div>
+
+                  {profile && (
+                    <div className="text-sm text-gray-600 grid grid-cols-2 gap-4 mb-4">
+                      <div>
+                        <div>Photos: {profilePhotos.length}</div>
+                        <div>
+                          Avg Quality:{" "}
+                          {(profile.metadata.avgQuality * 100).toFixed(1)}%
+                        </div>
+                      </div>
+                      <div>
+                        <div>Success Rate: {profile.metadata.successRate}%</div>
+                        <div>
+                          Created:{" "}
+                          {new Date(
+                            profile.metadata.createdAt
+                          ).toLocaleDateString()}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Add Photos Section */}
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Add More Photos
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="file"
+                        multiple
+                        accept="image/*"
+                        onChange={handleProfilePhotoSelect}
+                        className="flex-1 text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                      />
+                      {uploadingProfilePhotos.length > 0 && (
+                        <button
+                          onClick={addMorePhotosToProfile}
+                          disabled={isManagingProfile}
+                          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm disabled:opacity-50"
+                        >
+                          {isManagingProfile
+                            ? "Adding..."
+                            : `Add ${uploadingProfilePhotos.length}`}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Current Profile Photos */}
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <label className="block text-sm font-medium text-gray-700">
+                        Profile Photos ({profilePhotos.length})
+                      </label>
+                      {selectedPhotosToRemove.length > 0 && (
+                        <button
+                          onClick={removeSelectedPhotos}
+                          disabled={isManagingProfile}
+                          className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md text-sm disabled:opacity-50"
+                        >
+                          {isManagingProfile
+                            ? "Removing..."
+                            : `Remove ${selectedPhotosToRemove.length}`}
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto">
+                      {profilePhotos.map((photo) => (
+                        <div key={photo.id} className="relative">
+                          <div
+                            className={`cursor-pointer border-2 rounded-lg overflow-hidden ${
+                              selectedPhotosToRemove.includes(photo.url)
+                                ? "border-red-500 bg-red-100"
+                                : "border-gray-200 hover:border-blue-400"
+                            }`}
+                            onClick={() => togglePhotoSelection(photo.url)}
+                          >
+                            <img
+                              src={photo.url}
+                              alt="Profile"
+                              className="w-full h-16 object-cover"
+                            />
+                            <div
+                              className={`absolute inset-0 flex items-center justify-center ${
+                                selectedPhotosToRemove.includes(photo.url)
+                                  ? "bg-red-500 bg-opacity-50"
+                                  : "bg-transparent"
+                              }`}
+                            >
+                              {selectedPhotosToRemove.includes(photo.url) && (
+                                <svg
+                                  className="w-6 h-6 text-white"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M5 13l4 4L19 7"
+                                  />
+                                </svg>
+                              )}
+                            </div>
+                          </div>
+                          <div className="text-xs text-center mt-1">
+                            <span
+                              className={`inline-block px-1 py-0.5 rounded text-white text-xs ${
+                                photo.qualityTier === "high"
+                                  ? "bg-green-500"
+                                  : photo.qualityTier === "medium"
+                                  ? "bg-yellow-500"
+                                  : "bg-red-500"
+                              }`}
+                            >
+                              {(photo.confidence * 100).toFixed(0)}%
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="text-xs text-gray-600 mt-2">
+                      Click photos to select for removal. Higher confidence
+                      (green) photos give better results.
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Profile Info */}
+              <div className="text-center py-4">
+                {!hasProfile ? (
+                  <div className="text-sm text-gray-500 italic">
+                    Create a face profile to automatically find photos containing you in your trips.
+                  </div>
+                ) : (
+                  <div className="text-sm text-green-600">
+                    ✅ Face profile ready! Visit your trips to find photos with you.
+                  </div>
+                )}
+              </div>
+            </div>
+
             {/* My Friends */}
             <div className="bg-white rounded-2xl shadow-md p-5 mb-6">
               <div className="flex justify-between items-center mb-4">
@@ -576,6 +1071,46 @@ const Dashboard = () => {
           </div>
         </div>
       </main>
+
+      {/* Face Profile Manager Modal */}
+      {showProfileManager && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-800">
+                    Create Face Profile
+                  </h2>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Upload photos of yourself for automatic photo recognition in trips
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowProfileManager(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+
+              <FaceProfileManager onProfileLoaded={handleProfileLoaded} />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modals & Upload Section */}
 
