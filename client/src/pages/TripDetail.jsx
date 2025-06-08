@@ -44,31 +44,23 @@ import {
   getPendingFriendRequests,
 } from "../services/firebase/users";
 import {
-  deleteFaceProfileFromStorage,
   getFaceProfileFromStorage,
 } from "../services/firebase/faceProfiles";
 
-// 🔹 Face Recognition (Enhanced)
+// 🔹 Face Recognition (Simplified)
 import {
-  filterPhotosByFace,
   filterPhotosByFaceProfile,
   hasFaceProfile,
   cancelFaceRecognition,
   resetFaceRecognition,
-  createFaceProfile,
   getFaceProfile,
-  addPhotosToProfile,
-  removePhotosFromProfile,
-  getProfilePhotos,
-  optimizeProfile,
-  deleteFaceProfile,
+  createFaceProfile,
 } from "../services/faceRecognition";
 
 // 🔹 Components
 import PhotoUpload from "../components/photos/PhotoUpload";
 import InviteFriendDropdown from "../components/trips/InviteFriendDropdown";
 import UserProfileModal from "../components/profile/UserProfileModal";
-import FaceProfileManager from "../components/faceProfile/FaceProfileManager";
 
 // 🔹 Assets
 import logo from "../assets/logo/3.png";
@@ -90,10 +82,9 @@ const TripDetail = () => {
   const [filteredPhotos, setFilteredPhotos] = useState([]);
   const [filterActive, setFilterActive] = useState(false);
 
-  // Enhanced face recognition state with profiles
+  // Simplified face recognition state
   const [isProcessingFaces, setIsProcessingFaces] = useState(false);
   const [hasProfile, setHasProfile] = useState(false);
-  const [showProfileManager, setShowProfileManager] = useState(false);
   const [isLoadingProfile, setIsLoadingProfile] = useState(false);
   const [faceRecognitionProgress, setFaceRecognitionProgress] = useState({
     current: 0,
@@ -107,13 +98,10 @@ const TripDetail = () => {
     errors: [],
   });
 
-  // Enhanced profile management state
-  const [showProfileManagement, setShowProfileManagement] = useState(false);
-  const [profilePhotos, setProfilePhotos] = useState([]);
-  const [selectedPhotosToRemove, setSelectedPhotosToRemove] = useState([]);
-  const [uploadingProfilePhotos, setUploadingProfilePhotos] = useState([]);
-  const [isManagingProfile, setIsManagingProfile] = useState(false);
-  const [profile, setProfile] = useState(null);
+  // 📚 Caching states for previous scan results
+  const [cachedResults, setCachedResults] = useState(null);
+  const [lastScannedPhotos, setLastScannedPhotos] = useState(null);
+  const [lastScanTimestamp, setLastScanTimestamp] = useState(null);
 
   const isMember = trip?.members?.includes(currentUser?.uid);
   const canFilterByFace = isMember && currentUser?.uid;
@@ -129,191 +117,6 @@ const TripDetail = () => {
   const [showUserModal, setShowUserModal] = useState(false);
   const [pendingRequests, setPendingRequests] = useState([]);
 
-  // Helper function for uploading files to Firebase Storage
-  const uploadProfilePhotos = async (files, userId) => {
-    const uploadPromises = files.map(async (file, index) => {
-      const timestamp = Date.now();
-      const fileName = `profile_photos/${userId}/${timestamp}_${index}_${file.name}`;
-      const storageRef = ref(storage, fileName);
-      const snapshot = await uploadBytes(storageRef, file);
-      const downloadURL = await getDownloadURL(snapshot.ref);
-      return downloadURL;
-    });
-
-    return await Promise.all(uploadPromises);
-  };
-
-  // Load profile data when profile exists
-  const loadProfileData = () => {
-    if (!currentUser?.uid || !hasProfile) return;
-
-    try {
-      const profileData = getFaceProfile(currentUser.uid);
-      const photos = getProfilePhotos(currentUser.uid);
-      setProfile(profileData);
-      setProfilePhotos(photos);
-    } catch (error) {
-      console.error("Error loading profile data:", error);
-    }
-  };
-
-  // Handle profile photo file selection
-  const handleProfilePhotoSelect = (event) => {
-    const files = Array.from(event.target.files);
-    if (files.length === 0) return;
-
-    const validFiles = files.filter((file) => file.type.startsWith("image/"));
-    if (validFiles.length !== files.length) {
-      alert("Only image files are allowed");
-    }
-
-    setUploadingProfilePhotos(validFiles);
-  };
-
-  // Add more photos to existing profile
-  const addMorePhotosToProfile = async () => {
-    if (uploadingProfilePhotos.length === 0) {
-      alert("Please select images to add");
-      return;
-    }
-
-    setIsManagingProfile(true);
-
-    try {
-      console.log("🔄 Uploading new profile photos...");
-      const imageUrls = await uploadProfilePhotos(
-        uploadingProfilePhotos,
-        currentUser.uid
-      );
-
-      const updatedProfile = await addPhotosToProfile(
-        currentUser.uid,
-        imageUrls,
-        (progress) => console.log("Adding photos progress:", progress)
-      );
-
-      setProfile(updatedProfile);
-      setProfilePhotos(getProfilePhotos(currentUser.uid));
-      setUploadingProfilePhotos([]);
-
-      alert(`Added ${uploadingProfilePhotos.length} photos to your profile!`);
-    } catch (error) {
-      console.error("Failed to add photos:", error);
-      alert(error.message || "Failed to add photos to profile");
-    } finally {
-      setIsManagingProfile(false);
-    }
-  };
-
-  // Remove selected photos from profile
-  const removeSelectedPhotos = async () => {
-    if (selectedPhotosToRemove.length === 0) {
-      alert("Please select photos to remove");
-      return;
-    }
-
-    setIsManagingProfile(true);
-
-    try {
-      const updatedProfile = removePhotosFromProfile(
-        currentUser.uid,
-        selectedPhotosToRemove
-      );
-
-      setProfile(updatedProfile);
-      setProfilePhotos(getProfilePhotos(currentUser.uid));
-      setSelectedPhotosToRemove([]);
-
-      alert(`Removed ${selectedPhotosToRemove.length} photos from profile`);
-    } catch (error) {
-      console.error("Failed to remove photos:", error);
-      alert(error.message || "Failed to remove photos");
-    } finally {
-      setIsManagingProfile(false);
-    }
-  };
-
-  // Optimize profile by removing low quality photos
-  const optimizeCurrentProfile = async () => {
-    if (
-      !window.confirm(
-        "This will remove low quality photos from your profile. Continue?"
-      )
-    ) {
-      return;
-    }
-
-    setIsManagingProfile(true);
-
-    try {
-      const optimizedProfile = optimizeProfile(currentUser.uid, 0.5);
-      setProfile(optimizedProfile);
-      setProfilePhotos(getProfilePhotos(currentUser.uid));
-
-      alert("Profile optimized - removed low quality photos");
-    } catch (error) {
-      console.error("Failed to optimize profile:", error);
-      alert(error.message || "Failed to optimize profile");
-    } finally {
-      setIsManagingProfile(false);
-    }
-  };
-
-  // Delete entire profile
-  const deleteCurrentProfile = async () => {
-    if (
-      !window.confirm(
-        "Are you sure you want to delete your face profile? This cannot be undone."
-      )
-    ) {
-      return;
-    }
-
-    setIsManagingProfile(true);
-
-    try {
-      // Delete from memory
-      deleteFaceProfile(currentUser.uid);
-
-      // Delete from Firebase Storage
-      try {
-        await deleteFaceProfileFromStorage(currentUser.uid);
-        console.log("✅ Face profile deleted from Firebase Storage");
-      } catch (storageError) {
-        console.warn(
-          "⚠️ Could not delete from Firebase Storage:",
-          storageError
-        );
-        // Continue anyway since memory is cleared
-      }
-
-      // Update local state
-      setHasProfile(false);
-      setProfile(null);
-      setProfilePhotos([]);
-      setShowProfileManagement(false);
-
-      // Clear any filtered photos
-      setFilterActive(false);
-      setFilteredPhotos([]);
-
-      alert("Face profile deleted successfully");
-    } catch (error) {
-      console.error("Failed to delete profile:", error);
-      alert("Failed to delete profile: " + error.message);
-    } finally {
-      setIsManagingProfile(false);
-    }
-  };
-  // Toggle photo selection for removal
-  const togglePhotoSelection = (photoUrl) => {
-    setSelectedPhotosToRemove((prev) =>
-      prev.includes(photoUrl)
-        ? prev.filter((url) => url !== photoUrl)
-        : [...prev, photoUrl]
-    );
-  };
-
   // Auto-load face profile on component mount
   useEffect(() => {
     if (currentUser?.uid) {
@@ -321,40 +124,77 @@ const TripDetail = () => {
     }
   }, [currentUser]);
 
-  // Load profile data when hasProfile changes
+  // 📚 Clear cache when photos change
   useEffect(() => {
-    if (hasProfile && currentUser?.uid) {
-      loadProfileData();
-    }
-  }, [hasProfile, currentUser]);
-
-  // Fetch friends and pending requests when currentUser changes
-  useEffect(() => {
-    const fetchFriendData = async () => {
-      try {
-        const friendList = await getFriends(currentUser.uid);
-        const pendingList = await getPendingFriendRequests(currentUser.uid);
-        setFriends(friendList || []);
-        setPendingRequests(pendingList || []);
-      } catch (err) {
-        console.error("❌ Failed to fetch friend data:", err);
+    if (photosHaveChanged() && cachedResults) {
+      console.log('📚 Photos changed, clearing cached results');
+      setCachedResults(null);
+      setLastScannedPhotos(null);
+      setLastScanTimestamp(null);
+      
+      // If filter is currently active with old cached results, turn it off
+      if (filterActive) {
+        setFilterActive(false);
+        setFilteredPhotos([]);
+        toast.info('Photos changed - previous scan results cleared');
       }
-    };
-
-    if (currentUser?.uid) {
-      fetchFriendData();
     }
-  }, [currentUser]);
+  }, [photos]);
 
-  // Updated loadUserFaceProfile function with CORS workaround
+  // 📚 Check if photos have changed since last scan
+  const photosHaveChanged = () => {
+    if (!lastScannedPhotos || !photos) return true;
+    
+    // Quick check: compare counts
+    if (lastScannedPhotos.length !== photos.length) return true;
+    
+    // More thorough check: compare photo IDs and upload times
+    const currentPhotoSignature = photos
+      .map(p => `${p.id}-${p.uploadedAt}`)
+      .sort()
+      .join('|');
+    
+    const lastPhotoSignature = lastScannedPhotos
+      .map(p => `${p.id}-${p.uploadedAt}`)
+      .sort()  
+      .join('|');
+    
+    return currentPhotoSignature !== lastPhotoSignature;
+  };
+
+  // 📚 Check if cached results are still valid
+  const hasCachedResults = () => {
+    return cachedResults && 
+           lastScannedPhotos && 
+           lastScanTimestamp && 
+           !photosHaveChanged() &&
+           hasProfile;
+  };
+
+  // 📚 Show cached results without scanning
+  const showCachedResults = () => {
+    if (hasCachedResults()) {
+      setFilteredPhotos(cachedResults);
+      setFilterActive(true);
+      toast.success(`Showing ${cachedResults.length} previously found photos`);
+      console.log(`📚 Loaded ${cachedResults.length} cached results from ${new Date(lastScanTimestamp).toLocaleString()}`);
+    }
+  };
+
+  // 📚 Save scan results to cache
+  const saveScanResults = (results) => {
+    setCachedResults(results);
+    setLastScannedPhotos([...photos]); // Deep copy current photos state
+    setLastScanTimestamp(Date.now());
+    console.log(`💾 Cached ${results.length} face recognition results`);
+  };
+
+  // Updated loadUserFaceProfile function - simplified
   const loadUserFaceProfile = async () => {
     if (!currentUser?.uid) return;
 
     setIsLoadingProfile(true);
     try {
-      // First, clear any existing profile to start fresh
-      deleteFaceProfile(currentUser.uid);
-
       // Check if profile exists in memory first
       if (hasFaceProfile(currentUser.uid)) {
         setHasProfile(true);
@@ -375,24 +215,11 @@ const TripDetail = () => {
 
         try {
           const imageUrls = storedProfile.images.map((img) => img.url);
-
-          // Skip CORS accessibility test in development - just try to create the profile
-          // The createFaceProfile function will handle CORS errors gracefully
           await createFaceProfile(currentUser.uid, imageUrls);
-
           setHasProfile(true);
           console.log("✅ Face profile loaded automatically from storage");
         } catch (error) {
           console.error("❌ Failed to auto-load face profile:", error);
-          console.log("🗑️ Cleaning up corrupted profile data...");
-
-          // Clean up corrupted profile
-          try {
-            await deleteFaceProfileFromStorage(currentUser.uid);
-          } catch (cleanupError) {
-            console.warn("⚠️ Could not clean up stored profile:", cleanupError);
-          }
-
           setHasProfile(false);
         }
       } else {
@@ -495,17 +322,22 @@ const TripDetail = () => {
     });
   };
 
-  // Enhanced face recognition function with profile support
-  const handleFindMyPhotos = async () => {
+  // Simplified face recognition function
+  const handleFindMyPhotos = async (forceRescan = false) => {
     if (!currentUser?.uid || photos.length === 0) {
-      alert("User ID or trip photos missing");
+      toast.error("User ID or trip photos missing");
       return;
     }
 
     // Check if user has a face profile
     if (!hasProfile) {
-      console.log("⚠️ No face profile found, opening profile manager");
-      setShowProfileManager(true);
+      toast.error("No face profile found. Please create one in your Dashboard first.");
+      return;
+    }
+
+    // 📚 If we have valid cached results and not forcing rescan, offer to use cache
+    if (!forceRescan && hasCachedResults()) {
+      showCachedResults();
       return;
     }
 
@@ -539,16 +371,28 @@ const TripDetail = () => {
       if (matches.length > 0) {
         setFilteredPhotos(matches);
         setFilterActive(true);
+        
+        // 📚 Save results to cache
+        saveScanResults(matches);
+        
+        toast.success(`Found ${matches.length} matching photos!`);
         console.log(`✅ Found ${matches.length} matching photos`);
       } else {
         console.log("ℹ️ No matching photos found");
         setFilteredPhotos([]);
         setFilterActive(true); // Still show the section but with "no matches" message
+        
+        // 📚 Save empty results to cache
+        saveScanResults([]);
+        
+        toast.info("No matching photos found");
       }
     } catch (error) {
       console.error("❌ Face recognition error:", error);
       if (error.message.includes("No face profile found")) {
-        setShowProfileManager(true);
+        toast.error("No face profile found. Please create one in your Dashboard first.");
+      } else {
+        toast.error("Face recognition failed: " + error.message);
       }
       setFilteredPhotos([]);
     } finally {
@@ -575,7 +419,7 @@ const TripDetail = () => {
 
   const handleToggleFaceFilter = () => {
     if (!canFilterByFace) {
-      alert("Face filtering is only available for registered trip members.");
+      toast.error("Face filtering is only available for registered trip members.");
       return;
     }
 
@@ -586,16 +430,13 @@ const TripDetail = () => {
       setFilterActive(false);
       setFilteredPhotos([]);
     } else {
-      // Start face recognition
-      handleFindMyPhotos();
-    }
-  };
-
-  const handleProfileLoaded = (loaded) => {
-    setHasProfile(loaded);
-    if (loaded) {
-      setShowProfileManager(false);
-      console.log("✅ Face profile created successfully");
+      // 📚 If we have cached results and photos haven't changed, show cached first
+      if (hasCachedResults()) {
+        showCachedResults();
+      } else {
+        // Start face recognition
+        handleFindMyPhotos(false);
+      }
     }
   };
 
@@ -618,13 +459,12 @@ const TripDetail = () => {
       }
 
       setPhotos((prev) => prev.filter((p) => !selectedPhotos.includes(p.id)));
-      alert(`${selectedPhotos.length} photos deleted successfully ✅`);
+      toast.success(`${selectedPhotos.length} photos deleted successfully`);
       setSelectedPhotos([]);
-
       setSelectMode(false);
     } catch (error) {
       console.error("Failed to delete selected photos:", error);
-      alert("An error occurred while deleting photos.");
+      toast.error("An error occurred while deleting photos.");
     }
   };
 
@@ -821,14 +661,13 @@ const TripDetail = () => {
       setTrip(updatedTrip);
 
       toast.success(
-        `User ${userToRemove?.displayName || uid} was removed from the trip`,
-        { duration: 4000 }
+        `User ${userToRemove?.displayName || uid} was removed from the trip`
       );
 
       setSelectedUser(null);
     } catch (error) {
       console.error("Failed to remove user from trip:", error);
-      toast.error("❌ Failed to remove user from trip", { duration: 4000 });
+      toast.error("Failed to remove user from trip");
     }
   };
 
@@ -867,15 +706,15 @@ const TripDetail = () => {
       );
       const existing = await getDocs(q);
       if (!existing.empty) {
-        alert(`${friend.displayName} already has a pending invite.`);
+        toast.warning(`${friend.displayName} already has a pending invite.`);
         return;
       }
 
       await sendTripInvite(tripId, currentUser.uid, friend.uid);
-      alert(`Invitation sent to ${friend.displayName}.`);
+      toast.success(`Invitation sent to ${friend.displayName}.`);
     } catch (error) {
       console.error("Error sending trip invite:", error);
-      alert("Failed to send invitation.");
+      toast.error("Failed to send invitation.");
     }
   };
 
@@ -986,7 +825,7 @@ const TripDetail = () => {
                 <div className="flex gap-2">
                   {isAdmin && (
                     <button
-                      onClick={() => alert("Edit Trip modal will open here")}
+                      onClick={() => toast.info("Edit Trip feature coming soon!")}
                       className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
                     >
                       Edit Trip
@@ -1058,12 +897,12 @@ const TripDetail = () => {
               </div>
             </div>
 
-            {/* Enhanced Face Recognition Section with Profile Management */}
+            {/* Simplified Face Recognition Section */}
             <div className="bg-white rounded-lg shadow p-6">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-bold">Photos With Me</h2>
 
-                {/* Enhanced Face Recognition Controls */}
+                {/* Simplified Face Recognition Controls */}
                 {!isProcessingFaces ? (
                   <div className="flex items-center gap-3">
                     {/* Profile Status Indicator */}
@@ -1075,7 +914,7 @@ const TripDetail = () => {
                     ) : hasProfile ? (
                       <div className="flex items-center gap-2 text-sm text-green-600">
                         <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                        Profile Ready ({profilePhotos.length} photos)
+                        Profile Ready
                       </div>
                     ) : (
                       <div className="flex items-center gap-2 text-sm text-orange-600">
@@ -1084,13 +923,58 @@ const TripDetail = () => {
                       </div>
                     )}
 
-                    {/* Profile Management Button */}
-                    {hasProfile && (
+                    {/* 📚 Cache Status Indicator */}
+                    {hasCachedResults() && (
+                      <div className="flex items-center gap-2 text-sm text-blue-600">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h8a2 2 0 002-2V8m-9 4h4" />
+                        </svg>
+                        Previous scan available
+                      </div>
+                    )}
+
+                    {/* Action Buttons */}
+                    <div className="flex gap-2">
+                      {/* 📚 Show Cached Results Button (if available) */}
+                      {hasCachedResults() && !filterActive && (
+                        <button
+                          onClick={showCachedResults}
+                          disabled={!canFilterByFace || isLoadingProfile}
+                          className="px-3 py-2 text-sm bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707" />
+                          </svg>
+                          Show Previous ({cachedResults.length})
+                        </button>
+                      )}
+
+                      {/* Main Action Button */}
                       <button
-                        onClick={() =>
-                          setShowProfileManagement(!showProfileManagement)
-                        }
-                        className="px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md flex items-center gap-1"
+                        onClick={() => {
+                          if (filterActive) {
+                            setFilterActive(false);
+                            setFilteredPhotos([]);
+                          } else if (hasCachedResults()) {
+                            // Force rescan
+                            handleFindMyPhotos(true);
+                          } else {
+                            // Normal scan
+                            handleFindMyPhotos(false);
+                          }
+                        }}
+                        disabled={!canFilterByFace || isLoadingProfile}
+                        className={`px-4 py-2 text-sm rounded-md flex items-center gap-2 ${
+                          canFilterByFace && !isLoadingProfile
+                            ? filterActive
+                              ? "bg-red-500 text-white hover:bg-red-600"
+                              : hasProfile
+                              ? hasCachedResults()
+                                ? "bg-green-600 text-white hover:bg-green-700"
+                                : "bg-indigo-600 text-white hover:bg-indigo-700"
+                              : "bg-orange-500 text-white hover:bg-orange-600"
+                            : "bg-gray-300 text-gray-600 cursor-not-allowed"
+                        }`}
                       >
                         <svg
                           className="w-4 h-4"
@@ -1102,218 +986,23 @@ const TripDetail = () => {
                             strokeLinecap="round"
                             strokeLinejoin="round"
                             strokeWidth={2}
-                            d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
+                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
                           />
                         </svg>
-                        Manage
+                        {filterActive
+                          ? "Hide My Photos"
+                          : hasProfile
+                          ? hasCachedResults()
+                            ? `Scan Again (${photos.length})`
+                            : `Find My Photos (${photos.length})`
+                          : `Need Profile First`}
                       </button>
-                    )}
-
-                    {/* Main Action Button */}
-                    <button
-                      onClick={handleToggleFaceFilter}
-                      disabled={!canFilterByFace || isLoadingProfile}
-                      className={`px-4 py-2 text-sm rounded-md flex items-center gap-2 ${
-                        canFilterByFace && !isLoadingProfile
-                          ? filterActive
-                            ? "bg-red-500 text-white hover:bg-red-600"
-                            : hasProfile
-                            ? "bg-indigo-600 text-white hover:bg-indigo-700"
-                            : "bg-orange-500 text-white hover:bg-orange-600"
-                          : "bg-gray-300 text-gray-600 cursor-not-allowed"
-                      }`}
-                    >
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                        />
-                      </svg>
-                      {filterActive
-                        ? "Hide My Photos"
-                        : hasProfile
-                        ? `Find My Photos (${photos.length})`
-                        : `Setup Profile & Scan`}
-                    </button>
+                    </div>
                   </div>
                 ) : null}
               </div>
 
-              {/* Profile Management Options Dropdown */}
-              {showProfileManagement && hasProfile && (
-                <div className="mb-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                  <div className="flex flex-wrap gap-2 mb-3">
-                    <button
-                      onClick={() =>
-                        setShowProfileManagement(!showProfileManagement)
-                      }
-                      className="px-3 py-1.5 text-sm bg-blue-500 hover:bg-blue-600 text-white rounded-md"
-                    >
-                      {showProfileManagement ? "Hide" : "Show"} Photo Management
-                    </button>
-                    <button
-                      onClick={optimizeCurrentProfile}
-                      disabled={isManagingProfile}
-                      className="px-3 py-1.5 text-sm bg-green-500 hover:bg-green-600 text-white rounded-md disabled:opacity-50"
-                    >
-                      {isManagingProfile ? "Optimizing..." : "Optimize Profile"}
-                    </button>
-                    <button
-                      onClick={deleteCurrentProfile}
-                      disabled={isManagingProfile}
-                      className="px-3 py-1.5 text-sm bg-red-500 hover:bg-red-600 text-white rounded-md disabled:opacity-50"
-                    >
-                      Delete Profile
-                    </button>
-                  </div>
-
-                  {profile && (
-                    <div className="text-sm text-gray-600 grid grid-cols-2 gap-4">
-                      <div>
-                        <div>Photos: {profilePhotos.length}</div>
-                        <div>
-                          Avg Quality:{" "}
-                          {(profile.metadata.avgQuality * 100).toFixed(1)}%
-                        </div>
-                      </div>
-                      <div>
-                        <div>Success Rate: {profile.metadata.successRate}%</div>
-                        <div>
-                          Created:{" "}
-                          {new Date(
-                            profile.metadata.createdAt
-                          ).toLocaleDateString()}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Photo Management Section */}
-                  <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                    <h3 className="font-medium text-blue-900 mb-3">
-                      Manage Profile Photos
-                    </h3>
-
-                    {/* Add Photos Section */}
-                    <div className="mb-4">
-                      <label className="block text-sm font-medium text-blue-800 mb-2">
-                        Add More Photos
-                      </label>
-                      <div className="flex gap-2">
-                        <input
-                          type="file"
-                          multiple
-                          accept="image/*"
-                          onChange={handleProfilePhotoSelect}
-                          className="flex-1 text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                        />
-                        {uploadingProfilePhotos.length > 0 && (
-                          <button
-                            onClick={addMorePhotosToProfile}
-                            disabled={isManagingProfile}
-                            className="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-md disabled:opacity-50"
-                          >
-                            {isManagingProfile
-                              ? "Adding..."
-                              : `Add ${uploadingProfilePhotos.length} Photos`}
-                          </button>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Current Profile Photos */}
-                    <div>
-                      <div className="flex justify-between items-center mb-2">
-                        <label className="block text-sm font-medium text-blue-800">
-                          Current Profile Photos ({profilePhotos.length})
-                        </label>
-                        {selectedPhotosToRemove.length > 0 && (
-                          <button
-                            onClick={removeSelectedPhotos}
-                            disabled={isManagingProfile}
-                            className="px-3 py-1 text-sm bg-red-500 hover:bg-red-600 text-white rounded-md disabled:opacity-50"
-                          >
-                            {isManagingProfile
-                              ? "Removing..."
-                              : `Remove ${selectedPhotosToRemove.length} Selected`}
-                          </button>
-                        )}
-                      </div>
-
-                      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 max-h-48 overflow-y-auto">
-                        {profilePhotos.map((photo) => (
-                          <div key={photo.id} className="relative">
-                            <div
-                              className={`cursor-pointer border-2 rounded-lg overflow-hidden ${
-                                selectedPhotosToRemove.includes(photo.url)
-                                  ? "border-red-500 bg-red-100"
-                                  : "border-gray-200 hover:border-blue-400"
-                              }`}
-                              onClick={() => togglePhotoSelection(photo.url)}
-                            >
-                              <img
-                                src={photo.url}
-                                alt="Profile"
-                                className="w-full h-16 object-cover"
-                              />
-                              <div
-                                className={`absolute inset-0 flex items-center justify-center ${
-                                  selectedPhotosToRemove.includes(photo.url)
-                                    ? "bg-red-500 bg-opacity-50"
-                                    : "bg-transparent"
-                                }`}
-                              >
-                                {selectedPhotosToRemove.includes(photo.url) && (
-                                  <svg
-                                    className="w-6 h-6 text-white"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={2}
-                                      d="M5 13l4 4L19 7"
-                                    />
-                                  </svg>
-                                )}
-                              </div>
-                            </div>
-                            <div className="text-xs text-center mt-1">
-                              <span
-                                className={`inline-block px-1 py-0.5 rounded text-white text-xs ${
-                                  photo.qualityTier === "high"
-                                    ? "bg-green-500"
-                                    : photo.qualityTier === "medium"
-                                    ? "bg-yellow-500"
-                                    : "bg-red-500"
-                                }`}
-                              >
-                                {(photo.confidence * 100).toFixed(0)}%
-                              </span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-
-                      <div className="text-xs text-blue-600 mt-2">
-                        Click photos to select for removal. Higher confidence
-                        (green) photos give better results.
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Enhanced Processing UI */}
+              {/* Processing UI */}
               {isProcessingFaces ? (
                 <div className="space-y-4">
                   {/* Progress Bar */}
@@ -1352,14 +1041,6 @@ const TripDetail = () => {
                       </div>
                     )}
 
-                    {faceRecognitionProgress.batch > 0 &&
-                      faceRecognitionProgress.totalBatches > 0 && (
-                        <div className="text-xs text-gray-600">
-                          Batch {faceRecognitionProgress.batch} of{" "}
-                          {faceRecognitionProgress.totalBatches}
-                        </div>
-                      )}
-
                     {faceRecognitionProgress.estimatedTimeRemaining && (
                       <div className="text-xs text-indigo-600 font-medium">
                         {formatTimeRemaining(
@@ -1375,39 +1056,6 @@ const TripDetail = () => {
                       <div className="text-sm font-medium text-green-800">
                         ✅ Found {faceRecognitionProgress.matches.length}{" "}
                         matches so far
-                      </div>
-                      {faceRecognitionProgress.matches.length > 0 && (
-                        <div className="text-xs text-green-600 mt-1">
-                          Latest:{" "}
-                          {
-                            faceRecognitionProgress.matches[
-                              faceRecognitionProgress.matches.length - 1
-                            ]?.photo
-                          }
-                          {faceRecognitionProgress.matches[
-                            faceRecognitionProgress.matches.length - 1
-                          ]?.consensus && (
-                            <span className="ml-2 text-green-700 font-medium">
-                              (
-                              {
-                                faceRecognitionProgress.matches[
-                                  faceRecognitionProgress.matches.length - 1
-                                ].consensus
-                              }{" "}
-                              consensus)
-                            </span>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Error Counter */}
-                  {faceRecognitionProgress.errors?.length > 0 && (
-                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                      <div className="text-sm font-medium text-yellow-800">
-                        ⚠️ {faceRecognitionProgress.errors.length} photos failed
-                        to process
                       </div>
                     </div>
                   )}
@@ -1439,69 +1087,94 @@ const TripDetail = () => {
                   No matching photos found using your face profile.
                 </p>
               ) : filterActive ? (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {filteredPhotos.map((photo) => (
-                    <div
-                      key={`filtered-${photo.id}`}
-                      className="cursor-pointer"
-                      onClick={() => setSelectedPhoto(photo)}
-                    >
-                      <img
-                        src={photo.downloadURL.replace(
-                          "groupify-77202.appspot.com",
-                          "groupify-77202.firebasestorage.app"
-                        )}
-                        alt={photo.fileName}
-                        className="w-full h-32 object-cover rounded-lg shadow"
-                      />
-                      <div className="text-xs text-gray-500 mt-1">
-                        {photo.faceMatch && (
-                          <div className="flex justify-between items-center">
-                            <span
-                              className={`font-medium ${
-                                photo.faceMatch.matchType === "strong"
-                                  ? "text-green-600"
-                                  : "text-blue-600"
-                              }`}
-                            >
-                              {(photo.faceMatch.confidence * 100).toFixed(1)}%
-                              match
-                            </span>
-                            {photo.faceMatch.consensus && (
-                              <span className="text-xs text-gray-400">
-                                {photo.faceMatch.consensus}
-                              </span>
-                            )}
-                          </div>
-                        )}
+                <div>
+                  {/* 📚 Cache Information Banner */}
+                  {hasCachedResults() && cachedResults === filteredPhotos && (
+                    <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-sm text-blue-800">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <span className="font-medium">Showing previous results</span>
+                          <span className="text-blue-600">
+                            (scanned {new Date(lastScanTimestamp).toLocaleDateString()} at {new Date(lastScanTimestamp).toLocaleTimeString()})
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => handleFindMyPhotos(true)}
+                          className="text-xs bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700"
+                        >
+                          Scan Again
+                        </button>
                       </div>
                     </div>
-                  ))}
+                  )}
+
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {filteredPhotos.map((photo) => (
+                      <div
+                        key={`filtered-${photo.id}`}
+                        className="cursor-pointer"
+                        onClick={() => setSelectedPhoto(photo)}
+                      >
+                        <img
+                          src={photo.downloadURL.replace(
+                            "groupify-77202.appspot.com",
+                            "groupify-77202.firebasestorage.app"
+                          )}
+                          alt={photo.fileName}
+                          className="w-full h-32 object-cover rounded-lg shadow"
+                        />
+                        <div className="text-xs text-gray-500 mt-1">
+                          {photo.faceMatch && (
+                            <div className="flex justify-between items-center">
+                              <span
+                                className={`font-medium ${
+                                  photo.faceMatch.matchType === "strong"
+                                    ? "text-green-600"
+                                    : "text-blue-600"
+                                }`}
+                              >
+                                {(photo.faceMatch.confidence * 100).toFixed(1)}%
+                                match
+                              </span>
+                              {photo.faceMatch.consensus && (
+                                <span className="text-xs text-gray-400">
+                                  {photo.faceMatch.consensus}
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               ) : (
                 <div className="text-center py-8">
                   <div className="text-sm text-gray-400 italic mb-4">
                     {hasProfile
                       ? 'Click "Find My Photos" to automatically identify photos containing you using your face profile.'
-                      : "Create a face profile with multiple photos for much better face recognition accuracy."}
+                      : "You need to create a face profile in your Dashboard before you can find photos with yourself."}
                   </div>
                   {!hasProfile && (
                     <button
-                      onClick={() => setShowProfileManager(true)}
+                      onClick={() => navigate("/dashboard")}
                       className="text-blue-600 hover:text-blue-700 text-sm font-medium underline"
                     >
-                      Setup Face Profile Now
+                      Go to Dashboard to Setup Face Profile
                     </button>
                   )}
                 </div>
               )}
 
-              {/* Completion Summary with Profile Stats */}
+              {/* Completion Summary */}
               {!isProcessingFaces &&
                 faceRecognitionProgress.totalMatches !== undefined && (
                   <div className="mt-4 p-4 bg-indigo-50 rounded-lg border border-indigo-200">
                     <div className="text-sm font-medium text-indigo-800 mb-2">
-                      🎯 Profile-Based Recognition Complete!
+                      🎯 Face Recognition Complete!
                     </div>
                     <div className="text-xs text-indigo-600 space-y-1">
                       <div className="grid grid-cols-2 gap-4">
@@ -1529,25 +1202,12 @@ const TripDetail = () => {
                               {faceRecognitionProgress.processingTime}s
                             </div>
                           )}
-                          {faceRecognitionProgress.profileUsed && (
-                            <div>
-                              Profile refs:{" "}
-                              {faceRecognitionProgress.profileUsed.references}
-                            </div>
-                          )}
+                          <div className="text-blue-600 font-medium">
+                            📚 Results cached for quick access
+                          </div>
                         </div>
                       </div>
                     </div>
-
-                    {/* Cache Performance Stats */}
-                    {faceRecognitionProgress.cacheStats && (
-                      <div className="mt-2 pt-2 border-t border-indigo-200">
-                        <div className="text-xs text-indigo-500">
-                          💾 Cache: {faceRecognitionProgress.cacheStats.hitRate}{" "}
-                          hit rate
-                        </div>
-                      </div>
-                    )}
                   </div>
                 )}
             </div>
@@ -1571,7 +1231,6 @@ const TripDetail = () => {
               ) : (
                 <ul className="space-y-3">
                   {[...tripMembers]
-
                     .sort((a, b) => {
                       // 1. Current user first
                       if (a.uid === currentUser.uid) return -1;
@@ -1639,54 +1298,13 @@ const TripDetail = () => {
           </div>
         </div>
 
-        {/* Face Profile Manager Modal */}
-        {showProfileManager && (
-          <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-              <div className="p-6">
-                <div className="flex justify-between items-center mb-6">
-                  <div>
-                    <h2 className="text-2xl font-bold text-gray-800">
-                      Face Profile Required
-                    </h2>
-                    <p className="text-sm text-gray-600 mt-1">
-                      Create a face profile for much better photo recognition
-                      accuracy
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => setShowProfileManager(false)}
-                    className="text-gray-400 hover:text-gray-600"
-                  >
-                    <svg
-                      className="w-6 h-6"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M6 18L18 6M6 6l12 12"
-                      />
-                    </svg>
-                  </button>
-                </div>
-
-                <FaceProfileManager onProfileLoaded={handleProfileLoaded} />
-              </div>
-            </div>
-          </div>
-        )}
-
         {selectedUser && (
           <UserProfileModal
             user={selectedUser}
             currentUserId={currentUser?.uid}
             isAdmin={isAdmin}
-            isFriend={friends.some((f) => f.uid === selectedUser.uid)} // ✅ נוסף
-            isPending={pendingRequests.some((r) => r.from === selectedUser.uid)} // ✅ נוסף
+            isFriend={friends.some((f) => f.uid === selectedUser.uid)}
+            isPending={pendingRequests.some((r) => r.from === selectedUser.uid)}
             onAddFriend={handleAddFriend}
             onRemoveFriend={handleRemoveFriend}
             onCancelRequest={handleCancelFriendRequest}
@@ -1782,6 +1400,13 @@ const TripDetail = () => {
                       }`}
                       onClick={() => {
                         if (selectMode) {
+                          const togglePhotoSelection = (photoId) => {
+                            setSelectedPhotos((prev) =>
+                              prev.includes(photoId)
+                                ? prev.filter((id) => id !== photoId)
+                                : [...prev, photoId]
+                            );
+                          };
                           togglePhotoSelection(photo.id);
                         } else {
                           setSelectedPhoto(photo);
