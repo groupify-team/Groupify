@@ -1,3 +1,277 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Global Base Styles */
+@layer base {
+  html {
+    @apply scroll-smooth;
+  }
+
+  body {
+    @apply font-sans antialiased;
+    @apply bg-gray-50 dark:bg-gray-900;
+    @apply text-gray-900 dark:text-gray-100;
+    @apply transition-colors duration-200;
+  }
+
+  /* Custom scrollbar styles */
+  ::-webkit-scrollbar {
+    @apply w-2;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-gray-100 dark:bg-gray-800;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-gray-400 dark:bg-gray-600 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-gray-500 dark:bg-gray-500;
+  }
+}
+
+/* Component Styles */
+@layer components {
+  /* Sidebar Animation Classes */
+  .sidebar-overlay {
+    @apply fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden;
+    @apply transition-opacity duration-300 ease-in-out;
+  }
+
+  .sidebar-overlay.entering {
+    @apply opacity-0;
+  }
+
+  .sidebar-overlay.entered {
+    @apply opacity-100;
+  }
+
+  .sidebar-overlay.exiting {
+    @apply opacity-0;
+  }
+
+  /* Sidebar Container */
+  .sidebar-container {
+    @apply fixed top-0 left-0 z-50 h-full w-64;
+    @apply bg-white dark:bg-gray-800;
+    @apply shadow-xl border-r border-gray-200 dark:border-gray-700;
+    @apply transform transition-transform duration-300 ease-in-out;
+    @apply lg:translate-x-0 lg:static lg:inset-0;
+  }
+
+  .sidebar-container.closed {
+    @apply -translate-x-full lg:translate-x-0;
+  }
+
+  .sidebar-container.open {
+    @apply translate-x-0;
+  }
+
+  /* Main Content Area */
+  .main-content {
+    @apply flex-1 flex flex-col overflow-hidden;
+    @apply lg:ml-0; /* Remove margin since sidebar is now static on large screens */
+  }
+
+  /* Custom Button Styles */
+  .btn-primary {
+    @apply bg-indigo-600 hover:bg-indigo-700 text-white;
+    @apply px-4 py-2 rounded-lg font-medium;
+    @apply transition-colors duration-200;
+    @apply focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2;
+    @apply disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-secondary {
+    @apply bg-gray-200 hover:bg-gray-300 text-gray-800;
+    @apply dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-200;
+    @apply px-4 py-2 rounded-lg font-medium;
+    @apply transition-colors duration-200;
+    @apply focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2;
+  }
+
+  .btn-danger {
+    @apply bg-red-600 hover:bg-red-700 text-white;
+    @apply px-4 py-2 rounded-lg font-medium;
+    @apply transition-colors duration-200;
+    @apply focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2;
+  }
+
+  /* Card Styles */
+  .card {
+    @apply bg-white dark:bg-gray-800 rounded-lg shadow-md;
+    @apply border border-gray-200 dark:border-gray-700;
+    @apply transition-colors duration-200;
+  }
+
+  .card-hover {
+    @apply hover:shadow-lg hover:scale-[1.02];
+    @apply transition-all duration-200;
+  }
+
+  /* Input Styles */
+  .input-primary {
+    @apply w-full px-4 py-2 border border-gray-300 dark:border-gray-600;
+    @apply bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100;
+    @apply rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500;
+    @apply transition-colors duration-200;
+    @apply placeholder-gray-500 dark:placeholder-gray-400;
+  }
+
+  /* Navigation Link Styles */
+  .nav-link {
+    @apply flex items-center px-4 py-3 text-gray-700 dark:text-gray-300;
+    @apply hover:bg-gray-100 dark:hover:bg-gray-700;
+    @apply transition-colors duration-200 rounded-lg;
+  }
+
+  .nav-link.active {
+    @apply bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300;
+    @apply border-r-4 border-indigo-600 dark:border-indigo-400;
+  }
+
+  /* Status Indicators */
+  .status-indicator {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  .status-online {
+    @apply bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400;
+  }
+
+  .status-offline {
+    @apply bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400;
+  }
+
+  .status-pending {
+    @apply bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400;
+  }
+
+  /* Photo Grid Styles */
+  .photo-grid {
+    @apply grid gap-4;
+    @apply grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6;
+  }
+
+  .photo-item {
+    @apply relative group cursor-pointer rounded-lg overflow-hidden;
+    @apply hover:shadow-lg transition-all duration-200;
+    @apply bg-gray-200 dark:bg-gray-700;
+  }
+
+  .photo-item img {
+    @apply w-full h-32 object-cover;
+    @apply group-hover:scale-105 transition-transform duration-200;
+  }
+
+  /* Modal Styles */
+  .modal-overlay {
+    @apply fixed inset-0 bg-black bg-opacity-50 z-50;
+    @apply flex items-center justify-center p-4;
+    @apply animate-in fade-in duration-200;
+  }
+
+  .modal-content {
+    @apply bg-white dark:bg-gray-800 rounded-lg shadow-xl;
+    @apply max-w-2xl w-full max-h-[90vh] overflow-y-auto;
+    @apply animate-in zoom-in duration-200;
+  }
+}
+
+/* Utility Classes */
+@layer utilities {
+  /* Animation Utilities */
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-in-out;
+  }
+
+  .animate-slide-in-left {
+    animation: slideInLeft 0.3s ease-in-out;
+  }
+
+  .animate-slide-in-right {
+    animation: slideInRight 0.3s ease-in-out;
+  }
+
+  .animate-pulse-slow {
+    animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  /* Layout Utilities */
+  .container-padding {
+    @apply px-4 sm:px-6 lg:px-8;
+  }
+
+  .section-spacing {
+    @apply py-8 lg:py-12;
+  }
+
+  /* Text Utilities */
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Focus Utilities */
+  .focus-ring {
+    @apply focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2;
+    @apply dark:focus:ring-offset-gray-800;
+  }
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+/* Dark mode improvements */
+@media (prefers-color-scheme: dark) {
+  /* Dark mode is handled by ThemeContext - no need for auto class */
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .mobile-hidden {
+    @apply hidden;
+  }
+  
+  .mobile-full {
+    @apply w-full;
+  }
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    @apply hidden;
+  }
+  
+  .print-only {
+    @apply block;
+  }
+}
