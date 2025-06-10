@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 
-const TripCard = ({ trip }) => {
+const TripCard = ({ trip, onViewTrip }) => { // ADDED: onViewTrip prop
   const formatDate = (dateString) => {
     try {
       const date = new Date(dateString);
@@ -50,12 +50,14 @@ const TripCard = ({ trip }) => {
           <span className="text-xs text-gray-500">
             {trip.members?.length || 1} {trip.members?.length === 1 ? 'member' : 'members'}
           </span>
-          <Link 
-            to={`/trips/${trip.id}`} 
-            className="text-indigo-600 hover:text-indigo-800 text-sm font-medium"
+          
+          {/* CHANGED: From Link to button */}
+          <button
+            onClick={() => onViewTrip && onViewTrip(trip.id)}
+            className="text-indigo-600 hover:text-indigo-800 text-sm font-medium hover:underline cursor-pointer"
           >
             View Trip
-          </Link>
+          </button>
         </div>
       </div>
     </div>
