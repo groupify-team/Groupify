@@ -6,7 +6,6 @@ import ProtectedRoute from "./components/auth/ProtectedRoute";
 import SignIn from "./components/auth/SignIn";
 import SignUp from "./components/auth/SignUp";
 import Dashboard from "./pages/Dashboard";
-import TripDetail from "./pages/TripDetail";
 import HomePage from "./pages/HomePage";
 import { Toaster } from "react-hot-toast";
 
@@ -88,16 +87,7 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-              <Route
-                path="/trips/:tripId"
-                element={
-                  <ProtectedRoute>
-                    <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
-                      <TripDetail />
-                    </div>
-                  </ProtectedRoute>
-                }
-              />
+
 
               {/* 404 Fallback */}
               <Route 

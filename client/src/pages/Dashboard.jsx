@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import TripCard from "../components/trips/TripCard";
+import TripDetailView from "../components/trips/TripDetailView"; // NEW IMPORT
 import CreateTripModal from "../components/trips/CreateTripModal";
 import AddFriend from "../components/friends/AddFriend";
 import EditProfileModal from "../components/profile/EditProfileModal";
@@ -32,6 +33,7 @@ import {
   Bars3Icon,
   ExclamationTriangleIcon,
   XMarkIcon,
+  ArrowLeftIcon, // NEW IMPORT
 } from '@heroicons/react/24/outline';
 
 // functions
@@ -89,6 +91,10 @@ const Dashboard = () => {
   // Navigation state
   const [activeSection, setActiveSection] = useState('trips');
 
+  // NEW: Trip detail view state
+  const [currentView, setCurrentView] = useState('home'); // 'home' or 'trip'
+  const [selectedTripId, setSelectedTripId] = useState(null);
+
   // Data states
   const [trips, setTrips] = useState([]);
   const [friends, setFriends] = useState([]);
@@ -98,7 +104,6 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [pendingFriendRequests, setPendingFriendRequests] = useState([]);
-
 
   // Trip filtering
   const [searchTerm, setSearchTerm] = useState('');
@@ -121,6 +126,17 @@ const Dashboard = () => {
   const [selectedUserProfile, setSelectedUserProfile] = useState(null);
   const [showEditProfileModal, setShowEditProfileModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
+
+  // NEW: Functions to handle trip viewing
+  const handleViewTrip = (tripId) => {
+    setCurrentView('trip');
+    setSelectedTripId(tripId);
+  };
+
+  const handleBackToDashboard = () => {
+    setCurrentView('home');
+    setSelectedTripId(null);
+  };
 
   // Navigation items
   const navigationItems = [
@@ -585,8 +601,6 @@ const Dashboard = () => {
   // Open User Profile Modal
   const [isUserProfileOpen, setIsUserProfileOpen] = useState(false);
 
-  
-
   const handleOpenUserProfile = async (uid) => {
   try {
     const userDoc = await getDoc(doc(db, "users", uid));
@@ -600,7 +614,6 @@ const Dashboard = () => {
     console.error("Error fetching user profile:", err);
   }
 };
-
 
   const handleAccept = async (fromUid) => {
     try {
@@ -697,7 +710,11 @@ const Dashboard = () => {
           </div>
         ) : (
           filteredTrips.map((trip) => (
-            <TripCard key={trip.id} trip={trip} />
+            <TripCard 
+              key={trip.id} 
+              trip={trip} 
+              onViewTrip={handleViewTrip} // PASS THE FUNCTION TO TRIP CARD
+            />
           ))
         )}
       </div>
@@ -1154,7 +1171,14 @@ const Dashboard = () => {
     </div>
   );
 
+  // UPDATED: Modified renderSection to handle trip view
   const renderSection = () => {
+    // If we're viewing a trip, show the trip detail
+    if (currentView === 'trip' && selectedTripId) {
+      return <TripDetailView tripId={selectedTripId} />;
+    }
+
+    // Otherwise show the regular sections
     switch (activeSection) {
       case 'trips':
         return <TripsSection />;
@@ -1226,17 +1250,31 @@ const Dashboard = () => {
           </div>
         </div>
 
+        {/* NEW: Back button when viewing trip */}
+        {currentView === 'trip' && (
+          <div className="p-4 border-b border-gray-200">
+            <button
+              onClick={handleBackToDashboard}
+              className="w-full flex items-center gap-3 px-4 py-3 text-indigo-600 hover:bg-indigo-50 rounded-xl font-medium transition-colors"
+            >
+              <ArrowLeftIcon className="w-5 h-5" />
+              <span>Back to Dashboard</span>
+            </button>
+          </div>
+        )}
+
         {/* Navigation */}
         <nav className="flex-1 p-4">
           <ul className="space-y-2">
             {navigationItems.map((item) => {
               const Icon = item.icon;
-              const isActive = activeSection === item.id;
+              const isActive = activeSection === item.id && currentView === 'home'; // UPDATED: Only active when in home view
               return (
                 <li key={item.id}>
                   <button
                     onClick={() => {
                       setActiveSection(item.id);
+                      setCurrentView('home'); // UPDATED: Always go to home view when clicking sidebar
                       setSidebarOpen(false); // Close sidebar on mobile when item is clicked
                     }}
                     className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-medium transition-all duration-200 ${
@@ -1301,7 +1339,7 @@ const Dashboard = () => {
                 {/* Welcome message - hidden on mobile */}
                 <div className="hidden sm:block">
                   <h2 className="text-xl font-semibold text-gray-900">
-                    Welcome back, {userData?.displayName || currentUser?.displayName || 'User'}!
+                    {currentView === 'trip' ? 'Trip Details' : `Welcome back, ${userData?.displayName || currentUser?.displayName || 'User'}!`}
                   </h2>
                 </div>
               </div>
@@ -1317,7 +1355,13 @@ const Dashboard = () => {
               {/* Right section - Notifications and user menu */}
               <div className="flex items-center gap-4">
                 {/* Notifications */}
-                <button className="relative p-2 rounded-lg hover:bg-gray-100">
+                <button 
+                  onClick={() => {
+                    setActiveSection('notifications');
+                    setCurrentView('home');
+                  }}
+                  className="relative p-2 rounded-lg hover:bg-gray-100"
+                >
                   <BellIcon className="w-6 h-6 text-gray-600" />
                   {(pendingRequests.length > 0 || tripInvites.length > 0) && (
                     <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
