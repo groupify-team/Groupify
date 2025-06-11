@@ -2,16 +2,16 @@ import React, { useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
 import { useTheme } from "../../contexts/ThemeContext";
-import { 
-  EyeIcon, 
-  EyeSlashIcon, 
+import {
+  EyeIcon,
+  EyeSlashIcon,
   CameraIcon,
   MoonIcon,
   SunIcon,
   ArrowLeftIcon,
-  CheckIcon 
-} from '@heroicons/react/24/outline';
-import { toast } from 'react-hot-toast';
+  CheckIcon,
+} from "@heroicons/react/24/outline";
+import { toast } from "react-hot-toast";
 
 const SignUp = () => {
   const [formData, setFormData] = useState({
@@ -19,28 +19,28 @@ const SignUp = () => {
     password: "",
     confirmPassword: "",
     displayName: "",
-    gender: "male"
+    gender: "male",
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
-  
+
   const { signup, signInWithGoogle } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
   const validateForm = () => {
     const { email, password, confirmPassword, displayName } = formData;
-    
+
     if (!email || !password || !confirmPassword || !displayName) {
       toast.error("Please fill in all required fields");
       return false;
@@ -72,7 +72,7 @@ const SignUp = () => {
     const hasUpperCase = /[A-Z]/.test(password);
     const hasLowerCase = /[a-z]/.test(password);
     const hasNumbers = /\d/.test(password);
-    
+
     if (!hasUpperCase || !hasLowerCase || !hasNumbers) {
       toast.error("Password must contain uppercase, lowercase, and numbers");
       return false;
@@ -81,66 +81,73 @@ const SignUp = () => {
     return true;
   };
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  
-  if (!validateForm()) {
-    return;
-  }
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-  try {
-    setLoading(true);
-    
-    // Create user account (but don't sign them in yet)
-    await signup(
-      formData.email, 
-      formData.password, 
-      formData.displayName, 
-      formData.gender,
-      false // Add parameter to indicate not to sign in immediately
-    );
-    
-    // Send verification email via Firebase Function
-    const { getFunctions, httpsCallable } = await import("firebase/functions");
-    const functions = getFunctions();
-    const sendVerificationEmail = httpsCallable(functions, "sendVerificationEmail");
-
-    await sendVerificationEmail({
-      email: formData.email,
-      name: formData.displayName
-    });
-
-    
-    toast.success("Account created! Please check your email for verification.");
-    
-    // Redirect to confirmation page with email
-    navigate("/confirm-email", { 
-      state: { 
-        email: formData.email,
-        name: formData.displayName 
-      } 
-    });
-    
-  } catch (error) {
-    console.error("Sign up error:", error);
-    
-    let errorMessage = "Failed to create account";
-    
-    if (error.code === 'auth/email-already-in-use') {
-      errorMessage = "An account with this email already exists";
-    } else if (error.code === 'auth/invalid-email') {
-      errorMessage = "Invalid email address";
-    } else if (error.code === 'auth/weak-password') {
-      errorMessage = "Password is too weak";
-    } else if (error.code === 'auth/operation-not-allowed') {
-      errorMessage = "Account creation is currently disabled";
+    if (!validateForm()) {
+      return;
     }
-    
-    toast.error(errorMessage);
-  } finally {
-    setLoading(false);
-  }
-};
+
+    try {
+      setLoading(true);
+
+      // Create user account (but don't sign them in yet)
+      await signup(
+        formData.email,
+        formData.password,
+        formData.displayName,
+        formData.gender,
+        false // Don't sign in immediately
+      );
+
+      // Send verification email via Firebase Function
+      const { getFunctions, httpsCallable } = await import(
+        "firebase/functions"
+      );
+      const functions = getFunctions();
+      const sendVerificationEmail = httpsCallable(
+        functions,
+        "sendVerificationEmail"
+      );
+
+      await sendVerificationEmail({
+        email: formData.email,
+        name: formData.displayName,
+      });
+
+      toast.success(
+        "Account created! Please check your email for verification."
+      );
+
+      // Redirect to confirmation page with email
+      navigate("/confirm-email", {
+        state: {
+          email: formData.email,
+          name: formData.displayName,
+        },
+      });
+    } catch (error) {
+      console.error("Sign up error:", error);
+
+      let errorMessage = "Failed to create account";
+
+      if (error.code === "auth/email-already-in-use") {
+        errorMessage = "An account with this email already exists";
+      } else if (error.code === "auth/invalid-email") {
+        errorMessage = "Invalid email address";
+      } else if (error.code === "auth/weak-password") {
+        errorMessage = "Password is too weak";
+      } else if (error.code === "auth/operation-not-allowed") {
+        errorMessage = "Account creation is currently disabled";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      toast.error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleGoogleSignUp = async () => {
     if (!agreedToTerms) {
@@ -155,17 +162,20 @@ const handleSubmit = async (e) => {
       navigate("/dashboard");
     } catch (error) {
       console.error("Google sign up error:", error);
-      
+
       let errorMessage = "Failed to create account with Google";
-      
-      if (error.code === 'auth/popup-closed-by-user') {
+
+      if (error.code === "auth/popup-closed-by-user") {
         errorMessage = "Sign up was cancelled";
-      } else if (error.code === 'auth/popup-blocked') {
+      } else if (error.code === "auth/popup-blocked") {
         errorMessage = "Popup was blocked. Please allow popups and try again";
-      } else if (error.code === 'auth/account-exists-with-different-credential') {
-        errorMessage = "An account already exists with this email using a different sign-in method";
+      } else if (
+        error.code === "auth/account-exists-with-different-credential"
+      ) {
+        errorMessage =
+          "An account already exists with this email using a different sign-in method";
       }
-      
+
       toast.error(errorMessage);
     } finally {
       setLoading(false);
@@ -174,8 +184,8 @@ const handleSubmit = async (e) => {
 
   const getPasswordStrength = () => {
     const { password } = formData;
-    if (!password) return { strength: 0, label: '', color: '' };
-    
+    if (!password) return { strength: 0, label: "", color: "" };
+
     let strength = 0;
     if (password.length >= 6) strength++;
     if (password.length >= 8) strength++;
@@ -183,10 +193,11 @@ const handleSubmit = async (e) => {
     if (/[a-z]/.test(password)) strength++;
     if (/\d/.test(password)) strength++;
     if (/[^A-Za-z0-9]/.test(password)) strength++;
-    
-    if (strength <= 2) return { strength, label: 'Weak', color: 'bg-red-500' };
-    if (strength <= 4) return { strength, label: 'Medium', color: 'bg-yellow-500' };
-    return { strength, label: 'Strong', color: 'bg-green-500' };
+
+    if (strength <= 2) return { strength, label: "Weak", color: "bg-red-500" };
+    if (strength <= 4)
+      return { strength, label: "Medium", color: "bg-yellow-500" };
+    return { strength, label: "Strong", color: "bg-green-500" };
   };
 
   const passwordStrength = getPasswordStrength();
@@ -207,10 +218,11 @@ const handleSubmit = async (e) => {
             Join thousands of travelers
           </h2>
           <p className="text-xl text-purple-100 mb-8 leading-relaxed">
-            Start organizing your travel photos with AI-powered face recognition. 
-            Create albums, share with friends, and never lose a memory again.
+            Start organizing your travel photos with AI-powered face
+            recognition. Create albums, share with friends, and never lose a
+            memory again.
           </p>
-          
+
           {/* Stats */}
           <div className="grid grid-cols-2 gap-6 mb-8">
             <div className="text-center">
@@ -267,12 +279,12 @@ const handleSubmit = async (e) => {
                 <ArrowLeftIcon className="w-5 h-5 mr-2" />
                 Back to Home
               </Link>
-              
+
               <button
                 onClick={toggleTheme}
                 className="p-2 rounded-lg text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
               >
-                {theme === 'dark' ? (
+                {theme === "dark" ? (
                   <SunIcon className="w-5 h-5" />
                 ) : (
                   <MoonIcon className="w-5 h-5" />
@@ -302,7 +314,10 @@ const handleSubmit = async (e) => {
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Display Name */}
             <div>
-              <label htmlFor="displayName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label
+                htmlFor="displayName"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >
                 Full Name *
               </label>
               <input
@@ -321,7 +336,10 @@ const handleSubmit = async (e) => {
 
             {/* Email */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >
                 Email Address *
               </label>
               <input
@@ -340,14 +358,17 @@ const handleSubmit = async (e) => {
 
             {/* Password */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >
                 Password *
               </label>
               <div className="relative">
                 <input
                   id="password"
                   name="password"
-                  type={showPassword ? 'text' : 'password'}
+                  type={showPassword ? "text" : "password"}
                   autoComplete="new-password"
                   required
                   value={formData.password}
@@ -369,23 +390,32 @@ const handleSubmit = async (e) => {
                   )}
                 </button>
               </div>
-              
+
               {/* Password Strength Indicator */}
               {formData.password && (
                 <div className="mt-2">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-gray-500 dark:text-gray-400">Password strength:</span>
-                    <span className={`font-medium ${
-                      passwordStrength.label === 'Strong' ? 'text-green-600' :
-                      passwordStrength.label === 'Medium' ? 'text-yellow-600' : 'text-red-600'
-                    }`}>
+                    <span className="text-gray-500 dark:text-gray-400">
+                      Password strength:
+                    </span>
+                    <span
+                      className={`font-medium ${
+                        passwordStrength.label === "Strong"
+                          ? "text-green-600"
+                          : passwordStrength.label === "Medium"
+                          ? "text-yellow-600"
+                          : "text-red-600"
+                      }`}
+                    >
                       {passwordStrength.label}
                     </span>
                   </div>
                   <div className="mt-1 w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1">
-                    <div 
+                    <div
                       className={`h-1 rounded-full transition-all duration-300 ${passwordStrength.color}`}
-                      style={{ width: `${(passwordStrength.strength / 6) * 100}%` }}
+                      style={{
+                        width: `${(passwordStrength.strength / 6) * 100}%`,
+                      }}
                     />
                   </div>
                 </div>
@@ -394,14 +424,17 @@ const handleSubmit = async (e) => {
 
             {/* Confirm Password */}
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label
+                htmlFor="confirmPassword"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >
                 Confirm Password *
               </label>
               <div className="relative">
                 <input
                   id="confirmPassword"
                   name="confirmPassword"
-                  type={showConfirmPassword ? 'text' : 'password'}
+                  type={showConfirmPassword ? "text" : "password"}
                   autoComplete="new-password"
                   required
                   value={formData.confirmPassword}
@@ -435,7 +468,9 @@ const handleSubmit = async (e) => {
                   <button
                     key={option}
                     type="button"
-                    onClick={() => setFormData(prev => ({ ...prev, gender: option }))}
+                    onClick={() =>
+                      setFormData((prev) => ({ ...prev, gender: option }))
+                    }
                     disabled={loading}
                     className={`flex-1 py-2 px-4 rounded-lg border text-sm font-medium transition-all ${
                       formData.gender === option
@@ -463,13 +498,22 @@ const handleSubmit = async (e) => {
                 />
               </div>
               <div className="ml-3 text-sm">
-                <label htmlFor="terms" className="text-gray-700 dark:text-gray-300">
-                  I agree to the{' '}
-                  <a href="#" className="text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300">
+                <label
+                  htmlFor="terms"
+                  className="text-gray-700 dark:text-gray-300"
+                >
+                  I agree to the{" "}
+                  <a
+                    href="#"
+                    className="text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
+                  >
                     Terms of Service
-                  </a>{' '}
-                  and{' '}
-                  <a href="#" className="text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300">
+                  </a>{" "}
+                  and{" "}
+                  <a
+                    href="#"
+                    className="text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
+                  >
                     Privacy Policy
                   </a>
                 </label>
@@ -488,7 +532,7 @@ const handleSubmit = async (e) => {
                   Creating account...
                 </>
               ) : (
-                'Create Account'
+                "Create Account"
               )}
             </button>
           </form>
@@ -528,7 +572,7 @@ const handleSubmit = async (e) => {
 
           {/* Sign In Link */}
           <p className="mt-6 text-center text-sm text-gray-600 dark:text-gray-400">
-            Already have an account?{' '}
+            Already have an account?{" "}
             <Link
               to="/signin"
               className="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
