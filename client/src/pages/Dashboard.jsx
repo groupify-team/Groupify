@@ -1,13 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import TripCard from "../components/trips/TripCard";
-import TripDetailView from "../components/trips/TripDetailView"; // NEW IMPORT
+import TripDetailView from "../components/trips/TripDetailView";
 import CreateTripModal from "../components/trips/CreateTripModal";
 import AddFriend from "../components/friends/AddFriend";
 import EditProfileModal from "../components/profile/EditProfileModal";
 import SettingsModal from "../components/settings/SettingsModal";
-import ModernNavbar from "../components/layout/Navbar";
 import UserProfileModal from "../components/profile/UserProfileModal";
 import FaceProfileManager from "../components/faceProfile/FaceProfileManager";
 import { toast, ToastContainer } from "react-toastify";
@@ -33,8 +32,10 @@ import {
   Bars3Icon,
   ExclamationTriangleIcon,
   XMarkIcon,
-  ArrowLeftIcon, // NEW IMPORT
-} from '@heroicons/react/24/outline';
+  ArrowLeftIcon,
+  ChevronDownIcon,
+  ChevronRightIcon,
+} from "@heroicons/react/24/outline";
 
 // functions
 import {
@@ -45,9 +46,18 @@ import {
   where,
   doc,
   onSnapshot,
+  deleteDoc,
+  writeBatch,
 } from "firebase/firestore";
 import { db, storage } from "../services/firebase/config";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import {
+  ref,
+  uploadBytes,
+  getDownloadURL,
+  deleteObject,
+  listAll,
+} from "firebase/storage";
+import { deleteUser } from "firebase/auth";
 import {
   getUserTrips,
   getPendingInvites,
@@ -85,14 +95,25 @@ const Dashboard = () => {
   const { currentUser, logout } = useAuth();
   const navigate = useNavigate();
 
+  // Refs
+  const notificationRef = useRef(null);
+
   // Sidebar state
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Navigation state
-  const [activeSection, setActiveSection] = useState('trips');
+  const [activeSection, setActiveSection] = useState("trips");
 
-  // NEW: Trip detail view state
-  const [currentView, setCurrentView] = useState('home'); // 'home' or 'trip'
+  // NEW: Trip dropdown state
+  const [tripsDropdownOpen, setTripsDropdownOpen] = useState(false);
+  const [visibleTripsCount, setVisibleTripsCount] = useState(5);
+
+  // NEW: Notifications dropdown state
+  const [notificationsDropdownOpen, setNotificationsDropdownOpen] =
+    useState(false);
+
+  // Trip detail view state
+  const [currentView, setCurrentView] = useState("home"); // 'home' or 'trip'
   const [selectedTripId, setSelectedTripId] = useState(null);
 
   // Data states
@@ -105,9 +126,14 @@ const Dashboard = () => {
   const [error, setError] = useState(null);
   const [pendingFriendRequests, setPendingFriendRequests] = useState([]);
 
+  // Delete account modal state
+  const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
+
   // Trip filtering
-  const [searchTerm, setSearchTerm] = useState('');
-  const [dateFilter, setDateFilter] = useState('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [dateFilter, setDateFilter] = useState("all");
 
   // Face profile states
   const [hasProfile, setHasProfile] = useState(false);
@@ -129,22 +155,171 @@ const Dashboard = () => {
 
   // NEW: Functions to handle trip viewing
   const handleViewTrip = (tripId) => {
-    setCurrentView('trip');
+    setCurrentView("trip");
     setSelectedTripId(tripId);
+    setTripsDropdownOpen(false); // Close dropdown when navigating to trip
   };
 
   const handleBackToDashboard = () => {
-    setCurrentView('home');
+    setCurrentView("home");
     setSelectedTripId(null);
+  };
+
+  // NEW: Handle trips dropdown
+  const toggleTripsDropdown = () => {
+    setTripsDropdownOpen(!tripsDropdownOpen);
+    setVisibleTripsCount(5); // Reset to show first 5 trips
+  };
+
+  const showMoreTrips = () => {
+    setVisibleTripsCount((prev) => prev + 5);
+  };
+
+  // NEW: Handle notifications dropdown
+  const toggleNotificationsDropdown = () => {
+    setNotificationsDropdownOpen(!notificationsDropdownOpen);
+  };
+
+  // NEW: Click outside to close notifications dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        notificationRef.current &&
+        !notificationRef.current.contains(event.target)
+      ) {
+        setNotificationsDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Delete account state
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmText !== "DELETE") {
+      toast.error("Please type 'DELETE' to confirm");
+      return;
+    }
+
+    setIsDeleting(true);
+
+    try {
+      toast.info("Deleting account... This may take a moment.");
+
+      const batch = writeBatch(db);
+      const userId = currentUser.uid;
+
+      // Delete user profile photos from storage
+      try {
+        const userPhotosRef = ref(storage, `profile_photos/${userId}`);
+        const photosList = await listAll(userPhotosRef);
+
+        for (const photoRef of photosList.items) {
+          await deleteObject(photoRef);
+        }
+      } catch (storageError) {
+        console.warn("Error deleting profile photos:", storageError);
+      }
+
+      // Delete face profile data
+      try {
+        deleteFaceProfile(userId);
+        await deleteFaceProfileFromStorage(userId);
+      } catch (faceError) {
+        console.warn("Error deleting face profile:", faceError);
+      }
+
+      // Delete user document
+      batch.delete(doc(db, "users", userId));
+
+      // Delete friend requests
+      const sentRequestsQuery = query(
+        collection(db, "friendRequests"),
+        where("from", "==", userId)
+      );
+      const receivedRequestsQuery = query(
+        collection(db, "friendRequests"),
+        where("to", "==", userId)
+      );
+
+      const [sentRequests, receivedRequests] = await Promise.all([
+        getDocs(sentRequestsQuery),
+        getDocs(receivedRequestsQuery),
+      ]);
+
+      [...sentRequests.docs, ...receivedRequests.docs].forEach((docSnap) => {
+        batch.delete(docSnap.ref);
+      });
+
+      // Remove user from friends' friend lists
+      for (const friend of friends) {
+        const friendRef = doc(db, "users", friend.uid);
+        const friendDoc = await getDoc(friendRef);
+
+        if (friendDoc.exists()) {
+          const friendData = friendDoc.data();
+          const updatedFriends = (friendData.friends || []).filter(
+            (id) => id !== userId
+          );
+          batch.update(friendRef, { friends: updatedFriends });
+        }
+      }
+
+      // Execute batch operations
+      await batch.commit();
+
+      // Delete user from Firebase Auth (this should be last)
+      await deleteUser(currentUser);
+
+      toast.success("Account deleted successfully. Goodbye!");
+
+      // Navigate to home page
+      setTimeout(() => {
+        navigate("/");
+      }, 2000);
+    } catch (error) {
+      console.error("Error deleting account:", error);
+
+      if (error.code === "auth/requires-recent-login") {
+        toast.error(
+          "For security reasons, please log out and log back in, then try deleting your account again."
+        );
+      } else {
+        toast.error(
+          "Failed to delete account. Please try again or contact support."
+        );
+      }
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteAccountModal(false);
+      setDeleteConfirmText("");
+    }
   };
 
   // Navigation items
   const navigationItems = [
-    { id: 'trips', name: 'My Trips', icon: MapIcon, badge: trips.length },
-    { id: 'faceprofile', name: 'Face Profile', icon: UserCircleIcon },
-    { id: 'friends', name: 'Friends', icon: UserGroupIcon, badge: friends.length },
-    { id: 'notifications', name: 'Notifications', icon: BellIcon, badge: pendingRequests.length + tripInvites.length },
-    { id: 'settings', name: 'Settings', icon: Cog6ToothIcon },
+    {
+      id: "trips",
+      name: "My Trips",
+      icon: MapIcon,
+      badge: trips.length,
+      hasDropdown: true,
+    },
+    { id: "faceprofile", name: "Face Profile", icon: UserCircleIcon },
+    {
+      id: "friends",
+      name: "Friends",
+      icon: UserGroupIcon,
+      badge: friends.length,
+    },
+    {
+      id: "notifications",
+      name: "Notifications",
+      icon: BellIcon,
+      badge: pendingRequests.length + tripInvites.length,
+    },
+    { id: "settings", name: "Settings", icon: Cog6ToothIcon },
   ];
 
   // Helper function for uploading files to Firebase Storage
@@ -191,20 +366,20 @@ const Dashboard = () => {
 
   // Handle sidebar toggle
   useEffect(() => {
-  const fetchPendingRequests = async () => {
-    if (!currentUser?.uid) return;
-    try {
-      const requests = await getPendingFriendRequests(currentUser.uid);
-      setPendingFriendRequests(requests || []);
-    } catch (error) {
-      console.error("Error fetching pending friend requests:", error);
-    }
-  };
+    const fetchPendingRequests = async () => {
+      if (!currentUser?.uid) return;
+      try {
+        const requests = await getPendingFriendRequests(currentUser.uid);
+        setPendingFriendRequests(requests || []);
+      } catch (error) {
+        console.error("Error fetching pending friend requests:", error);
+      }
+    };
 
-  if (currentUser) {
-    fetchPendingRequests();
-  }
-}, [currentUser]);
+    if (currentUser) {
+      fetchPendingRequests();
+    }
+  }, [currentUser]);
 
   // Updated loadUserFaceProfile function
   const loadUserFaceProfile = async () => {
@@ -426,13 +601,14 @@ const Dashboard = () => {
     const loadDashboardData = async () => {
       try {
         setLoading(true);
-        const [userTrips, userProfile, userFriends, friendRequests, invites] = await Promise.all([
-          getUserTrips(currentUser.uid),
-          getUserProfile(currentUser.uid),
-          getFriends(currentUser.uid),
-          getPendingFriendRequests(currentUser.uid),
-          getPendingInvites(currentUser.uid),
-        ]);
+        const [userTrips, userProfile, userFriends, friendRequests, invites] =
+          await Promise.all([
+            getUserTrips(currentUser.uid),
+            getUserProfile(currentUser.uid),
+            getFriends(currentUser.uid),
+            getPendingFriendRequests(currentUser.uid),
+            getPendingInvites(currentUser.uid),
+          ]);
 
         setTrips(userTrips);
         setUserData(userProfile);
@@ -446,9 +622,9 @@ const Dashboard = () => {
           setProfilePhotos(getProfilePhotos(currentUser.uid));
         }
       } catch (error) {
-        console.error('Error loading dashboard data:', error);
-        setError('Failed to load dashboard data');
-        toast.error('Failed to load dashboard data');
+        console.error("Error loading dashboard data:", error);
+        setError("Failed to load dashboard data");
+        toast.error("Failed to load dashboard data");
       } finally {
         setLoading(false);
       }
@@ -554,23 +730,24 @@ const Dashboard = () => {
   }, [currentUser]);
 
   // Filter trips based on search and date
-  const filteredTrips = trips.filter(trip => {
-    const matchesSearch = trip.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         trip.location?.toLowerCase().includes(searchTerm.toLowerCase());
-    
+  const filteredTrips = trips.filter((trip) => {
+    const matchesSearch =
+      trip.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      trip.location?.toLowerCase().includes(searchTerm.toLowerCase());
+
     if (!matchesSearch) return false;
 
-    if (dateFilter === 'all') return true;
-    
+    if (dateFilter === "all") return true;
+
     const now = new Date();
     const tripDate = trip.startDate ? new Date(trip.startDate) : null;
-    
+
     switch (dateFilter) {
-      case 'upcoming':
+      case "upcoming":
         return tripDate && tripDate > now;
-      case 'past':
+      case "past":
         return tripDate && tripDate < now;
-      case 'recent':
+      case "recent":
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(now.getDate() - 30);
         return tripDate && tripDate > thirtyDaysAgo;
@@ -602,18 +779,18 @@ const Dashboard = () => {
   const [isUserProfileOpen, setIsUserProfileOpen] = useState(false);
 
   const handleOpenUserProfile = async (uid) => {
-  try {
-    const userDoc = await getDoc(doc(db, "users", uid));
-    if (userDoc.exists()) {
-      const userData = userDoc.data();
-      setSelectedUserProfile({ uid, ...userData });
-      setIsUserProfileOpen(true);
-      setShowAddFriendModal(false);
+    try {
+      const userDoc = await getDoc(doc(db, "users", uid));
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        setSelectedUserProfile({ uid, ...userData });
+        setIsUserProfileOpen(true);
+        setShowAddFriendModal(false);
+      }
+    } catch (err) {
+      console.error("Error fetching user profile:", err);
     }
-  } catch (err) {
-    console.error("Error fetching user profile:", err);
-  }
-};
+  };
 
   const handleAccept = async (fromUid) => {
     try {
@@ -640,13 +817,132 @@ const Dashboard = () => {
     }
   };
 
+  // NEW: Notifications Dropdown Component
+  const NotificationsDropdown = () => {
+    const allNotifications = [
+      ...pendingRequests.map((req) => ({
+        id: `friend-request-${req.id}`,
+        type: "friend_request",
+        message: `${req.displayName || req.email} wants to be your friend`,
+        avatar:
+          req.photoURL ||
+          "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg",
+        time: req.createdAt,
+        actions: [
+          {
+            label: "Accept",
+            action: () => handleAccept(req.from),
+            type: "accept",
+          },
+          {
+            label: "Decline",
+            action: () => handleReject(req.from),
+            type: "decline",
+          },
+        ],
+      })),
+      ...tripInvites.map((invite) => ({
+        id: `trip-invite-${invite.id}`,
+        type: "trip_invite",
+        message: `${invite.inviterName} invited you to "${invite.tripName}"`,
+        avatar:
+          invite.inviterPhoto ||
+          "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg",
+        time: invite.createdAt,
+        actions: [
+          {
+            label: "Accept",
+            action: async () => {
+              await acceptTripInvite(invite.id, currentUser.uid);
+              setTripInvites((prev) => prev.filter((i) => i.id !== invite.id));
+              const refreshedTrips = await getUserTrips(currentUser.uid);
+              setTrips(refreshedTrips);
+              toast.success("Trip invitation accepted");
+            },
+            type: "accept",
+          },
+          {
+            label: "Decline",
+            action: async () => {
+              await declineTripInvite(invite.id);
+              setTripInvites((prev) => prev.filter((i) => i.id !== invite.id));
+              toast.success("Trip invitation declined");
+            },
+            type: "decline",
+          },
+        ],
+      })),
+    ];
+
+    return (
+      <div className="absolute right-0 top-full mt-2 w-96 bg-white rounded-xl shadow-lg border border-gray-200 z-50 max-h-96 overflow-y-auto">
+        <div className="p-4 border-b border-gray-100">
+          <h3 className="text-lg font-semibold text-gray-900">Notifications</h3>
+        </div>
+
+        {allNotifications.length === 0 ? (
+          <div className="p-6 text-center text-gray-500">
+            <BellIcon className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+            <p>No notifications</p>
+          </div>
+        ) : (
+          <div className="divide-y divide-gray-100">
+            {allNotifications.map((notification) => (
+              <div key={notification.id} className="p-4 hover:bg-gray-50">
+                <div className="flex items-start gap-3">
+                  <img
+                    src={notification.avatar}
+                    alt=""
+                    className="w-10 h-10 rounded-full object-cover"
+                  />
+                  <div className="flex-1">
+                    <p className="text-sm text-gray-800 mb-2">
+                      {notification.message}
+                    </p>
+                    {notification.time && (
+                      <p className="text-xs text-gray-500 mb-3">
+                        {new Date(
+                          notification.time?.toDate?.() || notification.time
+                        ).toRelativeString?.() ||
+                          new Date(
+                            notification.time?.toDate?.() || notification.time
+                          ).toLocaleDateString()}
+                      </p>
+                    )}
+                    <div className="flex gap-2">
+                      {notification.actions.map((action, index) => (
+                        <button
+                          key={index}
+                          onClick={action.action}
+                          className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+                            action.type === "accept"
+                              ? "bg-green-100 text-green-700 hover:bg-green-200"
+                              : "bg-red-100 text-red-700 hover:bg-red-200"
+                          }`}
+                        >
+                          {action.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   // Section Components
   const TripsSection = () => (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">My Trips</h1>
-          <p className="text-gray-600 mt-1">Organize and manage your travel memories</p>
+          <p className="text-gray-600 mt-1">
+            Organize and manage your travel memories
+          </p>
         </div>
         <button
           onClick={() => setShowCreateTripModal(true)}
@@ -691,15 +987,16 @@ const Dashboard = () => {
               <MapIcon className="w-12 h-12 text-gray-400" />
             </div>
             <h3 className="text-xl font-semibold text-gray-600 mb-2">
-              {searchTerm || dateFilter !== 'all' ? 'No trips match your filters' : 'No trips yet'}
+              {searchTerm || dateFilter !== "all"
+                ? "No trips match your filters"
+                : "No trips yet"}
             </h3>
             <p className="text-gray-500 mb-6">
-              {searchTerm || dateFilter !== 'all' 
-                ? 'Try adjusting your search or filters'
-                : 'Create your first trip to get started'
-              }
+              {searchTerm || dateFilter !== "all"
+                ? "Try adjusting your search or filters"
+                : "Create your first trip to get started"}
             </p>
-            {!searchTerm && dateFilter === 'all' && (
+            {!searchTerm && dateFilter === "all" && (
               <button
                 onClick={() => setShowCreateTripModal(true)}
                 className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-semibold transition-colors"
@@ -710,11 +1007,7 @@ const Dashboard = () => {
           </div>
         ) : (
           filteredTrips.map((trip) => (
-            <TripCard 
-              key={trip.id} 
-              trip={trip} 
-              onViewTrip={handleViewTrip} // PASS THE FUNCTION TO TRIP CARD
-            />
+            <TripCard key={trip.id} trip={trip} onViewTrip={handleViewTrip} />
           ))
         )}
       </div>
@@ -725,7 +1018,9 @@ const Dashboard = () => {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Face Profile</h1>
-        <p className="text-gray-600 mt-1">AI-powered face recognition for automatic photo organization</p>
+        <p className="text-gray-600 mt-1">
+          AI-powered face recognition for automatic photo organization
+        </p>
       </div>
 
       {!hasProfile ? (
@@ -733,9 +1028,12 @@ const Dashboard = () => {
           <div className="w-24 h-24 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
             <UserCircleIcon className="w-12 h-12 text-indigo-500" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">Create Your Face Profile</h2>
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">
+            Create Your Face Profile
+          </h2>
           <p className="text-gray-600 mb-8 max-w-md mx-auto">
-            Upload 2-5 clear photos of yourself to enable automatic photo recognition in your trips
+            Upload 2-5 clear photos of yourself to enable automatic photo
+            recognition in your trips
           </p>
           <button
             onClick={() => setShowProfileManager(true)}
@@ -754,8 +1052,12 @@ const Dashboard = () => {
                 <CheckCircleIcon className="w-6 h-6 text-green-600" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-gray-800">Face Profile Active</h2>
-                <p className="text-green-600 text-sm">Ready for automatic photo recognition</p>
+                <h2 className="text-xl font-bold text-gray-800">
+                  Face Profile Active
+                </h2>
+                <p className="text-green-600 text-sm">
+                  Ready for automatic photo recognition
+                </p>
               </div>
             </div>
             <div className="flex gap-2">
@@ -807,7 +1109,9 @@ const Dashboard = () => {
                       disabled={isManagingProfile}
                       className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-medium disabled:opacity-50 transition-colors"
                     >
-                      {isManagingProfile ? "Adding..." : `Add ${uploadingProfilePhotos.length}`}
+                      {isManagingProfile
+                        ? "Adding..."
+                        : `Add ${uploadingProfilePhotos.length}`}
                     </button>
                   )}
                 </div>
@@ -825,7 +1129,9 @@ const Dashboard = () => {
                       disabled={isManagingProfile}
                       className="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-xl text-sm font-medium disabled:opacity-50 transition-colors"
                     >
-                      {isManagingProfile ? "Removing..." : `Remove ${selectedPhotosToRemove.length}`}
+                      {isManagingProfile
+                        ? "Removing..."
+                        : `Remove ${selectedPhotosToRemove.length}`}
                     </button>
                   )}
                 </div>
@@ -888,10 +1194,15 @@ const Dashboard = () => {
                   className="w-full h-24 object-cover rounded-xl border border-gray-200"
                 />
                 <div className="absolute bottom-2 right-2">
-                  <span className={`text-xs font-bold px-2 py-1 rounded-full text-white ${
-                    photo.qualityTier === 'high' ? 'bg-green-500' :
-                    photo.qualityTier === 'medium' ? 'bg-yellow-500' : 'bg-red-500'
-                  }`}>
+                  <span
+                    className={`text-xs font-bold px-2 py-1 rounded-full text-white ${
+                      photo.qualityTier === "high"
+                        ? "bg-green-500"
+                        : photo.qualityTier === "medium"
+                        ? "bg-yellow-500"
+                        : "bg-red-500"
+                    }`}
+                  >
                     {Math.round(photo.confidence * 100)}%
                   </span>
                 </div>
@@ -908,7 +1219,9 @@ const Dashboard = () => {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">My Friends</h1>
-          <p className="text-gray-600 mt-1">Connect and share memories with friends</p>
+          <p className="text-gray-600 mt-1">
+            Connect and share memories with friends
+          </p>
         </div>
         <button
           onClick={() => setShowAddFriendModal(true)}
@@ -925,8 +1238,12 @@ const Dashboard = () => {
             <div className="w-24 h-24 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
               <UserGroupIcon className="w-12 h-12 text-gray-400" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-600 mb-2">No friends yet</h3>
-            <p className="text-gray-500 mb-6">Start connecting with people to share your travel memories</p>
+            <h3 className="text-xl font-semibold text-gray-600 mb-2">
+              No friends yet
+            </h3>
+            <p className="text-gray-500 mb-6">
+              Start connecting with people to share your travel memories
+            </p>
             <button
               onClick={() => setShowAddFriendModal(true)}
               className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-semibold transition-colors"
@@ -943,12 +1260,17 @@ const Dashboard = () => {
                 onClick={() => handleOpenUserProfile(friend.uid)}
               >
                 <img
-                  src={friend.photoURL || "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg"}
+                  src={
+                    friend.photoURL ||
+                    "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg"
+                  }
                   alt={friend.displayName}
                   className="w-12 h-12 rounded-full object-cover mr-4"
                 />
                 <div className="flex-1">
-                  <h3 className="font-semibold text-gray-800">{friend.displayName}</h3>
+                  <h3 className="font-semibold text-gray-800">
+                    {friend.displayName}
+                  </h3>
                   <p className="text-sm text-gray-500">{friend.email}</p>
                 </div>
               </div>
@@ -963,7 +1285,9 @@ const Dashboard = () => {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Notifications</h1>
-        <p className="text-gray-600 mt-1">Manage your friend requests and trip invitations</p>
+        <p className="text-gray-600 mt-1">
+          Manage your friend requests and trip invitations
+        </p>
       </div>
 
       {/* Friend Requests */}
@@ -979,14 +1303,23 @@ const Dashboard = () => {
         </h2>
 
         {pendingRequests.length === 0 ? (
-          <p className="text-gray-500 py-8 text-center">No pending friend requests</p>
+          <p className="text-gray-500 py-8 text-center">
+            No pending friend requests
+          </p>
         ) : (
           <div className="space-y-3">
             {pendingRequests.map((request) => (
-              <div key={request.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-xl">
+              <div
+                key={request.id}
+                className="flex items-center justify-between p-4 border border-gray-200 rounded-xl"
+              >
                 <div>
-                  <p className="font-semibold text-gray-800">{request.displayName || request.email}</p>
-                  <p className="text-sm text-gray-500">wants to be your friend</p>
+                  <p className="font-semibold text-gray-800">
+                    {request.displayName || request.email}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    wants to be your friend
+                  </p>
                 </div>
                 <div className="flex gap-2">
                   <button
@@ -1023,23 +1356,36 @@ const Dashboard = () => {
         </h2>
 
         {tripInvites.length === 0 ? (
-          <p className="text-gray-500 py-8 text-center">No pending trip invitations</p>
+          <p className="text-gray-500 py-8 text-center">
+            No pending trip invitations
+          </p>
         ) : (
           <div className="space-y-3">
             {tripInvites.map((invite) => (
-              <div key={invite.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-xl">
+              <div
+                key={invite.id}
+                className="flex items-center justify-between p-4 border border-gray-200 rounded-xl"
+              >
                 <div>
-                  <p className="font-semibold text-gray-800">{invite.tripName}</p>
-                  <p className="text-sm text-gray-500">Invited by {invite.inviterName}</p>
+                  <p className="font-semibold text-gray-800">
+                    {invite.tripName}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    Invited by {invite.inviterName}
+                  </p>
                 </div>
                 <div className="flex gap-2">
                   <button
                     onClick={async () => {
                       await acceptTripInvite(invite.id, currentUser.uid);
-                      setTripInvites(prev => prev.filter(i => i.id !== invite.id));
-                      const refreshedTrips = await getUserTrips(currentUser.uid);
+                      setTripInvites((prev) =>
+                        prev.filter((i) => i.id !== invite.id)
+                      );
+                      const refreshedTrips = await getUserTrips(
+                        currentUser.uid
+                      );
                       setTrips(refreshedTrips);
-                      toast.success('Trip invitation accepted');
+                      toast.success("Trip invitation accepted");
                     }}
                     className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-1"
                   >
@@ -1049,8 +1395,10 @@ const Dashboard = () => {
                   <button
                     onClick={async () => {
                       await declineTripInvite(invite.id);
-                      setTripInvites(prev => prev.filter(i => i.id !== invite.id));
-                      toast.success('Trip invitation declined');
+                      setTripInvites((prev) =>
+                        prev.filter((i) => i.id !== invite.id)
+                      );
+                      toast.success("Trip invitation declined");
                     }}
                     className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-1"
                   >
@@ -1070,7 +1418,9 @@ const Dashboard = () => {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
-        <p className="text-gray-600 mt-1">Manage your account and preferences</p>
+        <p className="text-gray-600 mt-1">
+          Manage your account and preferences
+        </p>
       </div>
 
       {/* Account Settings */}
@@ -1079,17 +1429,24 @@ const Dashboard = () => {
           <UserCircleIcon className="w-6 h-6 text-indigo-600" />
           Account Information
         </h2>
-        
+
         <div className="flex items-center gap-6 mb-6">
           <img
-            src={userData?.photoURL || "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg"}
+            src={
+              userData?.photoURL ||
+              "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg"
+            }
             alt="Profile"
             className="w-20 h-20 rounded-full object-cover border-4 border-gray-200"
           />
           <div>
-            <h3 className="text-lg font-semibold text-gray-800">{userData?.displayName || currentUser?.displayName}</h3>
-            <p className="text-gray-600">{userData?.email || currentUser?.email}</p>
-            <button 
+            <h3 className="text-lg font-semibold text-gray-800">
+              {userData?.displayName || currentUser?.displayName}
+            </h3>
+            <p className="text-gray-600">
+              {userData?.email || currentUser?.email}
+            </p>
+            <button
               onClick={() => setShowEditProfileModal(true)}
               className="text-indigo-600 hover:text-indigo-700 text-sm font-medium mt-1"
             >
@@ -1103,11 +1460,19 @@ const Dashboard = () => {
             <h4 className="font-semibold text-gray-800">Preferences</h4>
             <div className="space-y-3">
               <label className="flex items-center gap-3">
-                <input type="checkbox" className="rounded border-gray-300" defaultChecked />
+                <input
+                  type="checkbox"
+                  className="rounded border-gray-300"
+                  defaultChecked
+                />
                 <span className="text-gray-700">Email notifications</span>
               </label>
               <label className="flex items-center gap-3">
-                <input type="checkbox" className="rounded border-gray-300" defaultChecked />
+                <input
+                  type="checkbox"
+                  className="rounded border-gray-300"
+                  defaultChecked
+                />
                 <span className="text-gray-700">Trip invitations</span>
               </label>
               <label className="flex items-center gap-3">
@@ -1121,15 +1486,25 @@ const Dashboard = () => {
             <h4 className="font-semibold text-gray-800">Privacy</h4>
             <div className="space-y-3">
               <label className="flex items-center gap-3">
-                <input type="checkbox" className="rounded border-gray-300" defaultChecked />
-                <span className="text-gray-700">Profile visible to friends</span>
+                <input
+                  type="checkbox"
+                  className="rounded border-gray-300"
+                  defaultChecked
+                />
+                <span className="text-gray-700">
+                  Profile visible to friends
+                </span>
               </label>
               <label className="flex items-center gap-3">
                 <input type="checkbox" className="rounded border-gray-300" />
                 <span className="text-gray-700">Allow face recognition</span>
               </label>
               <label className="flex items-center gap-3">
-                <input type="checkbox" className="rounded border-gray-300" defaultChecked />
+                <input
+                  type="checkbox"
+                  className="rounded border-gray-300"
+                  defaultChecked
+                />
                 <span className="text-gray-700">Show in search results</span>
               </label>
             </div>
@@ -1143,7 +1518,7 @@ const Dashboard = () => {
           <SparklesIcon className="w-6 h-6 text-purple-600" />
           Data & Storage
         </h2>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="text-center p-4 bg-gray-50 rounded-xl">
             <p className="text-2xl font-bold text-gray-800">{trips.length}</p>
@@ -1154,7 +1529,9 @@ const Dashboard = () => {
             <p className="text-sm text-gray-600">Friends</p>
           </div>
           <div className="text-center p-4 bg-gray-50 rounded-xl">
-            <p className="text-2xl font-bold text-gray-800">{hasProfile ? profilePhotos.length : 0}</p>
+            <p className="text-2xl font-bold text-gray-800">
+              {hasProfile ? profilePhotos.length : 0}
+            </p>
             <p className="text-sm text-gray-600">Profile Photos</p>
           </div>
         </div>
@@ -1163,7 +1540,10 @@ const Dashboard = () => {
           <button className="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 py-3 px-4 rounded-xl font-medium transition-colors">
             Export My Data
           </button>
-          <button className="w-full bg-red-100 hover:bg-red-200 text-red-800 py-3 px-4 rounded-xl font-medium transition-colors">
+          <button
+            onClick={() => setShowDeleteAccountModal(true)}
+            className="w-full bg-red-100 hover:bg-red-200 text-red-800 py-3 px-4 rounded-xl font-medium transition-colors"
+          >
             Delete Account
           </button>
         </div>
@@ -1171,24 +1551,24 @@ const Dashboard = () => {
     </div>
   );
 
-  // UPDATED: Modified renderSection to handle trip view
+  // Modified renderSection to handle trip view
   const renderSection = () => {
     // If we're viewing a trip, show the trip detail
-    if (currentView === 'trip' && selectedTripId) {
+    if (currentView === "trip" && selectedTripId) {
       return <TripDetailView tripId={selectedTripId} />;
     }
 
     // Otherwise show the regular sections
     switch (activeSection) {
-      case 'trips':
+      case "trips":
         return <TripsSection />;
-      case 'faceprofile':
+      case "faceprofile":
         return <FaceProfileSection />;
-      case 'friends':
+      case "friends":
         return <FriendsSection />;
-      case 'notifications':
+      case "notifications":
         return <NotificationsSection />;
-      case 'settings':
+      case "settings":
         return <SettingsSection />;
       default:
         return <TripsSection />;
@@ -1200,19 +1580,22 @@ const Dashboard = () => {
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-purple-200 border-t-white rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-xl text-white font-medium">Loading your dashboard...</p>
+          <p className="text-xl text-white font-medium">
+            Loading your dashboard...
+          </p>
         </div>
       </div>
     );
   }
 
   return (
-  <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex w-full">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex w-full">
       {/* Sidebar */}
-      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-xl border-r border-gray-200 transform ${
-        sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-      } transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0`}>
-        
+      <div
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-xl border-r border-gray-200 transform ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        } transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0`}
+      >
         {/* Logo */}
         <div className="p-6 border-b border-gray-200">
           <div className="flex items-center justify-between">
@@ -1239,19 +1622,26 @@ const Dashboard = () => {
         <div className="p-6 border-b border-gray-200">
           <div className="flex items-center gap-3">
             <img
-              src={userData?.photoURL || "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg"}
+              src={
+                userData?.photoURL ||
+                "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg"
+              }
               alt="Profile"
               className="w-12 h-12 rounded-full object-cover border-2 border-gray-200"
             />
             <div>
-              <p className="font-semibold text-gray-800">{userData?.displayName || currentUser?.displayName}</p>
-              <p className="text-sm text-gray-500">{userData?.email || currentUser?.email}</p>
+              <p className="font-semibold text-gray-800">
+                {userData?.displayName || currentUser?.displayName}
+              </p>
+              <p className="text-sm text-gray-500">
+                {userData?.email || currentUser?.email}
+              </p>
             </div>
           </div>
         </div>
 
-        {/* NEW: Back button when viewing trip */}
-        {currentView === 'trip' && (
+        {/* Back button when viewing trip */}
+        {currentView === "trip" && (
           <div className="p-4 border-b border-gray-200">
             <button
               onClick={handleBackToDashboard}
@@ -1268,33 +1658,100 @@ const Dashboard = () => {
           <ul className="space-y-2">
             {navigationItems.map((item) => {
               const Icon = item.icon;
-              const isActive = activeSection === item.id && currentView === 'home'; // UPDATED: Only active when in home view
+              const isActive =
+                activeSection === item.id && currentView === "home";
               return (
                 <li key={item.id}>
+                  {/* Main navigation item */}
                   <button
                     onClick={() => {
-                      setActiveSection(item.id);
-                      setCurrentView('home'); // UPDATED: Always go to home view when clicking sidebar
-                      setSidebarOpen(false); // Close sidebar on mobile when item is clicked
+                      if (item.hasDropdown && item.id === "trips") {
+                        toggleTripsDropdown();
+                      } else {
+                        setActiveSection(item.id);
+                        setCurrentView("home");
+                        setSidebarOpen(false);
+                      }
                     }}
                     className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-medium transition-all duration-200 ${
                       isActive
-                        ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg'
-                        : 'text-gray-700 hover:bg-gray-100'
+                        ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg"
+                        : "text-gray-700 hover:bg-gray-100"
                     }`}
                   >
                     <div className="flex items-center gap-3">
                       <Icon className="w-5 h-5" />
                       <span>{item.name}</span>
                     </div>
-                    {item.badge > 0 && (
-                      <span className={`text-xs px-2 py-1 rounded-full ${
-                        isActive ? 'bg-white text-indigo-600' : 'bg-red-500 text-white'
-                      }`}>
-                        {item.badge}
-                      </span>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {item.badge > 0 && (
+                        <span
+                          className={`text-xs px-2 py-1 rounded-full ${
+                            isActive
+                              ? "bg-white text-indigo-600"
+                              : "bg-red-500 text-white"
+                          }`}
+                        >
+                          {item.badge}
+                        </span>
+                      )}
+                      {item.hasDropdown && (
+                        <div
+                          className={`transition-transform duration-200 ${
+                            tripsDropdownOpen ? "rotate-90" : ""
+                          }`}
+                        >
+                          <ChevronRightIcon className="w-4 h-4" />
+                        </div>
+                      )}
+                    </div>
                   </button>
+
+                  {/* Trips dropdown */}
+                  {item.id === "trips" && tripsDropdownOpen && (
+                    <div className="mt-2 ml-4 pl-4 border-l-2 border-gray-200">
+                      {trips.length === 0 ? (
+                        <div className="py-2 px-3 text-sm text-gray-500">
+                          No trips yet
+                        </div>
+                      ) : (
+                        <>
+                          {trips.slice(0, visibleTripsCount).map((trip) => (
+                            <button
+                              key={trip.id}
+                              onClick={() => {
+                                handleViewTrip(trip.id);
+                                setSidebarOpen(false);
+                              }}
+                              className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors mb-1 ${
+                                selectedTripId === trip.id
+                                  ? "bg-indigo-100 text-indigo-700"
+                                  : "text-gray-600 hover:bg-gray-100"
+                              }`}
+                            >
+                              <div className="truncate">{trip.name}</div>
+                              {trip.location && (
+                                <div className="text-xs text-gray-500 truncate">
+                                  📍 {trip.location}
+                                </div>
+                              )}
+                            </button>
+                          ))}
+
+                          {trips.length > visibleTripsCount && (
+                            <button
+                              onClick={showMoreTrips}
+                              className="w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-indigo-600 hover:bg-indigo-50 transition-colors"
+                            >
+                              + Show{" "}
+                              {Math.min(5, trips.length - visibleTripsCount)}{" "}
+                              more
+                            </button>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  )}
                 </li>
               );
             })}
@@ -1315,7 +1772,7 @@ const Dashboard = () => {
 
       {/* Overlay for mobile */}
       {sidebarOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
@@ -1335,11 +1792,17 @@ const Dashboard = () => {
                 >
                   <Bars3Icon className="w-6 h-6 text-gray-600" />
                 </button>
-                
+
                 {/* Welcome message - hidden on mobile */}
                 <div className="hidden sm:block">
                   <h2 className="text-xl font-semibold text-gray-900">
-                    {currentView === 'trip' ? 'Trip Details' : `Welcome back, ${userData?.displayName || currentUser?.displayName || 'User'}!`}
+                    {currentView === "trip"
+                      ? "Trip Details"
+                      : `Welcome back, ${
+                          userData?.displayName ||
+                          currentUser?.displayName ||
+                          "User"
+                        }!`}
                   </h2>
                 </div>
               </div>
@@ -1349,30 +1812,37 @@ const Dashboard = () => {
                 <div className="w-8 h-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
                   <SparklesIcon className="w-5 h-5 text-white" />
                 </div>
-                <span className="text-lg font-bold text-gray-900">Groupify</span>
+                <span className="text-lg font-bold text-gray-900">
+                  Groupify
+                </span>
               </div>
 
               {/* Right section - Notifications and user menu */}
               <div className="flex items-center gap-4">
-                {/* Notifications */}
-                <button 
-                  onClick={() => {
-                    setActiveSection('notifications');
-                    setCurrentView('home');
-                  }}
-                  className="relative p-2 rounded-lg hover:bg-gray-100"
-                >
-                  <BellIcon className="w-6 h-6 text-gray-600" />
-                  {(pendingRequests.length > 0 || tripInvites.length > 0) && (
-                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                      {pendingRequests.length + tripInvites.length}
-                    </span>
-                  )}
-                </button>
+                {/* Notifications with dropdown */}
+                <div className="relative" ref={notificationRef}>
+                  <button
+                    onClick={toggleNotificationsDropdown}
+                    className="relative p-2 rounded-lg hover:bg-gray-100"
+                  >
+                    <BellIcon className="w-6 h-6 text-gray-600" />
+                    {(pendingRequests.length > 0 || tripInvites.length > 0) && (
+                      <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                        {pendingRequests.length + tripInvites.length}
+                      </span>
+                    )}
+                  </button>
+
+                  {/* Notifications Dropdown */}
+                  {notificationsDropdownOpen && <NotificationsDropdown />}
+                </div>
 
                 {/* User avatar */}
                 <img
-                  src={userData?.photoURL || "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg"}
+                  src={
+                    userData?.photoURL ||
+                    "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg"
+                  }
                   alt="Profile"
                   className="w-8 h-8 rounded-full object-cover border border-gray-200"
                 />
@@ -1401,9 +1871,9 @@ const Dashboard = () => {
         isOpen={showCreateTripModal}
         onClose={() => setShowCreateTripModal(false)}
         onTripCreated={(newTrip) => {
-          setTrips(prev => [newTrip, ...prev]);
+          setTrips((prev) => [newTrip, ...prev]);
           setShowCreateTripModal(false);
-          toast.success('Trip created successfully!');
+          toast.success("Trip created successfully!");
         }}
       />
 
@@ -1428,7 +1898,9 @@ const Dashboard = () => {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto p-6">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold text-gray-800">Face Profile Manager</h2>
+              <h2 className="text-xl font-bold text-gray-800">
+                Face Profile Manager
+              </h2>
               <button
                 onClick={() => setShowProfileManager(false)}
                 className="text-gray-400 hover:text-gray-600"
@@ -1452,46 +1924,113 @@ const Dashboard = () => {
       />
 
       {selectedUserProfile && (
-  <UserProfileModal
-    user={selectedUserProfile}
-    currentUserId={currentUser.uid}
-    isFriend={friends.some((f) => f.uid === selectedUserProfile.uid)}
-    isPending={
-      pendingRequests.some(
-        (r) => r.from === selectedUserProfile.uid
-      ) ||
-      pendingFriendRequests.some(
-        (r) => r.to === selectedUserProfile.uid
-      )
-    }
-    onlyTripMembers={false}
-    onAddFriend={async (uid) => {
-      await sendFriendRequest(currentUser.uid, uid);
-      toast.success("Friend request sent");
+        <UserProfileModal
+          user={selectedUserProfile}
+          currentUserId={currentUser.uid}
+          isFriend={friends.some((f) => f.uid === selectedUserProfile.uid)}
+          isPending={
+            pendingRequests.some((r) => r.from === selectedUserProfile.uid) ||
+            pendingFriendRequests.some((r) => r.to === selectedUserProfile.uid)
+          }
+          onlyTripMembers={false}
+          onAddFriend={async (uid) => {
+            await sendFriendRequest(currentUser.uid, uid);
+            toast.success("Friend request sent");
 
-      setPendingFriendRequests((prev) => [
-        ...prev,
-        { from: currentUser.uid, to: uid },
-      ]);
-    }}
-    onCancelRequest={async (uid) => {
-      await cancelFriendRequest(currentUser.uid, uid);
-      setPendingFriendRequests((prev) =>
-        prev.filter((r) => r.to !== uid && r.from !== uid)
-      );
-      toast.info("Friend request cancelled");
-    }}
-    onRemoveFriend={async (uid) => {
-      await removeFriend(currentUser.uid, uid);
-      setFriends((prev) => prev.filter((f) => f.uid !== uid));
-      toast.success("Friend removed");
-    }}
-    onClose={() => {
-      setIsUserProfileOpen(false);
-      setSelectedUserProfile(null);
-    }}
-  />
-)}
+            setPendingFriendRequests((prev) => [
+              ...prev,
+              { from: currentUser.uid, to: uid },
+            ]);
+          }}
+          onCancelRequest={async (uid) => {
+            await cancelFriendRequest(currentUser.uid, uid);
+            setPendingFriendRequests((prev) =>
+              prev.filter((r) => r.to !== uid && r.from !== uid)
+            );
+            toast.info("Friend request cancelled");
+          }}
+          onRemoveFriend={async (uid) => {
+            await removeFriend(currentUser.uid, uid);
+            setFriends((prev) => prev.filter((f) => f.uid !== uid));
+            toast.success("Friend removed");
+          }}
+          onClose={() => {
+            setIsUserProfileOpen(false);
+            setSelectedUserProfile(null);
+          }}
+        />
+      )}
+
+      {/* Delete Account Modal */}
+      {showDeleteAccountModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
+                <ExclamationTriangleIcon className="w-6 h-6 text-red-600" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">
+                  Delete Account
+                </h2>
+                <p className="text-sm text-gray-500">
+                  This action cannot be undone
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-4 mb-6">
+              <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+                <h3 className="font-semibold text-red-800 mb-2">⚠️ Warning</h3>
+                <p className="text-red-700 text-sm">
+                  This will permanently delete your account and ALL your data
+                  including:
+                </p>
+                <ul className="text-red-700 text-sm mt-2 list-disc list-inside space-y-1">
+                  <li>All your trips and photos</li>
+                  <li>Your face profile</li>
+                  <li>Friend connections</li>
+                  <li>Account settings</li>
+                </ul>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Type "DELETE" to confirm:
+                </label>
+                <input
+                  type="text"
+                  value={deleteConfirmText}
+                  onChange={(e) => setDeleteConfirmText(e.target.value)}
+                  placeholder="Type DELETE here"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 placeholder-gray-500"
+                  disabled={isDeleting}
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowDeleteAccountModal(false);
+                  setDeleteConfirmText("");
+                }}
+                disabled={isDeleting}
+                className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 py-3 px-4 rounded-xl font-medium transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteAccount}
+                disabled={isDeleting || deleteConfirmText !== "DELETE"}
+                className="flex-1 bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white py-3 px-4 rounded-xl font-medium transition-colors disabled:opacity-50"
+              >
+                {isDeleting ? "Deleting..." : "Delete Account"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <ToastContainer
         position="bottom-right"
