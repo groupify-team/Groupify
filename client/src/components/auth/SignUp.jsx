@@ -81,45 +81,66 @@ const SignUp = () => {
     return true;
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    if (!validateForm()) {
-      return;
-    }
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  
+  if (!validateForm()) {
+    return;
+  }
 
-    try {
-      setLoading(true);
-      
-      await signup(
-        formData.email, 
-        formData.password, 
-        formData.displayName, 
-        formData.gender
-      );
-      
-      toast.success("Account created successfully! Welcome to Groupify!");
-      navigate("/dashboard");
-    } catch (error) {
-      console.error("Sign up error:", error);
-      
-      let errorMessage = "Failed to create account";
-      
-      if (error.code === 'auth/email-already-in-use') {
-        errorMessage = "An account with this email already exists";
-      } else if (error.code === 'auth/invalid-email') {
-        errorMessage = "Invalid email address";
-      } else if (error.code === 'auth/weak-password') {
-        errorMessage = "Password is too weak";
-      } else if (error.code === 'auth/operation-not-allowed') {
-        errorMessage = "Account creation is currently disabled";
-      }
-      
-      toast.error(errorMessage);
-    } finally {
-      setLoading(false);
+  try {
+    setLoading(true);
+    
+    // Create user account (but don't sign them in yet)
+    await signup(
+      formData.email, 
+      formData.password, 
+      formData.displayName, 
+      formData.gender,
+      false // Add parameter to indicate not to sign in immediately
+    );
+    
+    // Send verification email via Firebase Function
+    const { getFunctions, httpsCallable } = await import("firebase/functions");
+    const functions = getFunctions();
+    const sendVerificationEmail = httpsCallable(functions, "sendVerificationEmail");
+
+    await sendVerificationEmail({
+      email: formData.email,
+      name: formData.displayName
+    });
+
+    
+    toast.success("Account created! Please check your email for verification.");
+    
+    // Redirect to confirmation page with email
+    navigate("/confirm-email", { 
+      state: { 
+        email: formData.email,
+        name: formData.displayName 
+      } 
+    });
+    
+  } catch (error) {
+    console.error("Sign up error:", error);
+    
+    let errorMessage = "Failed to create account";
+    
+    if (error.code === 'auth/email-already-in-use') {
+      errorMessage = "An account with this email already exists";
+    } else if (error.code === 'auth/invalid-email') {
+      errorMessage = "Invalid email address";
+    } else if (error.code === 'auth/weak-password') {
+      errorMessage = "Password is too weak";
+    } else if (error.code === 'auth/operation-not-allowed') {
+      errorMessage = "Account creation is currently disabled";
     }
-  };
+    
+    toast.error(errorMessage);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleGoogleSignUp = async () => {
     if (!agreedToTerms) {

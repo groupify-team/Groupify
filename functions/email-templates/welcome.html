@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to Groupify!</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #374151;
+            background-color: #f9fafb;
+        }
+        
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 50%, #2563eb 100%);
+            padding: 40px 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+        }
+        
+        .logo {
+            display: inline-flex;
+            align-items: center;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .logo-icon {
+            width: 48px;
+            height: 48px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .logo-text {
+            font-size: 32px;
+            font-weight: bold;
+            color: white;
+        }
+        
+        .header-title {
+            color: white;
+            font-size: 36px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .header-subtitle {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 20px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .content {
+            padding: 40px 30px;
+        }
+        
+        .welcome-box {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border: 1px solid #0ea5e9;
+            border-radius: 16px;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .welcome-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+        
+        .welcome-text {
+            font-size: 18px;
+            color: #1e40af;
+            font-weight: 600;
+        }
+        
+        .section-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1f2937;
+            margin: 40px 0 20px 0;
+            text-align: center;
+        }
+        
+        .story-section {
+            background: #f8fafc;
+            border-radius: 16px;
+            padding: 30px;
+            margin: 30px 0;
+        }
+        
+        .story-text {
+            font-size: 16px;
+            color: #4b5563;
+            line-height: 1.8;
+            margin-bottom: 20px;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .feature-card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #7c3aed, #4f46e5);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px auto;
+        }
+        
+        .feature-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+        
+        .feature-description {
+            font-size: 14px;
+            color: #6b7280;
+        }
+        
+        .stats-section {
+            background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+            border-radius: 16px;
+            padding: 30px;
+            color: white;
+            text-align: center;
+            margin: 40px 0;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 32px;
+            font-weight: bold;
+            color: #60a5fa;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            color: #d1d5db;
+        }
+        
+        .cta-section {
+            background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);
+            border-radius: 16px;
+            padding: 40px 30px;
+            text-align: center;
+            color: white;
+            margin: 40px 0;
+        }
+        
+        .cta-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        
+        .cta-description {
+            font-size: 16px;
+            margin-bottom: 25px;
+            opacity: 0.9;
+        }
+        
+        .cta-button {
+            display: inline-block;
+            background: white;
+            color: #4f46e5;
+            padding: 16px 32px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 16px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .tips-section {
+            margin: 40px 0;
+        }
+        
+        .tip-item {
+            display: flex;
+            align-items: flex-start;
+            padding: 20px;
+            background: #f9fafb;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border-left: 4px solid #4f46e5;
+        }
+        
+        .tip-number {
+            background: #4f46e5;
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+        
+        .tip-content {
+            flex: 1;
+        }
+        
+        .tip-title {
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 5px;
+        }
+        
+        .tip-description {
+            font-size: 14px;
+            color: #6b7280;
+        }
+        
+        .footer {
+            background-color: #f9fafb;
+            padding: 40px 30px;
+            text-align: center;
+            border-top: 1px solid #e5e7eb;
+        }
+        
+        .footer-text {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 20px;
+        }
+        
+        .social-links {
+            margin: 20px 0;
+        }
+        
+        .social-link {
+            display: inline-block;
+            margin: 0 10px;
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #7c3aed, #4f46e5);
+            border-radius: 10px;
+            text-decoration: none;
+            color: white;
+            line-height: 40px;
+            font-size: 20px;
+            transition: transform 0.3s ease;
+        }
+        
+        .social-link:hover {
+            transform: scale(1.1);
+        }
+        
+        .contact-info {
+            margin: 20px 0;
+            font-size: 14px;
+            color: #6b7280;
+        }
+        
+        .unsubscribe {
+            font-size: 12px;
+            color: #9ca3af;
+            margin-top: 20px;
+        }
+        
+        .unsubscribe a {
+            color: #6b7280;
+        }
+        
+        @media (max-width: 600px) {
+            .email-container {
+                margin: 0;
+                box-shadow: none;
+            }
+            
+            .header,
+            .content,
+            .footer {
+                padding: 30px 20px;
+            }
+            
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .tip-item {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">
+                <div class="logo-icon">
+                    <svg width="28" height="28" fill="white" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
+                </div>
+                <span class="logo-text">Groupify</span>
+            </div>
+            <h1 class="header-title">Welcome to Groupify!</h1>
+            <p class="header-subtitle">Your journey to organized travel memories starts here</p>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <div class="welcome-box">
+                <div class="welcome-icon">🎉</div>
+                <div class="welcome-text">
+                    Hi {{USER_NAME}}, your account is now verified and ready to go!
+                </div>
+            </div>
+
+            <!-- Our Story -->
+            <h2 class="section-title">Our Story</h2>
+            <div class="story-section">
+                <p class="story-text">
+                    Groupify was born from a simple problem we all face: finding ourselves in group photos from trips and events. After countless hours scrolling through hundreds of photos trying to find the ones with us in them, we knew there had to be a better way.
+                </p>
+                <p class="story-text">
+                    Our team of travel enthusiasts and AI engineers came together to create the smartest photo organization platform. Using cutting-edge face recognition technology, we've made it effortless to find, organize, and share your travel memories.
+                </p>
+                <p class="story-text">
+                    Today, thousands of travelers trust Groupify to keep their memories organized and accessible. We're not just a photo app – we're your digital memory keeper, designed by travelers, for travelers.
+                </p>
+            </div>
+
+            <!-- What You Can Do -->
+            <h2 class="section-title">What You Can Do With Groupify</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="24" height="24" fill="white" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                    </div>
+                    <div class="feature-title">Upload & Organize</div>
+                    <div class="feature-description">Upload your travel photos and let our AI automatically organize them by trip, date, and people.</div>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="24" height="24" fill="white" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                    </div>
+                    <div class="feature-title">Find Yourself</div>
+                    <div class="feature-description">Use AI face recognition to instantly find all photos with you in them across all your trips.</div>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="24" height="24" fill="white" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                        </svg>
+                    </div>
+                    <div class="feature-title">Share with Friends</div>
+                    <div class="feature-description">Invite friends to your trips and let everyone contribute photos to create shared albums.</div>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="24" height="24" fill="white" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"></path>
+                        </svg>
+                    </div>
+                    <div class="feature-title">Cloud Sync</div>
+                    <div class="feature-description">Access your photos from any device with automatic cloud synchronization and backup.</div>
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="stats-section">
+                <h3 style="font-size: 20px; margin-bottom: 10px;">Join Our Growing Community</h3>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-number">10K+</div>
+                        <div class="stat-label">Active Users</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">1M+</div>
+                        <div class="stat-label">Photos Organized</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">50K+</div>
+                        <div class="stat-label">Trips Created</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Getting Started Tips -->
+            <h2 class="section-title">Get Started in 3 Easy Steps</h2>
+            <div class="tips-section">
+                <div class="tip-item">
+                    <div class="tip-number">1</div>
+                    <div class="tip-content">
+                        <div class="tip-title">Create Your First Trip</div>
+                        <div class="tip-description">Start by creating a new trip album and uploading your photos. Our AI will automatically detect faces and organize them.</div>
+                    </div>
+                </div>
+                
+                <div class="tip-item">
+                    <div class="tip-number">2</div>
+                    <div class="tip-content">
+                        <div class="tip-title">Tag Yourself</div>
+                        <div class="tip-description">Help our AI learn by tagging yourself in a few photos. This improves face recognition accuracy across all your albums.</div>
+                    </div>
+                </div>
+                
+                <div class="tip-item">
+                    <div class="tip-number">3</div>
+                    <div class="tip-content">
+                        <div class="tip-title">Invite Friends</div>
+                        <div class="tip-description">Share your trip with friends and family. They can upload their photos too, creating a complete memory collection.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CTA -->
+            <div class="cta-section">
+                <h3 class="cta-title">Ready to Organize Your Memories?</h3>
+                <p class="cta-description">Your dashboard is waiting! Start uploading photos and discover the magic of AI-powered organization.</p>
+                <a href="{{DASHBOARD_LINK}}" class="cta-button">
+                    Go to Your Dashboard →
+                </a>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <div class="footer-text">
+                <strong>Welcome to the Groupify family!</strong><br>
+                We're here to help you organize and share your travel memories like never before.
+            </div>
+            
+            <div class="contact-info">
+                <strong>Need help getting started?</strong><br>
+                📧 support@groupify.com<br>
+                💬 Live chat available in your dashboard<br>
+                📚 Check out our <a href="{{HELP_CENTER_LINK}}" style="color: #4f46e5;">Help Center</a>
+            </div>
+            
+            <div class="social-links">
+                <a href="{{FACEBOOK_LINK}}" class="social-link">📘</a>
+                <a href="{{INSTAGRAM_LINK}}" class="social-link">📸</a>
+                <a href="{{TWITTER_LINK}}" class="social-link">🐦</a>
+                <a href="{{LINKEDIN_LINK}}" class="social-link">💼</a>
+            </div>
+            
+            <div class="unsubscribe">
+                © 2025 Groupify. Made with ❤️ for photo lovers everywhere.<br>
+                <a href="{{UNSUBSCRIBE_LINK}}">Unsubscribe</a> | 
+                <a href="{{PRIVACY_LINK}}">Privacy Policy</a> | 
+                <a href="{{TERMS_LINK}}">Terms of Service</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

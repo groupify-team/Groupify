@@ -10,9 +10,9 @@ import {
   sendPasswordResetEmail,
   updateProfile,
 } from "firebase/auth";
-import { auth } from "../services/firebase/config";
+import { auth, app } from "../services/firebase/config";
 import { createUserProfile } from "../services/firebase/users"; // ✅ Regular import
-
+import { getFunctions, httpsCallable } from "firebase/functions";
 const AuthContext = createContext({});
 
 // Exported hook for using the auth context in components
@@ -26,27 +26,43 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   // ✅ Sign up with email, password, displayName, and gender
-  const signup = async (email, password, displayName, gender) => {
-    const userCredential = await createUserWithEmailAndPassword(
-      auth,
-      email,
-      password
-    );
+  const signup = async (
+    email,
+    password,
+    displayName,
+    gender,
+    signInImmediately = true
+  ) => {
+    try {
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
 
-    // Optionally set display name in Firebase Auth
-    if (displayName) {
-      await updateProfile(userCredential.user, { displayName });
+      if (!signInImmediately) {
+        await signOut(auth);
+      }
+
+      const functions = getFunctions(app);
+      const sendVerificationEmail = httpsCallable(
+        functions,
+        "sendVerificationEmail"
+      );
+
+      await sendVerificationEmail({
+        email,
+        displayName,
+      });
+
+      await createUserProfile(userCredential.user.uid, {
+        email,
+        displayName,
+        gender,
+      });
+    } catch (error) {
+      throw error;
     }
-
-    // ✅ Create user profile in Firestore
-    await createUserProfile(userCredential.user.uid, {
-      email: userCredential.user.email,
-      displayName: displayName || "",
-      photoURL: userCredential.user.photoURL || "",
-      gender: gender || ""
-    });
-
-    return userCredential;
   };
 
   // Sign in with email and password
@@ -54,7 +70,7 @@ export const AuthProvider = ({ children }) => {
     return signInWithEmailAndPassword(auth, email, password);
   };
 
-    // Sign in with Google
+  // Sign in with Google
   const signInWithGoogle = async () => {
     const provider = new GoogleAuthProvider();
     return await signInWithPopup(auth, provider);
