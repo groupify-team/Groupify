@@ -26,6 +26,8 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   // ✅ Sign up with email, password, displayName, and gender
+  // In AuthContext.jsx, update the signup function to this:
+
   const signup = async (
     email,
     password,
@@ -34,33 +36,34 @@ export const AuthProvider = ({ children }) => {
     signInImmediately = true
   ) => {
     try {
+      // Create the user account
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         email,
         password
       );
 
-      if (!signInImmediately) {
-        await signOut(auth);
-      }
-
-      const functions = getFunctions(app);
-      const sendVerificationEmail = httpsCallable(
-        functions,
-        "sendVerificationEmail"
-      );
-
-      await sendVerificationEmail({
-        email,
-        displayName,
+      // Update the display name in Firebase Auth
+      await updateProfile(userCredential.user, {
+        displayName: displayName,
       });
 
+      // Create user profile in Firestore
       await createUserProfile(userCredential.user.uid, {
         email,
         displayName,
         gender,
       });
+
+      // Sign out if requested (for email verification flow)
+      if (!signInImmediately) {
+        await signOut(auth);
+      }
+
+      // Return the user credential so the caller can handle verification email
+      return userCredential;
     } catch (error) {
+      console.error("Signup error:", error);
       throw error;
     }
   };
