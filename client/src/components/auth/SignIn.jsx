@@ -1,31 +1,31 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
-import { useNavigate, Link } from 'react-router-dom';
-import { useTheme } from '../../contexts/ThemeContext';
-import { 
-  EyeIcon, 
-  EyeSlashIcon, 
+import React, { useState, useEffect } from "react";
+import { useAuth } from "../../contexts/AuthContext";
+import { useNavigate, Link } from "react-router-dom";
+import { useTheme } from "../../contexts/ThemeContext";
+import {
+  EyeIcon,
+  EyeSlashIcon,
   CameraIcon,
   MoonIcon,
   SunIcon,
-  ArrowLeftIcon 
-} from '@heroicons/react/24/outline';
-import { toast } from 'react-hot-toast';
+  ArrowLeftIcon,
+} from "@heroicons/react/24/outline";
+import { toast } from "react-hot-toast";
 
 const SignIn = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  
-  const { login, signInWithGoogle } = useAuth();
+
+  const { signin, signInWithGoogle } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
 
   // Load remembered email
   useEffect(() => {
-    const rememberedEmail = localStorage.getItem('rememberedEmail');
+    const rememberedEmail = localStorage.getItem("rememberedEmail");
     if (rememberedEmail) {
       setEmail(rememberedEmail);
       setRememberMe(true);
@@ -34,43 +34,43 @@ const SignIn = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!email || !password) {
-      toast.error('Please fill in all fields');
+      toast.error("Please fill in all fields");
       return;
     }
 
     try {
       setLoading(true);
-      
+
       // Remember email if checkbox is checked
       if (rememberMe) {
-        localStorage.setItem('rememberedEmail', email);
+        localStorage.setItem("rememberedEmail", email);
       } else {
-        localStorage.removeItem('rememberedEmail');
+        localStorage.removeItem("rememberedEmail");
       }
-      
-      await login(email, password);
-      toast.success('Welcome back!');
-      navigate('/dashboard');
+
+      await signin(email, password);
+      toast.success("Welcome back!");
+      navigate("/dashboard");
     } catch (error) {
-      console.error('Sign in error:', error);
-      
+      console.error("Sign in error:", error);
+
       // Provide user-friendly error messages
-      let errorMessage = 'Failed to sign in';
-      
-      if (error.code === 'auth/user-not-found') {
-        errorMessage = 'No account found with this email';
-      } else if (error.code === 'auth/wrong-password') {
-        errorMessage = 'Incorrect password';
-      } else if (error.code === 'auth/invalid-email') {
-        errorMessage = 'Invalid email address';
-      } else if (error.code === 'auth/too-many-requests') {
-        errorMessage = 'Too many failed attempts. Please try again later';
-      } else if (error.code === 'auth/user-disabled') {
-        errorMessage = 'This account has been disabled';
+      let errorMessage = "Failed to sign in";
+
+      if (error.code === "auth/user-not-found") {
+        errorMessage = "No account found with this email";
+      } else if (error.code === "auth/wrong-password") {
+        errorMessage = "Incorrect password";
+      } else if (error.code === "auth/invalid-email") {
+        errorMessage = "Invalid email address";
+      } else if (error.code === "auth/too-many-requests") {
+        errorMessage = "Too many failed attempts. Please try again later";
+      } else if (error.code === "auth/user-disabled") {
+        errorMessage = "This account has been disabled";
       }
-      
+
       toast.error(errorMessage);
     } finally {
       setLoading(false);
@@ -81,19 +81,19 @@ const SignIn = () => {
     try {
       setLoading(true);
       await signInWithGoogle();
-      toast.success('Welcome to Groupify!');
-      navigate('/dashboard');
+      toast.success("Welcome to Groupify!");
+      navigate("/dashboard");
     } catch (error) {
-      console.error('Google sign in error:', error);
-      
-      let errorMessage = 'Failed to sign in with Google';
-      
-      if (error.code === 'auth/popup-closed-by-user') {
-        errorMessage = 'Sign in was cancelled';
-      } else if (error.code === 'auth/popup-blocked') {
-        errorMessage = 'Popup was blocked. Please allow popups and try again';
+      console.error("Google sign in error:", error);
+
+      let errorMessage = "Failed to sign in with Google";
+
+      if (error.code === "auth/popup-closed-by-user") {
+        errorMessage = "Sign in was cancelled";
+      } else if (error.code === "auth/popup-blocked") {
+        errorMessage = "Popup was blocked. Please allow popups and try again";
       }
-      
+
       toast.error(errorMessage);
     } finally {
       setLoading(false);
@@ -116,12 +116,12 @@ const SignIn = () => {
                 <ArrowLeftIcon className="w-5 h-5 mr-2" />
                 Back to Home
               </Link>
-              
+
               <button
                 onClick={toggleTheme}
                 className="p-2 rounded-lg text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
               >
-                {theme === 'dark' ? (
+                {theme === "dark" ? (
                   <SunIcon className="w-5 h-5" />
                 ) : (
                   <MoonIcon className="w-5 h-5" />
@@ -151,7 +151,10 @@ const SignIn = () => {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Email Field */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >
                 Email address
               </label>
               <input
@@ -170,14 +173,17 @@ const SignIn = () => {
 
             {/* Password Field */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >
                 Password
               </label>
               <div className="relative">
                 <input
                   id="password"
                   name="password"
-                  type={showPassword ? 'text' : 'password'}
+                  type={showPassword ? "text" : "password"}
                   autoComplete="current-password"
                   required
                   value={password}
@@ -213,7 +219,10 @@ const SignIn = () => {
                   className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:border-gray-600 rounded"
                   disabled={loading}
                 />
-                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
+                <label
+                  htmlFor="remember-me"
+                  className="ml-2 block text-sm text-gray-700 dark:text-gray-300"
+                >
                   Remember me
                 </label>
               </div>
@@ -240,7 +249,7 @@ const SignIn = () => {
                   Signing in...
                 </>
               ) : (
-                'Sign in'
+                "Sign in"
               )}
             </button>
           </form>
@@ -280,7 +289,7 @@ const SignIn = () => {
 
           {/* Sign Up Link */}
           <p className="mt-8 text-center text-sm text-gray-600 dark:text-gray-400">
-            Don't have an account?{' '}
+            Don't have an account?{" "}
             <Link
               to="/signup"
               className="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
@@ -305,10 +314,11 @@ const SignIn = () => {
             Organize your travel memories with AI
           </h2>
           <p className="text-xl text-indigo-100 mb-8 leading-relaxed">
-            Upload photos from your trips and let our AI automatically find the ones with you in them. 
-            Share albums with friends and never lose track of your memories again.
+            Upload photos from your trips and let our AI automatically find the
+            ones with you in them. Share albums with friends and never lose
+            track of your memories again.
           </p>
-          
+
           {/* Feature List */}
           <div className="space-y-4">
             <div className="flex items-center">

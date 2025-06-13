@@ -3,21 +3,21 @@ const admin = require("firebase-admin");
 const nodemailer = require("nodemailer");
 const fs = require("fs");
 const path = require("path");
-const { defineString } = require("firebase-functions/params");
+const { defineSecret } = require("firebase-functions/params");
 
 // Initialize Firebase Admin
 admin.initializeApp();
 
-// Define config parameters - these will use Firebase secrets
-const emailUser = defineString("EMAIL_USER");
-const emailPassword = defineString("EMAIL_PASSWORD");
-const appUrl = defineString("APP_URL");
+// Define secrets
+const emailUser = defineSecret("EMAIL_USER");
+const emailPassword = defineSecret("EMAIL_PASSWORD");
+const appUrl = defineSecret("APP_URL");
 
-// Configure email transporter with better error handling
+// Configure email transporter
 function getTransporter() {
   try {
     console.log("Creating email transporter...");
-    const transporter = nodemailer.createTransport({
+    const transporter = nodemailer.createTransporter({
       service: "gmail",
       auth: {
         user: emailUser.value(),
@@ -33,7 +33,7 @@ function getTransporter() {
   }
 }
 
-// Email template loader with fallback
+// Email template loader
 async function loadEmailTemplate(templateName, variables) {
   try {
     const templatePath = path.join(
@@ -42,7 +42,6 @@ async function loadEmailTemplate(templateName, variables) {
       `${templateName}.html`
     );
 
-    // Check if template exists
     if (!fs.existsSync(templatePath)) {
       console.warn(`Template ${templateName}.html not found, using fallback`);
       return getFallbackTemplate(templateName, variables);
@@ -99,7 +98,7 @@ function generateVerificationCode() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-// Send verification email with detailed error handling
+// Send verification email
 exports.sendVerificationEmail = onCall(
   {
     secrets: [emailUser, emailPassword, appUrl],
@@ -172,8 +171,6 @@ exports.sendVerificationEmail = onCall(
       return { success: true, message: "Verification email sent" };
     } catch (error) {
       console.error("Send verification error:", error);
-      console.error("Error code:", error.code);
-      console.error("Error message:", error.message);
 
       if (error instanceof HttpsError) {
         throw error;
@@ -198,6 +195,7 @@ exports.sendVerificationEmail = onCall(
 // Verify email code
 exports.verifyEmailCode = onCall(
   {
+    secrets: [emailUser, emailPassword, appUrl],
     maxInstances: 40,
     timeoutSeconds: 60,
   },
@@ -273,6 +271,8 @@ exports.verifyEmailCode = onCall(
           subject: "Welcome to Groupify! 🎉",
           html: welcomeEmailHtml,
         });
+
+        console.log(`Welcome email sent to: ${email}`);
       } catch (emailError) {
         console.error("Failed to send welcome email:", emailError);
         // Don't fail the verification if welcome email fails
@@ -371,3 +371,35 @@ exports.resendVerificationCode = onCall(
     }
   }
 );
+
+// Add a function to enable Google Auth
+exports.enableGoogleAuth = onCall(async (request) => {
+  try {
+    const { uid, email, displayName, photoURL } = request.data;
+
+    if (!uid || !email) {
+      throw new HttpsError("invalid-argument", "UID and email are required");
+    }
+
+    // Update user document to mark email as verified for Google users
+    await admin
+      .firestore()
+      .collection("verificationCodes")
+      .doc(email)
+      .set({
+        verified: true,
+        email: email,
+        name: displayName || "Google User",
+        verifiedAt: admin.firestore.FieldValue.serverTimestamp(),
+        provider: "google",
+      });
+
+    return { success: true, message: "Google auth enabled" };
+  } catch (error) {
+    console.error("Google auth error:", error);
+    if (error instanceof HttpsError) {
+      throw error;
+    }
+    throw new HttpsError("internal", "Failed to enable Google auth");
+  }
+});

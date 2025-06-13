@@ -1,5 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation, Link } from "react-router-dom";
+import {
+  useNavigate,
+  useLocation,
+  Link,
+  useSearchParams,
+} from "react-router-dom";
 import { useTheme } from "../../contexts/ThemeContext";
 import {
   CameraIcon,
@@ -13,6 +18,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { toast } from "react-hot-toast";
 import { getFunctions, httpsCallable } from "firebase/functions";
+import { functions } from "../../services/firebase/config";
 
 const ConfirmEmail = () => {
   const [verificationCode, setVerificationCode] = useState([
@@ -31,12 +37,26 @@ const ConfirmEmail = () => {
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
 
-  const email = location.state?.email;
+  // Get email from location state or URL params
+  const email = location.state?.email || searchParams.get("email");
+  const codeFromUrl = searchParams.get("code");
 
   useEffect(() => {
-    if (!email) navigate("/signup");
-  }, [email, navigate]);
+    if (!email) {
+      navigate("/signup");
+      return;
+    }
+
+    // If code is in URL, auto-fill it
+    if (codeFromUrl && codeFromUrl.length === 6) {
+      const codeArray = codeFromUrl.split("");
+      setVerificationCode(codeArray);
+      // Auto-verify if code is provided in URL
+      handleVerifyWithCode(codeFromUrl);
+    }
+  }, [email, codeFromUrl, navigate]);
 
   useEffect(() => {
     if (timeLeft > 0) {
@@ -65,25 +85,20 @@ const ConfirmEmail = () => {
     }
   };
 
-  const handleVerify = async (e) => {
-    e.preventDefault();
-    const code = verificationCode.join("");
-    if (code.length !== 6) {
-      toast.error("Please enter the complete 6-digit code");
-      return;
-    }
-
+  const handleVerifyWithCode = async (code) => {
     try {
       setLoading(true);
-      const functions = getFunctions();
       const verifyCode = httpsCallable(functions, "verifyEmailCode");
       await verifyCode({ email, verificationCode: code });
 
-      toast.success("Email verified successfully! Please sign in to continue.");
-      navigate("/signin", {
+      toast.success("Email verified successfully!");
+
+      // Navigate to home page after successful verification
+      navigate("/", {
         state: {
-          message: "Email verified! You can now sign in to your account.",
-          email,
+          message:
+            "Welcome to Groupify! Your email has been verified. You can now sign in to start organizing your photos.",
+          verified: true,
         },
       });
     } catch (error) {
@@ -94,10 +109,20 @@ const ConfirmEmail = () => {
     }
   };
 
+  const handleVerify = async (e) => {
+    e.preventDefault();
+    const code = verificationCode.join("");
+    if (code.length !== 6) {
+      toast.error("Please enter the complete 6-digit code");
+      return;
+    }
+
+    await handleVerifyWithCode(code);
+  };
+
   const handleResendCode = async () => {
     try {
       setResendLoading(true);
-      const functions = getFunctions();
       const resendCode = httpsCallable(functions, "resendVerificationCode");
       await resendCode({ email });
 

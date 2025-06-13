@@ -90,55 +90,40 @@ const SignUp = () => {
 
     try {
       setLoading(true);
+      console.log("Starting signup process...");
 
-      // Create user account (but don't sign them in yet)
-      await signup(
+      // Add this debug line:
+      console.log("Form data before signup:", formData);
+      console.log("Display name value:", formData.displayName);
+
+      const result = await signup(
         formData.email,
         formData.password,
         formData.displayName,
-        formData.gender,
-        false // Don't sign in immediately
+        formData.gender
       );
 
-      // Send verification email via Firebase Function
-      const { getFunctions, httpsCallable } = await import(
-        "firebase/functions"
-      );
-      const functions = getFunctions();
-      const sendVerificationEmail = httpsCallable(
-        functions,
-        "sendVerificationEmail"
-      );
-
-      await sendVerificationEmail({
-        email: formData.email,
-        name: formData.displayName,
-      });
-
-      toast.success(
-        "Account created! Please check your email for verification."
-      );
-
-      // Redirect to confirmation page with email
-      navigate("/confirm-email", {
-        state: {
-          email: formData.email,
-          name: formData.displayName,
-        },
-      });
+      if (result.success) {
+        toast.success(result.message);
+        navigate("/signin", {
+          state: {
+            message:
+              "Account created! Please check your email and verify your account before signing in.",
+            email: formData.email,
+          },
+        });
+      }
     } catch (error) {
-      console.error("Sign up error:", error);
+      console.error("Signup error:", error);
 
       let errorMessage = "Failed to create account";
 
       if (error.code === "auth/email-already-in-use") {
         errorMessage = "An account with this email already exists";
-      } else if (error.code === "auth/invalid-email") {
-        errorMessage = "Invalid email address";
       } else if (error.code === "auth/weak-password") {
         errorMessage = "Password is too weak";
-      } else if (error.code === "auth/operation-not-allowed") {
-        errorMessage = "Account creation is currently disabled";
+      } else if (error.code === "auth/invalid-email") {
+        errorMessage = "Invalid email address";
       } else if (error.message) {
         errorMessage = error.message;
       }

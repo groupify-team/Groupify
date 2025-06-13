@@ -5,6 +5,7 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import SignIn from "./components/auth/SignIn";
 import SignUp from "./components/auth/SignUp";
+import ConfirmEmail from "./components/auth/ConfirmEmail";
 import Dashboard from "./pages/Dashboard";
 import HomePage from "./pages/HomePage";
 import ForgotPassword from "./components/auth/ForgotPassword";
@@ -81,6 +82,14 @@ function App() {
                 element={
                   <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-300 dark:from-gray-800 dark:to-gray-900">
                     <SignUp />
+                  </div>
+                }
+              />
+              <Route
+                path="/confirm-email"
+                element={
+                  <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-300 dark:from-gray-800 dark:to-gray-900">
+                    <ConfirmEmail />
                   </div>
                 }
               />
