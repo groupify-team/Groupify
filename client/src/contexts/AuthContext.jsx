@@ -23,16 +23,20 @@ export function useAuth() {
 export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [isSigningUp, setIsSigningUp] = useState(false); // Add this flag
+  const [isSigningUp, setIsSigningUp] = useState(false);
 
-  // Check if email is verified in our custom system
+  // Simplified email verification check - no Firestore permissions needed
   async function checkEmailVerification(email) {
     try {
-      const verificationDoc = await getDoc(doc(db, "verificationCodes", email));
-      return verificationDoc.exists() && verificationDoc.data().verified;
+      console.log("Checking email verification for:", email);
+      return { verified: true }; // Let Firebase Auth handle verification
     } catch (error) {
       console.error("Error checking email verification:", error);
-      return false;
+      return {
+        verified: false,
+        message:
+          "Please verify your email before signing in. Check your inbox!",
+      };
     }
   }
 
@@ -40,7 +44,7 @@ export function AuthProvider({ children }) {
   async function signup(email, password, displayName, gender = "male") {
     try {
       console.log("Starting signup process for:", email);
-      setIsSigningUp(true); // Set flag to prevent immediate sign-out
+      setIsSigningUp(true);
 
       // Validate inputs
       if (!email || !password || !displayName) {
@@ -105,28 +109,37 @@ export function AuthProvider({ children }) {
       console.error("Signup error:", error);
       throw error;
     } finally {
-      setIsSigningUp(false); // Reset flag
+      setIsSigningUp(false);
     }
   }
 
-
-  
+  // Fixed signin function - uses Firebase Auth verification only
   async function signin(email, password) {
-    // First sign in
-    const result = await signInWithEmailAndPassword(auth, email, password);
+    try {
+      console.log("Starting sign-in process for:", email);
 
-    // Then check if email is verified
-    const isVerified = await checkEmailVerification(email);
-
-    if (!isVerified) {
-      // Sign out immediately if not verified
-      await signOut(auth);
-      throw new Error(
-        "Please verify your email before signing in. Check your inbox!"
+      // Try to sign in directly - Firebase Auth will handle email verification
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
       );
-    }
+      const user = userCredential.user;
 
-    return result;
+      // Check if email is verified in Firebase Auth
+      if (!user.emailVerified) {
+        await signOut(auth); // Sign out if not verified
+        throw new Error(
+          "Please verify your email before signing in. Check your inbox!"
+        );
+      }
+
+      console.log("Sign-in successful for:", email);
+      return userCredential;
+    } catch (error) {
+      console.error("Sign in error:", error);
+      throw error;
+    }
   }
 
   async function signInWithGoogle() {
@@ -177,15 +190,19 @@ export function AuthProvider({ children }) {
     return sendPasswordResetEmail(auth, email);
   }
 
-  // Resend verification email
+  // Fixed resend verification email
   async function resendVerificationEmail(email) {
     try {
-      const resendCode = httpsCallable(functions, "resendVerificationCode");
-      await resendCode({ email });
-      return { success: true, message: "Verification email sent!" };
+      console.log("Resending verification email to:", email);
+
+      const resendFunction = httpsCallable(functions, "resendVerificationCode");
+      const result = await resendFunction({ email });
+
+      console.log("Verification email resent successfully");
+      return result.data;
     } catch (error) {
-      console.error("Resend verification error:", error);
-      throw new Error(error.message || "Failed to resend verification email");
+      console.error("Failed to resend verification email:", error);
+      throw error;
     }
   }
 
@@ -198,17 +215,21 @@ export function AuthProvider({ children }) {
         if (user.providerData[0]?.providerId === "google.com") {
           console.log("Google user signed in:", user.email);
           setCurrentUser(user);
-        } else if (!isSigningUp) {
-          // Only sign out if NOT currently signing up
-          // For email/password users, sign them out immediately after creation
+        } else if (isSigningUp) {
+          // During signup process, allow temporary access
+          console.log("User is signing up, allowing temporary access");
+          setCurrentUser(user);
+        } else if (user.emailVerified) {
+          // Email/password user with verified email
+          console.log("Verified email/password user signed in:", user.email);
+          setCurrentUser(user);
+        } else {
+          // Email/password user without verification - sign them out
           console.log(
             "Email/password user detected, signing out for verification"
           );
           await signOut(auth);
           setCurrentUser(null);
-        } else {
-          console.log("User is signing up, allowing temporary access");
-          setCurrentUser(user);
         }
       } else {
         setCurrentUser(null);
@@ -218,7 +239,7 @@ export function AuthProvider({ children }) {
     });
 
     return unsubscribe;
-  }, [isSigningUp]); // Add isSigningUp as dependency
+  }, [isSigningUp]);
 
   const value = {
     currentUser,

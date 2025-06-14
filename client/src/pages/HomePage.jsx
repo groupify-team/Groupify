@@ -185,7 +185,7 @@ const LaunchAnimation = ({ onAnimationComplete }) => {
       </div>
 
       {/* Custom Styles for Shimmer Animation */}
-      <style jsx>{`
+      <style>{`
         @keyframes shimmer {
           0% {
             transform: translateX(-100%);

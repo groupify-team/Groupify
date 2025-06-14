@@ -217,6 +217,7 @@ exports.sendVerificationEmail = onCall(
 );
 
 // Verify email code
+// Verify email code
 exports.verifyEmailCode = onCall(
   {
     secrets: [emailUser, emailPassword, appUrl],
@@ -264,7 +265,7 @@ exports.verifyEmailCode = onCall(
         );
       }
 
-      // Mark email as verified
+      // Mark email as verified in Firestore
       await admin
         .firestore()
         .collection("verificationCodes")
@@ -273,6 +274,21 @@ exports.verifyEmailCode = onCall(
           verified: true,
           verifiedAt: admin.firestore.FieldValue.serverTimestamp(),
         });
+
+      // **NEW: Also update Firebase Auth user's email verification status**
+      try {
+        const userRecord = await admin.auth().getUserByEmail(email);
+        await admin.auth().updateUser(userRecord.uid, {
+          emailVerified: true,
+        });
+        console.log(`Firebase Auth email verification updated for: ${email}`);
+      } catch (authError) {
+        console.error(
+          "Failed to update Firebase Auth verification:",
+          authError
+        );
+        // Don't fail the entire process if this fails
+      }
 
       // Send welcome email
       try {
