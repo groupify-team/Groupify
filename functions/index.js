@@ -17,7 +17,7 @@ const appUrl = defineSecret("APP_URL");
 function getTransporter() {
   try {
     console.log("Creating email transporter...");
-    const transporter = nodemailer.createTransporter({
+    const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
         user: emailUser.value(),

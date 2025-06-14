@@ -23,6 +23,7 @@ export function useAuth() {
 export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isSigningUp, setIsSigningUp] = useState(false); // Add this flag
 
   // Check if email is verified in our custom system
   async function checkEmailVerification(email) {
@@ -39,6 +40,7 @@ export function AuthProvider({ children }) {
   async function signup(email, password, displayName, gender = "male") {
     try {
       console.log("Starting signup process for:", email);
+      setIsSigningUp(true); // Set flag to prevent immediate sign-out
 
       // Validate inputs
       if (!email || !password || !displayName) {
@@ -75,60 +77,56 @@ export function AuthProvider({ children }) {
         joinedAt: new Date().toISOString(),
       });
 
-      // Send custom verification email via Cloud Function
-      try {
-        console.log("Calling sendVerificationEmail function...");
-        console.log("Sending email:", email, "name:", displayName);
+      console.log("User document created in Firestore");
 
-        const sendVerificationEmail = httpsCallable(
-          functions,
-          "sendVerificationEmail"
-        );
-        const result = await sendVerificationEmail({
-          email: email,
-          name: displayName,
-        });
+      // Send verification email (don't wait for it to complete)
+      const sendVerificationEmail = httpsCallable(
+        functions,
+        "sendVerificationEmail"
+      );
+      sendVerificationEmail({
+        email: email,
+        name: displayName,
+      }).catch((error) => {
+        console.error("Email send error (non-blocking):", error);
+      });
 
-        console.log("Verification email sent successfully:", result.data);
+      // NOW sign out the user
+      await signOut(auth);
+      console.log("User signed out after account creation");
 
-        // Sign out the user immediately after creating account
-        await signOut(auth);
-        console.log("User signed out after account creation");
-
-        return {
-          success: true,
-          message:
-            "Account created! Please check your email to verify your account before signing in.",
-          email: email, // Return email for redirect
-        };
-      } catch (emailError) {
-        console.error("Error sending verification email:", emailError);
-
-        // Even if email fails, we want to sign out the user
-        await signOut(auth);
-
-        throw new Error(
-          "Account created but failed to send verification email. Please contact support."
-        );
-      }
+      return {
+        success: true,
+        message:
+          "Account created! Please check your email to verify your account.",
+        email: email,
+      };
     } catch (error) {
       console.error("Signup error:", error);
       throw error;
+    } finally {
+      setIsSigningUp(false); // Reset flag
     }
   }
 
+
+  
   async function signin(email, password) {
-    // First check if email is verified in our system
+    // First sign in
+    const result = await signInWithEmailAndPassword(auth, email, password);
+
+    // Then check if email is verified
     const isVerified = await checkEmailVerification(email);
 
     if (!isVerified) {
+      // Sign out immediately if not verified
+      await signOut(auth);
       throw new Error(
         "Please verify your email before signing in. Check your inbox!"
       );
     }
 
-    // If verified, proceed with sign in
-    return signInWithEmailAndPassword(auth, email, password);
+    return result;
   }
 
   async function signInWithGoogle() {
@@ -196,24 +194,22 @@ export function AuthProvider({ children }) {
       console.log("Auth state changed:", user?.email || "No user");
 
       if (user) {
-        // For email/password users, check our custom verification
-        if (user.providerData[0]?.providerId === "password") {
-          const isVerified = await checkEmailVerification(user.email);
-
-          if (!isVerified) {
-            console.log("Email not verified in our system, signing out user");
-            await signOut(auth);
-            setCurrentUser(null);
-            toast.error(
-              "Please verify your email before signing in. Check your inbox!"
-            );
-            setLoading(false);
-            return;
-          }
+        // For Google users, allow immediate access
+        if (user.providerData[0]?.providerId === "google.com") {
+          console.log("Google user signed in:", user.email);
+          setCurrentUser(user);
+        } else if (!isSigningUp) {
+          // Only sign out if NOT currently signing up
+          // For email/password users, sign them out immediately after creation
+          console.log(
+            "Email/password user detected, signing out for verification"
+          );
+          await signOut(auth);
+          setCurrentUser(null);
+        } else {
+          console.log("User is signing up, allowing temporary access");
+          setCurrentUser(user);
         }
-
-        console.log("User verified and signed in:", user.email);
-        setCurrentUser(user);
       } else {
         setCurrentUser(null);
       }
@@ -222,7 +218,7 @@ export function AuthProvider({ children }) {
     });
 
     return unsubscribe;
-  }, []);
+  }, [isSigningUp]); // Add isSigningUp as dependency
 
   const value = {
     currentUser,
