@@ -25,6 +25,19 @@ const SignIn = () => {
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
+  const [showVerificationAlert, setShowVerificationAlert] = useState(false);
+
+  useEffect(() => {
+    const urlParams = new URLSearchParams(location.search);
+    if (urlParams.get("verified") === "true") {
+      const message = urlParams.get("message");
+      if (message) {
+        toast.success(decodeURIComponent(message), { duration: 5000 });
+      }
+      // Clean up URL
+      navigate("/signin", { replace: true });
+    }
+  }, [location, navigate]);
 
   // Load remembered email
   useEffect(() => {
@@ -58,6 +71,7 @@ const SignIn = () => {
 
     try {
       setLoading(true);
+      setShowVerificationAlert(false); // Hide alert when attempting login
 
       // Remember email if checkbox is checked
       if (rememberMe) {
@@ -77,15 +91,7 @@ const SignIn = () => {
 
       if (error.message && error.message.includes("verify your email")) {
         errorMessage = error.message;
-        // Show verification prompt
-        setTimeout(() => {
-          const shouldResend = confirm(
-            "Would you like us to resend the verification email?"
-          );
-          if (shouldResend) {
-            navigate("/confirm-email", { state: { email } });
-          }
-        }, 2000);
+        setShowVerificationAlert(true); // Show verification alert only on verification error
       } else if (error.code === "auth/user-not-found") {
         errorMessage = "No account found with this email";
       } else if (error.code === "auth/wrong-password") {
@@ -300,9 +306,9 @@ const SignIn = () => {
             </button>
           </form>
 
-          {/* Verification Notice */}
-          <div className="mt-6">
-            <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+          {/* Conditional Verification Alert - Only show after failed verification */}
+          {showVerificationAlert && (
+            <div className="mt-6 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
               <div className="flex">
                 <ExclamationTriangleIcon className="h-5 w-5 text-yellow-400 mr-3 mt-0.5 flex-shrink-0" />
                 <div className="text-sm">
@@ -310,19 +316,20 @@ const SignIn = () => {
                     Email verification required
                   </p>
                   <p className="text-yellow-600 dark:text-yellow-400 mt-1">
-                    Please verify your email before signing in. Check your inbox or{" "}
+                    Please verify your email before signing in. Check your inbox
+                    or{" "}
                     <Link
                       to="/confirm-email"
                       state={{ email }}
-                      className="underline font-medium"
+                      className="underline font-medium hover:text-yellow-500"
                     >
-                      resend verification
+                      resend verification email
                     </Link>
                   </p>
                 </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* Divider */}
           <div className="mt-8">

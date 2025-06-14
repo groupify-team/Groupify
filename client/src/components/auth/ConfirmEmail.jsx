@@ -93,16 +93,13 @@ const ConfirmEmail = () => {
       const verifyCode = httpsCallable(functions, "verifyEmailCode");
       await verifyCode({ email, verificationCode: code });
 
-      toast.success("Email verified successfully!");
-
-      // Navigate to home page with success message
-      navigate("/", {
-        state: {
-          message:
-            "Welcome to Groupify! Your email has been verified successfully. You can now sign in to start organizing your photos.",
-          verified: true,
-        },
-      });
+      // Navigate to sign-in page with success message (FIXED)
+      navigate(
+        "/signin?verified=true&message=" +
+          encodeURIComponent(
+            "Email verified successfully! You can now sign in."
+          )
+      );
     } catch (error) {
       console.error("Verification error:", error);
       let errorMessage = "Invalid verification code";
