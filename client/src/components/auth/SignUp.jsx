@@ -92,10 +92,6 @@ const SignUp = () => {
       setLoading(true);
       console.log("Starting signup process...");
 
-      // Add this debug line:
-      console.log("Form data before signup:", formData);
-      console.log("Display name value:", formData.displayName);
-
       const result = await signup(
         formData.email,
         formData.password,
@@ -105,10 +101,9 @@ const SignUp = () => {
 
       if (result.success) {
         toast.success(result.message);
-        navigate("/signin", {
+        // Navigate to confirm email page with email data
+        navigate("/confirm-email", {
           state: {
-            message:
-              "Account created! Please check your email and verify your account before signing in.",
             email: formData.email,
           },
         });
@@ -488,19 +483,19 @@ const SignUp = () => {
                   className="text-gray-700 dark:text-gray-300"
                 >
                   I agree to the{" "}
-                  <a
-                    href="#"
+                  <Link
+                    to="/terms"
                     className="text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
                   >
                     Terms of Service
-                  </a>{" "}
+                  </Link>{" "}
                   and{" "}
-                  <a
-                    href="#"
+                  <Link
+                    to="/privacy-policy"
                     className="text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
                   >
                     Privacy Policy
-                  </a>
+                  </Link>
                 </label>
               </div>
             </div>

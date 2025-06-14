@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useTheme } from "../contexts/ThemeContext";
+import { toast } from "react-hot-toast";
 import {
   CameraIcon,
   UserGroupIcon,
@@ -23,13 +24,13 @@ const LaunchAnimation = ({ onAnimationComplete }) => {
     "Initializing your experience...",
     "Loading smart photo tools...",
     "Preparing AI recognition...",
-    "Almost ready!"
+    "Almost ready!",
   ];
 
   useEffect(() => {
     // Simulate loading progress
     const progressInterval = setInterval(() => {
-      setProgress(prev => {
+      setProgress((prev) => {
         if (prev >= 100) {
           clearInterval(progressInterval);
           // Start exit animation
@@ -48,7 +49,7 @@ const LaunchAnimation = ({ onAnimationComplete }) => {
 
     // Cycle through loading texts
     const textInterval = setInterval(() => {
-      setCurrentText(prev => (prev + 1) % loadingTexts.length);
+      setCurrentText((prev) => (prev + 1) % loadingTexts.length);
     }, 1200);
 
     return () => {
@@ -58,14 +59,26 @@ const LaunchAnimation = ({ onAnimationComplete }) => {
   }, []);
 
   return (
-    <div className={`fixed inset-0 z-50 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 transition-all duration-800 ${isExiting ? 'opacity-0 scale-110' : 'opacity-100 scale-100'}`}>
-      
+    <div
+      className={`fixed inset-0 z-50 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 transition-all duration-800 ${
+        isExiting ? "opacity-0 scale-110" : "opacity-100 scale-100"
+      }`}
+    >
       {/* Floating Background Orbs */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-20 left-20 w-64 h-64 bg-gradient-to-br from-purple-400/30 to-blue-400/30 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute top-40 right-32 w-96 h-96 bg-gradient-to-br from-indigo-400/20 to-purple-400/20 rounded-full blur-3xl animate-bounce" style={{animationDuration: '3s'}}></div>
-        <div className="absolute bottom-32 left-1/4 w-80 h-80 bg-gradient-to-br from-blue-400/25 to-indigo-400/25 rounded-full blur-3xl animate-pulse" style={{animationDelay: '1s'}}></div>
-        <div className="absolute bottom-20 right-20 w-72 h-72 bg-gradient-to-br from-purple-400/20 to-pink-400/20 rounded-full blur-3xl animate-bounce" style={{animationDuration: '4s', animationDelay: '0.5s'}}></div>
+        <div
+          className="absolute top-40 right-32 w-96 h-96 bg-gradient-to-br from-indigo-400/20 to-purple-400/20 rounded-full blur-3xl animate-bounce"
+          style={{ animationDuration: "3s" }}
+        ></div>
+        <div
+          className="absolute bottom-32 left-1/4 w-80 h-80 bg-gradient-to-br from-blue-400/25 to-indigo-400/25 rounded-full blur-3xl animate-pulse"
+          style={{ animationDelay: "1s" }}
+        ></div>
+        <div
+          className="absolute bottom-20 right-20 w-72 h-72 bg-gradient-to-br from-purple-400/20 to-pink-400/20 rounded-full blur-3xl animate-bounce"
+          style={{ animationDuration: "4s", animationDelay: "0.5s" }}
+        ></div>
       </div>
 
       {/* Floating Particles */}
@@ -77,31 +90,34 @@ const LaunchAnimation = ({ onAnimationComplete }) => {
             left: `${Math.random() * 100}%`,
             top: `${Math.random() * 100}%`,
             animationDelay: `${Math.random() * 2}s`,
-            animationDuration: `${2 + Math.random() * 2}s`
+            animationDuration: `${2 + Math.random() * 2}s`,
           }}
         />
       ))}
 
       {/* Main Content */}
       <div className="flex flex-col items-center justify-center min-h-screen px-4">
-        
         {/* Animated Logo */}
         <div className="relative mb-8">
           {/* Glow Effect */}
           <div className="absolute inset-0 w-24 h-24 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-3xl blur-xl opacity-60 animate-pulse"></div>
-          
+
           {/* Logo Container */}
           <div className="relative w-24 h-24 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-3xl flex items-center justify-center shadow-2xl transform transition-all duration-1000 hover:scale-110">
             <CameraIcon className="w-12 h-12 text-white animate-pulse" />
-            
+
             {/* Rotating Border */}
-            <div className="absolute inset-0 w-24 h-24 border-4 border-transparent bg-gradient-to-r from-indigo-400 via-purple-400 to-blue-400 rounded-3xl animate-spin" style={{
-              mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
-              maskComposite: 'xor',
-              WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
-              WebkitMaskComposite: 'xor',
-              animationDuration: '3s'
-            }}></div>
+            <div
+              className="absolute inset-0 w-24 h-24 border-4 border-transparent bg-gradient-to-r from-indigo-400 via-purple-400 to-blue-400 rounded-3xl animate-spin"
+              style={{
+                mask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
+                maskComposite: "xor",
+                WebkitMask:
+                  "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
+                WebkitMaskComposite: "xor",
+                animationDuration: "3s",
+              }}
+            ></div>
           </div>
         </div>
 
@@ -112,7 +128,10 @@ const LaunchAnimation = ({ onAnimationComplete }) => {
 
         {/* Tagline with Icon */}
         <div className="flex items-center mb-12 px-6 py-3 bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-full border border-white/20 dark:border-gray-700/50">
-          <SparklesIcon className="w-5 h-5 text-indigo-600 dark:text-indigo-400 mr-2 animate-spin" style={{animationDuration: '2s'}} />
+          <SparklesIcon
+            className="w-5 h-5 text-indigo-600 dark:text-indigo-400 mr-2 animate-spin"
+            style={{ animationDuration: "2s" }}
+          />
           <span className="text-lg font-medium text-gray-700 dark:text-gray-300">
             AI-Powered Photo Management
           </span>
@@ -130,21 +149,21 @@ const LaunchAnimation = ({ onAnimationComplete }) => {
           {/* Progress Container */}
           <div className="relative w-full h-3 bg-white/40 dark:bg-gray-800/40 backdrop-blur-sm rounded-full border border-white/20 dark:border-gray-700/50 overflow-hidden">
             {/* Progress Fill */}
-            <div 
+            <div
               className="absolute left-0 top-0 h-full bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 rounded-full transition-all duration-300 ease-out"
               style={{ width: `${progress}%` }}
             >
               {/* Shimmer Effect */}
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer"></div>
             </div>
-            
+
             {/* Progress Glow */}
-            <div 
+            <div
               className="absolute left-0 top-0 h-full bg-gradient-to-r from-indigo-400 to-purple-400 rounded-full blur-sm opacity-50 transition-all duration-300"
               style={{ width: `${progress}%` }}
             ></div>
           </div>
-          
+
           {/* Progress Percentage */}
           <div className="text-center mt-4">
             <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
@@ -168,8 +187,12 @@ const LaunchAnimation = ({ onAnimationComplete }) => {
       {/* Custom Styles for Shimmer Animation */}
       <style jsx>{`
         @keyframes shimmer {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(200%); }
+          0% {
+            transform: translateX(-100%);
+          }
+          100% {
+            transform: translateX(200%);
+          }
         }
         .animate-shimmer {
           animation: shimmer 2s infinite;
@@ -183,8 +206,9 @@ const HomePage = () => {
   const { currentUser } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
+  const location = useLocation();
   const [isLoaded, setIsLoaded] = useState(false);
-  
+
   // ADD THIS STATE FOR LAUNCH ANIMATION
   const [showLaunch, setShowLaunch] = useState(true);
 
@@ -198,6 +222,19 @@ const HomePage = () => {
       navigate("/dashboard");
     }
   }, [currentUser, navigate]);
+
+  // Success message handling from email verification
+  useEffect(() => {
+    // Check if there's a success message from email verification
+    if (location.state?.message && location.state?.verified) {
+      toast.success(location.state.message, {
+        duration: 5000,
+      });
+
+      // Clear the state to prevent showing the message again
+      navigate(location.pathname, { replace: true });
+    }
+  }, [location, navigate]);
 
   // ADD THIS FUNCTION TO HANDLE ANIMATION COMPLETION
   const handleAnimationComplete = () => {
@@ -299,7 +336,6 @@ const HomePage = () => {
         </div>
       </nav>
 
-      {/* Rest of your existing HomePage content remains exactly the same... */}
       {/* Hero Section */}
       <div
         className={`relative overflow-hidden transition-all duration-1000 ${
@@ -330,6 +366,34 @@ const HomePage = () => {
               the moments together. The smartest way to organize and share your
               travel memories.
             </p>
+
+            {/* Success Message Banner */}
+            {location.state?.verified && (
+              <div className="mb-8 max-w-2xl mx-auto">
+                <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-6">
+                  <div className="flex items-center justify-center">
+                    <div className="w-8 h-8 bg-green-100 dark:bg-green-800 rounded-full flex items-center justify-center mr-3">
+                      <CheckIcon className="w-5 h-5 text-green-600 dark:text-green-400" />
+                    </div>
+                    <div className="text-center">
+                      <h3 className="text-lg font-semibold text-green-800 dark:text-green-200">
+                        Email Verified Successfully! 🎉
+                      </h3>
+                      <p className="text-green-700 dark:text-green-300 mt-1">
+                        You can now sign in and start organizing your travel
+                        photos.
+                      </p>
+                      <Link
+                        to="/signin"
+                        className="inline-block mt-3 bg-green-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors"
+                      >
+                        Sign In Now
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">

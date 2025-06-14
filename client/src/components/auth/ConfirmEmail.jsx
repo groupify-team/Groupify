@@ -6,6 +6,7 @@ import {
   useSearchParams,
 } from "react-router-dom";
 import { useTheme } from "../../contexts/ThemeContext";
+import { useAuth } from "../../contexts/AuthContext";
 import {
   CameraIcon,
   MoonIcon,
@@ -35,6 +36,7 @@ const ConfirmEmail = () => {
   const [canResend, setCanResend] = useState(false);
 
   const { theme, toggleTheme } = useTheme();
+  const { resendVerificationEmail } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
@@ -93,17 +95,30 @@ const ConfirmEmail = () => {
 
       toast.success("Email verified successfully!");
 
-      // Navigate to home page after successful verification
+      // Navigate to home page with success message
       navigate("/", {
         state: {
           message:
-            "Welcome to Groupify! Your email has been verified. You can now sign in to start organizing your photos.",
+            "Welcome to Groupify! Your email has been verified successfully. You can now sign in to start organizing your photos.",
           verified: true,
         },
       });
     } catch (error) {
       console.error("Verification error:", error);
-      toast.error(error.message || "Invalid verification code");
+      let errorMessage = "Invalid verification code";
+
+      if (error.message.includes("expired")) {
+        errorMessage =
+          "Verification code has expired. Please request a new one.";
+        setCanResend(true);
+        setTimeLeft(0);
+      } else if (error.message.includes("already verified")) {
+        errorMessage = "Email is already verified. You can now sign in.";
+        navigate("/signin");
+        return;
+      }
+
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -123,9 +138,7 @@ const ConfirmEmail = () => {
   const handleResendCode = async () => {
     try {
       setResendLoading(true);
-      const resendCode = httpsCallable(functions, "resendVerificationCode");
-      await resendCode({ email });
-
+      await resendVerificationEmail(email);
       toast.success("Verification code sent! Check your email.");
       setTimeLeft(120);
       setCanResend(false);
@@ -284,7 +297,7 @@ const ConfirmEmail = () => {
                   type="button"
                   onClick={handleResendCode}
                   disabled={resendLoading}
-                  className="text-sm text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium"
+                  className="text-sm text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium disabled:opacity-50"
                 >
                   {resendLoading ? "Sending..." : "Resend verification code"}
                 </button>
@@ -295,7 +308,7 @@ const ConfirmEmail = () => {
             <button
               type="submit"
               disabled={loading || verificationCode.join("").length !== 6}
-              className="w-full btn-primary flex items-center justify-center py-3 relative overflow-hidden"
+              className="w-full btn-primary flex items-center justify-center py-3 relative overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <>
@@ -321,6 +334,7 @@ const ConfirmEmail = () => {
                     <li>• Check your spam/junk folder</li>
                     <li>• Make sure {email} is correct</li>
                     <li>• Wait a few minutes for delivery</li>
+                    <li>• Try resending the code when timer expires</li>
                   </ul>
                 </div>
               </div>
