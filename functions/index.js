@@ -66,27 +66,51 @@ async function loadEmailTemplate(templateName, variables) {
 function getFallbackTemplate(templateName, variables) {
   if (templateName === "verification") {
     return `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h1 style="color: #4F46E5;">Welcome to Groupify!</h1>
-        <p>Hi ${variables.USER_NAME},</p>
-        <p>Your verification code is:</p>
-        <h2 style="color: #4F46E5; font-size: 32px; letter-spacing: 5px;">${variables.VERIFICATION_CODE}</h2>
-        <p>This code will expire in 10 minutes.</p>
-        <p>If you didn't request this, please ignore this email.</p>
-        <hr style="margin: 30px 0;">
-        <p style="color: #666; font-size: 12px;">© 2025 Groupify. All rights reserved.</p>
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="text-align: center; margin-bottom: 30px;">
+          <h1 style="color: #4F46E5;">Welcome to Groupify!</h1>
+        </div>
+        <div style="background: #f8f9fa; padding: 30px; border-radius: 10px; text-align: center;">
+          <p style="font-size: 18px; margin-bottom: 20px;">Hi ${variables.USER_NAME},</p>
+          <p style="margin-bottom: 30px;">Please verify your email address by entering this code:</p>
+          <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h2 style="color: #4F46E5; font-size: 32px; letter-spacing: 5px; margin: 0;">${variables.VERIFICATION_CODE}</h2>
+          </div>
+          <p style="color: #666; font-size: 14px;">This code will expire in 10 minutes.</p>
+          <a href="${variables.VERIFICATION_LINK}" style="display: inline-block; background: #4F46E5; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; margin-top: 20px;">Verify Email</a>
+        </div>
+        <p style="text-align: center; color: #666; font-size: 12px; margin-top: 30px;">
+          If you didn't request this, please ignore this email.<br>
+          © 2025 Groupify. All rights reserved.
+        </p>
       </div>
     `;
   } else if (templateName === "welcome") {
     return `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h1 style="color: #4F46E5;">Welcome to Groupify!</h1>
-        <p>Hi ${variables.USER_NAME},</p>
-        <p>Your email has been verified successfully!</p>
-        <p>You can now sign in and start organizing your travel photos.</p>
-        <a href="${variables.DASHBOARD_LINK}" style="display: inline-block; padding: 12px 24px; background-color: #4F46E5; color: white; text-decoration: none; border-radius: 6px; margin: 20px 0;">Go to Dashboard</a>
-        <hr style="margin: 30px 0;">
-        <p style="color: #666; font-size: 12px;">© 2025 Groupify. All rights reserved.</p>
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="text-align: center; margin-bottom: 30px;">
+          <h1 style="color: #4F46E5;">Welcome to Groupify! 🎉</h1>
+        </div>
+        <div style="background: #f8f9fa; padding: 30px; border-radius: 10px;">
+          <p style="font-size: 18px; margin-bottom: 20px;">Hi ${variables.USER_NAME},</p>
+          <p style="margin-bottom: 20px;">Your email has been verified successfully! Welcome to the Groupify community.</p>
+          <p style="margin-bottom: 30px;">You can now sign in and start organizing your travel photos with our AI-powered face recognition technology.</p>
+          <div style="text-align: center;">
+            <a href="${variables.DASHBOARD_LINK}" style="display: inline-block; background: #4F46E5; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold;">Go to Dashboard</a>
+          </div>
+        </div>
+        <div style="margin-top: 30px; padding: 20px; background: #e3f2fd; border-radius: 8px;">
+          <h3 style="color: #1976d2; margin-bottom: 15px;">Get Started:</h3>
+          <ul style="color: #555; line-height: 1.6;">
+            <li>Upload your travel photos</li>
+            <li>Let our AI identify faces automatically</li>
+            <li>Create albums and share with friends</li>
+            <li>Never lose track of your memories again!</li>
+          </ul>
+        </div>
+        <p style="text-align: center; color: #666; font-size: 12px; margin-top: 30px;">
+          © 2025 Groupify. All rights reserved.
+        </p>
       </div>
     `;
   }
@@ -254,7 +278,7 @@ exports.verifyEmailCode = onCall(
       try {
         const welcomeEmailHtml = await loadEmailTemplate("welcome", {
           USER_NAME: verificationData.name,
-          DASHBOARD_LINK: `${appUrl.value()}/dashboard`,
+          DASHBOARD_LINK: `${appUrl.value()}/signin`,
           HELP_CENTER_LINK: `${appUrl.value()}/help`,
           FACEBOOK_LINK: "https://facebook.com/groupify",
           INSTAGRAM_LINK: "https://instagram.com/groupify",
@@ -268,7 +292,7 @@ exports.verifyEmailCode = onCall(
         await getTransporter().sendMail({
           from: `"Groupify Team" <${emailUser.value()}>`,
           to: email,
-          subject: "Welcome to Groupify! 🎉",
+          subject: "Welcome to Groupify! 🎉 Your account is ready",
           html: welcomeEmailHtml,
         });
 
@@ -356,7 +380,7 @@ exports.resendVerificationCode = onCall(
       await getTransporter().sendMail({
         from: `"Groupify Team" <${emailUser.value()}>`,
         to: email,
-        subject: "Verify Your Email - Groupify",
+        subject: "Verify Your Email - Groupify (Resent)",
         html: verificationEmailHtml,
       });
 
@@ -372,7 +396,7 @@ exports.resendVerificationCode = onCall(
   }
 );
 
-// Add a function to enable Google Auth
+// Enable Google Auth
 exports.enableGoogleAuth = onCall(async (request) => {
   try {
     const { uid, email, displayName, photoURL } = request.data;
@@ -381,7 +405,7 @@ exports.enableGoogleAuth = onCall(async (request) => {
       throw new HttpsError("invalid-argument", "UID and email are required");
     }
 
-    // Update user document to mark email as verified for Google users
+    // Mark email as verified for Google users
     await admin
       .firestore()
       .collection("verificationCodes")

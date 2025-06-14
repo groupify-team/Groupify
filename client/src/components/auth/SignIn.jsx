@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../../contexts/AuthContext";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useTheme } from "../../contexts/ThemeContext";
 import {
   EyeIcon,
@@ -9,6 +9,8 @@ import {
   MoonIcon,
   SunIcon,
   ArrowLeftIcon,
+  CheckCircleIcon,
+  ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
 import { toast } from "react-hot-toast";
 
@@ -22,6 +24,7 @@ const SignIn = () => {
   const { signin, signInWithGoogle } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Load remembered email
   useEffect(() => {
@@ -31,6 +34,19 @@ const SignIn = () => {
       setRememberMe(true);
     }
   }, []);
+
+  // Show message from location state
+  useEffect(() => {
+    if (location.state?.message) {
+      if (location.state.verified) {
+        toast.success(location.state.message, { duration: 5000 });
+      } else {
+        toast.error(location.state.message, { duration: 5000 });
+      }
+      // Clear the state
+      navigate(location.pathname, { replace: true });
+    }
+  }, [location, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -59,7 +75,18 @@ const SignIn = () => {
       // Provide user-friendly error messages
       let errorMessage = "Failed to sign in";
 
-      if (error.code === "auth/user-not-found") {
+      if (error.message && error.message.includes("verify your email")) {
+        errorMessage = error.message;
+        // Show verification prompt
+        setTimeout(() => {
+          const shouldResend = confirm(
+            "Would you like us to resend the verification email?"
+          );
+          if (shouldResend) {
+            navigate("/confirm-email", { state: { email } });
+          }
+        }, 2000);
+      } else if (error.code === "auth/user-not-found") {
         errorMessage = "No account found with this email";
       } else if (error.code === "auth/wrong-password") {
         errorMessage = "Incorrect password";
@@ -69,6 +96,8 @@ const SignIn = () => {
         errorMessage = "Too many failed attempts. Please try again later";
       } else if (error.code === "auth/user-disabled") {
         errorMessage = "This account has been disabled";
+      } else if (error.code === "auth/invalid-credential") {
+        errorMessage = "Invalid email or password";
       }
 
       toast.error(errorMessage);
@@ -128,6 +157,23 @@ const SignIn = () => {
                 )}
               </button>
             </div>
+
+            {/* Success Message */}
+            {location.state?.verified && (
+              <div className="mb-6 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+                <div className="flex">
+                  <CheckCircleIcon className="h-5 w-5 text-green-400 mr-3 mt-0.5 flex-shrink-0" />
+                  <div className="text-sm">
+                    <p className="text-green-700 dark:text-green-300 font-medium">
+                      Email verified successfully!
+                    </p>
+                    <p className="text-green-600 dark:text-green-400 mt-1">
+                      You can now sign in to your account.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Logo and Title */}
             <div className="flex items-center mb-6">
@@ -241,7 +287,7 @@ const SignIn = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full btn-primary flex items-center justify-center py-3 relative overflow-hidden"
+              className="w-full btn-primary flex items-center justify-center py-3 relative overflow-hidden disabled:opacity-50"
             >
               {loading ? (
                 <>
@@ -253,6 +299,30 @@ const SignIn = () => {
               )}
             </button>
           </form>
+
+          {/* Verification Notice */}
+          <div className="mt-6">
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+              <div className="flex">
+                <ExclamationTriangleIcon className="h-5 w-5 text-yellow-400 mr-3 mt-0.5 flex-shrink-0" />
+                <div className="text-sm">
+                  <p className="text-yellow-700 dark:text-yellow-300 font-medium">
+                    Email verification required
+                  </p>
+                  <p className="text-yellow-600 dark:text-yellow-400 mt-1">
+                    Please verify your email before signing in. Check your inbox or{" "}
+                    <Link
+                      to="/confirm-email"
+                      state={{ email }}
+                      className="underline font-medium"
+                    >
+                      resend verification
+                    </Link>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
 
           {/* Divider */}
           <div className="mt-8">

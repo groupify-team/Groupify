@@ -24,6 +24,17 @@ export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Check if email is verified in our custom system
+  async function checkEmailVerification(email) {
+    try {
+      const verificationDoc = await getDoc(doc(db, "verificationCodes", email));
+      return verificationDoc.exists() && verificationDoc.data().verified;
+    } catch (error) {
+      console.error("Error checking email verification:", error);
+      return false;
+    }
+  }
+
   // Sign up function with email verification
   async function signup(email, password, displayName, gender = "male") {
     try {
@@ -88,6 +99,7 @@ export function AuthProvider({ children }) {
           success: true,
           message:
             "Account created! Please check your email to verify your account before signing in.",
+          email: email, // Return email for redirect
         };
       } catch (emailError) {
         console.error("Error sending verification email:", emailError);
@@ -106,6 +118,16 @@ export function AuthProvider({ children }) {
   }
 
   async function signin(email, password) {
+    // First check if email is verified in our system
+    const isVerified = await checkEmailVerification(email);
+
+    if (!isVerified) {
+      throw new Error(
+        "Please verify your email before signing in. Check your inbox!"
+      );
+    }
+
+    // If verified, proceed with sign in
     return signInWithEmailAndPassword(auth, email, password);
   }
 
@@ -157,14 +179,15 @@ export function AuthProvider({ children }) {
     return sendPasswordResetEmail(auth, email);
   }
 
-  // Check if email is verified in our system
-  async function checkEmailVerification(email) {
+  // Resend verification email
+  async function resendVerificationEmail(email) {
     try {
-      const verificationDoc = await getDoc(doc(db, "verificationCodes", email));
-      return verificationDoc.exists() && verificationDoc.data().verified;
+      const resendCode = httpsCallable(functions, "resendVerificationCode");
+      await resendCode({ email });
+      return { success: true, message: "Verification email sent!" };
     } catch (error) {
-      console.error("Error checking email verification:", error);
-      return false;
+      console.error("Resend verification error:", error);
+      throw new Error(error.message || "Failed to resend verification email");
     }
   }
 
@@ -173,16 +196,20 @@ export function AuthProvider({ children }) {
       console.log("Auth state changed:", user?.email || "No user");
 
       if (user) {
-        // Check if email is verified
-        if (!user.emailVerified) {
-          console.log("Email not verified, signing out user");
-          await signOut(auth);
-          setCurrentUser(null);
-          toast.error(
-            "Please verify your email before signing in. Check your inbox!"
-          );
-          setLoading(false);
-          return;
+        // For email/password users, check our custom verification
+        if (user.providerData[0]?.providerId === "password") {
+          const isVerified = await checkEmailVerification(user.email);
+
+          if (!isVerified) {
+            console.log("Email not verified in our system, signing out user");
+            await signOut(auth);
+            setCurrentUser(null);
+            toast.error(
+              "Please verify your email before signing in. Check your inbox!"
+            );
+            setLoading(false);
+            return;
+          }
         }
 
         console.log("User verified and signed in:", user.email);
@@ -205,6 +232,7 @@ export function AuthProvider({ children }) {
     logout,
     resetPassword,
     checkEmailVerification,
+    resendVerificationEmail,
   };
 
   return (
