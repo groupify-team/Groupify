@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useAuth } from "../contexts/AuthContext";
+import { useTheme } from "../contexts/ThemeContext";
 import { useNavigate } from "react-router-dom";
 import TripCard from "../components/trips/TripCard";
 import TripDetailView from "../components/trips/TripDetailView";
@@ -35,6 +36,8 @@ import {
   ArrowLeftIcon,
   ChevronDownIcon,
   ChevronRightIcon,
+  MoonIcon,
+  SunIcon,
 } from "@heroicons/react/24/outline";
 
 // functions
@@ -93,6 +96,7 @@ import {
 const Dashboard = () => {
   // Authentication context
   const { currentUser, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
 
   // Refs
@@ -875,20 +879,25 @@ const Dashboard = () => {
     ];
 
     return (
-      <div className="absolute right-0 top-full mt-2 w-96 bg-white rounded-xl shadow-lg border border-gray-200 z-50 max-h-96 overflow-y-auto">
-        <div className="p-4 border-b border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-900">Notifications</h3>
+      <div className="absolute right-0 top-full mt-2 w-96 bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20 dark:border-gray-700/50 z-50 max-h-96 overflow-y-auto">
+        <div className="p-4 border-b border-gray-100 dark:border-gray-700">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+            Notifications
+          </h3>
         </div>
 
         {allNotifications.length === 0 ? (
-          <div className="p-6 text-center text-gray-500">
-            <BellIcon className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+          <div className="p-6 text-center text-gray-500 dark:text-gray-400">
+            <BellIcon className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
             <p>No notifications</p>
           </div>
         ) : (
-          <div className="divide-y divide-gray-100">
+          <div className="divide-y divide-gray-100 dark:divide-gray-700">
             {allNotifications.map((notification) => (
-              <div key={notification.id} className="p-4 hover:bg-gray-50">
+              <div
+                key={notification.id}
+                className="p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+              >
                 <div className="flex items-start gap-3">
                   <img
                     src={notification.avatar}
@@ -896,11 +905,11 @@ const Dashboard = () => {
                     className="w-10 h-10 rounded-full object-cover"
                   />
                   <div className="flex-1">
-                    <p className="text-sm text-gray-800 mb-2">
+                    <p className="text-sm text-gray-800 dark:text-gray-200 mb-2">
                       {notification.message}
                     </p>
                     {notification.time && (
-                      <p className="text-xs text-gray-500 mb-3">
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
                         {new Date(
                           notification.time?.toDate?.() || notification.time
                         ).toRelativeString?.() ||
@@ -916,8 +925,8 @@ const Dashboard = () => {
                           onClick={action.action}
                           className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
                             action.type === "accept"
-                              ? "bg-green-100 text-green-700 hover:bg-green-200"
-                              : "bg-red-100 text-red-700 hover:bg-red-200"
+                              ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-900/50"
+                              : "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50"
                           }`}
                         >
                           {action.label}
@@ -939,8 +948,10 @@ const Dashboard = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">My Trips</h1>
-          <p className="text-gray-600 mt-1">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+            My Trips
+          </h1>
+          <p className="text-gray-600 dark:text-gray-300 mt-1">
             Organize and manage your travel memories
           </p>
         </div>
@@ -954,22 +965,22 @@ const Dashboard = () => {
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+      <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-2xl shadow-lg p-6 border border-white/20 dark:border-gray-700/50">
         <div className="flex flex-col md:flex-row gap-4">
           <div className="relative flex-1">
-            <MagnifyingGlassIcon className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
+            <MagnifyingGlassIcon className="w-5 h-5 text-gray-400 dark:text-gray-500 absolute left-3 top-1/2 transform -translate-y-1/2" />
             <input
               type="text"
               placeholder="Search trips..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+              className="w-full pl-10 pr-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors bg-white/50 dark:bg-gray-700/50 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
             />
           </div>
           <select
             value={dateFilter}
             onChange={(e) => setDateFilter(e.target.value)}
-            className="px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white min-w-[150px]"
+            className="px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white/50 dark:bg-gray-700/50 text-gray-900 dark:text-white min-w-[150px]"
           >
             <option value="all">All Trips</option>
             <option value="upcoming">Upcoming</option>
@@ -983,15 +994,15 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredTrips.length === 0 ? (
           <div className="col-span-full text-center py-16">
-            <div className="w-24 h-24 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-              <MapIcon className="w-12 h-12 text-gray-400" />
+            <div className="w-24 h-24 bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/30 dark:to-purple-900/30 rounded-2xl flex items-center justify-center mx-auto mb-6">
+              <MapIcon className="w-12 h-12 text-indigo-500 dark:text-indigo-400" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-600 mb-2">
+            <h3 className="text-xl font-semibold text-gray-600 dark:text-gray-300 mb-2">
               {searchTerm || dateFilter !== "all"
                 ? "No trips match your filters"
                 : "No trips yet"}
             </h3>
-            <p className="text-gray-500 mb-6">
+            <p className="text-gray-500 dark:text-gray-400 mb-6">
               {searchTerm || dateFilter !== "all"
                 ? "Try adjusting your search or filters"
                 : "Create your first trip to get started"}
@@ -1017,21 +1028,23 @@ const Dashboard = () => {
   const FaceProfileSection = () => (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Face Profile</h1>
-        <p className="text-gray-600 mt-1">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+          Face Profile
+        </h1>
+        <p className="text-gray-600 dark:text-gray-300 mt-1">
           AI-powered face recognition for automatic photo organization
         </p>
       </div>
 
       {!hasProfile ? (
-        <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100 text-center">
-          <div className="w-24 h-24 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-            <UserCircleIcon className="w-12 h-12 text-indigo-500" />
+        <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-2xl shadow-lg p-8 border border-white/20 dark:border-gray-700/50 text-center">
+          <div className="w-24 h-24 bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-2xl flex items-center justify-center mx-auto mb-6">
+            <UserCircleIcon className="w-12 h-12 text-indigo-500 dark:text-indigo-400" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">
             Create Your Face Profile
           </h2>
-          <p className="text-gray-600 mb-8 max-w-md mx-auto">
+          <p className="text-gray-600 dark:text-gray-300 mb-8 max-w-md mx-auto">
             Upload 2-5 clear photos of yourself to enable automatic photo
             recognition in your trips
           </p>
@@ -1045,17 +1058,17 @@ const Dashboard = () => {
           </button>
         </div>
       ) : (
-        <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
+        <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-2xl shadow-lg p-8 border border-white/20 dark:border-gray-700/50">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-                <CheckCircleIcon className="w-6 h-6 text-green-600" />
+              <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center">
+                <CheckCircleIcon className="w-6 h-6 text-green-600 dark:text-green-400" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-gray-800">
+                <h2 className="text-xl font-bold text-gray-800 dark:text-white">
                   Face Profile Active
                 </h2>
-                <p className="text-green-600 text-sm">
+                <p className="text-green-600 dark:text-green-400 text-sm">
                   Ready for automatic photo recognition
                 </p>
               </div>
@@ -1070,7 +1083,7 @@ const Dashboard = () => {
               <button
                 onClick={deleteCurrentProfile}
                 disabled={isManagingProfile}
-                className="text-red-600 hover:text-red-700 p-2 rounded-lg hover:bg-red-50 transition-colors"
+                className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
               >
                 <TrashIcon className="w-5 h-5" />
               </button>
@@ -1079,7 +1092,7 @@ const Dashboard = () => {
 
           {/* Profile Management Options */}
           {showProfileManagement && (
-            <div className="bg-gray-50 rounded-2xl p-6 mb-6">
+            <div className="bg-gray-50/50 dark:bg-gray-700/30 rounded-2xl p-6 mb-6">
               <div className="flex flex-wrap gap-2 mb-4">
                 <button
                   onClick={optimizeCurrentProfile}
@@ -1092,7 +1105,7 @@ const Dashboard = () => {
 
               {/* Add Photos Section */}
               <div className="mb-6">
-                <label className="block text-sm font-semibold text-gray-700 mb-3">
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
                   Add More Photos
                 </label>
                 <div className="flex gap-3">
@@ -1101,7 +1114,7 @@ const Dashboard = () => {
                     multiple
                     accept="image/*"
                     onChange={handleProfilePhotoSelect}
-                    className="flex-1 text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+                    className="flex-1 text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 dark:file:bg-indigo-900/30 file:text-indigo-700 dark:file:text-indigo-400 hover:file:bg-indigo-100 dark:hover:file:bg-indigo-900/50"
                   />
                   {uploadingProfilePhotos.length > 0 && (
                     <button
@@ -1120,7 +1133,7 @@ const Dashboard = () => {
               {/* Current Profile Photos */}
               <div>
                 <div className="flex justify-between items-center mb-3">
-                  <label className="block text-sm font-semibold text-gray-700">
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Profile Photos ({profilePhotos.length})
                   </label>
                   {selectedPhotosToRemove.length > 0 && (
@@ -1142,8 +1155,8 @@ const Dashboard = () => {
                       <div
                         className={`cursor-pointer border-2 rounded-xl overflow-hidden transition-all duration-300 ${
                           selectedPhotosToRemove.includes(photo.url)
-                            ? "border-red-500 bg-red-100"
-                            : "border-gray-200 hover:border-indigo-400"
+                            ? "border-red-500 bg-red-100 dark:bg-red-900/30"
+                            : "border-gray-200 dark:border-gray-600 hover:border-indigo-400"
                         }`}
                         onClick={() => togglePhotoSelection(photo.url)}
                       >
@@ -1191,7 +1204,7 @@ const Dashboard = () => {
                 <img
                   src={photo.url}
                   alt={`Profile ${index + 1}`}
-                  className="w-full h-24 object-cover rounded-xl border border-gray-200"
+                  className="w-full h-24 object-cover rounded-xl border border-gray-200 dark:border-gray-600"
                 />
                 <div className="absolute bottom-2 right-2">
                   <span
@@ -1218,8 +1231,10 @@ const Dashboard = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">My Friends</h1>
-          <p className="text-gray-600 mt-1">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+            My Friends
+          </h1>
+          <p className="text-gray-600 dark:text-gray-300 mt-1">
             Connect and share memories with friends
           </p>
         </div>
@@ -1232,16 +1247,16 @@ const Dashboard = () => {
         </button>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+      <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-2xl shadow-lg p-6 border border-white/20 dark:border-gray-700/50">
         {friends.length === 0 ? (
           <div className="text-center py-16">
-            <div className="w-24 h-24 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-              <UserGroupIcon className="w-12 h-12 text-gray-400" />
+            <div className="w-24 h-24 bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/30 dark:to-purple-900/30 rounded-2xl flex items-center justify-center mx-auto mb-6">
+              <UserGroupIcon className="w-12 h-12 text-indigo-500 dark:text-indigo-400" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-600 mb-2">
+            <h3 className="text-xl font-semibold text-gray-600 dark:text-gray-300 mb-2">
               No friends yet
             </h3>
-            <p className="text-gray-500 mb-6">
+            <p className="text-gray-500 dark:text-gray-400 mb-6">
               Start connecting with people to share your travel memories
             </p>
             <button
@@ -1256,7 +1271,7 @@ const Dashboard = () => {
             {friends.map((friend) => (
               <div
                 key={friend.uid}
-                className="flex items-center p-4 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer"
+                className="flex items-center p-4 border border-gray-200 dark:border-gray-600 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors cursor-pointer"
                 onClick={() => handleOpenUserProfile(friend.uid)}
               >
                 <img
@@ -1268,10 +1283,12 @@ const Dashboard = () => {
                   className="w-12 h-12 rounded-full object-cover mr-4"
                 />
                 <div className="flex-1">
-                  <h3 className="font-semibold text-gray-800">
+                  <h3 className="font-semibold text-gray-800 dark:text-white">
                     {friend.displayName}
                   </h3>
-                  <p className="text-sm text-gray-500">{friend.email}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    {friend.email}
+                  </p>
                 </div>
               </div>
             ))}
@@ -1284,16 +1301,18 @@ const Dashboard = () => {
   const NotificationsSection = () => (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Notifications</h1>
-        <p className="text-gray-600 mt-1">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+          Notifications
+        </h1>
+        <p className="text-gray-600 dark:text-gray-300 mt-1">
           Manage your friend requests and trip invitations
         </p>
       </div>
 
       {/* Friend Requests */}
-      <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
-        <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-          <UserGroupIcon className="w-6 h-6 text-indigo-600" />
+      <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-2xl shadow-lg p-6 border border-white/20 dark:border-gray-700/50">
+        <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4 flex items-center gap-2">
+          <UserGroupIcon className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
           Friend Requests
           {pendingRequests.length > 0 && (
             <span className="bg-red-500 text-white text-sm px-2 py-1 rounded-full">
@@ -1303,7 +1322,7 @@ const Dashboard = () => {
         </h2>
 
         {pendingRequests.length === 0 ? (
-          <p className="text-gray-500 py-8 text-center">
+          <p className="text-gray-500 dark:text-gray-400 py-8 text-center">
             No pending friend requests
           </p>
         ) : (
@@ -1311,13 +1330,13 @@ const Dashboard = () => {
             {pendingRequests.map((request) => (
               <div
                 key={request.id}
-                className="flex items-center justify-between p-4 border border-gray-200 rounded-xl"
+                className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-600 rounded-xl bg-white/30 dark:bg-gray-700/30"
               >
                 <div>
-                  <p className="font-semibold text-gray-800">
+                  <p className="font-semibold text-gray-800 dark:text-white">
                     {request.displayName || request.email}
                   </p>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
                     wants to be your friend
                   </p>
                 </div>
@@ -1344,9 +1363,9 @@ const Dashboard = () => {
       </div>
 
       {/* Trip Invitations */}
-      <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
-        <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-          <MapIcon className="w-6 h-6 text-purple-600" />
+      <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-2xl shadow-lg p-6 border border-white/20 dark:border-gray-700/50">
+        <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4 flex items-center gap-2">
+          <MapIcon className="w-6 h-6 text-purple-600 dark:text-purple-400" />
           Trip Invitations
           {tripInvites.length > 0 && (
             <span className="bg-red-500 text-white text-sm px-2 py-1 rounded-full">
@@ -1356,7 +1375,7 @@ const Dashboard = () => {
         </h2>
 
         {tripInvites.length === 0 ? (
-          <p className="text-gray-500 py-8 text-center">
+          <p className="text-gray-500 dark:text-gray-400 py-8 text-center">
             No pending trip invitations
           </p>
         ) : (
@@ -1364,13 +1383,13 @@ const Dashboard = () => {
             {tripInvites.map((invite) => (
               <div
                 key={invite.id}
-                className="flex items-center justify-between p-4 border border-gray-200 rounded-xl"
+                className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-600 rounded-xl bg-white/30 dark:bg-gray-700/30"
               >
                 <div>
-                  <p className="font-semibold text-gray-800">
+                  <p className="font-semibold text-gray-800 dark:text-white">
                     {invite.tripName}
                   </p>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
                     Invited by {invite.inviterName}
                   </p>
                 </div>
@@ -1417,16 +1436,18 @@ const Dashboard = () => {
   const SettingsSection = () => (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
-        <p className="text-gray-600 mt-1">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+          Settings
+        </h1>
+        <p className="text-gray-600 dark:text-gray-300 mt-1">
           Manage your account and preferences
         </p>
       </div>
 
       {/* Account Settings */}
-      <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
-        <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-          <UserCircleIcon className="w-6 h-6 text-indigo-600" />
+      <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-2xl shadow-lg p-6 border border-white/20 dark:border-gray-700/50">
+        <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-6 flex items-center gap-2">
+          <UserCircleIcon className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
           Account Information
         </h2>
 
@@ -1437,18 +1458,18 @@ const Dashboard = () => {
               "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg"
             }
             alt="Profile"
-            className="w-20 h-20 rounded-full object-cover border-4 border-gray-200"
+            className="w-20 h-20 rounded-full object-cover border-4 border-gray-200 dark:border-gray-600"
           />
           <div>
-            <h3 className="text-lg font-semibold text-gray-800">
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-white">
               {userData?.displayName || currentUser?.displayName}
             </h3>
-            <p className="text-gray-600">
+            <p className="text-gray-600 dark:text-gray-300">
               {userData?.email || currentUser?.email}
             </p>
             <button
               onClick={() => setShowEditProfileModal(true)}
-              className="text-indigo-600 hover:text-indigo-700 text-sm font-medium mt-1"
+              className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 text-sm font-medium mt-1"
             >
               Edit Profile
             </button>
@@ -1457,55 +1478,75 @@ const Dashboard = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-4">
-            <h4 className="font-semibold text-gray-800">Preferences</h4>
+            <h4 className="font-semibold text-gray-800 dark:text-white">
+              Preferences
+            </h4>
             <div className="space-y-3">
               <label className="flex items-center gap-3">
                 <input
                   type="checkbox"
-                  className="rounded border-gray-300"
+                  className="rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
                   defaultChecked
                 />
-                <span className="text-gray-700">Email notifications</span>
+                <span className="text-gray-700 dark:text-gray-300">
+                  Email notifications
+                </span>
               </label>
               <label className="flex items-center gap-3">
                 <input
                   type="checkbox"
-                  className="rounded border-gray-300"
+                  className="rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
                   defaultChecked
                 />
-                <span className="text-gray-700">Trip invitations</span>
+                <span className="text-gray-700 dark:text-gray-300">
+                  Trip invitations
+                </span>
               </label>
               <label className="flex items-center gap-3">
-                <input type="checkbox" className="rounded border-gray-300" />
-                <span className="text-gray-700">Friend requests</span>
+                <input
+                  type="checkbox"
+                  className="rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
+                />
+                <span className="text-gray-700 dark:text-gray-300">
+                  Friend requests
+                </span>
               </label>
             </div>
           </div>
 
           <div className="space-y-4">
-            <h4 className="font-semibold text-gray-800">Privacy</h4>
+            <h4 className="font-semibold text-gray-800 dark:text-white">
+              Privacy
+            </h4>
             <div className="space-y-3">
               <label className="flex items-center gap-3">
                 <input
                   type="checkbox"
-                  className="rounded border-gray-300"
+                  className="rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
                   defaultChecked
                 />
-                <span className="text-gray-700">
+                <span className="text-gray-700 dark:text-gray-300">
                   Profile visible to friends
                 </span>
               </label>
               <label className="flex items-center gap-3">
-                <input type="checkbox" className="rounded border-gray-300" />
-                <span className="text-gray-700">Allow face recognition</span>
+                <input
+                  type="checkbox"
+                  className="rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
+                />
+                <span className="text-gray-700 dark:text-gray-300">
+                  Allow face recognition
+                </span>
               </label>
               <label className="flex items-center gap-3">
                 <input
                   type="checkbox"
-                  className="rounded border-gray-300"
+                  className="rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
                   defaultChecked
                 />
-                <span className="text-gray-700">Show in search results</span>
+                <span className="text-gray-700 dark:text-gray-300">
+                  Show in search results
+                </span>
               </label>
             </div>
           </div>
@@ -1513,36 +1554,44 @@ const Dashboard = () => {
       </div>
 
       {/* Data & Storage */}
-      <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
-        <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-          <SparklesIcon className="w-6 h-6 text-purple-600" />
+      <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-2xl shadow-lg p-6 border border-white/20 dark:border-gray-700/50">
+        <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-6 flex items-center gap-2">
+          <SparklesIcon className="w-6 h-6 text-purple-600 dark:text-purple-400" />
           Data & Storage
         </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="text-center p-4 bg-gray-50 rounded-xl">
-            <p className="text-2xl font-bold text-gray-800">{trips.length}</p>
-            <p className="text-sm text-gray-600">Total Trips</p>
+          <div className="text-center p-4 bg-gray-50/50 dark:bg-gray-700/30 rounded-xl">
+            <p className="text-2xl font-bold text-gray-800 dark:text-white">
+              {trips.length}
+            </p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Total Trips
+            </p>
           </div>
-          <div className="text-center p-4 bg-gray-50 rounded-xl">
-            <p className="text-2xl font-bold text-gray-800">{friends.length}</p>
-            <p className="text-sm text-gray-600">Friends</p>
+          <div className="text-center p-4 bg-gray-50/50 dark:bg-gray-700/30 rounded-xl">
+            <p className="text-2xl font-bold text-gray-800 dark:text-white">
+              {friends.length}
+            </p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Friends</p>
           </div>
-          <div className="text-center p-4 bg-gray-50 rounded-xl">
-            <p className="text-2xl font-bold text-gray-800">
+          <div className="text-center p-4 bg-gray-50/50 dark:bg-gray-700/30 rounded-xl">
+            <p className="text-2xl font-bold text-gray-800 dark:text-white">
               {hasProfile ? profilePhotos.length : 0}
             </p>
-            <p className="text-sm text-gray-600">Profile Photos</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Profile Photos
+            </p>
           </div>
         </div>
 
         <div className="mt-6 space-y-3">
-          <button className="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 py-3 px-4 rounded-xl font-medium transition-colors">
+          <button className="w-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 py-3 px-4 rounded-xl font-medium transition-colors">
             Export My Data
           </button>
           <button
             onClick={() => setShowDeleteAccountModal(true)}
-            className="w-full bg-red-100 hover:bg-red-200 text-red-800 py-3 px-4 rounded-xl font-medium transition-colors"
+            className="w-full bg-red-100 dark:bg-red-900/30 hover:bg-red-200 dark:hover:bg-red-900/50 text-red-800 dark:text-red-400 py-3 px-4 rounded-xl font-medium transition-colors"
           >
             Delete Account
           </button>
@@ -1577,10 +1626,10 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen w-full bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
+      <div className="min-h-screen w-full bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 flex items-center justify-center transition-colors duration-500">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-purple-200 border-t-white rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-xl text-white font-medium">
+          <div className="w-16 h-16 border-4 border-purple-200 dark:border-purple-700 border-t-indigo-600 dark:border-t-indigo-400 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-xl text-gray-800 dark:text-white font-medium">
             Loading your dashboard...
           </p>
         </div>
@@ -1589,37 +1638,41 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex w-full">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 flex w-full transition-colors duration-500">
       {/* Sidebar */}
       <div
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-xl border-r border-gray-200 transform ${
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg shadow-xl border-r border-white/20 dark:border-gray-700/50 transform ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         } transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0`}
       >
         {/* Logo */}
-        <div className="p-6 border-b border-gray-200">
+        <div className="p-6 border-b border-gray-200/50 dark:border-gray-700/50">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center">
-                <SparklesIcon className="w-6 h-6 text-white" />
+                <CameraIcon className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-gray-800">Groupify</h1>
-                <p className="text-sm text-gray-500">Dashboard</p>
+                <h1 className="text-xl font-bold text-gray-800 dark:text-white">
+                  Groupify
+                </h1>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Dashboard
+                </p>
               </div>
             </div>
             {/* Close button for mobile */}
             <button
               onClick={() => setSidebarOpen(false)}
-              className="lg:hidden p-2 rounded-lg hover:bg-gray-100"
+              className="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
             >
-              <XMarkIcon className="w-5 h-5 text-gray-600" />
+              <XMarkIcon className="w-5 h-5 text-gray-600 dark:text-gray-400" />
             </button>
           </div>
         </div>
 
         {/* User Info */}
-        <div className="p-6 border-b border-gray-200">
+        <div className="p-6 border-b border-gray-200/50 dark:border-gray-700/50">
           <div className="flex items-center gap-3">
             <img
               src={
@@ -1627,13 +1680,13 @@ const Dashboard = () => {
                 "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg"
               }
               alt="Profile"
-              className="w-12 h-12 rounded-full object-cover border-2 border-gray-200"
+              className="w-12 h-12 rounded-full object-cover border-2 border-gray-200 dark:border-gray-600"
             />
             <div>
-              <p className="font-semibold text-gray-800">
+              <p className="font-semibold text-gray-800 dark:text-white">
                 {userData?.displayName || currentUser?.displayName}
               </p>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-gray-500 dark:text-gray-400">
                 {userData?.email || currentUser?.email}
               </p>
             </div>
@@ -1642,10 +1695,10 @@ const Dashboard = () => {
 
         {/* Back button when viewing trip */}
         {currentView === "trip" && (
-          <div className="p-4 border-b border-gray-200">
+          <div className="p-4 border-b border-gray-200/50 dark:border-gray-700/50">
             <button
               onClick={handleBackToDashboard}
-              className="w-full flex items-center gap-3 px-4 py-3 text-indigo-600 hover:bg-indigo-50 rounded-xl font-medium transition-colors"
+              className="w-full flex items-center gap-3 px-4 py-3 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-xl font-medium transition-colors"
             >
               <ArrowLeftIcon className="w-5 h-5" />
               <span>Back to Dashboard</span>
@@ -1676,7 +1729,7 @@ const Dashboard = () => {
                     className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-medium transition-all duration-200 ${
                       isActive
                         ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg"
-                        : "text-gray-700 hover:bg-gray-100"
+                        : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50"
                     }`}
                   >
                     <div className="flex items-center gap-3">
@@ -1697,8 +1750,10 @@ const Dashboard = () => {
                       )}
                       {item.hasDropdown && (
                         <div
-                          className={`transition-transform duration-200 ${
-                            tripsDropdownOpen ? "rotate-90" : ""
+                          className={`transition-all duration-300 ease-in-out ${
+                            tripsDropdownOpen
+                              ? "rotate-90 scale-110"
+                              : "scale-100"
                           }`}
                         >
                           <ChevronRightIcon className="w-4 h-4" />
@@ -1708,48 +1763,56 @@ const Dashboard = () => {
                   </button>
 
                   {/* Trips dropdown */}
-                  {item.id === "trips" && tripsDropdownOpen && (
-                    <div className="mt-2 ml-4 pl-4 border-l-2 border-gray-200">
-                      {trips.length === 0 ? (
-                        <div className="py-2 px-3 text-sm text-gray-500">
-                          No trips yet
-                        </div>
-                      ) : (
-                        <>
-                          {trips.slice(0, visibleTripsCount).map((trip) => (
-                            <button
-                              key={trip.id}
-                              onClick={() => {
-                                handleViewTrip(trip.id);
-                                setSidebarOpen(false);
-                              }}
-                              className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors mb-1 ${
-                                selectedTripId === trip.id
-                                  ? "bg-indigo-100 text-indigo-700"
-                                  : "text-gray-600 hover:bg-gray-100"
-                              }`}
-                            >
-                              <div className="truncate">{trip.name}</div>
-                              {trip.location && (
-                                <div className="text-xs text-gray-500 truncate">
-                                  📍 {trip.location}
-                                </div>
-                              )}
-                            </button>
-                          ))}
+                  {item.id === "trips" && (
+                    <div
+                      className={`overflow-hidden transition-all duration-700 ease-in-out ${
+                        tripsDropdownOpen
+                          ? "max-h-96 opacity-100"
+                          : "max-h-0 opacity-0"
+                      }`}
+                    >
+                      <div className="mt-2 ml-4 pl-4 border-l-2 border-gray-200 dark:border-gray-600">
+                        {trips.length === 0 ? (
+                          <div className="py-2 px-3 text-sm text-gray-500 dark:text-gray-400">
+                            No trips yet
+                          </div>
+                        ) : (
+                          <>
+                            {trips.slice(0, visibleTripsCount).map((trip) => (
+                              <button
+                                key={trip.id}
+                                onClick={() => {
+                                  handleViewTrip(trip.id);
+                                  setSidebarOpen(false);
+                                }}
+                                className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors mb-1 ${
+                                  selectedTripId === trip.id
+                                    ? "bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400"
+                                    : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700/50"
+                                }`}
+                              >
+                                <div className="truncate">{trip.name}</div>
+                                {trip.location && (
+                                  <div className="text-xs text-gray-500 dark:text-gray-500 truncate">
+                                    📍 {trip.location}
+                                  </div>
+                                )}
+                              </button>
+                            ))}
 
-                          {trips.length > visibleTripsCount && (
-                            <button
-                              onClick={showMoreTrips}
-                              className="w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-indigo-600 hover:bg-indigo-50 transition-colors"
-                            >
-                              + Show{" "}
-                              {Math.min(5, trips.length - visibleTripsCount)}{" "}
-                              more
-                            </button>
-                          )}
-                        </>
-                      )}
+                            {trips.length > visibleTripsCount && (
+                              <button
+                                onClick={showMoreTrips}
+                                className="w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors"
+                              >
+                                + Show{" "}
+                                {Math.min(5, trips.length - visibleTripsCount)}{" "}
+                                more
+                              </button>
+                            )}
+                          </>
+                        )}
+                      </div>
                     </div>
                   )}
                 </li>
@@ -1759,10 +1822,10 @@ const Dashboard = () => {
         </nav>
 
         {/* Logout */}
-        <div className="p-4 border-t border-gray-200">
+        <div className="p-4 border-t border-gray-200/50 dark:border-gray-700/50">
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl font-medium transition-colors"
+            className="w-full flex items-center gap-3 px-4 py-3 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl font-medium transition-colors"
           >
             <ArrowRightOnRectangleIcon className="w-5 h-5" />
             <span>Logout</span>
@@ -1781,21 +1844,21 @@ const Dashboard = () => {
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-h-screen w-full overflow-hidden">
         {/* Header */}
-        <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-30">
+        <header className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg shadow-sm border-b border-white/20 dark:border-gray-700/50 sticky top-0 z-30">
           <div className="w-full px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-16 w-full">
               {/* Left section - Mobile menu button */}
               <div className="flex items-center gap-4">
                 <button
                   onClick={() => setSidebarOpen(true)}
-                  className="lg:hidden p-2 rounded-lg hover:bg-gray-100"
+                  className="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
                 >
-                  <Bars3Icon className="w-6 h-6 text-gray-600" />
+                  <Bars3Icon className="w-6 h-6 text-gray-600 dark:text-gray-400" />
                 </button>
 
                 {/* Welcome message - hidden on mobile */}
                 <div className="hidden sm:block">
-                  <h2 className="text-xl font-semibold text-gray-900">
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
                     {currentView === "trip"
                       ? "Trip Details"
                       : `Welcome back, ${
@@ -1810,22 +1873,34 @@ const Dashboard = () => {
               {/* Center - Logo for mobile */}
               <div className="lg:hidden flex items-center gap-2">
                 <div className="w-8 h-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
-                  <SparklesIcon className="w-5 h-5 text-white" />
+                  <CameraIcon className="w-5 h-5 text-white" />
                 </div>
-                <span className="text-lg font-bold text-gray-900">
+                <span className="text-lg font-bold text-gray-900 dark:text-white">
                   Groupify
                 </span>
               </div>
 
-              {/* Right section - Notifications and user menu */}
+              {/* Right section - Theme toggle, Notifications and user menu */}
               <div className="flex items-center gap-4">
+                {/* Theme Toggle */}
+                <button
+                  onClick={toggleTheme}
+                  className="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                >
+                  {theme === "dark" ? (
+                    <SunIcon className="w-5 h-5" />
+                  ) : (
+                    <MoonIcon className="w-5 h-5" />
+                  )}
+                </button>
+
                 {/* Notifications with dropdown */}
                 <div className="relative" ref={notificationRef}>
                   <button
                     onClick={toggleNotificationsDropdown}
-                    className="relative p-2 rounded-lg hover:bg-gray-100"
+                    className="relative p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                   >
-                    <BellIcon className="w-6 h-6 text-gray-600" />
+                    <BellIcon className="w-6 h-6 text-gray-600 dark:text-gray-400" />
                     {(pendingRequests.length > 0 || tripInvites.length > 0) && (
                       <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
                         {pendingRequests.length + tripInvites.length}
@@ -1844,7 +1919,7 @@ const Dashboard = () => {
                     "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg"
                   }
                   alt="Profile"
-                  className="w-8 h-8 rounded-full object-cover border border-gray-200"
+                  className="w-8 h-8 rounded-full object-cover border border-gray-200 dark:border-gray-600"
                 />
               </div>
             </div>
@@ -1855,8 +1930,8 @@ const Dashboard = () => {
         <main className="flex-1 overflow-y-auto">
           <div className="w-full px-4 sm:px-6 lg:px-8 py-4">
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded-2xl mb-6 flex items-center space-x-3">
-                <ExclamationTriangleIcon className="w-6 h-6 text-red-500" />
+              <div className="bg-red-50/90 dark:bg-red-900/30 backdrop-blur-sm border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-6 py-4 rounded-2xl mb-6 flex items-center space-x-3">
+                <ExclamationTriangleIcon className="w-6 h-6 text-red-500 dark:text-red-400" />
                 <span>{error}</span>
               </div>
             )}
@@ -1878,13 +1953,15 @@ const Dashboard = () => {
       />
 
       {showAddFriendModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg rounded-2xl shadow-xl w-full max-w-md p-6 border border-white/20 dark:border-gray-700/50">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold text-gray-800">Add Friend</h2>
+              <h2 className="text-xl font-bold text-gray-800 dark:text-white">
+                Add Friend
+              </h2>
               <button
                 onClick={() => setShowAddFriendModal(false)}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
               >
                 <XCircleIcon className="w-6 h-6" />
               </button>
@@ -1895,15 +1972,15 @@ const Dashboard = () => {
       )}
 
       {showProfileManager && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto p-6">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto p-6 border border-white/20 dark:border-gray-700/50">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold text-gray-800">
+              <h2 className="text-xl font-bold text-gray-800 dark:text-white">
                 Face Profile Manager
               </h2>
               <button
                 onClick={() => setShowProfileManager(false)}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
               >
                 <XCircleIcon className="w-6 h-6" />
               </button>
@@ -1963,30 +2040,32 @@ const Dashboard = () => {
 
       {/* Delete Account Modal */}
       {showDeleteAccountModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg rounded-2xl shadow-xl w-full max-w-md p-6 border border-white/20 dark:border-gray-700/50">
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
-                <ExclamationTriangleIcon className="w-6 h-6 text-red-600" />
+              <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-xl flex items-center justify-center">
+                <ExclamationTriangleIcon className="w-6 h-6 text-red-600 dark:text-red-400" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-gray-900">
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white">
                   Delete Account
                 </h2>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-gray-500 dark:text-gray-400">
                   This action cannot be undone
                 </p>
               </div>
             </div>
 
             <div className="space-y-4 mb-6">
-              <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-                <h3 className="font-semibold text-red-800 mb-2">⚠️ Warning</h3>
-                <p className="text-red-700 text-sm">
+              <div className="bg-red-50/50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4">
+                <h3 className="font-semibold text-red-800 dark:text-red-400 mb-2">
+                  ⚠️ Warning
+                </h3>
+                <p className="text-red-700 dark:text-red-300 text-sm">
                   This will permanently delete your account and ALL your data
                   including:
                 </p>
-                <ul className="text-red-700 text-sm mt-2 list-disc list-inside space-y-1">
+                <ul className="text-red-700 dark:text-red-300 text-sm mt-2 list-disc list-inside space-y-1">
                   <li>All your trips and photos</li>
                   <li>Your face profile</li>
                   <li>Friend connections</li>
@@ -1995,7 +2074,7 @@ const Dashboard = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                   Type "DELETE" to confirm:
                 </label>
                 <input
@@ -2003,7 +2082,7 @@ const Dashboard = () => {
                   value={deleteConfirmText}
                   onChange={(e) => setDeleteConfirmText(e.target.value)}
                   placeholder="Type DELETE here"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 placeholder-gray-500"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 bg-white dark:bg-gray-700"
                   disabled={isDeleting}
                 />
               </div>
@@ -2016,7 +2095,7 @@ const Dashboard = () => {
                   setDeleteConfirmText("");
                 }}
                 disabled={isDeleting}
-                className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 py-3 px-4 rounded-xl font-medium transition-colors disabled:opacity-50"
+                className="flex-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 py-3 px-4 rounded-xl font-medium transition-colors disabled:opacity-50"
               >
                 Cancel
               </button>
