@@ -10,6 +10,8 @@ import {
   SunIcon,
   ArrowLeftIcon,
   CheckIcon,
+  ChevronUpIcon,
+  ChevronDownIcon,
 } from "@heroicons/react/24/outline";
 import { toast } from "react-hot-toast";
 
@@ -25,6 +27,8 @@ const SignUp = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [showPasswordRequirements, setShowPasswordRequirements] =
+    useState(true);
 
   const { signup, signInWithGoogle } = useAuth();
   const { theme, toggleTheme } = useTheme();
@@ -72,9 +76,12 @@ const SignUp = () => {
     const hasUpperCase = /[A-Z]/.test(password);
     const hasLowerCase = /[a-z]/.test(password);
     const hasNumbers = /\d/.test(password);
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
 
-    if (!hasUpperCase || !hasLowerCase || !hasNumbers) {
-      toast.error("Password must contain uppercase, lowercase, and numbers");
+    if (!hasUpperCase || !hasLowerCase || !hasNumbers || !hasSpecialChar) {
+      toast.error(
+        "Password must contain uppercase, lowercase, numbers, and special characters"
+      );
       return false;
     }
 
@@ -98,6 +105,7 @@ const SignUp = () => {
         formData.displayName,
         formData.gender
       );
+      console.log("Signup result:", result);
 
       if (result.success) {
         toast.success(result.message);
@@ -401,6 +409,121 @@ const SignUp = () => {
                 </div>
               )}
             </div>
+
+            {/* Password Requirements */}
+            {formData.password && (
+              <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 mt-3">
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Password requirements:
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setShowPasswordRequirements(!showPasswordRequirements)
+                    }
+                    className="p-1 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-all duration-200"
+                  >
+                    <ChevronUpIcon
+                      className={`w-4 h-4 transition-transform duration-300 ${
+                        showPasswordRequirements ? "rotate-0" : "rotate-180"
+                      }`}
+                    />
+                  </button>
+                </div>
+
+                <div
+                  className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                    showPasswordRequirements
+                      ? "max-h-96 opacity-100"
+                      : "max-h-0 opacity-0"
+                  }`}
+                >
+                  <div className="space-y-2">
+                    <div className="flex items-center">
+                      {formData.password.length >= 6 ? (
+                        <CheckIcon className="w-4 h-4 text-green-500 mr-2" />
+                      ) : (
+                        <div className="w-4 h-4 border border-gray-400 rounded-full mr-2"></div>
+                      )}
+                      <span
+                        className={`text-sm ${
+                          formData.password.length >= 6
+                            ? "text-green-600 dark:text-green-400"
+                            : "text-gray-500 dark:text-gray-400"
+                        }`}
+                      >
+                        At least 6 characters
+                      </span>
+                    </div>
+                    <div className="flex items-center">
+                      {/[A-Z]/.test(formData.password) ? (
+                        <CheckIcon className="w-4 h-4 text-green-500 mr-2" />
+                      ) : (
+                        <div className="w-4 h-4 border border-gray-400 rounded-full mr-2"></div>
+                      )}
+                      <span
+                        className={`text-sm ${
+                          /[A-Z]/.test(formData.password)
+                            ? "text-green-600 dark:text-green-400"
+                            : "text-gray-500 dark:text-gray-400"
+                        }`}
+                      >
+                        One uppercase letter
+                      </span>
+                    </div>
+                    <div className="flex items-center">
+                      {/[a-z]/.test(formData.password) ? (
+                        <CheckIcon className="w-4 h-4 text-green-500 mr-2" />
+                      ) : (
+                        <div className="w-4 h-4 border border-gray-400 rounded-full mr-2"></div>
+                      )}
+                      <span
+                        className={`text-sm ${
+                          /[a-z]/.test(formData.password)
+                            ? "text-green-600 dark:text-green-400"
+                            : "text-gray-500 dark:text-gray-400"
+                        }`}
+                      >
+                        One lowercase letter
+                      </span>
+                    </div>
+                    <div className="flex items-center">
+                      {/\d/.test(formData.password) ? (
+                        <CheckIcon className="w-4 h-4 text-green-500 mr-2" />
+                      ) : (
+                        <div className="w-4 h-4 border border-gray-400 rounded-full mr-2"></div>
+                      )}
+                      <span
+                        className={`text-sm ${
+                          /\d/.test(formData.password)
+                            ? "text-green-600 dark:text-green-400"
+                            : "text-gray-500 dark:text-gray-400"
+                        }`}
+                      >
+                        One number
+                      </span>
+                    </div>
+                    <div className="flex items-center">
+                      {/[!@#$%^&*(),.?":{}|<>]/.test(formData.password) ? (
+                        <CheckIcon className="w-4 h-4 text-green-500 mr-2" />
+                      ) : (
+                        <div className="w-4 h-4 border border-gray-400 rounded-full mr-2"></div>
+                      )}
+                      <span
+                        className={`text-sm ${
+                          /[!@#$%^&*(),.?":{}|<>]/.test(formData.password)
+                            ? "text-green-600 dark:text-green-400"
+                            : "text-gray-500 dark:text-gray-400"
+                        }`}
+                      >
+                        One special character (!@#$%^&*)
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Confirm Password */}
             <div>

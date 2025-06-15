@@ -40,10 +40,27 @@ const ConfirmEmail = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
+  const [hasAutoSent, setHasAutoSent] = useState(false);
 
   // Get email from location state or URL params
   const email = location.state?.email || searchParams.get("email");
   const codeFromUrl = searchParams.get("code");
+
+  const handleResendCode = async () => {
+    try {
+      setResendLoading(true);
+      await resendVerificationEmail(email);
+      toast.success("Verification code sent! Check your email.");
+      setTimeLeft(120);
+      setCanResend(false);
+      setVerificationCode(["", "", "", "", "", ""]);
+    } catch (error) {
+      console.error("Resend error:", error);
+      toast.error(error.message || "Failed to resend code. Please try again.");
+    } finally {
+      setResendLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (!email) {
@@ -68,6 +85,14 @@ const ConfirmEmail = () => {
       setCanResend(true);
     }
   }, [timeLeft]);
+
+  // Auto-send verification email when landing on page with email but no code
+  useEffect(() => {
+    if (email && !codeFromUrl && !hasAutoSent) {
+      handleResendCode();
+      setHasAutoSent(true);
+    }
+  }, [email, codeFromUrl, hasAutoSent]);
 
   const handleInputChange = (index, value) => {
     if (value.length > 1) return;
@@ -130,22 +155,6 @@ const ConfirmEmail = () => {
     }
 
     await handleVerifyWithCode(code);
-  };
-
-  const handleResendCode = async () => {
-    try {
-      setResendLoading(true);
-      await resendVerificationEmail(email);
-      toast.success("Verification code sent! Check your email.");
-      setTimeLeft(120);
-      setCanResend(false);
-      setVerificationCode(["", "", "", "", "", ""]);
-    } catch (error) {
-      console.error("Resend error:", error);
-      toast.error(error.message || "Failed to resend code. Please try again.");
-    } finally {
-      setResendLoading(false);
-    }
   };
 
   const formatTime = (seconds) => {

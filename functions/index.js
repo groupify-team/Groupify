@@ -1,9 +1,10 @@
 const { onCall, HttpsError } = require("firebase-functions/v2/https");
 const admin = require("firebase-admin");
 const nodemailer = require("nodemailer");
-const fs = require("fs");
+const fs = require("fs").promises;
 const path = require("path");
 const { defineSecret } = require("firebase-functions/params");
+const crypto = require("crypto");
 
 // Initialize Firebase Admin
 admin.initializeApp();
@@ -17,6 +18,11 @@ const appUrl = defineSecret("APP_URL");
 function getTransporter() {
   try {
     console.log("Creating email transporter...");
+
+    // Simple debug logging
+    console.log("EMAIL_USER exists:", !!emailUser.value());
+    console.log("EMAIL_PASSWORD exists:", !!emailPassword.value());
+
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
@@ -42,12 +48,11 @@ async function loadEmailTemplate(templateName, variables) {
       `${templateName}.html`
     );
 
-    if (!fs.existsSync(templatePath)) {
-      console.warn(`Template ${templateName}.html not found, using fallback`);
-      return getFallbackTemplate(templateName, variables);
-    }
+    console.log(`Looking for template at: ${templatePath}`);
 
-    let template = fs.readFileSync(templatePath, "utf8");
+    // Read the template file
+    let template = await fs.readFile(templatePath, "utf8");
+    console.log(`Template ${templateName} loaded successfully`);
 
     // Replace variables
     Object.keys(variables).forEach((key) => {
@@ -58,68 +63,35 @@ async function loadEmailTemplate(templateName, variables) {
     return template;
   } catch (error) {
     console.error("Email template error:", error);
-    return getFallbackTemplate(templateName, variables);
-  }
-}
+    console.error(
+      `Template path: ${path.join(
+        __dirname,
+        "email-templates",
+        `${templateName}.html`
+      )}`
+    );
 
-// Fallback templates
-function getFallbackTemplate(templateName, variables) {
-  if (templateName === "verification") {
-    return `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <div style="text-align: center; margin-bottom: 30px;">
-          <h1 style="color: #4F46E5;">Welcome to Groupify!</h1>
-        </div>
-        <div style="background: #f8f9fa; padding: 30px; border-radius: 10px; text-align: center;">
-          <p style="font-size: 18px; margin-bottom: 20px;">Hi ${variables.USER_NAME},</p>
-          <p style="margin-bottom: 30px;">Please verify your email address by entering this code:</p>
-          <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <h2 style="color: #4F46E5; font-size: 32px; letter-spacing: 5px; margin: 0;">${variables.VERIFICATION_CODE}</h2>
-          </div>
-          <p style="color: #666; font-size: 14px;">This code will expire in 10 minutes.</p>
-          <a href="${variables.VERIFICATION_LINK}" style="display: inline-block; background: #4F46E5; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; margin-top: 20px;">Verify Email</a>
-        </div>
-        <p style="text-align: center; color: #666; font-size: 12px; margin-top: 30px;">
-          If you didn't request this, please ignore this email.<br>
-          © 2025 Groupify. All rights reserved.
-        </p>
-      </div>
-    `;
-  } else if (templateName === "welcome") {
-    return `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <div style="text-align: center; margin-bottom: 30px;">
-          <h1 style="color: #4F46E5;">Welcome to Groupify! 🎉</h1>
-        </div>
-        <div style="background: #f8f9fa; padding: 30px; border-radius: 10px;">
-          <p style="font-size: 18px; margin-bottom: 20px;">Hi ${variables.USER_NAME},</p>
-          <p style="margin-bottom: 20px;">Your email has been verified successfully! Welcome to the Groupify community.</p>
-          <p style="margin-bottom: 30px;">You can now sign in and start organizing your travel photos with our AI-powered face recognition technology.</p>
-          <div style="text-align: center;">
-            <a href="${variables.DASHBOARD_LINK}" style="display: inline-block; background: #4F46E5; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold;">Go to Dashboard</a>
-          </div>
-        </div>
-        <div style="margin-top: 30px; padding: 20px; background: #e3f2fd; border-radius: 8px;">
-          <h3 style="color: #1976d2; margin-bottom: 15px;">Get Started:</h3>
-          <ul style="color: #555; line-height: 1.6;">
-            <li>Upload your travel photos</li>
-            <li>Let our AI identify faces automatically</li>
-            <li>Create albums and share with friends</li>
-            <li>Never lose track of your memories again!</li>
-          </ul>
-        </div>
-        <p style="text-align: center; color: #666; font-size: 12px; margin-top: 30px;">
-          © 2025 Groupify. All rights reserved.
-        </p>
-      </div>
-    `;
+    // If file not found, throw a specific error
+    if (error.code === "ENOENT") {
+      throw new Error(
+        `Template file ${templateName}.html not found in email-templates folder`
+      );
+    }
+
+    throw new Error(
+      `Failed to load template: ${templateName} - ${error.message}`
+    );
   }
-  return "<p>Email content</p>";
 }
 
 // Generate verification code
 function generateVerificationCode() {
   return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+// Generate secure reset token
+function generateResetToken() {
+  return crypto.randomBytes(32).toString("hex");
 }
 
 // Send verification email
@@ -216,7 +188,6 @@ exports.sendVerificationEmail = onCall(
   }
 );
 
-// Verify email code
 // Verify email code
 exports.verifyEmailCode = onCall(
   {
@@ -441,5 +412,295 @@ exports.enableGoogleAuth = onCall(async (request) => {
       throw error;
     }
     throw new HttpsError("internal", "Failed to enable Google auth");
+  }
+});
+
+// ============ NEW PASSWORD RESET FUNCTIONS ============
+
+// Check if user exists
+exports.checkUserExists = onCall(async (request) => {
+  try {
+    const { email } = request.data;
+
+    if (!email) {
+      throw new HttpsError("invalid-argument", "Email is required");
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      throw new HttpsError("invalid-argument", "Invalid email format");
+    }
+
+    try {
+      // Check if user exists in Firebase Auth
+      const userRecord = await admin.auth().getUserByEmail(email);
+      console.log(`User found: ${email}`);
+      return { exists: true };
+    } catch (error) {
+      if (error.code === "auth/user-not-found") {
+        console.log(`User not found: ${email}`);
+        return { exists: false };
+      }
+      throw error;
+    }
+  } catch (error) {
+    console.error("Check user exists error:", error);
+    if (error instanceof HttpsError) {
+      throw error;
+    }
+    throw new HttpsError("internal", "Failed to check user existence");
+  }
+});
+
+// Send password reset email
+exports.sendPasswordResetEmail = onCall(
+  {
+    secrets: [emailUser, emailPassword, appUrl],
+    maxInstances: 40,
+    timeoutSeconds: 60,
+  },
+  async (request) => {
+    console.log("sendPasswordResetEmail function called");
+
+    try {
+      const { email } = request.data;
+
+      console.log(`Processing password reset for: ${email}`);
+
+      if (!email) {
+        throw new HttpsError("invalid-argument", "Email is required");
+      }
+
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        throw new HttpsError("invalid-argument", "Invalid email format");
+      }
+
+      // Check if user exists
+      let userRecord;
+      try {
+        userRecord = await admin.auth().getUserByEmail(email);
+      } catch (error) {
+        if (error.code === "auth/user-not-found") {
+          throw new HttpsError(
+            "not-found",
+            "No account found with this email address"
+          );
+        }
+        throw error;
+      }
+
+      // Check for rate limiting (optional - limit reset requests)
+      const resetDoc = await admin
+        .firestore()
+        .collection("passwordResets")
+        .doc(email)
+        .get();
+      if (resetDoc.exists) {
+        const resetData = resetDoc.data();
+        const timeSinceLastRequest = Date.now() - resetData.lastRequest;
+        const cooldownPeriod = 2 * 60 * 1000; // 2 minutes
+
+        if (timeSinceLastRequest < cooldownPeriod) {
+          throw new HttpsError(
+            "resource-exhausted",
+            "Please wait before requesting another password reset"
+          );
+        }
+      }
+
+      // Generate secure reset token
+      const resetToken = generateResetToken();
+      const resetExpires = Date.now() + 60 * 60 * 1000; // 1 hour
+      const resetUrl = `${appUrl.value()}/reset-password?token=${resetToken}&email=${encodeURIComponent(
+        email
+      )}`;
+
+      console.log(`Generated reset token for: ${email}`);
+
+      // Store reset token in Firestore
+      await admin.firestore().collection("passwordResets").doc(email).set({
+        token: resetToken,
+        expires: resetExpires,
+        email: email,
+        used: false,
+        lastRequest: Date.now(),
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+      console.log("Password reset token stored in Firestore");
+
+      // Load reset email template
+      const resetEmailHtml = await loadEmailTemplate("resetpassword", {
+        RESET_URL: resetUrl,
+        USER_EMAIL: email,
+        EMAIL: email,
+        TOKEN: resetToken,
+        SUPPORT_URL: `${appUrl.value()}/support`,
+        CONTACT_URL: `${appUrl.value()}/contact`,
+        PRIVACY_URL: `${appUrl.value()}/privacy-policy`,
+      });
+
+      console.log("Reset email template loaded");
+
+      // Send reset email
+      const transporter = getTransporter();
+
+      const mailOptions = {
+        from: `"Groupify Team" <${emailUser.value()}>`,
+        to: email,
+        subject: "Reset Your Groupify Password",
+        html: resetEmailHtml,
+      };
+
+      console.log("Attempting to send reset email...");
+      await transporter.sendMail(mailOptions);
+
+      console.log(`Password reset email sent successfully to: ${email}`);
+      return { success: true, message: "Password reset email sent" };
+    } catch (error) {
+      console.error("Send password reset error:", error);
+
+      if (error instanceof HttpsError) {
+        throw error;
+      }
+
+      // Handle specific nodemailer errors
+      if (error.code === "EAUTH") {
+        throw new HttpsError(
+          "internal",
+          "Email authentication failed. Please check email credentials."
+        );
+      }
+
+      throw new HttpsError(
+        "internal",
+        "Failed to send password reset email: " + error.message
+      );
+    }
+  }
+);
+
+// Verify reset token (for when user clicks the reset link)
+exports.verifyResetToken = onCall(async (request) => {
+  try {
+    const { email, token } = request.data;
+
+    if (!email || !token) {
+      throw new HttpsError("invalid-argument", "Email and token are required");
+    }
+
+    // Get reset token from Firestore
+    const resetDoc = await admin
+      .firestore()
+      .collection("passwordResets")
+      .doc(email)
+      .get();
+
+    if (!resetDoc.exists) {
+      throw new HttpsError("not-found", "Reset token not found");
+    }
+
+    const resetData = resetDoc.data();
+
+    // Check if token has been used
+    if (resetData.used) {
+      throw new HttpsError(
+        "permission-denied",
+        "Reset token has already been used"
+      );
+    }
+
+    // Check if token matches
+    if (resetData.token !== token) {
+      throw new HttpsError("permission-denied", "Invalid reset token");
+    }
+
+    // Check if token has expired
+    if (Date.now() > resetData.expires) {
+      throw new HttpsError("deadline-exceeded", "Reset token has expired");
+    }
+
+    console.log(`Reset token verified for: ${email}`);
+    return { success: true, message: "Reset token is valid" };
+  } catch (error) {
+    console.error("Verify reset token error:", error);
+    if (error instanceof HttpsError) {
+      throw error;
+    }
+    throw new HttpsError("internal", "Failed to verify reset token");
+  }
+});
+
+// Reset password (final step)
+exports.resetPassword = onCall(async (request) => {
+  try {
+    const { email, token, newPassword } = request.data;
+
+    if (!email || !token || !newPassword) {
+      throw new HttpsError(
+        "invalid-argument",
+        "Email, token, and new password are required"
+      );
+    }
+
+    // Validate password strength
+    if (newPassword.length < 6) {
+      throw new HttpsError(
+        "invalid-argument",
+        "Password must be at least 6 characters long"
+      );
+    }
+
+    // Get and verify reset token
+    const resetDoc = await admin
+      .firestore()
+      .collection("passwordResets")
+      .doc(email)
+      .get();
+
+    if (!resetDoc.exists) {
+      throw new HttpsError("not-found", "Reset token not found");
+    }
+
+    const resetData = resetDoc.data();
+
+    if (resetData.used) {
+      throw new HttpsError(
+        "permission-denied",
+        "Reset token has already been used"
+      );
+    }
+
+    if (resetData.token !== token) {
+      throw new HttpsError("permission-denied", "Invalid reset token");
+    }
+
+    if (Date.now() > resetData.expires) {
+      throw new HttpsError("deadline-exceeded", "Reset token has expired");
+    }
+
+    // Get user and update password
+    const userRecord = await admin.auth().getUserByEmail(email);
+    await admin.auth().updateUser(userRecord.uid, {
+      password: newPassword,
+    });
+
+    // Mark token as used
+    await admin.firestore().collection("passwordResets").doc(email).update({
+      used: true,
+      usedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    console.log(`Password reset successfully for: ${email}`);
+    return { success: true, message: "Password reset successfully" };
+  } catch (error) {
+    console.error("Reset password error:", error);
+    if (error instanceof HttpsError) {
+      throw error;
+    }
+    throw new HttpsError("internal", "Failed to reset password");
   }
 });

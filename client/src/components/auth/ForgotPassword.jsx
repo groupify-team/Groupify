@@ -1,62 +1,97 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import { useTheme } from "../../contexts/ThemeContext";
-import { 
+import {
   CameraIcon,
   MoonIcon,
   SunIcon,
   ArrowLeftIcon,
   EnvelopeIcon,
-  CheckCircleIcon
-} from '@heroicons/react/24/outline';
-import { toast } from 'react-hot-toast';
+  CheckCircleIcon,
+} from "@heroicons/react/24/outline";
+import { toast } from "react-hot-toast";
+import { httpsCallable } from "firebase/functions";
+import { functions } from "../../services/firebase/config"; // Make sure this path is correct
 
 const ForgotPassword = () => {
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
-  
+
   const { theme, toggleTheme } = useTheme();
+
+  // Email validation function
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  // Function to send password reset email using your Firebase Function
+  const sendPasswordResetEmail = async (email) => {
+    try {
+      // Call your Firebase Function
+      const sendResetEmail = httpsCallable(functions, 'sendPasswordResetEmail');
+      const result = await sendResetEmail({ email });
+      
+      console.log('Reset email function result:', result.data);
+      return result.data;
+    } catch (error) {
+      console.error("Error calling sendPasswordResetEmail function:", error);
+      throw error;
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
+    // Basic validation
     if (!email) {
-      toast.error('Please enter your email address');
+      toast.error("Please enter your email address");
       return;
     }
 
-    // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      toast.error('Please enter a valid email address');
+    if (!email.trim()) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+
+    // Email format validation
+    if (!validateEmail(email)) {
+      toast.error("Please enter a valid email address");
       return;
     }
 
     try {
       setLoading(true);
-      
-      // TODO: Implement password reset logic
-      // await resetPassword(email);
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      setEmailSent(true);
-      toast.success('Password reset email sent!');
-    } catch (error) {
-      console.error('Password reset error:', error);
-      
-      let errorMessage = 'Failed to send reset email';
-      
-      if (error.code === 'auth/user-not-found') {
-        errorMessage = 'No account found with this email';
-      } else if (error.code === 'auth/invalid-email') {
-        errorMessage = 'Invalid email address';
-      } else if (error.code === 'auth/too-many-requests') {
-        errorMessage = 'Too many requests. Please try again later';
+
+      // Send password reset email using your Firebase Function
+      const result = await sendPasswordResetEmail(email);
+
+      if (result.success) {
+        setEmailSent(true);
+        toast.success("Password reset email sent successfully!");
+      } else {
+        toast.error("Failed to send reset email. Please try again.");
       }
-      
+    } catch (error) {
+      console.error("Password reset error:", error);
+
+      let errorMessage = "Failed to send reset email. Please try again.";
+
+      // Handle Firebase Function specific errors
+      if (error.code === "functions/not-found") {
+        errorMessage = "No account found with this email address";
+      } else if (error.code === "functions/invalid-argument") {
+        errorMessage = "Please enter a valid email address";
+      } else if (error.code === "functions/resource-exhausted") {
+        errorMessage = "Too many requests. Please try again in a few minutes";
+      } else if (error.code === "functions/deadline-exceeded") {
+        errorMessage = "Request timed out. Please try again";
+      } else if (error.message) {
+        // Use the error message from your Firebase Function
+        errorMessage = error.message;
+      }
+
       toast.error(errorMessage);
     } finally {
       setLoading(false);
@@ -80,12 +115,12 @@ const ForgotPassword = () => {
                   <ArrowLeftIcon className="w-5 h-5 mr-2" />
                   Back to Sign In
                 </Link>
-                
+
                 <button
                   onClick={toggleTheme}
                   className="p-2 rounded-lg text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                 >
-                  {theme === 'dark' ? (
+                  {theme === "dark" ? (
                     <SunIcon className="w-5 h-5" />
                   ) : (
                     <MoonIcon className="w-5 h-5" />
@@ -107,7 +142,10 @@ const ForgotPassword = () => {
                 Check your inbox
               </h2>
               <p className="mt-2 text-gray-600 dark:text-gray-400">
-                We've sent a password reset link to <span className="font-medium text-indigo-600 dark:text-indigo-400">{email}</span>
+                We've sent a password reset link to{" "}
+                <span className="font-medium text-indigo-600 dark:text-indigo-400">
+                  {email}
+                </span>
               </p>
             </div>
 
@@ -137,7 +175,7 @@ const ForgotPassword = () => {
                 >
                   Send another email
                 </button>
-                
+
                 <Link
                   to="/signin"
                   className="w-full btn-primary text-center py-3"
@@ -159,13 +197,12 @@ const ForgotPassword = () => {
 
           {/* Content */}
           <div className="relative z-10 text-white">
-            <h2 className="text-4xl font-bold mb-6">
-              We've got you covered
-            </h2>
+            <h2 className="text-4xl font-bold mb-6">We've got you covered</h2>
             <p className="text-xl text-green-100 mb-8 leading-relaxed">
-              Don't worry about forgetting your password. We'll help you get back to organizing your memories in no time.
+              Don't worry about forgetting your password. We'll help you get
+              back to organizing your memories in no time.
             </p>
-            
+
             {/* Feature List */}
             <div className="space-y-4">
               <div className="flex items-center">
@@ -209,12 +246,12 @@ const ForgotPassword = () => {
                 <ArrowLeftIcon className="w-5 h-5 mr-2" />
                 Back to Sign In
               </Link>
-              
+
               <button
                 onClick={toggleTheme}
                 className="p-2 rounded-lg text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
               >
-                {theme === 'dark' ? (
+                {theme === "dark" ? (
                   <SunIcon className="w-5 h-5" />
                 ) : (
                   <MoonIcon className="w-5 h-5" />
@@ -244,7 +281,10 @@ const ForgotPassword = () => {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Email Field */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >
                 Email address
               </label>
               <div className="relative">
@@ -256,11 +296,11 @@ const ForgotPassword = () => {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="input-primary pl-12"
+                  className="input-primary pl-14"
                   placeholder="you@example.com"
                   disabled={loading}
                 />
-                <EnvelopeIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <EnvelopeIcon className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
               </div>
             </div>
 
@@ -276,7 +316,7 @@ const ForgotPassword = () => {
                   Sending reset email...
                 </>
               ) : (
-                'Send reset email'
+                "Send reset email"
               )}
             </button>
           </form>
@@ -284,7 +324,7 @@ const ForgotPassword = () => {
           {/* Back to Sign In */}
           <div className="mt-6">
             <p className="text-center text-sm text-gray-600 dark:text-gray-400">
-              Remember your password?{' '}
+              Remember your password?{" "}
               <Link
                 to="/signin"
                 className="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
@@ -306,14 +346,12 @@ const ForgotPassword = () => {
 
         {/* Content */}
         <div className="relative z-10 text-white">
-          <h2 className="text-4xl font-bold mb-6">
-            Get back to your memories
-          </h2>
+          <h2 className="text-4xl font-bold mb-6">Get back to your memories</h2>
           <p className="text-xl text-indigo-100 mb-8 leading-relaxed">
-            Don't let a forgotten password keep you away from your precious travel memories. 
-            We'll help you regain access quickly and securely.
+            Don't let a forgotten password keep you away from your precious
+            travel memories. We'll help you regain access quickly and securely.
           </p>
-          
+
           {/* Feature List */}
           <div className="space-y-4">
             <div className="flex items-center">

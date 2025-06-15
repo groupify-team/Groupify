@@ -1,324 +1,370 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Verify Your Email - Groupify</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          "Helvetica Neue", Arial, sans-serif;
+        line-height: 1.6;
+        color: #374151;
+        background: linear-gradient(
+          135deg,
+          #dbeafe 0%,
+          #e0e7ff 50%,
+          #f3e8ff 100%
+        );
+        min-height: 100vh;
+      }
+
+      .email-container {
+        max-width: 600px;
+        margin: 0 auto;
+        background-color: rgba(
+          255,
+          255,
+          255,
+          0.95
+        ); /* More transparent white */
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(10px); /* Adds a nice blur effect */
+      }
+
+      .header {
+        background: linear-gradient(
+          135deg,
+          #7c3aed 0%,
+          #4f46e5 50%,
+          #2563eb 100%
+        );
+        padding: 40px 30px;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .header::before {
+        content: "";
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(
+          circle,
+          rgba(255, 255, 255, 0.1) 0%,
+          transparent 70%
+        );
+        animation: pulse 3s ease-in-out infinite;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 0.5;
         }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            line-height: 1.6;
-            color: #374151;
-            background-color: #f9fafb;
+        50% {
+          opacity: 0.8;
         }
-        
+      }
+
+      .logo {
+        display: inline-flex;
+        align-items: center;
+        margin-bottom: 20px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .logo-icon {
+        width: 40px;
+        height: 40px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 12px;
+        backdrop-filter: blur(10px);
+      }
+
+      .logo-text {
+        font-size: 28px;
+        font-weight: bold;
+        color: white;
+      }
+
+      .header-title {
+        color: white;
+        font-size: 32px;
+        font-weight: bold;
+        margin-bottom: 10px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .header-subtitle {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 18px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .content {
+        padding: 40px 30px;
+      }
+
+      .greeting {
+        font-size: 20px;
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 20px;
+      }
+
+      .message {
+        font-size: 16px;
+        color: #6b7280;
+        margin-bottom: 30px;
+        line-height: 1.7;
+      }
+
+      .verification-box {
+        background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+        border: 2px dashed #d1d5db;
+        border-radius: 16px;
+        padding: 30px;
+        text-align: center;
+        margin: 30px 0;
+      }
+
+      .verification-label {
+        font-size: 14px;
+        font-weight: 600;
+        color: #6b7280;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 15px;
+      }
+
+      .verification-code {
+        font-size: 36px;
+        font-weight: bold;
+        letter-spacing: 8px;
+        color: #4f46e5;
+        background: linear-gradient(135deg, #7c3aed, #4f46e5);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 15px;
+        font-family: "Courier New", monospace;
+      }
+
+      .verification-note {
+        font-size: 14px;
+        color: #9ca3af;
+      }
+
+      .cta-button {
+        display: inline-block;
+        background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);
+        color: white;
+        padding: 16px 32px;
+        border-radius: 12px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 16px;
+        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+        transition: all 0.3s ease;
+      }
+
+      .cta-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(79, 70, 229, 0.5);
+      }
+
+      .security-note {
+        background: #fef3c7;
+        border: 1px solid #fbbf24;
+        border-radius: 12px;
+        padding: 20px;
+        margin: 30px 0;
+      }
+
+      .security-icon {
+        color: #d97706;
+        margin-bottom: 10px;
+      }
+
+      .security-text {
+        font-size: 14px;
+        color: #92400e;
+        line-height: 1.6;
+      }
+
+      .footer {
+        background-color: #f9fafb;
+        padding: 30px;
+        text-align: center;
+        border-top: 1px solid #e5e7eb;
+      }
+
+      .footer-text {
+        font-size: 14px;
+        color: #6b7280;
+        margin-bottom: 10px;
+      }
+
+      .social-links {
+        margin: 20px 0;
+      }
+
+      .social-link {
+        display: inline-block;
+        margin: 0 10px;
+        width: 36px;
+        height: 36px;
+        background: linear-gradient(135deg, #7c3aed, #4f46e5);
+        border-radius: 8px;
+        text-decoration: none;
+        color: white;
+        line-height: 36px;
+        font-size: 18px;
+      }
+
+      .unsubscribe {
+        font-size: 12px;
+        color: #9ca3af;
+      }
+
+      .unsubscribe a {
+        color: #6b7280;
+      }
+
+      @media (max-width: 600px) {
         .email-container {
-            max-width: 600px;
-            margin: 0 auto;
-            background-color: #ffffff;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+          margin: 0;
+          box-shadow: none;
         }
-        
-        .header {
-            background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 50%, #2563eb 100%);
-            padding: 40px 30px;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .header::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
-            animation: pulse 3s ease-in-out infinite;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { opacity: 0.5; }
-            50% { opacity: 0.8; }
-        }
-        
-        .logo {
-            display: inline-flex;
-            align-items: center;
-            margin-bottom: 20px;
-            position: relative;
-            z-index: 1;
-        }
-        
-        .logo-icon {
-            width: 40px;
-            height: 40px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 12px;
-            backdrop-filter: blur(10px);
-        }
-        
-        .logo-text {
-            font-size: 28px;
-            font-weight: bold;
-            color: white;
-        }
-        
-        .header-title {
-            color: white;
-            font-size: 32px;
-            font-weight: bold;
-            margin-bottom: 10px;
-            position: relative;
-            z-index: 1;
-        }
-        
-        .header-subtitle {
-            color: rgba(255, 255, 255, 0.9);
-            font-size: 18px;
-            position: relative;
-            z-index: 1;
-        }
-        
-        .content {
-            padding: 40px 30px;
-        }
-        
-        .greeting {
-            font-size: 20px;
-            font-weight: 600;
-            color: #1f2937;
-            margin-bottom: 20px;
-        }
-        
-        .message {
-            font-size: 16px;
-            color: #6b7280;
-            margin-bottom: 30px;
-            line-height: 1.7;
-        }
-        
-        .verification-box {
-            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
-            border: 2px dashed #d1d5db;
-            border-radius: 16px;
-            padding: 30px;
-            text-align: center;
-            margin: 30px 0;
-        }
-        
-        .verification-label {
-            font-size: 14px;
-            font-weight: 600;
-            color: #6b7280;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 15px;
-        }
-        
-        .verification-code {
-            font-size: 36px;
-            font-weight: bold;
-            letter-spacing: 8px;
-            color: #4f46e5;
-            background: linear-gradient(135deg, #7c3aed, #4f46e5);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 15px;
-            font-family: 'Courier New', monospace;
-        }
-        
-        .verification-note {
-            font-size: 14px;
-            color: #9ca3af;
-        }
-        
-        .cta-button {
-            display: inline-block;
-            background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);
-            color: white;
-            padding: 16px 32px;
-            border-radius: 12px;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 16px;
-            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
-            transition: all 0.3s ease;
-        }
-        
-        .cta-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(79, 70, 229, 0.5);
-        }
-        
-        .security-note {
-            background: #fef3c7;
-            border: 1px solid #fbbf24;
-            border-radius: 12px;
-            padding: 20px;
-            margin: 30px 0;
-        }
-        
-        .security-icon {
-            color: #d97706;
-            margin-bottom: 10px;
-        }
-        
-        .security-text {
-            font-size: 14px;
-            color: #92400e;
-            line-height: 1.6;
-        }
-        
+
+        .header,
+        .content,
         .footer {
-            background-color: #f9fafb;
-            padding: 30px;
-            text-align: center;
-            border-top: 1px solid #e5e7eb;
+          padding: 30px 20px;
         }
-        
-        .footer-text {
-            font-size: 14px;
-            color: #6b7280;
-            margin-bottom: 10px;
+
+        .header-title {
+          font-size: 28px;
         }
-        
-        .social-links {
-            margin: 20px 0;
+
+        .verification-code {
+          font-size: 30px;
+          letter-spacing: 6px;
         }
-        
-        .social-link {
-            display: inline-block;
-            margin: 0 10px;
-            width: 36px;
-            height: 36px;
-            background: linear-gradient(135deg, #7c3aed, #4f46e5);
-            border-radius: 8px;
-            text-decoration: none;
-            color: white;
-            line-height: 36px;
-            font-size: 18px;
-        }
-        
-        .unsubscribe {
-            font-size: 12px;
-            color: #9ca3af;
-        }
-        
-        .unsubscribe a {
-            color: #6b7280;
-        }
-        
-        @media (max-width: 600px) {
-            .email-container {
-                margin: 0;
-                box-shadow: none;
-            }
-            
-            .header,
-            .content,
-            .footer {
-                padding: 30px 20px;
-            }
-            
-            .header-title {
-                font-size: 28px;
-            }
-            
-            .verification-code {
-                font-size: 30px;
-                letter-spacing: 6px;
-            }
-        }
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="email-container">
-        <!-- Header -->
-        <div class="header">
-            <div class="logo">
-                <div class="logo-icon">
-                    <svg width="24" height="24" fill="white" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                    </svg>
-                </div>
-                <span class="logo-text">Groupify</span>
-            </div>
-            <h1 class="header-title">Verify Your Email</h1>
-            <p class="header-subtitle">You're almost ready to start organizing your memories!</p>
+      <!-- Header -->
+      <div class="header">
+        <div class="logo">
+          <div class="logo-icon">
+            <svg width="24" height="24" fill="white" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+              ></path>
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+              ></path>
+            </svg>
+          </div>
+          <span class="logo-text">Groupify</span>
+        </div>
+        <h1 class="header-title">Verify Your Email</h1>
+        <p class="header-subtitle">
+          You're almost ready to start organizing your memories!
+        </p>
+      </div>
+
+      <!-- Content -->
+      <div class="content">
+        <div class="greeting">Hi {{USER_NAME}},</div>
+
+        <div class="message">
+          Thanks for joining Groupify! We're excited to help you organize and
+          share your travel photos with AI-powered face recognition.
+          <br /><br />
+          To complete your account setup, please verify your email address using
+          the code below:
         </div>
 
-        <!-- Content -->
-        <div class="content">
-            <div class="greeting">Hi {{USER_NAME}},</div>
-            
-            <div class="message">
-                Thanks for joining Groupify! We're excited to help you organize and share your travel photos with AI-powered face recognition.
-                <br><br>
-                To complete your account setup, please verify your email address using the code below:
-            </div>
-
-            <div class="verification-box">
-                <div class="verification-label">Your Verification Code</div>
-                <div class="verification-code">{{VERIFICATION_CODE}}</div>
-                <div class="verification-note">This code expires in 10 minutes</div>
-            </div>
-
-            <div style="text-align: center; margin: 30px 0;">
-                <a href="{{VERIFICATION_LINK}}" class="cta-button">
-                    Verify Email Now
-                </a>
-            </div>
-
-            <div class="security-note">
-                <div class="security-icon">🔒</div>
-                <div class="security-text">
-                    <strong>Security Notice:</strong> If you didn't create an account with Groupify, please ignore this email. Your email address will be removed from our system automatically.
-                </div>
-            </div>
-
-            <div class="message">
-                Having trouble? Simply copy and paste this code into the verification page, or click the button above to verify automatically.
-                <br><br>
-                Can't wait to see you organizing your travel memories!
-                <br><br>
-                Best regards,<br>
-                <strong>The Groupify Team</strong>
-            </div>
+        <div class="verification-box">
+          <div class="verification-label">Your Verification Code</div>
+          <div class="verification-code">{{VERIFICATION_CODE}}</div>
+          <div class="verification-note">This code expires in 10 minutes</div>
         </div>
 
-        <!-- Footer -->
-        <div class="footer">
-            <div class="footer-text">
-                This email was sent by Groupify • The smartest way to organize your travel photos
-            </div>
-            
-            <div class="social-links">
-                <a href="#" class="social-link">📘</a>
-                <a href="#" class="social-link">📸</a>
-                <a href="#" class="social-link">🐦</a>
-                <a href="#" class="social-link">💼</a>
-            </div>
-            
-            <div class="unsubscribe">
-                © 2025 Groupify. Made with ❤️ for photo lovers.
-                <br>
-                <a href="{{UNSUBSCRIBE_LINK}}">Unsubscribe</a> | <a href="{{PRIVACY_LINK}}">Privacy Policy</a>
-            </div>
+        <div style="text-align: center; margin: 30px 0">
+          <a href="{{VERIFICATION_LINK}}" class="cta-button">
+            Verify Email Now
+          </a>
         </div>
+
+        <div class="security-note">
+          <div class="security-icon">🔒</div>
+          <div class="security-text">
+            <strong>Security Notice:</strong> If you didn't create an account
+            with Groupify, please ignore this email. Your email address will be
+            removed from our system automatically.
+          </div>
+        </div>
+
+        <div class="message">
+          Having trouble? Simply copy and paste this code into the verification
+          page, or click the button above to verify automatically.
+          <br /><br />
+          Can't wait to see you organizing your travel memories!
+          <br /><br />
+          Best regards,<br />
+          <strong>The Groupify Team</strong>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="footer">
+        <div class="footer-text">
+          This email was sent by Groupify • The smartest way to organize your
+          travel photos
+        </div>
+
+        <div class="social-links">
+          <a href="#" class="social-link">📘</a>
+          <a href="#" class="social-link">📸</a>
+          <a href="#" class="social-link">🐦</a>
+          <a href="#" class="social-link">💼</a>
+        </div>
+
+        <div class="unsubscribe">
+          © 2025 Groupify. Made with ❤️ for photo lovers.
+          <br />
+          <a href="{{UNSUBSCRIBE_LINK}}">Unsubscribe</a> |
+          <a href="{{PRIVACY_LINK}}">Privacy Policy</a>
+        </div>
+      </div>
     </div>
-</body>
+  </body>
 </html>
