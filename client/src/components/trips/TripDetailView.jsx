@@ -886,14 +886,6 @@ const TripDetailView = ({ tripId: propTripId }) => {
               <p className="text-red-700 dark:text-red-400 mb-8 leading-relaxed">
                 {error}
               </p>
-
-              <button
-                onClick={() => navigate("/dashboard")}
-                className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-8 py-4 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 shadow-lg backdrop-blur-sm flex items-center gap-3 mx-auto"
-              >
-                <ArrowLeftIcon className="w-5 h-5" />
-                Back to Dashboard
-              </button>
             </div>
           </div>
         </div>
@@ -913,14 +905,6 @@ const TripDetailView = ({ tripId: propTripId }) => {
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
               {/* Left side - Navigation & Trip Info */}
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 flex-1">
-                <button
-                  onClick={() => navigate("/dashboard")}
-                  className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium transition-all duration-200 group/back px-3 py-2 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/30"
-                >
-                  <ArrowLeftIcon className="w-5 h-5 group-hover/back:-translate-x-1 transition-transform" />
-                  Back to Dashboard
-                </button>
-
                 <div className="hidden sm:block w-px h-8 bg-gray-300 dark:bg-gray-600"></div>
 
                 <div className="space-y-1">
@@ -1022,9 +1006,9 @@ const TripDetailView = ({ tripId: propTripId }) => {
           </div>
         </div>
         {/* Main Content Grid - Enhanced with glassmorphism */}
-        <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
           {/* Main Content - Takes 3 columns on xl screens */}
-          <div className="xl:col-span-3 space-y-8">
+          <div className="xl:col-span-2 space-y-6">
             {/* Upload Form - Enhanced with glassmorphism */}
             {showUploadForm && (
               <div className="relative group">
@@ -1116,7 +1100,7 @@ const TripDetailView = ({ tripId: propTripId }) => {
                         {photos.slice(0, 8).map((photo, index) => (
                           <div
                             key={`preview-${photo.id}`}
-                            className="flex-shrink-0 w-48 sm:w-56 cursor-pointer group relative"
+                            className="flex-shrink-0 w-40 sm:w-44 cursor-pointer group relative"
                             onClick={() => setSelectedPhoto(photo)}
                           >
                             <div className="relative overflow-hidden rounded-xl shadow-lg transform group-hover:scale-105 transition-all duration-300 bg-gradient-to-br from-white to-gray-50 dark:from-gray-700 dark:to-gray-800 p-2">
@@ -1126,7 +1110,7 @@ const TripDetailView = ({ tripId: propTripId }) => {
                                   "groupify-77202.firebasestorage.app"
                                 )}
                                 alt={photo.fileName}
-                                className="w-full h-36 sm:h-40 object-cover rounded-lg"
+                                className="w-full h-28 sm:h-32 object-cover rounded-lg"
                               />
 
                               {/* Hover overlay with enhanced effects */}
@@ -1541,7 +1525,7 @@ const TripDetailView = ({ tripId: propTripId }) => {
           </div>
 
           {/* Sidebar - Enhanced with glassmorphism */}
-          <div className="xl:col-span-1 space-y-8">
+          <div className="xl:col-span-1 space-y-6">
             {/* Invite People Card */}
             <div className="relative group">
               <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl blur opacity-20 group-hover:opacity-30 transition duration-300"></div>

@@ -103,7 +103,7 @@ const Dashboard = () => {
   const notificationRef = useRef(null);
 
   // Sidebar state
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   // Navigation state
   const [activeSection, setActiveSection] = useState("trips");
@@ -1643,24 +1643,32 @@ const Dashboard = () => {
       <div
         className={`fixed inset-y-0 left-0 z-50 w-64 bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg shadow-xl border-r border-white/20 dark:border-gray-700/50 transform ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0`}
+        } transition-transform duration-300 ease-in-out lg:translate-x-0`}
       >
         {/* Logo */}
         <div className="p-6 border-b border-gray-200/50 dark:border-gray-700/50">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center">
+            <button
+              onClick={() => {
+                setActiveSection("trips");
+                setCurrentView("home");
+                setSidebarOpen(false);
+                setTripsDropdownOpen(false); // Close dropdown when going back to main trips view
+              }}
+              className="flex items-center gap-3 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded-xl p-2 transition-colors cursor-pointer group"
+            >
+              <div className="w-10 h-10 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform">
                 <CameraIcon className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-gray-800 dark:text-white">
+                <h1 className="text-xl font-bold text-gray-800 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                   Groupify
                 </h1>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
                   Dashboard
                 </p>
               </div>
-            </div>
+            </button>
             {/* Close button for mobile */}
             <button
               onClick={() => setSidebarOpen(false)}
@@ -1715,28 +1723,25 @@ const Dashboard = () => {
                 activeSection === item.id && currentView === "home";
               return (
                 <li key={item.id}>
-                  {/* Main navigation item */}
-                  <button
-                    onClick={() => {
-                      if (item.hasDropdown && item.id === "trips") {
-                        toggleTripsDropdown();
-                      } else {
+                  <div className="flex items-center">
+                    {/* Main navigation button */}
+                    <button
+                      onClick={() => {
                         setActiveSection(item.id);
                         setCurrentView("home");
                         setSidebarOpen(false);
-                      }
-                    }}
-                    className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-medium transition-all duration-200 ${
-                      isActive
-                        ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg"
-                        : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50"
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <Icon className="w-5 h-5" />
-                      <span>{item.name}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
+                        // Don't toggle dropdown here anymore
+                      }}
+                      className={`flex-1 flex items-center px-4 py-3 rounded-xl font-medium transition-all duration-200 ${
+                        isActive
+                          ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg"
+                          : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50"
+                      }`}
+                    >
+                      <div className="flex items-center gap-3 flex-1">
+                        <Icon className="w-5 h-5" />
+                        <span>{item.name}</span>
+                      </div>
                       {item.badge > 0 && (
                         <span
                           className={`text-xs px-2 py-1 rounded-full ${
@@ -1748,7 +1753,21 @@ const Dashboard = () => {
                           {item.badge}
                         </span>
                       )}
-                      {item.hasDropdown && (
+                    </button>
+
+                    {/* Separate arrow button for dropdown */}
+                    {item.hasDropdown && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation(); // Prevent triggering the main button
+                          toggleTripsDropdown();
+                        }}
+                        className={`ml-1 p-2 rounded-lg transition-all duration-200 ${
+                          isActive
+                            ? "text-white hover:bg-white/20"
+                            : "text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700/50"
+                        }`}
+                      >
                         <div
                           className={`transition-all duration-300 ease-in-out ${
                             tripsDropdownOpen
@@ -1758,9 +1777,9 @@ const Dashboard = () => {
                         >
                           <ChevronRightIcon className="w-4 h-4" />
                         </div>
-                      )}
-                    </div>
-                  </button>
+                      </button>
+                    )}
+                  </div>
 
                   {/* Trips dropdown */}
                   {item.id === "trips" && (
@@ -1842,7 +1861,12 @@ const Dashboard = () => {
       )}
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col min-h-screen w-full overflow-hidden">
+      <div
+        className={`flex-1 flex flex-col min-h-screen w-full overflow-hidden transition-all duration-300 lg:ml-64 ${
+          sidebarOpen ? "ml-0" : "ml-0"
+        }`}
+      >
+        {" "}
         {/* Header */}
         <header className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg shadow-sm border-b border-white/20 dark:border-gray-700/50 sticky top-0 z-30">
           <div className="w-full px-4 sm:px-6 lg:px-8">
@@ -1854,6 +1878,13 @@ const Dashboard = () => {
                   className="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
                 >
                   <Bars3Icon className="w-6 h-6 text-gray-600 dark:text-gray-400" />
+                </button>
+                <button
+                  onClick={() => setSidebarOpen(!sidebarOpen)}
+                  className="hidden lg:block p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  title={sidebarOpen ? "Close sidebar" : "Open sidebar"}
+                >
+                  <Bars3Icon className="w-5 h-5 text-gray-600 dark:text-gray-400" />
                 </button>
 
                 {/* Welcome message - hidden on mobile */}
@@ -1925,7 +1956,6 @@ const Dashboard = () => {
             </div>
           </div>
         </header>
-
         {/* Main Content */}
         <main className="flex-1 overflow-y-auto">
           <div className="w-full px-4 sm:px-6 lg:px-8 py-4">
