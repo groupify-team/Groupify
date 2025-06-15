@@ -103,8 +103,7 @@ const Dashboard = () => {
   const notificationRef = useRef(null);
 
   // Sidebar state
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   // Navigation state
   const [activeSection, setActiveSection] = useState("trips");
 
@@ -1643,7 +1642,7 @@ const Dashboard = () => {
       <div
         className={`fixed inset-y-0 left-0 z-50 w-64 bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg shadow-xl border-r border-white/20 dark:border-gray-700/50 transform ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } transition-transform duration-300 ease-in-out lg:translate-x-0`}
+        } transition-transform duration-300 ease-in-out`}
       >
         {/* Logo */}
         <div className="p-6 border-b border-gray-200/50 dark:border-gray-700/50">
@@ -1652,8 +1651,7 @@ const Dashboard = () => {
               onClick={() => {
                 setActiveSection("trips");
                 setCurrentView("home");
-                setSidebarOpen(false);
-                setTripsDropdownOpen(false); // Close dropdown when going back to main trips view
+                setTripsDropdownOpen(false);
               }}
               className="flex items-center gap-3 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded-xl p-2 transition-colors cursor-pointer group"
             >
@@ -1729,8 +1727,6 @@ const Dashboard = () => {
                       onClick={() => {
                         setActiveSection(item.id);
                         setCurrentView("home");
-                        setSidebarOpen(false);
-                        // Don't toggle dropdown here anymore
                       }}
                       className={`flex-1 flex items-center px-4 py-3 rounded-xl font-medium transition-all duration-200 ${
                         isActive
@@ -1802,7 +1798,6 @@ const Dashboard = () => {
                                 key={trip.id}
                                 onClick={() => {
                                   handleViewTrip(trip.id);
-                                  setSidebarOpen(false);
                                 }}
                                 className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors mb-1 ${
                                   selectedTripId === trip.id
@@ -1862,8 +1857,8 @@ const Dashboard = () => {
 
       {/* Main Content */}
       <div
-        className={`flex-1 flex flex-col min-h-screen w-full overflow-hidden transition-all duration-300 lg:ml-64 ${
-          sidebarOpen ? "ml-0" : "ml-0"
+        className={`flex-1 flex flex-col min-h-screen w-full overflow-hidden transition-all duration-300 ${
+          sidebarOpen ? "lg:ml-64" : "ml-0"
         }`}
       >
         {" "}
@@ -1874,7 +1869,7 @@ const Dashboard = () => {
               {/* Left section - Mobile menu button */}
               <div className="flex items-center gap-4">
                 <button
-                  onClick={() => setSidebarOpen(true)}
+                  onClick={() => setSidebarOpen(!sidebarOpen)}
                   className="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
                 >
                   <Bars3Icon className="w-6 h-6 text-gray-600 dark:text-gray-400" />
