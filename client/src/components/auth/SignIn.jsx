@@ -48,19 +48,6 @@ const SignIn = () => {
     }
   }, []);
 
-  // Show message from location state
-  useEffect(() => {
-    if (location.state?.message) {
-      if (location.state.verified) {
-        toast.success(location.state.message, { duration: 5000 });
-      } else {
-        toast.error(location.state.message, { duration: 5000 });
-      }
-      // Clear the state
-      navigate(location.pathname, { replace: true });
-    }
-  }, [location, navigate]);
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -89,9 +76,20 @@ const SignIn = () => {
       // Provide user-friendly error messages
       let errorMessage = "Failed to sign in";
 
-      if (error.message && error.message.includes("verify your email")) {
-        errorMessage = error.message;
-        setShowVerificationAlert(true); // Show verification alert only on verification error
+if (error.message && error.message.includes("verify your email")) {
+  toast(error.message, {
+    icon: <ExclamationTriangleIcon className="h-6 w-6 text-black flex-shrink-0" />,
+    style: {
+      background: '#fbbf24', // yellow-400
+      color: '#000000', // black
+      border: '1px solid #f59e0b', // yellow-500
+      padding: '16px', // Add more padding to expand the message
+      textAlign: 'center', // Center the text
+      minWidth: '300px', // Make it wider
+    }
+  });
+  setShowVerificationAlert(true);
+  return;
       } else if (error.code === "auth/user-not-found") {
         errorMessage = "No account found with this email";
       } else if (error.code === "auth/wrong-password") {
@@ -163,23 +161,6 @@ const SignIn = () => {
                 )}
               </button>
             </div>
-
-            {/* Success Message */}
-            {location.state?.verified && (
-              <div className="mb-6 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
-                <div className="flex">
-                  <CheckCircleIcon className="h-5 w-5 text-green-400 mr-3 mt-0.5 flex-shrink-0" />
-                  <div className="text-sm">
-                    <p className="text-green-700 dark:text-green-300 font-medium">
-                      Email verified successfully!
-                    </p>
-                    <p className="text-green-600 dark:text-green-400 mt-1">
-                      You can now sign in to your account.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
 
             {/* Logo and Title */}
             <div className="flex items-center mb-6">
@@ -319,8 +300,7 @@ const SignIn = () => {
                     Please verify your email before signing in. Check your inbox
                     or{" "}
                     <Link
-                      to="/confirm-email"
-                      state={{ email }}
+                      to={`/confirm-email?email=${encodeURIComponent(email)}`}
                       className="underline font-medium hover:text-yellow-500"
                     >
                       resend verification email

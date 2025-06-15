@@ -16,6 +16,7 @@ import About from "./pages/About";
 import { Toaster } from "react-hot-toast";
 import HelpCenter from "./pages/HelpCenter";
 import Careers from "./pages/Careers";
+import ResetPassword from "./components/auth/ResetPassword";
 
 function App() {
   return (
@@ -93,7 +94,6 @@ function App() {
                   </div>
                 }
               />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
 
               {/* Legal & Info Pages */}
               <Route path="/terms" element={<TermsOfService />} />
@@ -102,6 +102,8 @@ function App() {
               <Route path="/about" element={<About />} />
               <Route path="/careers" element={<Careers />} />
               <Route path="/help" element={<HelpCenter />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
 
               {/* Protected Routes with Sidebar Layout */}
               <Route
