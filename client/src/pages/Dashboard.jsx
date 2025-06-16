@@ -9,7 +9,7 @@ import AddFriend from "../components/friends/AddFriend";
 import EditProfileModal from "../components/profile/EditProfileModal";
 import SettingsModal from "../components/settings/SettingsModal";
 import UserProfileModal from "../components/profile/UserProfileModal";
-import FaceProfileManager from "../components/faceProfile/FaceProfileManager";
+import FaceProfileModal from "../components/faceProfile/FaceProfileModal";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -152,7 +152,7 @@ const Dashboard = () => {
   // Modal states
   const [showCreateTripModal, setShowCreateTripModal] = useState(false);
   const [showAddFriendModal, setShowAddFriendModal] = useState(false);
-  const [showProfileManager, setShowProfileManager] = useState(false);
+  const [showFaceProfileModal, setShowFaceProfileModal] = useState(false);
   const [selectedUserProfile, setSelectedUserProfile] = useState(null);
   const [showEditProfileModal, setShowEditProfileModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
@@ -1054,38 +1054,38 @@ const Dashboard = () => {
     </div>
   );
 
-  const FaceProfileSection = () => (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-          Face Profile
-        </h1>
-        <p className="text-gray-600 dark:text-gray-300 mt-1">
-          AI-powered face recognition for automatic photo organization
-        </p>
-      </div>
-
-      {!hasProfile ? (
-        <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-2xl shadow-lg p-8 border border-white/20 dark:border-gray-700/50 text-center">
-          <div className="w-24 h-24 bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-2xl flex items-center justify-center mx-auto mb-6">
-            <UserCircleIcon className="w-12 h-12 text-indigo-500 dark:text-indigo-400" />
-          </div>
-          <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">
-            Create Your Face Profile
-          </h2>
-          <p className="text-gray-600 dark:text-gray-300 mb-8 max-w-md mx-auto">
-            Upload 2-5 clear photos of yourself to enable automatic photo
-            recognition in your trips
+    const FaceProfileSection = () => (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+            Face Profile
+          </h1>
+          <p className="text-gray-600 dark:text-gray-300 mt-1">
+            AI-powered face recognition for automatic photo organization
           </p>
-          <button
-            onClick={() => setShowProfileManager(true)}
-            disabled={isLoadingProfile}
-            className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-400 text-white px-8 py-4 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center gap-2 mx-auto"
-          >
-            <CameraIcon className="w-5 h-5" />
-            {isLoadingProfile ? "Loading..." : "Setup Face Profile"}
-          </button>
         </div>
+
+        {!hasProfile ? (
+          <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-2xl shadow-lg p-8 border border-white/20 dark:border-gray-700/50 text-center">
+            <div className="w-24 h-24 bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-2xl flex items-center justify-center mx-auto mb-6">
+              <UserCircleIcon className="w-12 h-12 text-indigo-500 dark:text-indigo-400" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">
+              Create Your Face Profile
+            </h2>
+            <p className="text-gray-600 dark:text-gray-300 mb-8 max-w-md mx-auto">
+              Upload 2-10 clear photos of yourself or use your camera to enable automatic photo
+              recognition in your trips
+            </p>
+            <button
+              onClick={() => setShowFaceProfileModal(true)}
+              disabled={isLoadingProfile}
+              className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-400 text-white px-8 py-4 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center gap-2 mx-auto"
+            >
+              <CameraIcon className="w-5 h-5" />
+              {isLoadingProfile ? "Loading..." : "Setup Face Profile"}
+            </button>
+          </div>
       ) : (
         <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-2xl shadow-lg p-8 border border-white/20 dark:border-gray-700/50">
           <div className="flex items-center justify-between mb-6">
@@ -2026,25 +2026,11 @@ const Dashboard = () => {
         </div>
       )}
 
-      {showProfileManager && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto p-6 border border-white/20 dark:border-gray-700/50">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold text-gray-800 dark:text-white">
-                Face Profile Manager
-              </h2>
-              <button
-                onClick={() => setShowProfileManager(false)}
-                className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
-              >
-                <XCircleIcon className="w-6 h-6" />
-              </button>
-            </div>
-            <FaceProfileManager onProfileLoaded={handleProfileLoaded} />
-          </div>
-        </div>
-      )}
-
+      <FaceProfileModal 
+        isOpen={showFaceProfileModal}
+        onClose={() => setShowFaceProfileModal(false)}
+        onProfileCreated={handleProfileLoaded}
+      />
       <EditProfileModal
         isOpen={showEditProfileModal}
         onClose={() => setShowEditProfileModal(false)}
