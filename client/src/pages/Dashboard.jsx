@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useTheme } from "../contexts/ThemeContext";
 import { useNavigate } from "react-router-dom";
@@ -118,6 +118,7 @@ const Dashboard = () => {
   // Trip detail view state
   const [currentView, setCurrentView] = useState("home"); // 'home' or 'trip'
   const [selectedTripId, setSelectedTripId] = useState(null);
+  const searchInputRef = useRef(null);
 
   // Data states
   const [trips, setTrips] = useState([]);
@@ -980,23 +981,41 @@ const Dashboard = () => {
           <div className="relative flex-1">
             <MagnifyingGlassIcon className="w-5 h-5 text-gray-400 dark:text-gray-500 absolute left-3 top-1/2 transform -translate-y-1/2" />
             <input
+              ref={searchInputRef}
               type="text"
               placeholder="Search trips..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={useCallback(
+                (e) => {
+                  setSearchTerm(e.target.value);
+                  // Keep focus on the input after state change
+                  setTimeout(() => {
+                    if (searchInputRef.current) {
+                      searchInputRef.current.focus();
+                    }
+                  }, 0);
+                },
+                [setSearchTerm]
+              )}
               className="w-full pl-10 pr-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors bg-white/50 dark:bg-gray-700/50 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
             />
           </div>
-          <select
-            value={dateFilter}
-            onChange={(e) => setDateFilter(e.target.value)}
-            className="px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white/50 dark:bg-gray-700/50 text-gray-900 dark:text-white min-w-[150px]"
-          >
-            <option value="all">All Trips</option>
-            <option value="upcoming">Upcoming</option>
-            <option value="recent">Recent</option>
-            <option value="past">Past</option>
-          </select>
+
+          {/* Select dropdown with custom arrow positioning */}
+          <div className="relative min-w-[150px]">
+            <select
+              value={dateFilter}
+              onChange={(e) => setDateFilter(e.target.value)}
+              className="w-full px-4 py-3 pr-8 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white/50 dark:bg-gray-700/50 text-gray-900 dark:text-white appearance-none cursor-pointer"
+            >
+              <option value="all">All Trips</option>
+              <option value="upcoming">Upcoming</option>
+              <option value="recent">Recent</option>
+              <option value="past">Past</option>
+            </select>
+            {/* Custom arrow positioned more to the left */}
+            <ChevronDownIcon className="w-4 h-4 text-gray-400 dark:text-gray-500 absolute right-2 top-1/2 transform -translate-y-1/2 pointer-events-none" />
+          </div>
         </div>
       </div>
 
