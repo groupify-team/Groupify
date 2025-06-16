@@ -103,7 +103,7 @@ const Dashboard = () => {
   const notificationRef = useRef(null);
 
   // Sidebar state
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   // Navigation state
   const [activeSection, setActiveSection] = useState("trips");
 

@@ -102,6 +102,7 @@ const TripDetailView = ({ tripId: propTripId }) => {
   const [filteredPhotos, setFilteredPhotos] = useState([]);
   const [filterActive, setFilterActive] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   // Simplified face recognition state
   const [isProcessingFaces, setIsProcessingFaces] = useState(false);
@@ -473,31 +474,94 @@ const TripDetailView = ({ tripId: propTripId }) => {
     }
   };
 
-  const handleDeleteSelectedPhotos = async () => {
-    const confirmed = window.confirm(
-      `Are you sure you want to delete ${selectedPhotos.length} selected photo(s)?`
+  const handleDeleteSelectedPhotos = () => {
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDeletePhotos = async () => {
+    setShowDeleteConfirm(false);
+
+    const deletingToast = toast.loading(
+      `Deleting ${selectedPhotos.length} photos...`
     );
-    if (!confirmed) return;
 
     try {
+      // Store photos to delete for proper cleanup
+      const photosToDelete = photos.filter((photo) =>
+        selectedPhotos.includes(photo.id)
+      );
+
+      // Delete each photo from storage and database
       for (const photoId of selectedPhotos) {
         const photo = photos.find((p) => p.id === photoId);
         if (!photo) continue;
 
+        // Delete from Firebase Storage
         const photoRef = ref(storage, `photos/${tripId}/${photo.fileName}`);
         await deleteObject(photoRef);
 
-        const docRef = doc(db, "tripPhotos", photoId);
-        await deleteDoc(docRef);
+        // Delete from Firestore - tripPhotos collection
+        const tripPhotoRef = doc(db, "tripPhotos", photoId);
+        await deleteDoc(tripPhotoRef);
+
+        // Delete from Firestore - photos collection (main photos collection)
+        const photoRef2 = doc(db, "photos", photoId);
+        await deleteDoc(photoRef2);
       }
 
-      setPhotos((prev) => prev.filter((p) => !selectedPhotos.includes(p.id)));
+      // Update the photos state by removing deleted photos
+      setPhotos((prevPhotos) =>
+        prevPhotos.filter((photo) => !selectedPhotos.includes(photo.id))
+      );
+
+      // Also update filtered photos if face filter is active
+      if (filterActive && filteredPhotos.length > 0) {
+        setFilteredPhotos((prevFiltered) =>
+          prevFiltered.filter((photo) => !selectedPhotos.includes(photo.id))
+        );
+      }
+
+      // Clear cache if it exists since photos changed
+      if (cachedResults) {
+        setCachedResults(null);
+        setLastScannedPhotos(null);
+        setLastScanTimestamp(null);
+      }
+
+      // Update trip photo count
+      if (trip) {
+        setTrip((prevTrip) => ({
+          ...prevTrip,
+          photoCount: Math.max(
+            (prevTrip.photoCount || 0) - selectedPhotos.length,
+            0
+          ),
+        }));
+      }
+
+      toast.dismiss(deletingToast);
       toast.success(`${selectedPhotos.length} photos deleted successfully`);
+
+      // Reset selection state
       setSelectedPhotos([]);
       setSelectMode(false);
+
+      // Force re-render
+      setShowAllPhotosModal(false);
+      setTimeout(() => {
+        setShowAllPhotosModal(true);
+      }, 100);
     } catch (error) {
       console.error("Failed to delete selected photos:", error);
-      toast.error("An error occurred while deleting photos.");
+      toast.dismiss(deletingToast);
+
+      if (error.code === "storage/unauthorized") {
+        toast.error(
+          "Permission denied. You may not have permission to delete these photos."
+        );
+      } else {
+        toast.error("An error occurred while deleting photos.");
+      }
     }
   };
 
@@ -750,14 +814,16 @@ const TripDetailView = ({ tripId: propTripId }) => {
       const existing = await getDocs(q);
 
       if (!existing.empty) {
-        toast.warning(`${friend.displayName} already has a pending invite.`, {
+        // Use toast.error instead of toast.warning, or use a custom styled toast
+        toast(`${friend.displayName} already has a pending invite.`, {
           style: {
             borderRadius: "10px",
             background: "#fdf6e3",
             color: "#333",
+            border: "1px solid #f59e0b",
           },
+          icon: "⚠️",
         });
-
         return;
       }
 
@@ -765,7 +831,6 @@ const TripDetailView = ({ tripId: propTripId }) => {
       toast.success(`Invitation sent to ${friend.displayName}.`);
     } catch (error) {
       console.error("Error sending trip invite:", error);
-
       toast.error("Failed to send invitation.");
     }
   };
@@ -1705,6 +1770,65 @@ const TripDetailView = ({ tripId: propTripId }) => {
           </div>
         )}
 
+        {showDeleteConfirm && (
+          <div
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[60] p-4"
+            onClick={() => setShowDeleteConfirm(false)}
+          >
+            <div
+              className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg rounded-2xl shadow-2xl max-w-md w-full border border-white/20 dark:border-gray-700/50 overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="p-6">
+                {/* Header */}
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 bg-gradient-to-r from-red-500 to-red-600 rounded-xl flex items-center justify-center shadow-lg">
+                    <TrashIcon className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                      Delete Photos
+                    </h3>
+                    <p className="text-gray-600 dark:text-gray-400 text-sm">
+                      This action cannot be undone
+                    </p>
+                  </div>
+                </div>
+
+                {/* Content */}
+                <div className="mb-6">
+                  <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+                    Are you sure you want to delete{" "}
+                    <span className="font-bold text-red-600 dark:text-red-400">
+                      {selectedPhotos.length}
+                    </span>{" "}
+                    selected photo{selectedPhotos.length > 1 ? "s" : ""}? This
+                    will permanently remove{" "}
+                    {selectedPhotos.length > 1 ? "them" : "it"} from the trip.
+                  </p>
+                </div>
+
+                {/* Actions */}
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <button
+                    onClick={() => setShowDeleteConfirm(false)}
+                    className="flex-1 px-4 py-3 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-xl font-medium transition-all duration-300 text-sm"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={confirmDeletePhotos}
+                    className="flex-1 px-4 py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-xl font-medium transition-all duration-300 text-sm shadow-lg"
+                  >
+                    Delete {selectedPhotos.length} Photo
+                    {selectedPhotos.length > 1 ? "s" : ""}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Edit Trip Modal */}
         <EditTripModal
           isOpen={showEditModal}
@@ -1774,7 +1898,10 @@ const TripDetailView = ({ tripId: propTripId }) => {
                 </div>
 
                 <div className="max-h-[60vh] overflow-y-auto scrollbar-thin scrollbar-thumb-purple-300 dark:scrollbar-thumb-purple-700 scrollbar-track-transparent">
-                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-3">
+                  <div
+                    key={`photo-grid-${photos.length}-${selectedPhotos.length}`}
+                    className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-3"
+                  >
                     {photos.map((photo) => {
                       const isSelected = selectedPhotos.includes(photo.id);
                       return (
