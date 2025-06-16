@@ -1,132 +1,436 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
-import { createFaceProfile } from '../../services/faceRecognition';
-import { saveFaceProfileToStorage } from '../../services/firebase/faceProfiles';
-import { uploadBytes, getDownloadURL, ref } from 'firebase/storage';
-import { storage } from '../../services/firebase/config';
-import { 
-  XMarkIcon, 
-  CameraIcon, 
-  PhotoIcon, 
+import React, { useState, useRef, useEffect } from "react";
+import { useAuth } from "../../contexts/AuthContext";
+import { createFaceProfile } from "../../services/faceRecognition";
+import { saveFaceProfileToStorage } from "../../services/firebase/faceProfiles";
+import { uploadBytes, getDownloadURL, ref } from "firebase/storage";
+import { storage } from "../../services/firebase/config";
+import {
+  XMarkIcon,
+  CameraIcon,
+  PhotoIcon,
   CheckCircleIcon,
   ExclamationTriangleIcon,
   InformationCircleIcon,
-  TrashIcon
-} from '@heroicons/react/24/outline';
+  TrashIcon,
+  SparklesIcon,
+  ArrowRightIcon,
+  ArrowLeftIcon,
+  PlayIcon,
+} from "@heroicons/react/24/outline";
 
 const FaceProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
   const { currentUser } = useAuth();
+
+  // Setup method selection
+  const [setupMethod, setSetupMethod] = useState(null); // null, 'guided', 'upload'
+
+  // Guided capture states
+  const [guidedStep, setGuidedStep] = useState(0);
+  const [capturedPhotos, setCapturedPhotos] = useState([]);
+  const [isCapturing, setIsCapturing] = useState(false);
+  const [countdown, setCountdown] = useState(0);
+  const [showPreview, setShowPreview] = useState(false);
+
+  // Manual upload states
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [previewUrls, setPreviewUrls] = useState([]);
+
+  // Common states
   const [isCreating, setIsCreating] = useState(false);
   const [progress, setProgress] = useState(null);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
-  const [showCamera, setShowCamera] = useState(false);
   const [stream, setStream] = useState(null);
-  
+
   const fileInputRef = useRef(null);
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
+  const isCapturingRef = useRef(false);
+
+  // Fixed capture steps configuration (5 distinct angles)
+  const captureSteps = [
+    {
+      id: "front",
+      title: "Face Forward",
+      instruction: "Look directly at the camera with a neutral expression",
+      icon: "👤",
+      tip: "Keep your face centered in the circle",
+      color: "from-emerald-500 to-green-500",
+    },
+    {
+      id: "right",
+      title: "Turn Right",
+      instruction: "Turn your head 30° to the right",
+      icon: "👤➡️",
+      tip: "Show your right profile while keeping eyes visible",
+      color: "from-blue-500 to-cyan-500",
+    },
+    {
+      id: "left",
+      title: "Turn Left",
+      instruction: "Turn your head 30° to the left",
+      icon: "👤⬅️",
+      tip: "Show your left profile while keeping eyes visible",
+      color: "from-purple-500 to-violet-500",
+    },
+    {
+      id: "up",
+      title: "Look Up Slightly",
+      instruction: "Tilt your head slightly upward",
+      icon: "👤⬆️",
+      tip: "Just a gentle upward tilt, keep face visible",
+      color: "from-amber-500 to-orange-500",
+    },
+    {
+      id: "down",
+      title: "Look Down Slightly",
+      instruction: "Tilt your head slightly downward",
+      icon: "👤⬇️",
+      tip: "Gentle downward tilt, eyes still visible",
+      color: "from-red-500 to-pink-500",
+    },
+  ];
+
+  // Circular Progress Component
+  const CircularProgress = ({ currentStep, totalSteps, capturedPhotos }) => {
+    const radius = 50;
+    const strokeWidth = 8;
+    const normalizedRadius = radius - strokeWidth * 2;
+    const circumference = normalizedRadius * 2 * Math.PI;
+    const strokeDasharray = `${circumference} ${circumference}`;
+    const progress = (capturedPhotos.length / totalSteps) * 100;
+    const strokeDashoffset = circumference - (progress / 100) * circumference;
+
+    return (
+      <div className="relative flex flex-col items-center">
+        <div className="relative">
+          <svg
+            height={radius * 2}
+            width={radius * 2}
+            className="transform -rotate-90"
+          >
+            {/* Background circle */}
+            <circle
+              stroke="#e5e7eb"
+              fill="transparent"
+              strokeWidth={strokeWidth}
+              r={normalizedRadius}
+              cx={radius}
+              cy={radius}
+              className="dark:stroke-gray-600"
+            />
+            {/* Progress circle */}
+            <circle
+              stroke="url(#progressGradient)"
+              fill="transparent"
+              strokeWidth={strokeWidth}
+              strokeDasharray={strokeDasharray}
+              style={{ strokeDashoffset }}
+              strokeLinecap="round"
+              r={normalizedRadius}
+              cx={radius}
+              cy={radius}
+              className="transition-all duration-500 ease-in-out"
+            />
+            {/* Gradient definition */}
+            <defs>
+              <linearGradient
+                id="progressGradient"
+                x1="0%"
+                y1="0%"
+                x2="100%"
+                y2="0%"
+              >
+                <stop offset="0%" stopColor="#10b981" />
+                <stop offset="100%" stopColor="#3b82f6" />
+              </linearGradient>
+            </defs>
+          </svg>
+
+          {/* Center content */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-gray-800 dark:text-white">
+                {capturedPhotos.length}
+              </div>
+              <div className="text-xs text-gray-600 dark:text-gray-400">
+                of {totalSteps}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Step indicators around the circle */}
+        <div className="absolute inset-0">
+          {captureSteps.map((step, index) => {
+            const angle = (index * 360) / totalSteps - 90; // Start from top
+            const x = 50 + 35 * Math.cos((angle * Math.PI) / 180);
+            const y = 50 + 35 * Math.sin((angle * Math.PI) / 180);
+            const isCompleted = capturedPhotos.some(
+              (photo) => photo.step.id === step.id
+            );
+            const isCurrent = index === currentStep;
+
+            return (
+              <div
+                key={step.id}
+                className="absolute w-6 h-6 rounded-full flex items-center justify-center text-xs transition-all duration-300"
+                style={{
+                  left: `${x}%`,
+                  top: `${y}%`,
+                  transform: "translate(-50%, -50%)",
+                }}
+              >
+                {isCompleted ? (
+                  <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                    <CheckCircleIcon className="w-4 h-4 text-white" />
+                  </div>
+                ) : isCurrent ? (
+                  <div
+                    className={`w-6 h-6 bg-gradient-to-r ${step.color} rounded-full flex items-center justify-center animate-pulse`}
+                  >
+                    <div className="w-3 h-3 bg-white rounded-full"></div>
+                  </div>
+                ) : (
+                  <div className="w-6 h-6 border-2 border-gray-300 dark:border-gray-600 rounded-full bg-white dark:bg-gray-700"></div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
+  // Dynamic Guide Component
+  const DynamicGuide = ({ step }) => {
+    const currentStep = captureSteps[step];
+
+    const getGuideStyle = () => {
+      switch (currentStep.id) {
+        case "front":
+          return { transform: "rotate(0deg)", borderColor: "#10b981" };
+        case "right":
+          return { transform: "rotateY(-30deg)", borderColor: "#3b82f6" };
+        case "left":
+          return { transform: "rotateY(30deg)", borderColor: "#8b5cf6" };
+        case "up":
+          return { transform: "rotateX(-15deg)", borderColor: "#f59e0b" };
+        case "down":
+          return { transform: "rotateX(15deg)", borderColor: "#ef4444" };
+        default:
+          return { transform: "rotate(0deg)", borderColor: "#6b7280" };
+      }
+    };
+
+    return (
+      <div className="flex flex-col items-center space-y-3">
+        <div className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+          Position Guide
+        </div>
+        <div
+          className="w-16 h-20 border-3 border-dashed rounded-full transition-all duration-700 ease-in-out bg-gradient-to-b from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800"
+          style={getGuideStyle()}
+        >
+          <div className="w-full h-full flex items-center justify-center">
+            <div className="text-lg">{currentStep.icon}</div>
+          </div>
+        </div>
+        <div className="text-center">
+          <div className="text-sm font-semibold text-gray-800 dark:text-white">
+            {currentStep.title}
+          </div>
+          <div className="text-xs text-gray-600 dark:text-gray-400">
+            {currentStep.tip}
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   // Cleanup function
   const cleanup = () => {
+    setSetupMethod(null);
+    setGuidedStep(0);
+    setCapturedPhotos([]);
     setSelectedFiles([]);
     setPreviewUrls([]);
-    setError('');
+    setError("");
     setSuccess(false);
     setProgress(null);
+    setShowPreview(false);
     stopCamera();
   };
 
-  // Handle modal close
   const handleClose = () => {
     cleanup();
     onClose();
   };
 
-  // Stop camera stream
   const stopCamera = () => {
     if (stream) {
-      stream.getTracks().forEach(track => track.stop());
+      stream.getTracks().forEach((track) => track.stop());
       setStream(null);
     }
-    setShowCamera(false);
   };
 
-  // Start camera
   const startCamera = async () => {
     try {
-      const mediaStream = await navigator.mediaDevices.getUserMedia({ 
-        video: { width: 640, height: 480 } 
+      const mediaStream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+          facingMode: "user",
+        },
       });
       setStream(mediaStream);
-      setShowCamera(true);
-      
+
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
       }
     } catch (error) {
-      setError('Could not access camera. Please check permissions.');
-      console.error('Camera error:', error);
+      setError("Could not access camera. Please check permissions.");
+      console.error("Camera error:", error);
     }
   };
 
-  // Capture photo from camera
-  const capturePhoto = () => {
-    if (!videoRef.current || !canvasRef.current) return;
+  const capturePhotoWithCountdown = () => {
+    if (isCapturingRef.current) return;
+
+    isCapturingRef.current = true;
+    setIsCapturing(true);
+    setCountdown(3);
+
+    const countdownInterval = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(countdownInterval);
+          setCountdown(0);
+
+          setTimeout(() => {
+            if (isCapturingRef.current) {
+              captureCurrentStep();
+            }
+          }, 500);
+
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
+  const captureCurrentStep = () => {
+    if (!isCapturingRef.current || !videoRef.current || !canvasRef.current)
+      return;
+
+    isCapturingRef.current = false;
+    setIsCapturing(false);
+    setCountdown(0);
 
     const video = videoRef.current;
     const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext("2d");
 
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     ctx.drawImage(video, 0, 0);
 
-    canvas.toBlob((blob) => {
-      const file = new File([blob], `camera-capture-${Date.now()}.jpg`, { type: 'image/jpeg' });
-      addFile(file);
-    }, 'image/jpeg', 0.8);
-  };
+    const currentStepIndex = capturedPhotos.length;
+    const currentStep = captureSteps[currentStepIndex];
 
-  // Add file to selection
-  const addFile = (file) => {
-    if (selectedFiles.length >= 10) {
-      setError('Maximum 10 photos allowed');
+    if (!currentStep) {
+      console.warn("⛔️ Tried to capture more steps than defined.");
       return;
     }
 
-    const url = URL.createObjectURL(file);
-    setSelectedFiles(prev => [...prev, file]);
-    setPreviewUrls(prev => [...prev, url]);
-    setError('');
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) {
+          console.warn("❗️ No image blob captured.");
+          return;
+        }
+
+        const file = new File(
+          [blob],
+          `face-${currentStep.id}-${Date.now()}.jpg`,
+          { type: "image/jpeg" }
+        );
+
+        setCapturedPhotos((prev) => {
+          const newPhotos = [
+            ...prev,
+            {
+              file,
+              step: currentStep,
+              url: URL.createObjectURL(file),
+            },
+          ];
+
+          if (newPhotos.length >= captureSteps.length) {
+            setTimeout(() => {
+              setShowPreview(true);
+              stopCamera();
+            }, 1000);
+          } else {
+            setTimeout(() => {
+              setGuidedStep((prev) => prev + 1);
+            }, 1000);
+          }
+
+          return newPhotos;
+        });
+      },
+      "image/jpeg",
+      0.9
+    );
   };
 
-  // Handle file selection
+  const retakePhoto = (stepIndex) => {
+    setCapturedPhotos((prev) => prev.filter((_, i) => i !== stepIndex));
+    setGuidedStep(stepIndex);
+    setShowPreview(false);
+    startCamera();
+  };
+
+  const resetGuidedCapture = () => {
+    setCapturedPhotos([]);
+    setGuidedStep(0);
+    setShowPreview(false);
+    startCamera();
+  };
+
+  // Manual upload functions
   const handleFileSelect = (event) => {
     const files = Array.from(event.target.files);
-    
-    files.forEach(file => {
-      if (!file.type.startsWith('image/')) {
-        setError('Only image files are allowed');
+
+    files.forEach((file) => {
+      if (!file.type.startsWith("image/")) {
+        setError("Only image files are allowed");
         return;
       }
-      
+
       if (file.size > 10 * 1024 * 1024) {
-        setError('File size must be less than 10MB');
+        setError("File size must be less than 10MB");
         return;
       }
-      
-      addFile(file);
+
+      if (selectedFiles.length >= 10) {
+        setError("Maximum 10 photos allowed");
+        return;
+      }
+
+      const url = URL.createObjectURL(file);
+      setSelectedFiles((prev) => [...prev, file]);
+      setPreviewUrls((prev) => [...prev, url]);
+      setError("");
     });
   };
 
-  // Remove photo
   const removePhoto = (index) => {
     URL.revokeObjectURL(previewUrls[index]);
-    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
-    setPreviewUrls(prev => prev.filter((_, i) => i !== index));
+    setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
+    setPreviewUrls((prev) => prev.filter((_, i) => i !== index));
   };
 
   // Upload files to Firebase Storage
@@ -145,91 +449,104 @@ const FaceProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
 
   // Create face profile
   const handleCreateProfile = async () => {
-    if (selectedFiles.length < 2) {
-      setError('Please select at least 2 photos');
+    const photos =
+      setupMethod === "guided"
+        ? capturedPhotos.map((cp) => cp.file)
+        : selectedFiles;
+
+    if (photos.length < 2) {
+      setError("Please capture at least 2 photos");
       return;
     }
 
     setIsCreating(true);
-    setError('');
-    
+    setError("");
+
     try {
-      // Upload files to Firebase Storage
-      setProgress({ phase: 'Uploading photos...', current: 0, total: selectedFiles.length });
-      const imageUrls = await uploadFiles(selectedFiles);
-
-      // Create face profile using the service
-      const profile = await createFaceProfile(currentUser.uid, imageUrls, (progressData) => {
-        setProgress(progressData);
+      setProgress({
+        phase: "Uploading photos...",
+        current: 0,
+        total: photos.length,
       });
+      const imageUrls = await uploadFiles(photos);
 
-      // Save profile metadata to Firebase
+      const profile = await createFaceProfile(
+        currentUser.uid,
+        imageUrls,
+        (progressData) => {
+          setProgress(progressData);
+        }
+      );
+
       await saveFaceProfileToStorage(currentUser.uid, {
         images: imageUrls.map((url, index) => ({
           url,
           uploadedAt: new Date().toISOString(),
-          filename: selectedFiles[index].name
+          filename: photos[index].name,
+          captureMethod: setupMethod,
         })),
         createdAt: new Date().toISOString(),
-        metadata: profile.metadata
+        method: setupMethod,
+        metadata: profile.metadata,
       });
 
       setSuccess(true);
-      setProgress({ phase: 'Face profile created successfully!', current: 100, total: 100 });
-      
-      // Call success callback
+      setProgress({
+        phase: "Face profile created successfully!",
+        current: 100,
+        total: 100,
+      });
+
       if (onProfileCreated) {
         onProfileCreated(true);
       }
 
-      // Auto-close after delay
       setTimeout(() => {
         handleClose();
       }, 2000);
-
     } catch (error) {
-      console.error('Error creating face profile:', error);
-      setError(error.message || 'Failed to create face profile');
+      console.error("Error creating face profile:", error);
+      setError(error.message || "Failed to create face profile");
     } finally {
       setIsCreating(false);
     }
   };
 
-  // Cleanup preview URLs when component unmounts
+  // Initialize camera when guided method is selected
   useEffect(() => {
-    return () => {
-      previewUrls.forEach(url => URL.revokeObjectURL(url));
-    };
-  }, [previewUrls]);
-
-  // Handle video element when camera starts
-  useEffect(() => {
-    if (stream && videoRef.current) {
-      videoRef.current.srcObject = stream;
+    if (setupMethod === "guided" && !showPreview) {
+      startCamera();
     }
-  }, [stream]);
+    return () => {
+      if (setupMethod !== "guided") {
+        stopCamera();
+      }
+    };
+  }, [setupMethod, showPreview]);
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
       stopCamera();
-      previewUrls.forEach(url => URL.revokeObjectURL(url));
+      previewUrls.forEach((url) => URL.revokeObjectURL(url));
+      capturedPhotos.forEach((photo) => URL.revokeObjectURL(photo.url));
     };
   }, []);
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto border border-white/20 dark:border-gray-700/50">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-2">
+      <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg rounded-xl shadow-xl w-full max-w-6xl max-h-[95vh] overflow-y-auto border border-white/20 dark:border-gray-700/50">
         {/* Header */}
-        <div className="flex justify-between items-center p-6 border-b border-gray-200/50 dark:border-gray-700/50">
+        <div className="flex justify-between items-center p-4 border-b border-gray-200/50 dark:border-gray-700/50">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-              Create Face Profile
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+              <SparklesIcon className="w-6 h-6 text-indigo-600" />
+              Setup Face Profile
             </h2>
-            <p className="text-gray-600 dark:text-gray-300 mt-1">
-              Upload 2-10 clear photos of yourself for automatic recognition
+            <p className="text-sm text-gray-600 dark:text-gray-300">
+              AI-powered face recognition for automatic photo organization
             </p>
           </div>
           <button
@@ -241,194 +558,464 @@ const FaceProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
           </button>
         </div>
 
-        <div className="p-6">
-          {/* Authentication Status */}
-          {currentUser && (
-            <div className="bg-green-50/50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-4 mb-6">
-              <div className="flex items-center gap-3">
-                <CheckCircleIcon className="w-5 h-5 text-green-600 dark:text-green-400" />
-                <div>
-                  <p className="font-medium text-green-800 dark:text-green-400">
-                    Authenticated as {currentUser.displayName || currentUser.email}
-                  </p>
-                  <p className="text-sm text-green-600 dark:text-green-300">
-                    Ready to create face profile
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Error Display */}
+        <div className="p-4">
+          {/* Error/Success/Progress Display */}
           {error && (
-            <div className="bg-red-50/50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4 mb-6">
-              <div className="flex items-center gap-3">
-                <ExclamationTriangleIcon className="w-5 h-5 text-red-600 dark:text-red-400" />
-                <p className="text-red-800 dark:text-red-400">{error}</p>
-              </div>
-            </div>
-          )}
-
-          {/* Success Display */}
-          {success && (
-            <div className="bg-green-50/50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-4 mb-6">
-              <div className="flex items-center gap-3">
-                <CheckCircleIcon className="w-5 h-5 text-green-600 dark:text-green-400" />
-                <p className="text-green-800 dark:text-green-400">
-                  Face profile created successfully! You can now use automatic photo recognition.
+            <div className="bg-red-50/50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 mb-4">
+              <div className="flex items-center gap-2">
+                <ExclamationTriangleIcon className="w-4 h-4 text-red-600 dark:text-red-400" />
+                <p className="text-sm text-red-800 dark:text-red-400">
+                  {error}
                 </p>
               </div>
             </div>
           )}
 
-          {/* Progress Display */}
+          {success && (
+            <div className="bg-green-50/50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3 mb-4">
+              <div className="flex items-center gap-2">
+                <CheckCircleIcon className="w-4 h-4 text-green-600 dark:text-green-400" />
+                <p className="text-sm text-green-800 dark:text-green-400">
+                  Face profile created successfully! You can now use automatic
+                  photo recognition.
+                </p>
+              </div>
+            </div>
+          )}
+
           {progress && (
-            <div className="bg-blue-50/50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4 mb-6">
-              <div className="flex items-center gap-3 mb-3">
-                <InformationCircleIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                <p className="text-blue-800 dark:text-blue-400">{progress.phase}</p>
+            <div className="bg-blue-50/50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 mb-4">
+              <div className="flex items-center gap-2 mb-2">
+                <InformationCircleIcon className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                <p className="text-sm text-blue-800 dark:text-blue-400">
+                  {progress.phase}
+                </p>
               </div>
               {progress.current && progress.total && (
-                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                  <div 
-                    className="bg-blue-600 dark:bg-blue-400 h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${(progress.current / progress.total) * 100}%` }}
+                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
+                  <div
+                    className="bg-blue-600 dark:bg-blue-400 h-1.5 rounded-full transition-all duration-300"
+                    style={{
+                      width: `${(progress.current / progress.total) * 100}%`,
+                    }}
                   />
                 </div>
               )}
             </div>
           )}
 
-          {/* Camera Section */}
-          {showCamera && (
-            <div className="bg-gray-50/50 dark:bg-gray-700/30 rounded-xl p-4 mb-6">
-              <div className="text-center">
-                <video
-                  ref={videoRef}
-                  autoPlay
-                  playsInline
-                  className="w-full max-w-md mx-auto rounded-lg border border-gray-200 dark:border-gray-600"
-                />
-                <div className="flex gap-3 mt-4 justify-center">
-                  <button
-                    onClick={capturePhoto}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
-                  >
-                    <CameraIcon className="w-4 h-4" />
-                    Capture Photo
-                  </button>
-                  <button
-                    onClick={stopCamera}
-                    className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-                  >
-                    Stop Camera
-                  </button>
+          {/* Method Selection */}
+          {!setupMethod && (
+            <div className="space-y-4">
+              <div className="text-center mb-4">
+                <div className="w-20 h-20 bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/30 dark:to-purple-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                  <CameraIcon className="w-10 h-10 text-indigo-600 dark:text-indigo-400" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-2">
+                  Choose Setup Method
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Select how you'd like to create your face profile for optimal
+                  recognition
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Guided Capture - Enhanced */}
+                <div
+                  onClick={() => setSetupMethod("guided")}
+                  className="relative cursor-pointer group"
+                >
+                  <div className="absolute -inset-1 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-2xl blur opacity-20 group-hover:opacity-30 transition duration-300"></div>
+                  <div className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-xl p-6 border border-indigo-200 dark:border-indigo-800 group-hover:border-indigo-300 dark:group-hover:border-indigo-700 transition-all duration-300">
+                    <div className="absolute top-4 right-4">
+                      <span className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
+                        ✨ RECOMMENDED
+                      </span>
+                    </div>
+
+                    <div className="w-16 h-16 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg group-hover:scale-105 transition-transform">
+                      <CameraIcon className="w-8 h-8 text-white" />
+                    </div>
+
+                    <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-3 text-center">
+                      Guided Face Scan
+                    </h3>
+
+                    <p className="text-gray-600 dark:text-gray-400 text-sm mb-4 text-center">
+                      AI-guided photo capture with step-by-step instructions for
+                      optimal results
+                    </p>
+
+                    <div className="space-y-2 mb-6">
+                      <div className="flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300">
+                        <CheckCircleIcon className="w-4 h-4 text-green-500" />
+                        <span>Automatic quality optimization</span>
+                      </div>
+                      <div className="flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300">
+                        <CheckCircleIcon className="w-4 h-4 text-green-500" />
+                        <span>Perfect angle guidance</span>
+                      </div>
+                      <div className="flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300">
+                        <CheckCircleIcon className="w-4 h-4 text-green-500" />
+                        <span>5 optimized captures</span>
+                      </div>
+                      <div className="flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300">
+                        <CheckCircleIcon className="w-4 h-4 text-green-500" />
+                        <span>Higher accuracy</span>
+                      </div>
+                    </div>
+
+                    <button className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white py-3 px-4 rounded-xl font-medium transition-all duration-300 flex items-center justify-center gap-2 group-hover:scale-105 shadow-lg">
+                      <PlayIcon className="w-5 h-5" />
+                      Start Guided Setup
+                    </button>
+                  </div>
+                </div>
+
+                {/* Manual Upload - Enhanced */}
+                <div
+                  onClick={() => setSetupMethod("upload")}
+                  className="cursor-pointer group"
+                >
+                  <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-xl p-6 border border-gray-200 dark:border-gray-700 group-hover:border-gray-300 dark:group-hover:border-gray-600 transition-all duration-300 h-full">
+                    <div className="w-16 h-16 bg-gradient-to-r from-gray-500 to-gray-600 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg group-hover:scale-105 transition-transform">
+                      <PhotoIcon className="w-8 h-8 text-white" />
+                    </div>
+
+                    <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-3 text-center">
+                      Upload Photos
+                    </h3>
+
+                    <p className="text-gray-600 dark:text-gray-400 text-sm mb-4 text-center">
+                      Upload 2-10 existing photos of yourself from your device
+                    </p>
+
+                    <div className="space-y-2 mb-6">
+                      <div className="flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300">
+                        <CheckCircleIcon className="w-4 h-4 text-blue-500" />
+                        <span>Use existing photos</span>
+                      </div>
+                      <div className="flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300">
+                        <CheckCircleIcon className="w-4 h-4 text-blue-500" />
+                        <span>No camera required</span>
+                      </div>
+                      <div className="flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300">
+                        <CheckCircleIcon className="w-4 h-4 text-blue-500" />
+                        <span>Bulk upload support</span>
+                      </div>
+                      <div className="flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300">
+                        <InformationCircleIcon className="w-4 h-4 text-orange-500" />
+                        <span>Quality may vary</span>
+                      </div>
+                    </div>
+
+                    <button className="w-full bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white py-3 px-4 rounded-xl font-medium transition-all duration-300 flex items-center justify-center gap-2 group-hover:scale-105 shadow-lg">
+                      <PhotoIcon className="w-5 h-5" />
+                      Choose Files
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
           )}
 
-          {/* Upload Options */}
-          {!showCamera && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isCreating}
-                className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl hover:border-indigo-400 dark:hover:border-indigo-500 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors group"
-              >
-                <PhotoIcon className="w-12 h-12 text-gray-400 dark:text-gray-500 group-hover:text-indigo-500 dark:group-hover:text-indigo-400 mb-3" />
-                <p className="text-lg font-medium text-gray-700 dark:text-gray-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
-                  Upload Photos
-                </p>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                  Select multiple photos from your device
-                </p>
-              </button>
+          {/* Guided Capture Flow - Redesigned Layout */}
+          {setupMethod === "guided" && !showPreview && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <button
+                  onClick={() => setSetupMethod(null)}
+                  className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 text-sm"
+                >
+                  <ArrowLeftIcon className="w-4 h-4" />
+                  Back to options
+                </button>
+              </div>
 
-              <button
-                onClick={startCamera}
-                disabled={isCreating}
-                className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl hover:border-indigo-400 dark:hover:border-indigo-500 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors group"
-              >
-                <CameraIcon className="w-12 h-12 text-gray-400 dark:text-gray-500 group-hover:text-indigo-500 dark:group-hover:text-indigo-400 mb-3" />
-                <p className="text-lg font-medium text-gray-700 dark:text-gray-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
-                  Take Photos
-                </p>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                  Use your camera to take photos
-                </p>
-              </button>
-            </div>
-          )}
-
-          {/* Hidden File Input */}
-          <input
-            ref={fileInputRef}
-            type="file"
-            multiple
-            accept="image/*"
-            onChange={handleFileSelect}
-            className="hidden"
-          />
-
-          {/* Selected Photos Preview */}
-          {selectedFiles.length > 0 && (
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-3">
-                Selected Photos ({selectedFiles.length}/10)
-              </h3>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {previewUrls.map((url, index) => (
-                  <div key={index} className="relative group">
-                    <img
-                      src={url}
-                      alt={`Preview ${index + 1}`}
-                      className="w-full h-32 object-cover rounded-lg border border-gray-200 dark:border-gray-600"
+              {/* Main Layout: Left (Progress + Guide) + Right (Camera) */}
+              <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                {/* Left Side: Progress Circle + Instructions + Guide */}
+                <div className="lg:col-span-2 space-y-6">
+                  {/* Circular Progress */}
+                  <div className="flex justify-center">
+                    <CircularProgress
+                      currentStep={capturedPhotos.length}
+                      totalSteps={captureSteps.length}
+                      capturedPhotos={capturedPhotos}
                     />
-                    <button
-                      onClick={() => removePhoto(index)}
-                      disabled={isCreating}
-                      className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <TrashIcon className="w-4 h-4" />
-                    </button>
                   </div>
-                ))}
+
+                  {/* Current Step Instructions */}
+                  {captureSteps[capturedPhotos.length] && (
+                    <div className="text-center space-y-3">
+                      <h3 className="text-xl font-bold text-gray-800 dark:text-white">
+                        {captureSteps[capturedPhotos.length].title}
+                      </h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        {captureSteps[capturedPhotos.length].instruction}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Dynamic Guide Simulation */}
+                  {captureSteps[capturedPhotos.length] && (
+                    <div className="flex justify-center">
+                      <DynamicGuide step={capturedPhotos.length} />
+                    </div>
+                  )}
+                </div>
+
+                {/* Right Side: Camera View (Narrower Width) */}
+                <div className="lg:col-span-3">
+                  {/* Camera View - Narrower */}
+                  <div className="relative bg-black rounded-xl overflow-hidden max-w-md mx-auto">
+                    <video
+                      ref={videoRef}
+                      autoPlay
+                      playsInline
+                      muted
+                      className="w-full h-64 lg:h-80 object-cover"
+                    />
+
+                    {/* Face Guide Overlay */}
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <div className="w-40 h-52 border-2 border-white/50 rounded-full border-dashed animate-pulse"></div>
+                    </div>
+
+                    {/* Countdown Overlay */}
+                    {countdown > 0 && (
+                      <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                        <div className="text-white text-6xl font-bold animate-ping">
+                          {countdown}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Capture Button */}
+                    <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
+                      <button
+                        onClick={capturePhotoWithCountdown}
+                        disabled={isCapturing}
+                        className="w-16 h-16 bg-white rounded-full shadow-lg hover:scale-110 transition-transform duration-200 flex items-center justify-center disabled:opacity-50"
+                      >
+                        <div className="w-12 h-12 bg-red-500 rounded-full"></div>
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           )}
 
-          {/* Tips Section */}
-          <div className="bg-blue-50/50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4 mb-6">
-            <h3 className="font-semibold text-blue-800 dark:text-blue-400 mb-2">
-              📸 Tips for Best Results
-            </h3>
-            <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
-              <li>• Upload 2-10 clear photos of yourself</li>
-              <li>• Ensure your face is clearly visible and well-lit</li>
-              <li>• Include photos from different angles and expressions</li>
-              <li>• Avoid sunglasses, masks, or heavy shadows</li>
-              <li>• Photos should be at least 200x200 pixels</li>
-            </ul>
-          </div>
+          {/* Guided Capture Preview */}
+          {setupMethod === "guided" && showPreview && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
+                  <CheckCircleIcon className="w-6 h-6 text-green-500" />
+                  Review Your Photos
+                </h3>
+                <button
+                  onClick={resetGuidedCapture}
+                  className="text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 text-sm"
+                >
+                  Retake All
+                </button>
+              </div>
 
-          {/* Action Buttons */}
-          <div className="flex gap-4">
-            <button
-              onClick={handleClose}
-              disabled={isCreating}
-              className="flex-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 py-3 px-4 rounded-xl font-medium transition-colors disabled:opacity-50"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleCreateProfile}
-              disabled={isCreating || selectedFiles.length < 2}
-              className="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-400 text-white py-3 px-4 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 shadow-lg disabled:transform-none disabled:shadow-none"
-            >
-              {isCreating ? 'Creating Profile...' : 'Create Face Profile'}
-            </button>
-          </div>
+              <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
+                {capturedPhotos.map((photo, index) => (
+                  <div key={index} className="relative group">
+                    <img
+                      src={photo.url}
+                      alt={`${photo.step.title}`}
+                      className="w-full h-24 object-cover rounded-lg border border-gray-200 dark:border-gray-600"
+                    />
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-all duration-200 rounded-lg flex items-center justify-center">
+                      <button
+                        onClick={() => retakePhoto(index)}
+                        className="opacity-0 group-hover:opacity-100 bg-white text-gray-800 px-2 py-1 rounded text-xs font-medium transition-all duration-200"
+                      >
+                        Retake
+                      </button>
+                    </div>
+                    <div className="absolute bottom-1 left-1 bg-black/70 text-white text-xs px-1 py-0.5 rounded">
+                      {photo.step.title}
+                    </div>
+                    <div className="absolute top-1 right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
+                      <CheckCircleIcon className="w-3 h-3 text-white" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="bg-green-50/50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-4">
+                <div className="flex items-center gap-3">
+                  <CheckCircleIcon className="w-5 h-5 text-green-600 dark:text-green-400" />
+                  <div>
+                    <p className="font-medium text-green-800 dark:text-green-400">
+                      Perfect! All 5 photos captured successfully
+                    </p>
+                    <p className="text-sm text-green-600 dark:text-green-300">
+                      These photos will be used to create your face profile for
+                      automatic recognition
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Create Profile Button */}
+              <div className="flex justify-center">
+                <button
+                  onClick={handleCreateProfile}
+                  disabled={isCreating || capturedPhotos.length < 5}
+                  className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-400 text-white py-3 px-8 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 shadow-lg disabled:transform-none disabled:shadow-none flex items-center gap-2"
+                >
+                  <SparklesIcon className="w-5 h-5" />
+                  {isCreating ? "Creating Profile..." : "Create Face Profile"}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Manual Upload Flow */}
+          {setupMethod === "upload" && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <button
+                  onClick={() => setSetupMethod(null)}
+                  className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 text-sm"
+                >
+                  <ArrowLeftIcon className="w-4 h-4" />
+                  Back to options
+                </button>
+              </div>
+
+              {/* Upload Area */}
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                className="flex flex-col items-center justify-center p-12 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl hover:border-indigo-400 dark:hover:border-indigo-500 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors cursor-pointer group"
+              >
+                <PhotoIcon className="w-16 h-16 text-gray-400 dark:text-gray-500 group-hover:text-indigo-500 mb-4 transition-colors" />
+                <h3 className="text-xl font-bold text-gray-700 dark:text-gray-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 mb-2 transition-colors">
+                  Upload Your Photos
+                </h3>
+                <p className="text-gray-500 dark:text-gray-400 text-center mb-4">
+                  Select 2-10 clear photos of yourself
+                  <br />
+                  Maximum 10MB per photo
+                </p>
+                <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-3 rounded-xl font-medium group-hover:scale-105 transition-transform shadow-lg">
+                  Choose Files
+                </div>
+              </div>
+
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                accept="image/*"
+                onChange={handleFileSelect}
+                className="hidden"
+              />
+
+              {/* Selected Photos Preview */}
+              {selectedFiles.length > 0 && (
+                <div className="space-y-4">
+                  <h4 className="text-lg font-semibold text-gray-800 dark:text-white flex items-center gap-2">
+                    <PhotoIcon className="w-5 h-5 text-indigo-600" />
+                    Selected Photos ({selectedFiles.length}/10)
+                  </h4>
+                  <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
+                    {previewUrls.map((url, index) => (
+                      <div key={index} className="relative group">
+                        <img
+                          src={url}
+                          alt={`Preview ${index + 1}`}
+                          className="w-full h-20 object-cover rounded-lg border border-gray-200 dark:border-gray-600"
+                        />
+                        <button
+                          onClick={() => removePhoto(index)}
+                          disabled={isCreating}
+                          className="absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <TrashIcon className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Create Profile Button for Upload */}
+                  <div className="flex justify-center pt-4">
+                    <button
+                      onClick={handleCreateProfile}
+                      disabled={isCreating || selectedFiles.length < 2}
+                      className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-400 text-white py-3 px-8 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 shadow-lg disabled:transform-none disabled:shadow-none flex items-center gap-2"
+                    >
+                      <SparklesIcon className="w-5 h-5" />
+                      {isCreating
+                        ? "Creating Profile..."
+                        : "Create Face Profile"}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Spaced Tips Section */}
+          {setupMethod && (
+            <div className="mt-8 bg-blue-50/50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
+              <h3 className="font-semibold text-blue-800 dark:text-blue-400 mb-3 flex items-center gap-2">
+                <InformationCircleIcon className="w-5 h-5" />
+                📸 Tips for Best Results
+              </h3>
+              <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-2">
+                {setupMethod === "guided" ? (
+                  <>
+                    <li className="flex items-start gap-2">
+                      <CheckCircleIcon className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
+                      <span>Follow the on-screen instructions carefully</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircleIcon className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
+                      <span>Ensure good lighting on your face</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircleIcon className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
+                      <span>Keep your face within the guide circle</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircleIcon className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
+                      <span>Remove sunglasses and hats</span>
+                    </li>
+                  </>
+                ) : (
+                  <>
+                    <li className="flex items-start gap-2">
+                      <CheckCircleIcon className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
+                      <span>Upload 2-10 clear photos of yourself</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircleIcon className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
+                      <span>
+                        Include photos from different angles and expressions
+                      </span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircleIcon className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
+                      <span>Avoid sunglasses, masks, or heavy shadows</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircleIcon className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
+                      <span>Photos should be at least 200x200 pixels</span>
+                    </li>
+                  </>
+                )}
+              </ul>
+            </div>
+          )}
         </div>
 
         {/* Hidden Canvas for Camera Capture */}

@@ -103,15 +103,15 @@ const Dashboard = () => {
   const notificationRef = useRef(null);
 
   // Sidebar state
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   // Navigation state
   const [activeSection, setActiveSection] = useState("trips");
 
-  // NEW: Trip dropdown state
+  // Trip dropdown state
   const [tripsDropdownOpen, setTripsDropdownOpen] = useState(false);
   const [visibleTripsCount, setVisibleTripsCount] = useState(5);
 
-  // NEW: Notifications dropdown state
+  // Notifications dropdown state
   const [notificationsDropdownOpen, setNotificationsDropdownOpen] =
     useState(false);
 
@@ -148,6 +148,7 @@ const Dashboard = () => {
   const [selectedPhotosToRemove, setSelectedPhotosToRemove] = useState([]);
   const [uploadingProfilePhotos, setUploadingProfilePhotos] = useState([]);
   const [isManagingProfile, setIsManagingProfile] = useState(false);
+  const [showProfileManager, setShowProfileManager] = useState(false);
 
   // Modal states
   const [showCreateTripModal, setShowCreateTripModal] = useState(false);
@@ -559,46 +560,67 @@ const Dashboard = () => {
   };
 
   // Delete entire profile
-  const deleteCurrentProfile = async () => {
-    if (
-      !window.confirm(
-        "Are you sure you want to delete your face profile? This cannot be undone."
-      )
-    ) {
-      return;
-    }
+const deleteCurrentProfile = async () => {
+  toast((t) => (
+    <div className="text-center">
+      <p className="text-sm text-gray-800 font-medium">
+        Delete your face profile?
+      </p>
+      <p className="text-xs text-gray-500 mt-1">
+        This action cannot be undone.
+      </p>
+      <div className="mt-3 flex justify-center gap-3">
+        <button
+          onClick={async () => {
+            toast.dismiss(t.id); 
+            setIsManagingProfile(true);
 
-    setIsManagingProfile(true);
+            try {
+              // 1. Delete from memory
+              deleteFaceProfile(currentUser.uid);
 
-    try {
-      // Delete from memory
-      deleteFaceProfile(currentUser.uid);
+              // 2. Delete from Firebase Storage
+              try {
+                await deleteFaceProfileFromStorage(currentUser.uid);
+                console.log("✅ Face profile deleted from Firebase Storage");
+              } catch (storageError) {
+                console.warn(
+                  "⚠️ Could not delete from Firebase Storage:",
+                  storageError
+                );
+              }
 
-      // Delete from Firebase Storage
-      try {
-        await deleteFaceProfileFromStorage(currentUser.uid);
-        console.log("✅ Face profile deleted from Firebase Storage");
-      } catch (storageError) {
-        console.warn(
-          "⚠️ Could not delete from Firebase Storage:",
-          storageError
-        );
-      }
+              // 3. Update state
+              setHasProfile(false);
+              setProfile(null);
+              setProfilePhotos([]);
+              setShowProfileManagement(false);
 
-      // Update local state
-      setHasProfile(false);
-      setProfile(null);
-      setProfilePhotos([]);
-      setShowProfileManagement(false);
-
-      toast.success("Face profile deleted successfully");
-    } catch (error) {
-      console.error("Failed to delete profile:", error);
-      toast.error("Failed to delete profile: " + error.message);
-    } finally {
-      setIsManagingProfile(false);
-    }
-  };
+              toast.success("Face profile deleted successfully");
+            } catch (error) {
+              console.error("Failed to delete profile:", error);
+              toast.error("Failed to delete profile: " + error.message);
+            } finally {
+              setIsManagingProfile(false);
+            }
+          }}
+          className="px-3 py-1 bg-red-500 text-white text-sm rounded-md shadow hover:bg-red-600"
+        >
+          Delete
+        </button>
+        <button
+          onClick={() => toast.dismiss(t.id)}
+          className="px-3 py-1 bg-gray-200 text-gray-700 text-sm rounded-md shadow hover:bg-gray-300"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  ), {
+    duration: 10000,
+    id: "delete-profile-confirmation", 
+  });
+};
 
   // Toggle photo selection for removal
   const togglePhotoSelection = (photoUrl) => {
@@ -1054,38 +1076,38 @@ const Dashboard = () => {
     </div>
   );
 
-    const FaceProfileSection = () => (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Face Profile
-          </h1>
-          <p className="text-gray-600 dark:text-gray-300 mt-1">
-            AI-powered face recognition for automatic photo organization
-          </p>
-        </div>
+  const FaceProfileSection = () => (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+          Face Profile
+        </h1>
+        <p className="text-gray-600 dark:text-gray-300 mt-1">
+          AI-powered face recognition for automatic photo organization
+        </p>
+      </div>
 
-        {!hasProfile ? (
-          <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-2xl shadow-lg p-8 border border-white/20 dark:border-gray-700/50 text-center">
-            <div className="w-24 h-24 bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-2xl flex items-center justify-center mx-auto mb-6">
-              <UserCircleIcon className="w-12 h-12 text-indigo-500 dark:text-indigo-400" />
-            </div>
-            <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">
-              Create Your Face Profile
-            </h2>
-            <p className="text-gray-600 dark:text-gray-300 mb-8 max-w-md mx-auto">
-              Upload 2-10 clear photos of yourself or use your camera to enable automatic photo
-              recognition in your trips
-            </p>
-            <button
-              onClick={() => setShowFaceProfileModal(true)}
-              disabled={isLoadingProfile}
-              className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-400 text-white px-8 py-4 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center gap-2 mx-auto"
-            >
-              <CameraIcon className="w-5 h-5" />
-              {isLoadingProfile ? "Loading..." : "Setup Face Profile"}
-            </button>
+      {!hasProfile ? (
+        <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-2xl shadow-lg p-8 border border-white/20 dark:border-gray-700/50 text-center">
+          <div className="w-24 h-24 bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-2xl flex items-center justify-center mx-auto mb-6">
+            <UserCircleIcon className="w-12 h-12 text-indigo-500 dark:text-indigo-400" />
           </div>
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">
+            Create Your Face Profile
+          </h2>
+          <p className="text-gray-600 dark:text-gray-300 mb-8 max-w-md mx-auto">
+            Upload 2-10 clear photos of yourself or use your camera to enable
+            automatic photo recognition in your trips
+          </p>
+          <button
+            onClick={() => setShowFaceProfileModal(true)}
+            disabled={isLoadingProfile}
+            className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-400 text-white px-8 py-4 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center gap-2 mx-auto"
+          >
+            <SparklesIcon className="w-5 h-5" />
+            {isLoadingProfile ? "Loading..." : "Setup Face Profile"}
+          </button>
+        </div>
       ) : (
         <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-2xl shadow-lg p-8 border border-white/20 dark:border-gray-700/50">
           <div className="flex items-center justify-between mb-6">
@@ -2026,7 +2048,7 @@ const Dashboard = () => {
         </div>
       )}
 
-      <FaceProfileModal 
+      <FaceProfileModal
         isOpen={showFaceProfileModal}
         onClose={() => setShowFaceProfileModal(false)}
         onProfileCreated={handleProfileLoaded}
