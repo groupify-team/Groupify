@@ -1491,7 +1491,9 @@ const TripDetailView = ({ tripId: propTripId }) => {
                     </p>
                     {!hasProfile && (
                       <button
-                        onClick={() => navigate("/dashboard")}
+                        onClick={() =>
+                          navigate("/dashboard?section=faceprofile")
+                        }
                         className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white px-8 py-4 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 shadow-lg backdrop-blur-sm flex items-center gap-3 mx-auto"
                       >
                         <SparklesIcon className="w-5 h-5" />

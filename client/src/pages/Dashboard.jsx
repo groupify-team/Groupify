@@ -384,6 +384,17 @@ const Dashboard = () => {
     }
   }, [currentUser]);
 
+  useEffect(() => {
+    const urlParams = new URLSearchParams(location.search);
+    const section = urlParams.get("section");
+    if (section) {
+      setActiveSection(section);
+      setCurrentView("home");
+      // Clear the URL parameter
+      navigate("/dashboard", { replace: true });
+    }
+  }, [location.search, navigate]);
+
   // Updated loadUserFaceProfile function
   const loadUserFaceProfile = async () => {
     if (!currentUser?.uid) return;
