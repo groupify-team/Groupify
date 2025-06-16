@@ -62,6 +62,7 @@ import {
 import PhotoUpload from "../photos/PhotoUpload";
 import InviteFriendDropdown from "../trips/InviteFriendDropdown";
 import UserProfileModal from "../profile/UserProfileModal";
+import EditTripModal from "../trips/EditTripModal";
 
 // 🔹 Icons
 import {
@@ -79,6 +80,7 @@ import {
   FireIcon,
   MapPinIcon,
   PhotoIcon,
+  PencilIcon,
 } from "@heroicons/react/24/outline";
 
 const TripDetailView = ({ tripId: propTripId }) => {
@@ -99,6 +101,7 @@ const TripDetailView = ({ tripId: propTripId }) => {
   const [selectedPhoto, setSelectedPhoto] = useState(null);
   const [filteredPhotos, setFilteredPhotos] = useState([]);
   const [filterActive, setFilterActive] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
 
   // Simplified face recognition state
   const [isProcessingFaces, setIsProcessingFaces] = useState(false);
@@ -962,12 +965,10 @@ const TripDetailView = ({ tripId: propTripId }) => {
                 <div className="flex flex-wrap gap-3">
                   {isAdmin && (
                     <button
-                      onClick={() =>
-                        toast.info("Edit Trip feature coming soon!")
-                      }
+                      onClick={() => setShowEditModal(true)}
                       className="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl font-medium transition-all duration-300 transform hover:scale-105 shadow-lg text-sm flex items-center gap-2 backdrop-blur-sm"
                     >
-                      <SparklesIcon className="w-4 h-4" />
+                      <PencilIcon className="w-4 h-4" />
                       Edit Trip
                     </button>
                   )}
@@ -1011,31 +1012,10 @@ const TripDetailView = ({ tripId: propTripId }) => {
           <div className="xl:col-span-2 space-y-6">
             {/* Upload Form - Enhanced with glassmorphism */}
             {showUploadForm && (
-              <div className="relative group">
-                <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500 via-blue-500 to-purple-500 rounded-2xl blur opacity-20 group-hover:opacity-30 transition duration-300"></div>
-                <div className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-xl shadow-lg p-6 border border-white/20 dark:border-gray-700/50">
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-xl flex items-center justify-center shadow-lg">
-                      <CameraIcon className="w-5 h-5 text-white" />
-                    </div>
-                    <div>
-                      <h2 className="text-xl font-bold text-gray-800 dark:text-white">
-                        Upload New Photos
-                      </h2>
-                      <p className="text-gray-600 dark:text-gray-400 text-sm">
-                        Share your amazing memories with the group
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="bg-gradient-to-br from-emerald-50/50 to-blue-50/50 dark:from-emerald-900/20 dark:to-blue-900/20 rounded-xl p-4 border border-emerald-200/30 dark:border-emerald-800/30">
-                    <PhotoUpload
-                      tripId={tripId}
-                      onPhotoUploaded={handlePhotoUploaded}
-                    />
-                  </div>
-                </div>
-              </div>
+              <PhotoUpload
+                tripId={tripId}
+                onPhotoUploaded={handlePhotoUploaded}
+              />
             )}
 
             {/* Photos Preview Section - Enhanced */}
@@ -1722,6 +1702,17 @@ const TripDetailView = ({ tripId: propTripId }) => {
             </div>
           </div>
         )}
+
+        {/* Edit Trip Modal */}
+        <EditTripModal
+          isOpen={showEditModal}
+          onClose={() => setShowEditModal(false)}
+          trip={trip}
+          onTripUpdated={(updatedTrip) => {
+            setTrip(updatedTrip);
+            setShowEditModal(false);
+          }}
+        />
 
         {/* All Photos Modal - Enhanced for mobile */}
         {showAllPhotosModal && (
