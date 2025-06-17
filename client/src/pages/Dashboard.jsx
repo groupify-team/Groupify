@@ -1,97 +1,93 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
-import { useAuth } from "../contexts/AuthContext";
-import { useTheme } from "../contexts/ThemeContext";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import TripCard from "../components/trips/TripCard";
-import TripDetailView from "../components/trips/TripDetailView";
-import CreateTripModal from "../components/trips/CreateTripModal";
-import AddFriend from "../components/friends/AddFriend";
-import EditProfileModal from "../components/profile/EditProfileModal";
-import SettingsModal from "../components/settings/SettingsModal";
-import UserProfileModal from "../components/profile/UserProfileModal";
-import FaceProfileModal from "../components/faceProfile/FaceProfileModal";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import FaceProfileModal from "../components/faceProfile/FaceProfileModal";
+import AddFriend from "../components/friends/AddFriend";
+import EditProfileModal from "../components/profile/EditProfileModal";
+import UserProfileModal from "../components/profile/UserProfileModal";
+import SettingsModal from "../components/settings/SettingsModal";
+import CreateTripModal from "../components/trips/CreateTripModal";
+import TripCard from "../components/trips/TripCard";
+import TripDetailView from "../components/trips/TripDetailView";
+import { useAuth } from "../contexts/AuthContext";
+import { useTheme } from "../contexts/ThemeContext";
 
 // Icons
 import {
-  MapIcon,
-  UserCircleIcon,
-  UserGroupIcon,
-  BellIcon,
-  Cog6ToothIcon,
-  ArrowRightOnRectangleIcon,
-  MagnifyingGlassIcon,
-  PlusIcon,
-  CalendarIcon,
-  CheckCircleIcon,
-  XCircleIcon,
-  CameraIcon,
-  SparklesIcon,
-  EyeIcon,
-  TrashIcon,
-  Bars3Icon,
-  ExclamationTriangleIcon,
-  XMarkIcon,
   ArrowLeftIcon,
+  ArrowRightOnRectangleIcon,
+  Bars3Icon,
+  BellIcon,
+  CameraIcon,
+  CheckCircleIcon,
   ChevronDownIcon,
   ChevronRightIcon,
+  Cog6ToothIcon,
+  ExclamationTriangleIcon,
+  MagnifyingGlassIcon,
+  MapIcon,
   MoonIcon,
+  PlusIcon,
+  SparklesIcon,
   SunIcon,
+  TrashIcon,
+  UserCircleIcon,
+  UserGroupIcon,
+  XCircleIcon,
+  XMarkIcon
 } from "@heroicons/react/24/outline";
 
 // functions
-import {
-  collection,
-  getDocs,
-  getDoc,
-  query,
-  where,
-  doc,
-  onSnapshot,
-  deleteDoc,
-  writeBatch,
-} from "firebase/firestore";
-import { db, storage } from "../services/firebase/config";
-import {
-  ref,
-  uploadBytes,
-  getDownloadURL,
-  deleteObject,
-  listAll,
-} from "firebase/storage";
 import { deleteUser } from "firebase/auth";
 import {
-  getUserTrips,
-  getPendingInvites,
-  acceptTripInvite,
-  declineTripInvite,
-} from "../services/firebase/trips";
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  onSnapshot,
+  query,
+  where,
+  writeBatch
+} from "firebase/firestore";
 import {
-  getUserProfile,
-  getFriends,
-  getPendingFriendRequests,
-  acceptFriendRequest,
-  rejectFriendRequest,
-  sendFriendRequest,
-  removeFriend,
-  cancelFriendRequest,
-  didISendRequest,
-} from "../services/firebase/users";
+  deleteObject,
+  getDownloadURL,
+  listAll,
+  ref,
+  uploadBytes,
+} from "firebase/storage";
+import {
+  addPhotosToProfile,
+  createFaceProfile,
+  deleteFaceProfile,
+  getFaceProfile,
+  getProfilePhotos,
+  hasFaceProfile,
+  optimizeProfile,
+  removePhotosFromProfile,
+} from "../services/faceRecognition";
+import { db, storage } from "../services/firebase/config";
 import {
   deleteFaceProfileFromStorage,
   getFaceProfileFromStorage,
 } from "../services/firebase/faceProfiles";
 import {
-  hasFaceProfile,
-  getFaceProfile,
-  createFaceProfile,
-  deleteFaceProfile,
-  addPhotosToProfile,
-  removePhotosFromProfile,
-  getProfilePhotos,
-  optimizeProfile,
-} from "../services/faceRecognition";
+  acceptTripInvite,
+  declineTripInvite,
+  getPendingInvites,
+  getUserTrips,
+} from "../services/firebase/trips";
+import {
+  acceptFriendRequest,
+  cancelFriendRequest,
+  getFriends,
+  getPendingFriendRequests,
+  getUserProfile,
+  rejectFriendRequest,
+  removeFriend,
+  sendFriendRequest
+} from "../services/firebase/users";
 
 const Dashboard = () => {
   // Authentication context

@@ -18,7 +18,7 @@ import {
   ClockIcon,
 } from "@heroicons/react/24/outline";
 import { toast } from "react-hot-toast";
-import { getFunctions, httpsCallable } from "firebase/functions";
+import { httpsCallable } from "firebase/functions";
 import { functions } from "../../services/firebase/config";
 
 const ConfirmEmail = () => {
@@ -126,26 +126,21 @@ const ConfirmEmail = () => {
           )
       );
     } catch (error) {
-      console.error("Verification error:", error);
-      let errorMessage = "Invalid verification code";
+  console.error("Verification error:", error);
 
-      if (error.message.includes("expired")) {
-        errorMessage =
-          "Verification code has expired. Please request a new one.";
-        setCanResend(true);
-        setTimeLeft(0);
-      } else if (error.message.includes("already verified")) {
-        errorMessage = "Email is already verified. You can now sign in.";
-        navigate("/signin");
-        return;
-      }
-
-      toast.error(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  if (error.message.includes("expired")) {
+    toast.error("Verification code has expired. Please request a new one.");
+    setCanResend(true);
+    setTimeLeft(0);
+  } else if (error.message.includes("already verified")) {
+    toast.success("Email is already verified. You can now sign in.");
+    navigate("/signin");
+    return;
+  } else {
+    toast.error("Invalid verification code");
+  }
+}
+    };
   const handleVerify = async (e) => {
     e.preventDefault();
     const code = verificationCode.join("");
@@ -271,13 +266,13 @@ const ConfirmEmail = () => {
           <form onSubmit={handleVerify} className="space-y-6">
             {/* Code Input */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">
+              <label htmlFor="code-0" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">
                 Verification Code
               </label>
               <div className="flex justify-between space-x-2">
                 {verificationCode.map((digit, index) => (
                   <input
-                    key={index}
+                    key={`digit-${index}-${digit}`}
                     id={`code-${index}`}
                     type="text"
                     maxLength="1"

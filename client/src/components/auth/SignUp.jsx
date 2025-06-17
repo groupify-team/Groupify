@@ -11,7 +11,6 @@ import {
   ArrowLeftIcon,
   CheckIcon,
   ChevronUpIcon,
-  ChevronDownIcon,
 } from "@heroicons/react/24/outline";
 import { toast } from "react-hot-toast";
 
@@ -563,9 +562,9 @@ const SignUp = () => {
 
             {/* Gender Selection */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+              <p className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
                 Gender (Optional)
-              </label>
+              </p>
               <div className="flex space-x-3">
                 {["male", "female", "other"].map((option) => (
                   <button

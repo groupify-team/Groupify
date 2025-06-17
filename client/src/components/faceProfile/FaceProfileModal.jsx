@@ -13,7 +13,6 @@ import {
   InformationCircleIcon,
   TrashIcon,
   SparklesIcon,
-  ArrowRightIcon,
   ArrowLeftIcon,
   PlayIcon,
 } from "@heroicons/react/24/outline";

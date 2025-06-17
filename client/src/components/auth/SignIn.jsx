@@ -9,7 +9,6 @@ import {
   MoonIcon,
   SunIcon,
   ArrowLeftIcon,
-  CheckCircleIcon,
   ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
 import { toast } from "react-hot-toast";
@@ -76,20 +75,22 @@ const SignIn = () => {
       // Provide user-friendly error messages
       let errorMessage = "Failed to sign in";
 
-if (error.message && error.message.includes("verify your email")) {
-  toast(error.message, {
-    icon: <ExclamationTriangleIcon className="h-6 w-6 text-black flex-shrink-0" />,
-    style: {
-      background: '#fbbf24', // yellow-400
-      color: '#000000', // black
-      border: '1px solid #f59e0b', // yellow-500
-      padding: '16px', // Add more padding to expand the message
-      textAlign: 'center', // Center the text
-      minWidth: '300px', // Make it wider
-    }
-  });
-  setShowVerificationAlert(true);
-  return;
+      if (error.message?.includes("verify your email")) {
+        toast(error.message, {
+          icon: (
+            <ExclamationTriangleIcon className="h-6 w-6 text-black flex-shrink-0" />
+          ),
+          style: {
+            background: "#fbbf24", // yellow-400
+            color: "#000000", // black
+            border: "1px solid #f59e0b", // yellow-500
+            padding: "16px", // Add more padding to expand the message
+            textAlign: "center", // Center the text
+            minWidth: "300px", // Make it wider
+          },
+        });
+        setShowVerificationAlert(true);
+        return;
       } else if (error.code === "auth/user-not-found") {
         errorMessage = "No account found with this email";
       } else if (error.code === "auth/wrong-password") {

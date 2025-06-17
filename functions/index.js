@@ -386,7 +386,7 @@ exports.resendVerificationCode = onCall(
 // Enable Google Auth
 exports.enableGoogleAuth = onCall(async (request) => {
   try {
-    const { uid, email, displayName, photoURL } = request.data;
+    const { uid, email, displayName, } = request.data;
 
     if (!uid || !email) {
       throw new HttpsError("invalid-argument", "UID and email are required");
