@@ -1,36 +1,48 @@
-// EditProfileModal.jsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { updateDoc, doc, getDoc } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { auth, db, storage } from "../../services/firebase/config";
 import { updateEmail, updatePassword } from "firebase/auth";
 import ProfileImageCropper from "./ProfileImageCropper";
 import { useAuth } from "../../contexts/AuthContext";
-import { useRef } from "react"; // ודא שזה למעלה
-import { CameraIcon, PlusIcon } from "@heroicons/react/24/outline";
+import { useTheme } from "../../contexts/ThemeContext";
+import {
+  CameraIcon,
+  PlusIcon,
+  XMarkIcon,
+  EyeIcon,
+  EyeSlashIcon,
+  SparklesIcon,
+  UserCircleIcon,
+} from "@heroicons/react/24/outline";
 
 const EditProfileModal = ({ isOpen, onClose }) => {
-  // Form states
+  // Form states - keeping your exact original structure
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [birthdate, setBirthdate] = useState("");
   const [gender, setGender] = useState(null);
 
-  // Image upload & crop states
-  const [profileImage, setProfileImage] = useState(null); // This will hold the final cropped blob
-  const [previewUrl, setPreviewUrl] = useState(null); // For showing cropped image in UI
-  const [rawImage, setRawImage] = useState(null); // Uncropped image for Cropper
-  const [cropping, setCropping] = useState(false); // Whether Cropper is active
+  // Image upload & crop states - keeping your exact original structure
+  const [profileImage, setProfileImage] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const [rawImage, setRawImage] = useState(null);
+  const [cropping, setCropping] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const { updateUserProfile, setCurrentUser } = useAuth();
+  const { theme } = useTheme();
   const [showCamera, setShowCamera] = useState(false);
   const [videoStream, setVideoStream] = useState(null);
   const [capturedPhoto, setCapturedPhoto] = useState(null);
   const videoRef = useRef(null);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [showSuccess, setShowSuccess] = useState(false);
+  // New UI state for password visibility
+  const [showPassword, setShowPassword] = useState(false);
 
-  // Load user data when modal opens
+  // Load user data when modal opens - keeping your exact logic
   useEffect(() => {
     const loadUserData = async () => {
       if (!auth.currentUser) return;
@@ -41,16 +53,21 @@ const EditProfileModal = ({ isOpen, onClose }) => {
         setDisplayName(data.displayName || "");
         setEmail(data.email || "");
         setBirthdate(data.birthdate || "");
-        setPreviewUrl(data.photoURL || null);
+        setPreviewUrl(data.photoURL || null); // This will load your actual profile photo
         if (data.gender) {
           setGender(data.gender);
         }
       }
     };
 
-    if (isOpen) loadUserData();
+    if (isOpen) {
+      loadUserData();
+      setError("");
+      setShowSuccess(false);
+    }
   }, [isOpen]);
 
+  // Camera functionality - keeping your exact logic
   useEffect(() => {
     const startCamera = async () => {
       if (showCamera && videoRef.current) {
@@ -72,7 +89,7 @@ const EditProfileModal = ({ isOpen, onClose }) => {
     startCamera();
   }, [showCamera]);
 
-  // Handle raw file selection and open cropper
+  // Handle raw file selection and open cropper - keeping your exact logic
   const handleImageSelect = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -81,7 +98,7 @@ const EditProfileModal = ({ isOpen, onClose }) => {
     }
   };
 
-  // Receive cropped image blob and preview URL from cropper
+  // Receive cropped image blob and preview URL from cropper - keeping your exact logic
   const handleCropComplete = (blob, fileUrl) => {
     console.log("📸 Received blob from cropper:", blob);
     setProfileImage(blob);
@@ -89,7 +106,7 @@ const EditProfileModal = ({ isOpen, onClose }) => {
     setCropping(false);
   };
 
-  // Upload the blob to Firebase Storage and return the download URL
+  // Upload the blob to Firebase Storage - keeping your exact logic
   const handleImageUpload = async () => {
     if (!profileImage) {
       console.log("⚠️ No profile image selected");
@@ -140,7 +157,7 @@ const EditProfileModal = ({ isOpen, onClose }) => {
     setCapturedPhoto(null);
   };
 
-  // Save all profile data (including new image URL if changed)
+  // Save all profile data - keeping your exact logic
   const handleSave = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -149,7 +166,7 @@ const EditProfileModal = ({ isOpen, onClose }) => {
     try {
       const user = auth.currentUser;
       const userRef = doc(db, "users", user.uid);
-      const updates = { displayName, birthdate, gender }; // ✅ gender is now included
+      const updates = { displayName, birthdate, gender };
 
       if (email !== user.email) {
         try {
@@ -161,7 +178,7 @@ const EditProfileModal = ({ isOpen, onClose }) => {
             setLoading(false);
             return;
           } else {
-            throw error; // Let it go to the outer catch if it's another error
+            throw error;
           }
         }
       }
@@ -182,13 +199,18 @@ const EditProfileModal = ({ isOpen, onClose }) => {
 
       const imageUrl = await handleImageUpload();
       if (imageUrl) {
-        updates.photoURL = imageUrl; // Update Firestore
-        await updateUserProfile({ photoURL: imageUrl }); // Update Firebase Auth
-        setCurrentUser((prev) => ({ ...prev, photoURL: imageUrl })); // Update local context
+        updates.photoURL = imageUrl;
+        await updateUserProfile({ photoURL: imageUrl });
+        setCurrentUser((prev) => ({ ...prev, photoURL: imageUrl }));
       }
 
-      await updateDoc(userRef, updates); // ✅ update Firestore with all fields
-      onClose();
+      await updateDoc(userRef, updates);
+      setSuccessMessage("Profile updated successfully! ✨");
+      setShowSuccess(true);
+      setTimeout(() => {
+        setShowSuccess(false);
+        onClose();
+      }, 2000); // Show success message for 2 seconds before closing
     } catch (err) {
       console.error("❌ Error saving profile:", err);
       setError(err.message);
@@ -202,33 +224,48 @@ const EditProfileModal = ({ isOpen, onClose }) => {
 
   return (
     <>
+      {/* Camera Modal - Enhanced with theme support */}
       {showCamera && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]">
-          <div className="bg-white rounded-lg p-6 shadow-md flex flex-col items-center space-y-4 w-[300px]">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[9999]">
+          <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg rounded-2xl p-6 shadow-2xl flex flex-col items-center space-y-4 w-[400px] border border-white/20 dark:border-gray-700/50">
+            <div className="flex items-center justify-between w-full mb-2">
+              <h3 className="text-lg font-semibold text-gray-800 dark:text-white">
+                Take a Photo
+              </h3>
+              <button
+                onClick={cancelCamera}
+                className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+              >
+                <XMarkIcon className="w-5 h-5" />
+              </button>
+            </div>
             <video
               ref={videoRef}
               autoPlay
               playsInline
               muted
-              className="w-full h-48 rounded-md object-cover border bg-black"
+              className="w-full h-64 rounded-xl object-cover border border-gray-200 dark:border-gray-600 bg-black shadow-inner"
             />
-            <button
-              onClick={capturePhoto}
-              className="bg-blue-600 text-white px-4 py-2 rounded w-full"
-            >
-              📸 Capture
-            </button>
-            <button
-              onClick={cancelCamera}
-              className="text-sm text-gray-500 underline"
-            >
-              ❌ Cancel
-            </button>
+            <div className="flex gap-3 w-full">
+              <button
+                onClick={capturePhoto}
+                className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium py-3 rounded-xl shadow-lg transition-all duration-200 transform hover:scale-[1.02] flex items-center justify-center gap-2"
+              >
+                <CameraIcon className="w-5 h-5" />
+                Capture Photo
+              </button>
+              <button
+                onClick={cancelCamera}
+                className="px-6 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl font-medium transition-all duration-200"
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Image Cropper Overlay */}
+      {/* Image Cropper - keeping your exact component */}
       {cropping && (
         <ProfileImageCropper
           imageSrc={rawImage}
@@ -237,108 +274,186 @@ const EditProfileModal = ({ isOpen, onClose }) => {
         />
       )}
 
-      {/* Main Edit Modal */}
-      <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
-        <div className="bg-white rounded-lg shadow p-6 w-full max-w-md">
-          <h2 className="text-xl font-bold mb-4 text-center">Edit Profile</h2>
-          {error && <p className="text-red-500 text-sm mb-2">{error}</p>}
-
-          {/* Profile Image Preview + Upload & Camera Buttons */}
-          <div className="flex flex-col items-center mb-4 space-y-3">
-            <img
-              src={
-                previewUrl ||
-                "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg"
-              }
-              alt="Profile Preview"
-              className="w-24 h-24 rounded-full object-cover border"
-            />
-
-            <div className="flex items-center space-x-4">
-              {/* Upload from file */}
+      {/* Main Modal - Redesigned with Dashboard styling */}
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg shadow-2xl rounded-2xl w-full max-w-2xl relative transform transition-all duration-300 scale-100 max-h-[90vh] overflow-hidden border border-white/20 dark:border-gray-700/50">
+          {/* Header - Enhanced with glassmorphism */}
+          <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 px-6 py-4 rounded-t-2xl relative overflow-hidden">
+            {/* Background decoration */}
+            <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent"></div>
+            <div className="relative flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
+                  <UserCircleIcon className="w-5 h-5 text-white" />
+                </div>
+                <h2 className="text-xl font-bold text-white">Edit Profile</h2>
+              </div>
               <button
-                type="button"
-                onClick={() => document.getElementById("fileInput").click()}
-                className="w-10 h-10 flex items-center justify-center bg-indigo-600 rounded-full hover:bg-indigo-700 transition"
-                title="Upload from device"
+                onClick={onClose}
+                className="text-white/80 hover:text-white transition-colors p-2 rounded-full hover:bg-white/20 backdrop-blur-sm"
               >
-                <PlusIcon className="w-5 h-5 text-white" />
+                <XMarkIcon className="w-5 h-5" />
               </button>
-
-              {/* Take photo from camera */}
-              <button
-                type="button"
-                onClick={handleCaptureFromCamera}
-                className="w-10 h-10 flex items-center justify-center bg-green-600 rounded-full hover:bg-green-700 transition"
-                title="Take photo from camera"
-              >
-                <CameraIcon className="w-5 h-5 text-white" />
-              </button>
-
-              <input
-                id="fileInput"
-                type="file"
-                accept="image/*"
-                onChange={handleImageSelect}
-                className="hidden"
-              />
             </div>
           </div>
 
-          {/* Form Fields */}
-          <form onSubmit={handleSave} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium">Full Name</label>
-              <input
-                type="text"
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-                required
-              />
+          <div className="p-6 overflow-y-auto max-h-[calc(90vh-5rem)] bg-gradient-to-br from-blue-50/30 via-indigo-50/30 to-purple-50/30 dark:from-gray-900/30 dark:via-blue-900/30 dark:to-purple-900/30">
+            {/* Error Message - Enhanced */}
+            {error && (
+              <div className="mb-4 p-4 bg-red-50/80 dark:bg-red-900/30 backdrop-blur-sm border border-red-200 dark:border-red-800 rounded-xl flex items-center gap-3 animate-fade-in">
+                <div className="w-2 h-2 bg-red-500 rounded-full flex-shrink-0" />
+                <p className="text-red-700 dark:text-red-400 text-sm">
+                  {error}
+                </p>
+              </div>
+            )}
+
+            {/* Success Message */}
+            {showSuccess && (
+              <div className="mb-4 p-4 bg-green-50/80 dark:bg-green-900/30 backdrop-blur-sm border border-green-200 dark:border-green-800 rounded-xl flex items-center gap-3 animate-fade-in">
+                <div className="w-2 h-2 bg-green-500 rounded-full flex-shrink-0" />
+                <p className="text-green-700 dark:text-green-400 text-sm font-medium">
+                  {successMessage}
+                </p>
+              </div>
+            )}
+
+            {/* Profile Image Section - Enhanced with glassmorphism */}
+            <div className="flex flex-col items-center mb-6">
+              <div className="relative group mb-4">
+                <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white/50 dark:border-gray-600/50 shadow-2xl bg-gradient-to-br from-indigo-100/50 to-purple-100/50 dark:from-indigo-900/50 dark:to-purple-900/50 group-hover:shadow-3xl transition-all duration-300 backdrop-blur-sm">
+                  <img
+                    src={
+                      previewUrl ||
+                      "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg"
+                    }
+                    alt="Profile"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                </div>
+                {/* Floating glow effect */}
+                <div className="absolute inset-0 w-32 h-32 rounded-full bg-gradient-to-r from-indigo-400/20 to-purple-400/20 blur-xl group-hover:blur-2xl transition-all duration-300"></div>
+              </div>
+
+              {/* Upload and Camera Buttons - Enhanced */}
+              <div className="flex items-center space-x-3">
+                <button
+                  type="button"
+                  onClick={() => document.getElementById("fileInput").click()}
+                  className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-xl font-medium transform hover:scale-105 transition-all duration-200 shadow-lg backdrop-blur-sm"
+                  title="Upload from device"
+                >
+                  <PlusIcon className="w-4 h-4" />
+                  Upload
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleCaptureFromCamera}
+                  className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-xl font-medium transform hover:scale-105 transition-all duration-200 shadow-lg backdrop-blur-sm"
+                  title="Take a photo"
+                >
+                  <CameraIcon className="w-4 h-4" />
+                  Camera
+                </button>
+
+                <input
+                  id="fileInput"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageSelect}
+                  className="hidden"
+                />
+              </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium">Email</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-                required
-              />
-            </div>
+            {/* Form Fields - Enhanced with glassmorphism */}
+            <form onSubmit={handleSave} className="space-y-6">
+              {/* Row 1 - Name and Email */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Full Name
+                  </label>
+                  <input
+                    type="text"
+                    value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-white/50 dark:bg-gray-700/50 backdrop-blur-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                    required
+                  />
+                </div>
 
-            <div>
-              <label className="block text-sm font-medium">Password</label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-                placeholder="Leave empty to keep current"
-              />
-            </div>
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Email Address
+                  </label>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-white/50 dark:bg-gray-700/50 backdrop-blur-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                    required
+                  />
+                </div>
+              </div>
 
-            {/* Gender */}
-            <div className="flex justify-center">
-              <div className="flex items-center space-x-4">
-                {/* Label */}
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+              {/* Row 2 - Password and Birthdate */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Password
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Leave empty to keep current"
+                      className="w-full px-4 py-3 pr-12 border border-gray-200 dark:border-gray-600 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-white/50 dark:bg-gray-700/50 backdrop-blur-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600"
+                    >
+                      {showPassword ? (
+                        <EyeSlashIcon className="w-5 h-5" />
+                      ) : (
+                        <EyeIcon className="w-5 h-5" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Date of Birth
+                  </label>
+                  <input
+                    type="date"
+                    value={birthdate}
+                    onChange={(e) => setBirthdate(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-white/50 dark:bg-gray-700/50 backdrop-blur-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                  />
+                </div>
+              </div>
+
+              {/* Row 3 - Gender Selection - Enhanced */}
+              <div className="space-y-3">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Gender
                 </label>
-
-                {/* Button group */}
-                <div className="flex space-x-2">
+                <div className="grid grid-cols-3 gap-3">
                   {["male", "female", "other"].map((option) => (
                     <button
                       key={option}
                       type="button"
                       onClick={() => setGender(option)}
-                      className={`px-4 py-1 rounded-full border text-sm transition ${
+                      className={`py-3 px-4 rounded-xl border text-sm font-medium transition-all duration-200 backdrop-blur-sm ${
                         gender === option
-                          ? "bg-indigo-600 text-white"
-                          : "bg-white text-gray-700 border-gray-300"
+                          ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white border-transparent shadow-lg transform scale-105"
+                          : "bg-white/50 dark:bg-gray-700/50 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-600 hover:border-indigo-400 dark:hover:border-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/20"
                       }`}
                     >
                       {option.charAt(0).toUpperCase() + option.slice(1)}
@@ -346,38 +461,82 @@ const EditProfileModal = ({ isOpen, onClose }) => {
                   ))}
                 </div>
               </div>
-            </div>
 
-            <div>
-              <label className="block text-sm font-medium">Birthdate</label>
-              <input
-                type="date"
-                value={birthdate}
-                onChange={(e) => setBirthdate(e.target.value)}
-                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-              />
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex justify-end space-x-2 pt-4">
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={loading}
-                className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50"
-              >
-                {loading ? "Saving..." : "Save"}
-              </button>
-            </div>
-          </form>
+              {/* Action Buttons - Enhanced with glassmorphism */}
+              <div className="flex gap-4 pt-6 border-t border-gray-200/50 dark:border-gray-700/50">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="flex-1 px-6 py-3 bg-gray-100/80 dark:bg-gray-700/80 backdrop-blur-sm text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl font-medium transition-all duration-200 border border-gray-200/50 dark:border-gray-600/50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="flex-1 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-medium rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg transform hover:scale-105 disabled:hover:scale-100 backdrop-blur-sm flex items-center justify-center gap-2"
+                >
+                  {loading ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <SparklesIcon className="w-4 h-4" />
+                      Save Changes
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       </div>
+
+      <style jsx>{`
+        .animate-fade-in {
+          animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        .shadow-3xl {
+          box-shadow: 0 35px 60px -12px rgba(0, 0, 0, 0.25);
+        }
+
+        .custom-scrollbar {
+          scrollbar-width: thin;
+          scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 6px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background-color: rgba(156, 163, 175, 0.5);
+          border-radius: 3px;
+          border: none;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background-color: rgba(156, 163, 175, 0.8);
+        }
+      `}</style>
     </>
   );
 };

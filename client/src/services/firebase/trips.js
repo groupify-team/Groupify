@@ -5,11 +5,12 @@ import { db } from './config';
 // Create a new trip
 export const createTrip = async (tripData) => {
   try {
-    const tripRef = await addDoc(collection(db, 'trips'), {
+    const tripRef = await addDoc(collection(db, "trips"), {
       ...tripData,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      admins: tripData.admins || [tripData.createdBy], 
+      createdAt: serverTimestamp(),
     });
+
     
     return {
       id: tripRef.id,
@@ -141,14 +142,21 @@ export const inviteUserToTripByUid = async (tripId, userId) => {
 
 
 export const sendTripInvite = async (tripId, inviterUid, inviteeUid) => {
-  await addDoc(collection(db, "tripInvites"), {
+  console.log("🔥 sendTripInvite called with:", { tripId, inviterUid, inviteeUid });
+
+  const inviteData = {
     tripId,
     inviterUid,
     inviteeUid,
     status: "pending",
     createdAt: serverTimestamp()
-  });
+  };
+
+  console.log("📤 Firestore inviteData:", inviteData);
+
+  await addDoc(collection(db, "tripInvites"), inviteData);
 };
+
 
 
 
