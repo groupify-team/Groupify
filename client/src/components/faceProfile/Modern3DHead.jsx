@@ -3,7 +3,6 @@
 import React, { useRef, useEffect, useState } from "react";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
 
 const Modern3DHead = ({ step, captureSteps }) => {
   const mountRef = useRef(null);
@@ -108,48 +107,20 @@ const Modern3DHead = ({ step, captureSteps }) => {
     rimLight.position.set(0, 2, -2);
     scene.add(rimLight);
 
-    // Load 3D model with DRACO support
+    // Load 3D model
     const loader = new GLTFLoader();
-    
-    // Set up DRACO decoder for compressed models
-    const dracoLoader = new DRACOLoader();
-    // Set the path to the DRACO decoder files (served from CDN)
-    dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
-    dracoLoader.setDecoderConfig({ type: 'js' });
-    loader.setDRACOLoader(dracoLoader);
 
-    // Try multiple possible paths
-    const possiblePaths = [
-      "/models/generic_human_head_a.glb",
-      "/generic_human_head_a.glb",
-      "/assets/generic_human_head_a.glb",
-      "./models/generic_human_head_a.glb",
-      "./generic_human_head_a.glb"
-    ];
-    
-    let currentPathIndex = 0;
-    
-    const tryLoadModel = (pathIndex = 0) => {
-      if (pathIndex >= possiblePaths.length) {
-        setError(`Could not load 3D model from any of these paths:
-${possiblePaths.map(p => `- ${p}`).join('\n')}
+    // First, let's check if the file exists and debug the path
+    console.log(
+      "🔍 Attempting to load model from: /models/generic_human_head_a.glb"
+    );
 
-Please verify:
-1. File exists at: C:\\GitHub\\Groupify\\client\\public\\models\\generic_human_head_a.glb
-2. File is a valid GLB format
-3. Development server is running`);
-        setIsLoading(false);
-        return;
-      }
-      
-      const currentPath = possiblePaths[pathIndex];
-      console.log(`🔄 Trying path ${pathIndex + 1}/${possiblePaths.length}: ${currentPath}`);
-      
-      loader.load(
-        currentPath,
-        (gltf) => {
-          console.log(`✅ Model loaded successfully from: ${currentPath}`);
-          const model = gltf.scene;
+    // Load your specific GLB model
+    loader.load(
+      "/models/generic_human_head_a.glb", // Updated path to your model
+      (gltf) => {
+        console.log("✅ Model loaded successfully!");
+        const model = gltf.scene;
 
         // Center the model and scale appropriately
         const box = new THREE.Box3().setFromObject(model);
@@ -178,13 +149,13 @@ Please verify:
             // Improve material properties
             if (child.material) {
               child.material.side = THREE.FrontSide;
-              
+
               // If it's a standard material, enhance it
-              if (child.material.type === 'MeshStandardMaterial') {
+              if (child.material.type === "MeshStandardMaterial") {
                 child.material.roughness = 0.8;
                 child.material.metalness = 0.1;
               }
-              
+
               // Ensure proper lighting response
               child.material.needsUpdate = true;
             }
@@ -195,7 +166,7 @@ Please verify:
         const modelGroup = new THREE.Group();
         modelGroup.add(model);
         scene.add(modelGroup);
-        
+
         headModelRef.current = modelGroup;
         setIsLoading(false);
         setError(null);
@@ -205,15 +176,46 @@ Please verify:
         console.log(`Loading progress: ${percentage.toFixed(1)}%`);
       },
       (error) => {
-        console.error(`❌ Error loading from ${currentPath}:`, error);
-        // Try next path
-        tryLoadModel(pathIndex + 1);
+        console.error("❌ Error loading GLB model:", error);
+        console.log("🔍 Debug info:");
+        console.log(
+          "- Expected file location: C:\\GitHub\\Groupify\\public\\models\\generic_human_head_a.glb"
+        );
+        console.log("- URL being requested: /models/generic_human_head_a.glb");
+        console.log("- Current location:", window.location.origin);
+        console.log(
+          "- Full URL would be:",
+          window.location.origin + "/models/generic_human_head_a.glb"
+        );
+
+        // Try to fetch the URL directly to see what we get
+        fetch("/models/generic_human_head_a.glb")
+          .then((response) => {
+            console.log("📡 Fetch response status:", response.status);
+            console.log("📡 Fetch response headers:", response.headers);
+            return response.text();
+          })
+          .then((text) => {
+            console.log(
+              "📄 Response content (first 200 chars):",
+              text.substring(0, 200)
+            );
+          })
+          .catch((fetchError) => {
+            console.log("📡 Fetch also failed:", fetchError);
+          });
+
+        setError(`Could not load 3D model. Please verify:
+1. File exists at: public/models/generic_human_head_a.glb
+2. File is a valid GLB format
+3. File is accessible from the web server
+
+Error: ${error.message}`);
+        setIsLoading(false);
+
+        // Don't create placeholder, just show error
+        // User should fix the model path/file
       }
-    );
-  };
-  
-  // Start trying to load the model
-  tryLoadModel();
     );
 
     // Animation loop with smooth transitions
@@ -271,15 +273,10 @@ Please verify:
       if (mountRef.current && renderer.domElement) {
         mountRef.current.removeChild(renderer.domElement);
       }
-      
+
       // Dispose of resources
       renderer.dispose();
-      
-      // Dispose of DRACO loader
-      if (dracoLoader) {
-        dracoLoader.dispose();
-      }
-      
+
       // Clean up geometry and materials
       scene.traverse((object) => {
         if (object.geometry) {
@@ -287,7 +284,7 @@ Please verify:
         }
         if (object.material) {
           if (Array.isArray(object.material)) {
-            object.material.forEach(material => material.dispose());
+            object.material.forEach((material) => material.dispose());
           } else {
             object.material.dispose();
           }
@@ -345,7 +342,9 @@ Please verify:
             <div className="text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
               <p className="text-white text-sm">Loading 3D Model...</p>
-              <p className="text-gray-300 text-xs mt-1">generic_human_head_a.glb</p>
+              <p className="text-gray-300 text-xs mt-1">
+                generic_human_head_a.glb
+              </p>
             </div>
           </div>
         )}
@@ -355,7 +354,9 @@ Please verify:
           <div className="absolute inset-0 flex items-center justify-center bg-red-900/80 rounded-2xl p-4">
             <div className="text-center">
               <div className="text-red-400 text-6xl mb-4">⚠️</div>
-              <p className="text-red-200 text-sm mb-2 font-medium">Model Loading Failed</p>
+              <p className="text-red-200 text-sm mb-2 font-medium">
+                Model Loading Failed
+              </p>
               <p className="text-red-300 text-xs">{error}</p>
             </div>
           </div>
