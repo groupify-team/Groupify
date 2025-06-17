@@ -1,15 +1,11 @@
 import React, { useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
-import {
-  findUsersByEmail,
-  getUserProfile,
-} from "../../services/firebase/users";
+import { findUsersByEmail } from "../../services/firebase/users";
 import {
   MagnifyingGlassIcon,
   UserPlusIcon,
   ExclamationTriangleIcon,
   CheckCircleIcon,
-  XCircleIcon,
   AtSymbolIcon,
   SparklesIcon,
 } from "@heroicons/react/24/outline";
