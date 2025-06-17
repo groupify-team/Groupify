@@ -16,6 +16,7 @@ import { useTheme } from "../contexts/ThemeContext";
 // Icons
 import {
   ArrowLeftIcon,
+  ArrowRightOnRectangleIcon,
   Bars3Icon,
   BellIcon,
   CameraIcon,
@@ -34,7 +35,7 @@ import {
   UserCircleIcon,
   UserGroupIcon,
   XCircleIcon,
-  XMarkIcon,
+  XMarkIcon
 } from "@heroicons/react/24/outline";
 
 // functions
@@ -47,7 +48,7 @@ import {
   onSnapshot,
   query,
   where,
-  writeBatch,
+  writeBatch
 } from "firebase/firestore";
 import {
   deleteObject,
@@ -85,7 +86,7 @@ import {
   getUserProfile,
   rejectFriendRequest,
   removeFriend,
-  sendFriendRequest,
+  sendFriendRequest
 } from "../services/firebase/users";
 
 const Dashboard = () => {
@@ -555,72 +556,67 @@ const Dashboard = () => {
   };
 
   // Delete entire profile
-  const deleteCurrentProfile = async () => {
-    toast(
-      (t) => (
-        <div className="text-center">
-          <p className="text-sm text-gray-800 font-medium">
-            Delete your face profile?
-          </p>
-          <p className="text-xs text-gray-500 mt-1">
-            This action cannot be undone.
-          </p>
-          <div className="mt-3 flex justify-center gap-3">
-            <button
-              onClick={async () => {
-                toast.dismiss(t.id);
-                setIsManagingProfile(true);
+const deleteCurrentProfile = async () => {
+  toast((t) => (
+    <div className="text-center">
+      <p className="text-sm text-gray-800 font-medium">
+        Delete your face profile?
+      </p>
+      <p className="text-xs text-gray-500 mt-1">
+        This action cannot be undone.
+      </p>
+      <div className="mt-3 flex justify-center gap-3">
+        <button
+          onClick={async () => {
+            toast.dismiss(t.id); 
+            setIsManagingProfile(true);
 
-                try {
-                  // 1. Delete from memory
-                  deleteFaceProfile(currentUser.uid);
+            try {
+              // 1. Delete from memory
+              deleteFaceProfile(currentUser.uid);
 
-                  // 2. Delete from Firebase Storage
-                  try {
-                    await deleteFaceProfileFromStorage(currentUser.uid);
-                    console.log(
-                      "✅ Face profile deleted from Firebase Storage"
-                    );
-                  } catch (storageError) {
-                    console.warn(
-                      "⚠️ Could not delete from Firebase Storage:",
-                      storageError
-                    );
-                  }
+              // 2. Delete from Firebase Storage
+              try {
+                await deleteFaceProfileFromStorage(currentUser.uid);
+                console.log("✅ Face profile deleted from Firebase Storage");
+              } catch (storageError) {
+                console.warn(
+                  "⚠️ Could not delete from Firebase Storage:",
+                  storageError
+                );
+              }
 
-                  // 3. Update state
-                  setHasProfile(false);
-                  setProfile(null);
-                  setProfilePhotos([]);
-                  setShowProfileManagement(false);
+              // 3. Update state
+              setHasProfile(false);
+              setProfile(null);
+              setProfilePhotos([]);
+              setShowProfileManagement(false);
 
-                  toast.success("Face profile deleted successfully");
-                } catch (error) {
-                  console.error("Failed to delete profile:", error);
-                  toast.error("Failed to delete profile: " + error.message);
-                } finally {
-                  setIsManagingProfile(false);
-                }
-              }}
-              className="px-3 py-1 bg-red-500 text-white text-sm rounded-md shadow hover:bg-red-600"
-            >
-              Delete
-            </button>
-            <button
-              onClick={() => toast.dismiss(t.id)}
-              className="px-3 py-1 bg-gray-200 text-gray-700 text-sm rounded-md shadow hover:bg-gray-300"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      ),
-      {
-        duration: 10000,
-        id: "delete-profile-confirmation",
-      }
-    );
-  };
+              toast.success("Face profile deleted successfully");
+            } catch (error) {
+              console.error("Failed to delete profile:", error);
+              toast.error("Failed to delete profile: " + error.message);
+            } finally {
+              setIsManagingProfile(false);
+            }
+          }}
+          className="px-3 py-1 bg-red-500 text-white text-sm rounded-md shadow hover:bg-red-600"
+        >
+          Delete
+        </button>
+        <button
+          onClick={() => toast.dismiss(t.id)}
+          className="px-3 py-1 bg-gray-200 text-gray-700 text-sm rounded-md shadow hover:bg-gray-300"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  ), {
+    duration: 10000,
+    id: "delete-profile-confirmation", 
+  });
+};
 
   // Toggle photo selection for removal
   const togglePhotoSelection = (photoUrl) => {
