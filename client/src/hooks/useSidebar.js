@@ -1,5 +1,5 @@
 // client/src/hooks/useSidebar.js
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from "react";
 
 /**
  * Custom hook for managing sidebar state
@@ -8,8 +8,8 @@ import { useState, useEffect, useCallback } from 'react';
 export const useSidebar = (defaultOpen = false) => {
   // Initialize state from localStorage or default
   const [isOpen, setIsOpen] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('sidebar-open');
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("sidebar-open");
       if (saved !== null) {
         return JSON.parse(saved);
       }
@@ -19,14 +19,14 @@ export const useSidebar = (defaultOpen = false) => {
 
   // Save state to localStorage whenever it changes
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('sidebar-open', JSON.stringify(isOpen));
+    if (typeof window !== "undefined") {
+      localStorage.setItem("sidebar-open", JSON.stringify(isOpen));
     }
   }, [isOpen]);
 
   // Toggle sidebar state
   const toggle = useCallback(() => {
-    setIsOpen(prev => !prev);
+    setIsOpen((prev) => !prev);
   }, []);
 
   // Open sidebar
@@ -40,28 +40,34 @@ export const useSidebar = (defaultOpen = false) => {
   }, []);
 
   // Close sidebar on mobile when clicking outside
-  const handleOutsideClick = useCallback((event) => {
-    const sidebar = document.getElementById('sidebar');
-    const toggleButton = document.getElementById('sidebar-toggle');
-    
-    if (
-      sidebar && 
-      !sidebar.contains(event.target) && 
-      !toggleButton?.contains(event.target)
-    ) {
-      // Only close on mobile
-      if (window.innerWidth < 1024) {
-        close();
+  const handleOutsideClick = useCallback(
+    (event) => {
+      const sidebar = document.getElementById("sidebar");
+      const toggleButton = document.getElementById("sidebar-toggle");
+
+      if (
+        sidebar &&
+        !sidebar.contains(event.target) &&
+        !toggleButton?.contains(event.target)
+      ) {
+        // Only close on mobile
+        if (window.innerWidth < 1024) {
+          close();
+        }
       }
-    }
-  }, [close]);
+    },
+    [close]
+  );
 
   // Handle escape key to close sidebar
-  const handleEscapeKey = useCallback((event) => {
-    if (event.key === 'Escape' && isOpen) {
-      close();
-    }
-  }, [isOpen, close]);
+  const handleEscapeKey = useCallback(
+    (event) => {
+      if (event.key === "Escape" && isOpen) {
+        close();
+      }
+    },
+    [isOpen, close]
+  );
 
   // Auto-close on mobile when route changes
   const handleRouteChange = useCallback(() => {
@@ -72,13 +78,13 @@ export const useSidebar = (defaultOpen = false) => {
 
   // Set up event listeners
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      document.addEventListener('mousedown', handleOutsideClick);
-      document.addEventListener('keydown', handleEscapeKey);
-      
+    if (typeof window !== "undefined") {
+      document.addEventListener("mousedown", handleOutsideClick);
+      document.addEventListener("keydown", handleEscapeKey);
+
       return () => {
-        document.removeEventListener('mousedown', handleOutsideClick);
-        document.removeEventListener('keydown', handleEscapeKey);
+        document.removeEventListener("mousedown", handleOutsideClick);
+        document.removeEventListener("keydown", handleEscapeKey);
       };
     }
   }, [handleOutsideClick, handleEscapeKey]);
@@ -88,7 +94,7 @@ export const useSidebar = (defaultOpen = false) => {
     toggle,
     open,
     close,
-    handleRouteChange
+    handleRouteChange,
   };
 };
 
@@ -97,25 +103,25 @@ export const useSidebar = (defaultOpen = false) => {
  */
 export const useIsMobile = () => {
   const [isMobile, setIsMobile] = useState(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       return window.innerWidth < 1024;
     }
     return false;
   });
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
 
     const handleResize = () => {
       setIsMobile(window.innerWidth < 1024);
     };
 
-    window.addEventListener('resize', handleResize);
-    
+    window.addEventListener("resize", handleResize);
+
     // Check initial size
     handleResize();
-    
-    return () => window.removeEventListener('resize', handleResize);
+
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   return isMobile;
@@ -126,44 +132,45 @@ export const useIsMobile = () => {
  */
 export const useSidebarResponsive = () => {
   const [breakpoint, setBreakpoint] = useState(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       const width = window.innerWidth;
-      if (width >= 1280) return 'xl';
-      if (width >= 1024) return 'lg';
-      if (width >= 768) return 'md';
-      if (width >= 640) return 'sm';
-      return 'xs';
+      if (width >= 1280) return "xl";
+      if (width >= 1024) return "lg";
+      if (width >= 768) return "md";
+      if (width >= 640) return "sm";
+      return "xs";
     }
-    return 'lg';
+    return "lg";
   });
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
 
     const handleResize = () => {
       const width = window.innerWidth;
       let newBreakpoint;
-      
-      if (width >= 1280) newBreakpoint = 'xl';
-      else if (width >= 1024) newBreakpoint = 'lg';
-      else if (width >= 768) newBreakpoint = 'md';
-      else if (width >= 640) newBreakpoint = 'sm';
-      else newBreakpoint = 'xs';
-      
+
+      if (width >= 1280) newBreakpoint = "xl";
+      else if (width >= 1024) newBreakpoint = "lg";
+      else if (width >= 768) newBreakpoint = "md";
+      else if (width >= 640) newBreakpoint = "sm";
+      else newBreakpoint = "xs";
+
       setBreakpoint(newBreakpoint);
     };
 
-    window.addEventListener('resize', handleResize);
-    
+    window.addEventListener("resize", handleResize);
+
     // Check initial size
     handleResize();
-    
-    return () => window.removeEventListener('resize', handleResize);
+
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const isMobile = breakpoint === 'xs' || breakpoint === 'sm' || breakpoint === 'md';
-  const isTablet = breakpoint === 'md';
-  const isDesktop = breakpoint === 'lg' || breakpoint === 'xl';
+  const isMobile =
+    breakpoint === "xs" || breakpoint === "sm" || breakpoint === "md";
+  const isTablet = breakpoint === "md";
+  const isDesktop = breakpoint === "lg" || breakpoint === "xl";
 
   return {
     breakpoint,
@@ -171,7 +178,7 @@ export const useSidebarResponsive = () => {
     isTablet,
     isDesktop,
     shouldShowOverlay: isMobile,
-    shouldAutoClose: isMobile
+    shouldAutoClose: isMobile,
   };
 };
 
