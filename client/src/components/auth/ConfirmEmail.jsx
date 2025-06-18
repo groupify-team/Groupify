@@ -143,7 +143,6 @@ const ConfirmEmail = () => {
       console.log("Verification result:", result.data);
 
       // Success - navigate to signin with success message
-      toast.success("Email verified successfully!");
       setTimeout(() => {
         navigate(
           "/signin?verified=true&message=" +
