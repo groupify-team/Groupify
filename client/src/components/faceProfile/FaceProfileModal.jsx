@@ -4,6 +4,7 @@ import { createFaceProfile } from "../../services/faceRecognition";
 import { saveFaceProfileToStorage } from "../../services/firebase/faceProfiles";
 import { uploadBytes, getDownloadURL, ref } from "firebase/storage";
 import { storage } from "../../services/firebase/config";
+import Modern3DHead from "./Modern3DHead";
 import {
   XMarkIcon,
   CameraIcon,
@@ -201,50 +202,10 @@ const FaceProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
     );
   };
 
-  // Dynamic Guide Component
+  // Dynamic guide component
+
   const DynamicGuide = ({ step }) => {
-    const currentStep = captureSteps[step];
-
-    const getGuideStyle = () => {
-      switch (currentStep.id) {
-        case "front":
-          return { transform: "rotate(0deg)", borderColor: "#10b981" };
-        case "right":
-          return { transform: "rotateY(-30deg)", borderColor: "#3b82f6" };
-        case "left":
-          return { transform: "rotateY(30deg)", borderColor: "#8b5cf6" };
-        case "up":
-          return { transform: "rotateX(-15deg)", borderColor: "#f59e0b" };
-        case "down":
-          return { transform: "rotateX(15deg)", borderColor: "#ef4444" };
-        default:
-          return { transform: "rotate(0deg)", borderColor: "#6b7280" };
-      }
-    };
-
-    return (
-      <div className="flex flex-col items-center space-y-3">
-        <div className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
-          Position Guide
-        </div>
-        <div
-          className="w-16 h-20 border-3 border-dashed rounded-full transition-all duration-700 ease-in-out bg-gradient-to-b from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800"
-          style={getGuideStyle()}
-        >
-          <div className="w-full h-full flex items-center justify-center">
-            <div className="text-lg">{currentStep.icon}</div>
-          </div>
-        </div>
-        <div className="text-center">
-          <div className="text-sm font-semibold text-gray-800 dark:text-white">
-            {currentStep.title}
-          </div>
-          <div className="text-xs text-gray-600 dark:text-gray-400">
-            {currentStep.tip}
-          </div>
-        </div>
-      </div>
-    );
+    return <Modern3DHead step={step} captureSteps={captureSteps} />;
   };
 
   // Cleanup function
