@@ -12,6 +12,8 @@ import {
   ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
 import { toast } from "react-hot-toast";
+import { httpsCallable } from "firebase/functions";
+import { functions } from "../../services/firebase/config";
 
 const SignIn = () => {
   const [email, setEmail] = useState("");
@@ -301,10 +303,37 @@ const SignIn = () => {
                     Please verify your email before signing in. Check your inbox
                     or{" "}
                     <button
-                      onClick={() => {
-                        navigate(
-                          `/confirm-email?email=${encodeURIComponent(email)}`
-                        );
+                      onClick={async () => {
+                        try {
+                          console.log(
+                            "Resending verification email from SignIn to:",
+                            email
+                          );
+
+                          const resendFunction = httpsCallable(
+                            functions,
+                            "resendVerificationCode"
+                          );
+                          await resendFunction({ email });
+
+                          toast.success(
+                            "Verification email sent! Check your inbox."
+                          );
+
+                          // Then navigate to confirm page
+                          setTimeout(() => {
+                            navigate(
+                              `/confirm-email?email=${encodeURIComponent(
+                                email
+                              )}`
+                            );
+                          }, 1500);
+                        } catch (error) {
+                          console.error("Resend error:", error);
+                          toast.error(
+                            "Failed to resend email. Please try again."
+                          );
+                        }
                       }}
                       className="underline font-medium hover:text-yellow-500 bg-transparent border-none cursor-pointer"
                     >
