@@ -47,16 +47,36 @@ const ConfirmEmail = () => {
   const codeFromUrl = searchParams.get("code");
 
   const handleResendCode = async () => {
+    if (!email) {
+      toast.error("Email address is required");
+      return;
+    }
+
     try {
       setResendLoading(true);
-      await resendVerificationEmail(email);
+      console.log("Attempting to resend verification email to:", email);
+
+      const resendFunction = httpsCallable(functions, "resendVerificationCode");
+      const result = await resendFunction({ email });
+
+      console.log("Resend function result:", result.data);
       toast.success("Verification code sent! Check your email.");
       setTimeLeft(120);
       setCanResend(false);
       setVerificationCode(["", "", "", "", "", ""]);
     } catch (error) {
       console.error("Resend error:", error);
-      toast.error(error.message || "Failed to resend code. Please try again.");
+      let errorMessage = "Failed to resend code. Please try again.";
+
+      if (error.code === "functions/not-found") {
+        errorMessage = "No account found with this email address";
+      } else if (error.code === "functions/deadline-exceeded") {
+        errorMessage = "Request timed out. Please try again.";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      toast.error(errorMessage);
     } finally {
       setResendLoading(false);
     }
@@ -86,14 +106,6 @@ const ConfirmEmail = () => {
     }
   }, [timeLeft]);
 
-  // Auto-send verification email when landing on page with email but no code
-  useEffect(() => {
-    if (email && !codeFromUrl && !hasAutoSent) {
-      handleResendCode();
-      setHasAutoSent(true);
-    }
-  }, [email, codeFromUrl, hasAutoSent]);
-
   const handleInputChange = (index, value) => {
     if (value.length > 1) return;
     const newCode = [...verificationCode];
@@ -113,34 +125,64 @@ const ConfirmEmail = () => {
   };
 
   const handleVerifyWithCode = async (code) => {
+    if (!email || !code) {
+      toast.error("Email and verification code are required");
+      return;
+    }
+
     try {
       setLoading(true);
+      console.log("Attempting to verify code:", code, "for email:", email);
+
       const verifyCode = httpsCallable(functions, "verifyEmailCode");
-      await verifyCode({ email, verificationCode: code });
+      const result = await verifyCode({
+        email: email,
+        verificationCode: code,
+      });
 
-      // Navigate to sign-in page with success message (FIXED)
-      navigate(
-        "/signin?verified=true&message=" +
-          encodeURIComponent(
-            "Email verified successfully! You can now sign in."
-          )
-      );
+      console.log("Verification result:", result.data);
+
+      // Success - navigate to signin with success message
+      toast.success("Email verified successfully!");
+      setTimeout(() => {
+        navigate(
+          "/signin?verified=true&message=" +
+            encodeURIComponent(
+              "Email verified successfully! You can now sign in."
+            )
+        );
+      }, 1000);
     } catch (error) {
-  console.error("Verification error:", error);
+      console.error("Verification error:", error);
 
-  if (error.message.includes("expired")) {
-    toast.error("Verification code has expired. Please request a new one.");
-    setCanResend(true);
-    setTimeLeft(0);
-  } else if (error.message.includes("already verified")) {
-    toast.success("Email is already verified. You can now sign in.");
-    navigate("/signin");
-    return;
-  } else {
-    toast.error("Invalid verification code");
-  }
-}
-    };
+      let errorMessage = "Invalid verification code";
+
+      if (error.code === "functions/not-found") {
+        errorMessage = "Verification code not found or expired";
+      } else if (error.code === "functions/deadline-exceeded") {
+        errorMessage = "Verification request timed out";
+      } else if (error.message?.includes("expired")) {
+        errorMessage =
+          "Verification code has expired. Please request a new one.";
+        setCanResend(true);
+        setTimeLeft(0);
+      } else if (error.message?.includes("already verified")) {
+        toast.success("Email is already verified. You can now sign in.");
+        navigate("/signin");
+        return;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      toast.error(errorMessage);
+
+      // Clear the form for retry
+      setVerificationCode(["", "", "", "", "", ""]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleVerify = async (e) => {
     e.preventDefault();
     const code = verificationCode.join("");
@@ -266,7 +308,10 @@ const ConfirmEmail = () => {
           <form onSubmit={handleVerify} className="space-y-6">
             {/* Code Input */}
             <div>
-              <label htmlFor="code-0" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">
+              <label
+                htmlFor="code-0"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-4"
+              >
                 Verification Code
               </label>
               <div className="flex justify-between space-x-2">

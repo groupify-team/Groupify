@@ -6,7 +6,6 @@ import {
   MoonIcon,
   SunIcon,
   ArrowLeftIcon,
-  EnvelopeIcon,
   CheckCircleIcon,
 } from "@heroicons/react/24/outline";
 import { toast } from "react-hot-toast";
@@ -30,10 +29,10 @@ const ForgotPassword = () => {
   const sendPasswordResetEmail = async (email) => {
     try {
       // Call your Firebase Function
-      const sendResetEmail = httpsCallable(functions, 'sendPasswordResetEmail');
+      const sendResetEmail = httpsCallable(functions, "sendPasswordResetEmail");
       const result = await sendResetEmail({ email });
-      
-      console.log('Reset email function result:', result.data);
+
+      console.log("Reset email function result:", result.data);
       return result.data;
     } catch (error) {
       console.error("Error calling sendPasswordResetEmail function:", error);
@@ -296,11 +295,10 @@ const ForgotPassword = () => {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="input-primary pl-14"
+                  className="input-primary"
                   placeholder="you@example.com"
                   disabled={loading}
                 />
-                <EnvelopeIcon className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
               </div>
             </div>
 
