@@ -1,5 +1,12 @@
 # 📸 Groupify - Smart Photo Sharing for Group Trips
 
+![React](https://img.shields.io/badge/React-19.1.0-blue?logo=react)
+![Firebase](https://img.shields.io/badge/Firebase-11.7.3-ffca28?logo=firebase)
+![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.4.1-38bdf8?logo=tailwindcss)
+![License](https://img.shields.io/github/license/groupify-team/groupify)
+![Last Commit](https://img.shields.io/github/last-commit/groupify-team/groupify)
+
+
 Groupify is a modern web app that helps groups of friends upload, manage, and share photos from trips — using **face recognition** to automatically deliver personalized galleries.
 
 Built with **React**, **Vite**, and **Firebase**, the app supports trip creation, friend management, photo uploads, and more.
