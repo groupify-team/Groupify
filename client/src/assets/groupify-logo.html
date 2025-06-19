@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Groupify Social Media Logo Generator</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 20px;
+        background: linear-gradient(
+          135deg,
+          #f0f9ff 0%,
+          #e0e7ff 50%,
+          #f3e8ff 100%
+        );
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .main-container {
+        background: white;
+        padding: 40px;
+        border-radius: 20px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        margin-bottom: 30px;
+        max-width: 1200px;
+        width: 100%;
+      }
+
+      .preview-section {
+        text-align: center;
+        margin-bottom: 40px;
+      }
+
+      .preview-title {
+        font-size: 28px;
+        font-weight: 700;
+        color: #374151;
+        margin-bottom: 30px;
+      }
+
+      .logo-options {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 40px;
+        margin-bottom: 40px;
+      }
+
+      .logo-option {
+        background: #f8fafc;
+        padding: 30px;
+        border-radius: 16px;
+        border: 2px solid #e2e8f0;
+        transition: all 0.3s ease;
+      }
+
+      .logo-option.dark {
+        background: #1f2937;
+        border-color: #374151;
+      }
+
+      .option-title {
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 25px;
+        color: #374151;
+        text-align: center;
+      }
+
+      .logo-option.dark .option-title {
+        color: #f9fafb;
+      }
+
+      /* OPTION 1: Text Under Camera */
+      .logo-vertical {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+        padding: 20px;
+      }
+
+      .camera-icon-vertical {
+        width: 120px;
+        height: 120px;
+        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+        border-radius: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 15px 35px rgba(79, 70, 229, 0.3);
+        position: relative;
+      }
+
+      .camera-icon-vertical.animated::before {
+        content: "";
+        position: absolute;
+        inset: -4px;
+        background: linear-gradient(45deg, #6366f1, #8b5cf6, #3b82f6, #6366f1);
+        border-radius: 34px;
+        z-index: -1;
+        animation: rotate 3s linear infinite;
+      }
+
+      .camera-svg-vertical {
+        width: 60px;
+        height: 60px;
+        fill: white;
+      }
+
+      .text-vertical {
+        font-size: 32px;
+        font-weight: 700;
+        background: linear-gradient(
+          135deg,
+          #4f46e5 0%,
+          #7c3aed 50%,
+          #3b82f6 100%
+        );
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-align: center;
+      }
+
+      /* OPTION 2: Text to Right Side */
+      .logo-horizontal {
+        display: flex;
+        align-items: center;
+        gap: 25px;
+        padding: 20px;
+        justify-content: center;
+      }
+
+      .camera-icon-horizontal {
+        width: 100px;
+        height: 100px;
+        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+        border-radius: 25px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 15px 35px rgba(79, 70, 229, 0.3);
+        position: relative;
+        flex-shrink: 0;
+      }
+
+      .camera-icon-horizontal.animated::before {
+        content: "";
+        position: absolute;
+        inset: -4px;
+        background: linear-gradient(45deg, #6366f1, #8b5cf6, #3b82f6, #6366f1);
+        border-radius: 29px;
+        z-index: -1;
+        animation: rotate 3s linear infinite;
+      }
+
+      .camera-svg-horizontal {
+        width: 50px;
+        height: 50px;
+        fill: white;
+      }
+
+      .text-horizontal {
+        font-size: 36px;
+        font-weight: 700;
+        background: linear-gradient(
+          135deg,
+          #4f46e5 0%,
+          #7c3aed 50%,
+          #3b82f6 100%
+        );
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      @keyframes rotate {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .controls-section {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 30px;
+        margin-bottom: 30px;
+      }
+
+      .control-group {
+        background: #f8fafc;
+        padding: 25px;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+      }
+
+      .control-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 20px;
+      }
+
+      .toggle-group {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+        padding: 12px;
+        background: white;
+        border-radius: 8px;
+        border: 1px solid #e5e7eb;
+      }
+
+      .toggle-switch {
+        position: relative;
+        width: 50px;
+        height: 24px;
+        background: #e5e7eb;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: background 0.3s ease;
+      }
+
+      .toggle-switch.active {
+        background: #4f46e5;
+      }
+
+      .toggle-switch::after {
+        content: "";
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 20px;
+        height: 20px;
+        background: white;
+        border-radius: 50%;
+        transition: transform 0.3s ease;
+      }
+
+      .toggle-switch.active::after {
+        transform: translateX(26px);
+      }
+
+      .size-selector {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+
+      .social-sizes {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+      }
+
+      .size-btn {
+        background: white;
+        border: 2px solid #e5e7eb;
+        padding: 10px 12px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: 500;
+        text-align: center;
+        font-size: 13px;
+      }
+
+      .size-btn.active {
+        border-color: #4f46e5;
+        background: #f0f9ff;
+        color: #4f46e5;
+      }
+
+      .download-section {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+      }
+
+      .download-group {
+        background: #f8fafc;
+        padding: 25px;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+      }
+
+      .download-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 20px;
+        text-align: center;
+      }
+
+      .download-buttons {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+
+      .btn {
+        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+        color: white;
+        border: none;
+        padding: 12px 16px;
+        border-radius: 10px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3);
+      }
+
+      .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(79, 70, 229, 0.4);
+      }
+
+      .btn.dark {
+        background: linear-gradient(135deg, #374151 0%, #1f2937 100%);
+        box-shadow: 0 4px 15px rgba(55, 65, 81, 0.3);
+      }
+
+      .social-info {
+        background: linear-gradient(135deg, #f0f9ff 0%, #e0e7ff 100%);
+        padding: 25px;
+        border-radius: 12px;
+        border: 1px solid #c7d2fe;
+        text-align: center;
+        margin-top: 30px;
+      }
+
+      .social-platforms {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 15px;
+        margin-top: 20px;
+      }
+
+      .platform {
+        background: white;
+        padding: 15px 10px;
+        border-radius: 10px;
+        border: 1px solid #e2e8f0;
+        text-align: center;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      }
+
+      .platform-name {
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 5px;
+        font-size: 14px;
+      }
+
+      .platform-size {
+        color: #6b7280;
+        font-size: 12px;
+      }
+
+      @media (max-width: 768px) {
+        .logo-options {
+          grid-template-columns: 1fr;
+        }
+
+        .download-section {
+          grid-template-columns: 1fr;
+        }
+
+        .text-vertical,
+        .text-horizontal {
+          font-size: 24px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="main-container">
+      <!-- Logo Options Preview -->
+      <div class="preview-section">
+        <h2 class="preview-title">🎯 Choose Your Perfect Social Media Logo</h2>
+
+        <div class="logo-options">
+          <!-- OPTION 1: Text Under Camera -->
+          <div class="logo-option" id="option1">
+            <div class="option-title">📱 Option 1: Text Under Camera</div>
+            <div class="logo-vertical">
+              <div class="camera-icon-vertical" id="cameraVertical">
+                <svg
+                  class="camera-svg-vertical"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
+                  <path d="M12 9a3 3 0 100 6 3 3 0 000-6z" />
+                  <path
+                    fill-rule="evenodd"
+                    d="M9 2a1 1 0 000 2h6a1 1 0 100-2H9zM4 5a2 2 0 00-2 2v8a2 2 0 002 2h16a2 2 0 002-2V7a2 2 0 00-2-2H4zm0 2h16v8H4V7z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+              </div>
+              <div class="text-vertical">Groupify</div>
+            </div>
+          </div>
+
+          <!-- OPTION 2: Text to Right Side -->
+          <div class="logo-option" id="option2">
+            <div class="option-title">➡️ Option 2: Text Right Side</div>
+            <div class="logo-horizontal">
+              <div class="camera-icon-horizontal" id="cameraHorizontal">
+                <svg
+                  class="camera-svg-horizontal"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
+                  <path d="M12 9a3 3 0 100 6 3 3 0 000-6z" />
+                  <path
+                    fill-rule="evenodd"
+                    d="M9 2a1 1 0 000 2h6a1 1 0 100-2H9zM4 5a2 2 0 00-2 2v8a2 2 0 002 2h16a2 2 0 002-2V7a2 2 0 00-2-2H4zm0 2h16v8H4V7z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+              </div>
+              <div class="text-horizontal">Groupify</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Controls -->
+      <div class="controls-section">
+        <!-- Settings -->
+        <div class="control-group">
+          <div class="control-title">⚙️ Logo Settings</div>
+
+          <div class="toggle-group">
+            <span>🎬 Animated Border</span>
+            <div
+              class="toggle-switch"
+              id="animationToggle"
+              onclick="toggleAnimation()"
+            ></div>
+          </div>
+
+          <div class="toggle-group">
+            <span>🌙 Dark Theme Preview</span>
+            <div
+              class="toggle-switch"
+              id="darkModeToggle"
+              onclick="toggleDarkMode()"
+            ></div>
+          </div>
+
+          <div class="size-selector">
+            <button class="size-btn active" onclick="setSize(512)">
+              512px
+            </button>
+            <button class="size-btn" onclick="setSize(400)">400px</button>
+            <button class="size-btn" onclick="setSize(300)">300px</button>
+            <button class="size-btn" onclick="setSize(256)">256px</button>
+          </div>
+        </div>
+
+        <!-- Social Media Sizes -->
+        <div class="control-group">
+          <div class="control-title">📱 Social Media Platforms</div>
+          <div class="social-sizes">
+            <button class="size-btn" onclick="setSize(500, 'Facebook')">
+              Facebook
+            </button>
+            <button class="size-btn" onclick="setSize(460, 'GitHub')">
+              GitHub
+            </button>
+            <button class="size-btn" onclick="setSize(400, 'Twitter')">
+              Twitter
+            </button>
+            <button class="size-btn" onclick="setSize(300, 'LinkedIn')">
+              LinkedIn
+            </button>
+            <button class="size-btn" onclick="setSize(240, 'Discord')">
+              Discord
+            </button>
+            <button class="size-btn" onclick="setSize(180, 'Instagram')">
+              Instagram
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Download Section -->
+      <div class="download-section">
+        <!-- Option 1 Downloads -->
+        <div class="download-group">
+          <div class="download-title">
+            📱 Download Option 1: Text Under Camera
+          </div>
+          <div class="download-buttons">
+            <button class="btn" onclick="downloadVertical('png', false)">
+              🔲 Transparent PNG
+            </button>
+            <button class="btn" onclick="downloadVertical('jpg', false)">
+              💡 Light JPG
+            </button>
+            <button class="btn dark" onclick="downloadVertical('jpg', true)">
+              🌙 Dark JPG
+            </button>
+            <button
+              class="btn"
+              style="
+                background: linear-gradient(135deg, #059669 0%, #0d9488 100%);
+                box-shadow: 0 4px 15px rgba(5, 150, 105, 0.3);
+              "
+              onclick="downloadVertical('png', false)"
+            >
+              ✨ No Background
+            </button>
+          </div>
+        </div>
+
+        <!-- Option 2 Downloads -->
+        <div class="download-group">
+          <div class="download-title">
+            ➡️ Download Option 2: Text Right Side
+          </div>
+          <div class="download-buttons">
+            <button class="btn" onclick="downloadHorizontal('png', false)">
+              🔲 Transparent PNG
+            </button>
+            <button class="btn" onclick="downloadHorizontal('jpg', false)">
+              💡 Light JPG
+            </button>
+            <button class="btn dark" onclick="downloadHorizontal('jpg', true)">
+              🌙 Dark JPG
+            </button>
+            <button
+              class="btn"
+              style="
+                background: linear-gradient(135deg, #059669 0%, #0d9488 100%);
+                box-shadow: 0 4px 15px rgba(5, 150, 105, 0.3);
+              "
+              onclick="downloadHorizontal('png', false)"
+            >
+              ✨ No Background
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Social Media Guide -->
+      <div class="social-info">
+        <h3 style="margin: 0 0 10px 0; color: #4f46e5">
+          🚀 Perfect for All Social Media Platforms
+        </h3>
+        <p style="margin: 0 0 15px 0; color: #6b7280">
+          Both options work great! Choose based on your platform's layout
+          preferences.
+        </p>
+
+        <div
+          style="
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+          "
+        >
+          <div
+            style="
+              background: white;
+              padding: 15px;
+              border-radius: 10px;
+              border: 1px solid #e2e8f0;
+            "
+          >
+            <strong style="color: #4f46e5">📱 Option 1 (Vertical)</strong>
+            <p style="margin: 5px 0 0 0; font-size: 14px; color: #6b7280">
+              Best for: Square profiles, Instagram, Discord, GitHub
+            </p>
+          </div>
+          <div
+            style="
+              background: white;
+              padding: 15px;
+              border-radius: 10px;
+              border: 1px solid #e2e8f0;
+            "
+          >
+            <strong style="color: #4f46e5">➡️ Option 2 (Horizontal)</strong>
+            <p style="margin: 5px 0 0 0; font-size: 14px; color: #6b7280">
+              Best for: Twitter headers, LinkedIn, Facebook covers
+            </p>
+          </div>
+        </div>
+
+        <div class="social-platforms">
+          <div class="platform">
+            <div class="platform-name">Facebook</div>
+            <div class="platform-size">500×500px</div>
+          </div>
+          <div class="platform">
+            <div class="platform-name">GitHub</div>
+            <div class="platform-size">460×460px</div>
+          </div>
+          <div class="platform">
+            <div class="platform-name">Twitter</div>
+            <div class="platform-size">400×400px</div>
+          </div>
+          <div class="platform">
+            <div class="platform-name">LinkedIn</div>
+            <div class="platform-size">300×300px</div>
+          </div>
+          <div class="platform">
+            <div class="platform-name">Discord</div>
+            <div class="platform-size">240×240px</div>
+          </div>
+          <div class="platform">
+            <div class="platform-name">Instagram</div>
+            <div class="platform-size">180×180px</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let currentSize = 512;
+      let isAnimated = false;
+      let isDarkMode = false;
+      let currentPlatform = "Custom";
+
+      function setSize(size, platform = "Custom") {
+        currentSize = size;
+        currentPlatform = platform;
+        document
+          .querySelectorAll(".size-btn")
+          .forEach((btn) => btn.classList.remove("active"));
+        event.target.classList.add("active");
+      }
+
+      function toggleAnimation() {
+        isAnimated = !isAnimated;
+        const toggle = document.getElementById("animationToggle");
+        const cameraVertical = document.getElementById("cameraVertical");
+        const cameraHorizontal = document.getElementById("cameraHorizontal");
+
+        toggle.classList.toggle("active", isAnimated);
+        cameraVertical.classList.toggle("animated", isAnimated);
+        cameraHorizontal.classList.toggle("animated", isAnimated);
+      }
+
+      function toggleDarkMode() {
+        isDarkMode = !isDarkMode;
+        const toggle = document.getElementById("darkModeToggle");
+        const option1 = document.getElementById("option1");
+        const option2 = document.getElementById("option2");
+
+        toggle.classList.toggle("active", isDarkMode);
+        option1.classList.toggle("dark", isDarkMode);
+        option2.classList.toggle("dark", isDarkMode);
+      }
+
+      function drawCameraIcon(ctx, x, y, size) {
+        ctx.fillStyle = "white";
+
+        // Camera body - main rectangle
+        const bodyWidth = size * 0.65;
+        const bodyHeight = size * 0.45;
+        const bodyX = x + (size - bodyWidth) / 2;
+        const bodyY = y + (size - bodyHeight) / 2 + size * 0.08;
+
+        roundRect(ctx, bodyX, bodyY, bodyWidth, bodyHeight, size * 0.04);
+        ctx.fill();
+
+        // Camera top section (viewfinder bump)
+        const topWidth = size * 0.35;
+        const topHeight = size * 0.15;
+        const topX = x + (size - topWidth) / 2;
+        const topY = y + size * 0.1;
+
+        roundRect(ctx, topX, topY, topWidth, topHeight, size * 0.02);
+        ctx.fill();
+
+        // Camera lens (outer circle)
+        ctx.beginPath();
+        ctx.arc(
+          x + size / 2,
+          y + size / 2 + size * 0.05,
+          size * 0.18,
+          0,
+          2 * Math.PI
+        );
+        ctx.fillStyle = "#4f46e5";
+        ctx.fill();
+
+        // Camera lens (inner circle)
+        ctx.beginPath();
+        ctx.arc(
+          x + size / 2,
+          y + size / 2 + size * 0.05,
+          size * 0.1,
+          0,
+          2 * Math.PI
+        );
+        ctx.fillStyle = "#7c3aed";
+        ctx.fill();
+
+        // Small details - Flash
+        ctx.fillStyle = "white";
+        const flashSize = size * 0.06;
+        roundRect(
+          ctx,
+          bodyX + bodyWidth * 0.8,
+          bodyY + bodyHeight * 0.2,
+          flashSize,
+          flashSize * 0.6,
+          flashSize * 0.2
+        );
+        ctx.fill();
+      }
+
+      function downloadVertical(format, darkMode) {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+
+        // Square canvas for vertical layout
+        canvas.width = currentSize;
+        canvas.height = currentSize;
+
+        // Background
+        if (format === "jpg" || darkMode) {
+          ctx.fillStyle = darkMode ? "#1f2937" : "white";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        // Calculate positions for vertical layout
+        const iconSize = currentSize * 0.45;
+        const iconX = (currentSize - iconSize) / 2;
+        const iconY = currentSize * 0.15;
+
+        // Draw icon background
+        const gradient = ctx.createLinearGradient(
+          iconX,
+          iconY,
+          iconX + iconSize,
+          iconY + iconSize
+        );
+        gradient.addColorStop(0, "#4f46e5");
+        gradient.addColorStop(1, "#7c3aed");
+
+        ctx.fillStyle = gradient;
+        roundRect(ctx, iconX, iconY, iconSize, iconSize, iconSize * 0.25);
+        ctx.fill();
+
+        // Draw camera icon
+        drawCameraIcon(ctx, iconX, iconY, iconSize);
+
+        // Draw text below icon
+        const textY = iconY + iconSize + currentSize * 0.15;
+        const fontSize = currentSize * 0.12;
+
+        const textGradient = ctx.createLinearGradient(
+          0,
+          textY - fontSize,
+          currentSize,
+          textY
+        );
+        textGradient.addColorStop(0, "#4f46e5");
+        textGradient.addColorStop(0.5, "#7c3aed");
+        textGradient.addColorStop(1, "#3b82f6");
+
+        ctx.fillStyle = textGradient;
+        ctx.font = `bold ${fontSize}px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif`;
+        ctx.textAlign = "center";
+        ctx.fillText("Groupify", currentSize / 2, textY);
+
+        // Download
+        const themeStr = darkMode ? "dark" : "light";
+        const platformStr =
+          currentPlatform !== "Custom" ? `-${currentPlatform}` : "";
+        const link = document.createElement("a");
+        link.download = `groupify-vertical-${themeStr}${platformStr}-${currentSize}px.${format}`;
+        link.href = canvas.toDataURL(
+          `image/${format}`,
+          format === "jpg" ? 0.9 : 1.0
+        );
+        link.click();
+      }
+
+      function downloadHorizontal(format, darkMode) {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+
+        // Wider canvas for horizontal layout
+        const aspectRatio = 1.8;
+        canvas.width = currentSize * aspectRatio;
+        canvas.height = currentSize;
+
+        // Background
+        if (format === "jpg" || darkMode) {
+          ctx.fillStyle = darkMode ? "#1f2937" : "white";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        // Calculate positions for horizontal layout
+        const iconSize = currentSize * 0.6;
+        const iconX = currentSize * 0.2;
+        const iconY = (currentSize - iconSize) / 2;
+
+        // Draw icon background
+        const gradient = ctx.createLinearGradient(
+          iconX,
+          iconY,
+          iconX + iconSize,
+          iconY + iconSize
+        );
+        gradient.addColorStop(0, "#4f46e5");
+        gradient.addColorStop(1, "#7c3aed");
+
+        ctx.fillStyle = gradient;
+        roundRect(ctx, iconX, iconY, iconSize, iconSize, iconSize * 0.25);
+        ctx.fill();
+
+        // Draw camera icon
+        drawCameraIcon(ctx, iconX, iconY, iconSize);
+
+        // Draw text to the right of icon
+        const textX = iconX + iconSize + currentSize * 0.15;
+        const textY = currentSize / 2 + currentSize * 0.08;
+        const fontSize = currentSize * 0.2;
+
+        const textGradient = ctx.createLinearGradient(
+          textX,
+          textY - fontSize,
+          textX + fontSize * 4,
+          textY
+        );
+        textGradient.addColorStop(0, "#4f46e5");
+        textGradient.addColorStop(0.5, "#7c3aed");
+        textGradient.addColorStop(1, "#3b82f6");
+
+        ctx.fillStyle = textGradient;
+        ctx.font = `bold ${fontSize}px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif`;
+        ctx.textAlign = "left";
+        ctx.fillText("Groupify", textX, textY);
+
+        // Download
+        const themeStr = darkMode ? "dark" : "light";
+        const platformStr =
+          currentPlatform !== "Custom" ? `-${currentPlatform}` : "";
+        const link = document.createElement("a");
+        link.download = `groupify-horizontal-${themeStr}${platformStr}-${currentSize}px.${format}`;
+        link.href = canvas.toDataURL(
+          `image/${format}`,
+          format === "jpg" ? 0.9 : 1.0
+        );
+        link.click();
+      }
+
+      function roundRect(ctx, x, y, width, height, radius) {
+        ctx.beginPath();
+        ctx.moveTo(x + radius, y);
+        ctx.lineTo(x + width - radius, y);
+        ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+        ctx.lineTo(x + width, y + height - radius);
+        ctx.quadraticCurveTo(
+          x + width,
+          y + height,
+          x + width - radius,
+          y + height
+        );
+        ctx.lineTo(x + radius, y + height);
+        ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+        ctx.lineTo(x, y + radius);
+        ctx.quadraticCurveTo(x, y, x + radius, y);
+        ctx.closePath();
+      }
+    </script>
+  </body>
+</html>
