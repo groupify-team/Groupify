@@ -56,7 +56,7 @@ import {
   resetFaceRecognition,
   getFaceProfile,
   createFaceProfile,
-} from "../../services/faceRecognition";
+} from "../../services/faceRecognitionService";
 
 // 🔹 Components
 import PhotoUpload from "../photos/PhotoUpload";
@@ -120,11 +120,6 @@ const TripDetailView = ({ tripId: propTripId }) => {
     errors: [],
   });
 
-  // 📚 Caching states for previous scan results
-  const [cachedResults, setCachedResults] = useState(null);
-  const [lastScannedPhotos, setLastScannedPhotos] = useState(null);
-  const [lastScanTimestamp, setLastScanTimestamp] = useState(null);
-
   const isMember = trip?.members?.includes(currentUser?.uid);
   const canFilterByFace = isMember && currentUser?.uid;
   const [showAllPhotosModal, setShowAllPhotosModal] = useState(false);
@@ -145,77 +140,6 @@ const TripDetailView = ({ tripId: propTripId }) => {
       loadUserFaceProfile();
     }
   }, [currentUser]);
-
-  // 📚 Clear cache when photos change
-  useEffect(() => {
-    if (photosHaveChanged() && cachedResults) {
-      console.log("📚 Photos changed, clearing cached results");
-      setCachedResults(null);
-      setLastScannedPhotos(null);
-      setLastScanTimestamp(null);
-
-      // If filter is currently active with old cached results, turn it off
-      if (filterActive) {
-        setFilterActive(false);
-        setFilteredPhotos([]);
-        toast.info("Photos changed - previous scan results cleared");
-      }
-    }
-  }, [photos]);
-
-  // 📚 Check if photos have changed since last scan
-  const photosHaveChanged = () => {
-    if (!lastScannedPhotos || !photos) return true;
-
-    // Quick check: compare counts
-    if (lastScannedPhotos.length !== photos.length) return true;
-
-    // More thorough check: compare photo IDs and upload times
-    const currentPhotoSignature = photos
-      .map((p) => `${p.id}-${p.uploadedAt}`)
-      .sort()
-      .join("|");
-
-    const lastPhotoSignature = lastScannedPhotos
-      .map((p) => `${p.id}-${p.uploadedAt}`)
-      .sort()
-      .join("|");
-
-    return currentPhotoSignature !== lastPhotoSignature;
-  };
-
-  // 📚 Check if cached results are still valid
-  const hasCachedResults = () => {
-    return (
-      cachedResults &&
-      lastScannedPhotos &&
-      lastScanTimestamp &&
-      !photosHaveChanged() &&
-      hasProfile
-    );
-  };
-
-  // 📚 Show cached results without scanning
-  const showCachedResults = () => {
-    if (hasCachedResults()) {
-      setFilteredPhotos(cachedResults);
-      setFilterActive(true);
-      toast.success(`Showing ${cachedResults.length} previously found photos`);
-      console.log(
-        `📚 Loaded ${cachedResults.length} cached results from ${new Date(
-          lastScanTimestamp
-        ).toLocaleString()}`
-      );
-    }
-  };
-
-  // 📚 Save scan results to cache
-  const saveScanResults = (results) => {
-    setCachedResults(results);
-    setLastScannedPhotos([...photos]); // Deep copy current photos state
-    setLastScanTimestamp(Date.now());
-    console.log(`💾 Cached ${results.length} face recognition results`);
-  };
 
   // Updated loadUserFaceProfile function - simplified
   const loadUserFaceProfile = async () => {
@@ -334,7 +258,6 @@ const TripDetailView = ({ tripId: propTripId }) => {
             weakMatches: progressData.weakMatches,
             averageConfidence: progressData.averageConfidence,
             processingTime: progressData.processingTime,
-            cacheStats: progressData.cacheStats,
             profileUsed: progressData.profileUsed,
           };
 
@@ -351,7 +274,7 @@ const TripDetailView = ({ tripId: propTripId }) => {
   };
 
   // Simplified face recognition function
-  const handleFindMyPhotos = async (forceRescan = false) => {
+  const handleFindMyPhotos = async () => {
     if (!currentUser?.uid || photos.length === 0) {
       toast.error("User ID or trip photos missing");
       return;
@@ -362,12 +285,6 @@ const TripDetailView = ({ tripId: propTripId }) => {
       toast.error(
         "No face profile found. Please create one in your Dashboard first."
       );
-      return;
-    }
-
-    // 📚 If we have valid cached results and not forcing rescan, offer to use cache
-    if (!forceRescan && hasCachedResults()) {
-      showCachedResults();
       return;
     }
 
@@ -401,20 +318,12 @@ const TripDetailView = ({ tripId: propTripId }) => {
       if (matches.length > 0) {
         setFilteredPhotos(matches);
         setFilterActive(true);
-
-        // 📚 Save results to cache
-        saveScanResults(matches);
-
         toast.success(`Found ${matches.length} matching photos!`);
         console.log(`✅ Found ${matches.length} matching photos`);
       } else {
         console.log("ℹ️ No matching photos found");
         setFilteredPhotos([]);
         setFilterActive(true); // Still show the section but with "no matches" message
-
-        // 📚 Save empty results to cache
-        saveScanResults([]);
-
         toast.info("No matching photos found");
       }
     } catch (error) {
@@ -464,13 +373,8 @@ const TripDetailView = ({ tripId: propTripId }) => {
       setFilterActive(false);
       setFilteredPhotos([]);
     } else {
-      // 📚 If we have cached results and photos haven't changed, show cached first
-      if (hasCachedResults()) {
-        showCachedResults();
-      } else {
-        // Start face recognition
-        handleFindMyPhotos(false);
-      }
+      // Start face recognition
+      handleFindMyPhotos();
     }
   };
 
@@ -519,13 +423,6 @@ const TripDetailView = ({ tripId: propTripId }) => {
         setFilteredPhotos((prevFiltered) =>
           prevFiltered.filter((photo) => !selectedPhotos.includes(photo.id))
         );
-      }
-
-      // Clear cache if it exists since photos changed
-      if (cachedResults) {
-        setCachedResults(null);
-        setLastScannedPhotos(null);
-        setLastScanTimestamp(null);
       }
 
       // Update trip photo count
@@ -1315,39 +1212,17 @@ const TripDetailView = ({ tripId: propTripId }) => {
                             </span>
                           </div>
                         )}
-
-                        {hasCachedResults() && (
-                          <div className="flex items-center gap-2 bg-blue-100 dark:bg-blue-900/30 px-3 py-2 rounded-full text-xs backdrop-blur-sm border border-blue-200 dark:border-blue-800">
-                            <ClockIcon className="w-3 h-3 text-blue-600 dark:text-blue-400" />
-                            <span className="text-blue-700 dark:text-blue-400 font-medium">
-                              Previous scan
-                            </span>
-                          </div>
-                        )}
                       </div>
 
                       {/* Action Buttons */}
                       <div className="flex flex-wrap gap-2">
-                        {hasCachedResults() && !filterActive && (
-                          <button
-                            onClick={showCachedResults}
-                            disabled={!canFilterByFace || isLoadingProfile}
-                            className="px-4 py-2 bg-blue-100 dark:bg-blue-900/30 hover:bg-blue-200 dark:hover:bg-blue-900/50 text-blue-700 dark:text-blue-400 rounded-xl font-medium transition-all duration-300 text-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm border border-blue-200 dark:border-blue-800"
-                          >
-                            <ClockIcon className="w-4 h-4" />
-                            Show Previous ({cachedResults.length})
-                          </button>
-                        )}
-
                         <button
                           onClick={() => {
                             if (filterActive) {
                               setFilterActive(false);
                               setFilteredPhotos([]);
-                            } else if (hasCachedResults()) {
-                              handleFindMyPhotos(true);
                             } else {
-                              handleFindMyPhotos(false);
+                              handleFindMyPhotos();
                             }
                           }}
                           disabled={!canFilterByFace || isLoadingProfile}
@@ -1356,9 +1231,7 @@ const TripDetailView = ({ tripId: propTripId }) => {
                               ? filterActive
                                 ? "bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white"
                                 : hasProfile
-                                ? hasCachedResults()
-                                  ? "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white"
-                                  : "bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white"
+                                ? "bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white"
                                 : "bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white"
                               : "bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400 cursor-not-allowed"
                           }`}
@@ -1367,9 +1240,7 @@ const TripDetailView = ({ tripId: propTripId }) => {
                           {filterActive
                             ? "Hide Results"
                             : hasProfile
-                            ? hasCachedResults()
-                              ? `Scan Again`
-                              : `Find My Photos`
+                            ? `Find My Photos`
                             : `Need Profile`}
                         </button>
                       </div>
@@ -1460,34 +1331,6 @@ const TripDetailView = ({ tripId: propTripId }) => {
                   </div>
                 ) : filterActive ? (
                   <div className="space-y-6">
-                    {/* Cache Information Banner */}
-                    {hasCachedResults() && cachedResults === filteredPhotos && (
-                      <div className="bg-blue-50/80 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-xl p-4 backdrop-blur-sm">
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                          <div className="flex items-center gap-3">
-                            <ClockIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                            <div>
-                              <p className="font-semibold text-blue-800 dark:text-blue-400 text-sm">
-                                Showing previous results
-                              </p>
-                              <p className="text-blue-600 dark:text-blue-400 text-xs">
-                                Scanned on{" "}
-                                {new Date(
-                                  lastScanTimestamp
-                                ).toLocaleDateString()}
-                              </p>
-                            </div>
-                          </div>
-                          <button
-                            onClick={() => handleFindMyPhotos(true)}
-                            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-xs font-medium transition-colors backdrop-blur-sm"
-                          >
-                            Scan Again
-                          </button>
-                        </div>
-                      </div>
-                    )}
-
                     {/* Photos Grid - Responsive */}
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
                       {filteredPhotos.map((photo) => (

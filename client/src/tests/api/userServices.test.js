@@ -1,4 +1,5 @@
-import {
+// testing the following functions
+import { 
     createUserProfile,
     getUserProfile,
     sendFriendRequest,
@@ -7,7 +8,7 @@ import {
     findUsersByEmail
 } from '../../services/firebase/users';
 
-// Mock Firebase
+// Mock Firebase methods
 jest.mock('../../services/firebase/config');
 jest.mock('firebase/firestore', () => ({
     doc: jest.fn(),
@@ -22,7 +23,7 @@ jest.mock('firebase/firestore', () => ({
     arrayUnion: jest.fn(),
     arrayRemove: jest.fn()
 }));
-
+// Mock Firebase Auth methods
 import {
     doc,
     getDoc,
@@ -36,7 +37,7 @@ import {
     arrayUnion,
     arrayRemove
 } from 'firebase/firestore';
-
+// test users
 describe('User services API tests', () => {
     const testUser1 = {
         uid: 'testUser1',
@@ -55,7 +56,7 @@ describe('User services API tests', () => {
     beforeEach(() => {
         jest.clearAllMocks();
     });
-
+    // Test cases for user services
     test('should create user with valid data', async () => {
         // Mock Firestore calls
         const mockDocRef = { id: 'mockDocId' };
@@ -112,7 +113,7 @@ describe('User services API tests', () => {
         getDoc.mockResolvedValue({ exists: () => false });
         setDoc.mockResolvedValue();
         
-        // Create users
+        // Create two users
         await createUserProfile(testUser1.uid, testUser1);
         await createUserProfile(testUser2.uid, testUser2);
 
@@ -121,16 +122,19 @@ describe('User services API tests', () => {
         deleteDoc.mockResolvedValue();
         arrayUnion.mockImplementation((value) => ({ _type: 'arrayUnion', elements: [value] }));
 
-        // Send and accept friend request
+        // user 1 sends a friend request to user 2
         await sendFriendRequest(testUser1.uid, testUser2.uid);
+
+        // user 2 accepts the friend request
         await acceptFriendRequest(testUser2.uid, testUser1.uid);
 
         // Mock getFriends response
         getDoc
+            // Mock user 1's friends
             .mockResolvedValueOnce({
                 exists: () => true,
                 data: () => ({ friends: [testUser2.uid] })
-            })
+            }) 
             .mockResolvedValueOnce({
                 exists: () => true,
                 data: () => ({ 
@@ -138,7 +142,7 @@ describe('User services API tests', () => {
                     displayName: testUser2.displayName,
                     email: testUser2.email
                 })
-            })
+            }) // Mock user 2's friends
             .mockResolvedValueOnce({
                 exists: () => true,
                 data: () => ({ friends: [testUser1.uid] })

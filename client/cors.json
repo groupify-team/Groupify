@@ -1,8 +1,8 @@
 [
   {
-    "origin": ["http://localhost:5173"],
-    "method": ["GET", "POST", "PUT", "OPTIONS"],
-    "responseHeader": ["Content-Type", "Authorization", "X-Firebase-AppCheck"],
-    "maxAgeSeconds": 3600
+    "origin": ["https://groupify-77202.web.app/", "http://localhost:5173/"],
+    "method": ["GET", "POST", "PUT", "DELETE"],
+    "maxAgeSeconds": 3600,
+    "responseHeader": ["Content-Type", "Authorization"]
   }
 ]
