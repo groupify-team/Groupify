@@ -186,10 +186,13 @@ const FaceProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
     );
   };
 
+
   // Dynamic guide component
   const DynamicGuide = ({ step }) => {
     return <Modern3DHead step={step} captureSteps={captureSteps} />;
   };
+
+=======
 
   // Cleanup function
   const cleanup = () => {
@@ -727,10 +730,13 @@ const FaceProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
                     </div>
                   )}
 
-                  {/* Dynamic Guide Simulation */}
+                  {/* Modern 3D Head Guide - Using the new component */}
                   {captureSteps[capturedPhotos.length] && (
                     <div className="flex justify-center">
-                      <DynamicGuide step={capturedPhotos.length} />
+                      <Modern3DHead
+                        step={capturedPhotos.length}
+                        captureSteps={captureSteps}
+                      />
                     </div>
                   )}
                 </div>

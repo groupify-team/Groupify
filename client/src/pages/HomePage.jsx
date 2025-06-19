@@ -210,7 +210,10 @@ const HomePage = () => {
   const [isLoaded, setIsLoaded] = useState(false);
 
   // ADD THIS STATE FOR LAUNCH ANIMATION
-  const [showLaunch, setShowLaunch] = useState(true);
+  const [showLaunch, setShowLaunch] = useState(() => {
+    // Only show launch animation if user hasn't seen it before
+    return !localStorage.getItem("hasSeenLaunchAnimation");
+  });
 
   useEffect(() => {
     setIsLoaded(true);
@@ -238,6 +241,7 @@ const HomePage = () => {
 
   // ADD THIS FUNCTION TO HANDLE ANIMATION COMPLETION
   const handleAnimationComplete = () => {
+    localStorage.setItem("hasSeenLaunchAnimation", "true");
     setShowLaunch(false);
   };
 

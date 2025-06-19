@@ -12,6 +12,8 @@ import {
   ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
 import { toast } from "react-hot-toast";
+import { httpsCallable } from "firebase/functions";
+import { functions } from "../../services/firebase/config";
 
 const SignIn = () => {
   const [email, setEmail] = useState("");
@@ -31,12 +33,12 @@ const SignIn = () => {
     if (urlParams.get("verified") === "true") {
       const message = urlParams.get("message");
       if (message) {
-        toast.success(decodeURIComponent(message), { duration: 5000 });
+        toast.success(decodeURIComponent(message), { duration: 4000 });
       }
-      // Clean up URL
-      navigate("/signin", { replace: true });
+      // Clean up URL immediately to prevent re-triggering
+      window.history.replaceState({}, document.title, "/signin");
     }
-  }, [location, navigate]);
+  }, [location.search]); // Changed from [location, navigate] to [location.search]
 
   // Load remembered email
   useEffect(() => {
@@ -233,9 +235,9 @@ const SignIn = () => {
                   disabled={loading}
                 >
                   {showPassword ? (
-                    <EyeSlashIcon className="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
-                  ) : (
                     <EyeIcon className="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
+                  ) : (
+                    <EyeSlashIcon className="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
                   )}
                 </button>
               </div>
@@ -300,12 +302,43 @@ const SignIn = () => {
                   <p className="text-yellow-600 dark:text-yellow-400 mt-1">
                     Please verify your email before signing in. Check your inbox
                     or{" "}
-                    <Link
-                      to={`/confirm-email?email=${encodeURIComponent(email)}`}
-                      className="underline font-medium hover:text-yellow-500"
+                    <button
+                      onClick={async () => {
+                        try {
+                          console.log(
+                            "Resending verification email from SignIn to:",
+                            email
+                          );
+
+                          const resendFunction = httpsCallable(
+                            functions,
+                            "resendVerificationCode"
+                          );
+                          await resendFunction({ email });
+
+                          toast.success(
+                            "Verification email sent! Check your inbox."
+                          );
+
+                          // Then navigate to confirm page
+                          setTimeout(() => {
+                            navigate(
+                              `/confirm-email?email=${encodeURIComponent(
+                                email
+                              )}`
+                            );
+                          }, 1500);
+                        } catch (error) {
+                          console.error("Resend error:", error);
+                          toast.error(
+                            "Failed to resend email. Please try again."
+                          );
+                        }
+                      }}
+                      className="underline font-medium hover:text-yellow-500 bg-transparent border-none cursor-pointer"
                     >
                       resend verification email
-                    </Link>
+                    </button>
                   </p>
                 </div>
               </div>

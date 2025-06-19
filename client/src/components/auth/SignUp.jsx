@@ -107,7 +107,11 @@ const SignUp = () => {
       console.log("Signup result:", result);
 
       if (result.success) {
-        toast.success(result.message);
+        // Show ONE success message here
+        toast.success(
+          "Account created! Please check your email to verify your account."
+        );
+
         // Navigate to confirm email page with email data
         navigate("/confirm-email", {
           state: {
@@ -371,9 +375,9 @@ const SignUp = () => {
                   disabled={loading}
                 >
                   {showPassword ? (
-                    <EyeSlashIcon className="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
-                  ) : (
                     <EyeIcon className="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
+                  ) : (
+                    <EyeSlashIcon className="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
                   )}
                 </button>
               </div>
@@ -552,9 +556,9 @@ const SignUp = () => {
                   disabled={loading}
                 >
                   {showConfirmPassword ? (
-                    <EyeSlashIcon className="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
-                  ) : (
                     <EyeIcon className="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
+                  ) : (
+                    <EyeSlashIcon className="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
                   )}
                 </button>
               </div>
