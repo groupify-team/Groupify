@@ -83,17 +83,21 @@ export function AuthProvider({ children }) {
 
       console.log("User document created in Firestore");
 
-      // Send verification email (don't wait for it to complete)
-      const sendVerificationEmail = httpsCallable(
-        functions,
-        "sendVerificationEmail"
-      );
-      sendVerificationEmail({
-        email: email,
-        name: displayName,
-      }).catch((error) => {
-        console.error("Email send error (non-blocking):", error);
-      });
+      // Send verification email (wait for it to complete this time)
+      try {
+        const sendVerificationEmail = httpsCallable(
+          functions,
+          "sendVerificationEmail"
+        );
+        await sendVerificationEmail({
+          email: email,
+          name: displayName,
+        });
+        console.log("Verification email sent successfully");
+      } catch (emailError) {
+        console.error("Email send error:", emailError);
+        // Don't fail the entire signup if email fails
+      }
 
       // NOW sign out the user
       await signOut(auth);
@@ -101,8 +105,6 @@ export function AuthProvider({ children }) {
 
       return {
         success: true,
-        message:
-          "Account created! Please check your email to verify your account.",
         email: email,
       };
     } catch (error) {
