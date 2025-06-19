@@ -66,7 +66,7 @@ import {
   hasFaceProfile,
   optimizeProfile,
   removePhotosFromProfile,
-} from "../services/faceRecognition";
+} from "../services/faceRecognitionService";
 import { db, storage } from "../services/firebase/config";
 import {
   deleteFaceProfileFromStorage,
