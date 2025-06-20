@@ -106,6 +106,7 @@ const Dashboard = () => {
   // Trip dropdown state
   const [tripsDropdownOpen, setTripsDropdownOpen] = useState(false);
   const [visibleTripsCount, setVisibleTripsCount] = useState(5);
+  const [filterDropdownOpen, setFilterDropdownOpen] = useState(false);
 
   // Notifications dropdown state
   const [notificationsDropdownOpen, setNotificationsDropdownOpen] =
@@ -125,6 +126,8 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [pendingFriendRequests, setPendingFriendRequests] = useState([]);
+  const [friendsActiveTab, setFriendsActiveTab] = useState("friends"); // "friends" or "requests"
+  const [showDesktopRequests, setShowDesktopRequests] = useState(true);
 
   // Delete account modal state
   const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false);
@@ -180,6 +183,22 @@ const Dashboard = () => {
     setVisibleTripsCount(5); // Reset to show first 5 trips
   };
 
+  // NEW: Handle filter dropdown
+  const getFilterLabel = (value) => {
+    switch (value) {
+      case "all":
+        return "📁 All Trips";
+      case "upcoming":
+        return "📅 Upcoming";
+      case "recent":
+        return "🕒 Recent";
+      case "past":
+        return "✅ Past";
+      default:
+        return "📁 All Trips";
+    }
+  };
+
   const showMoreTrips = () => {
     setVisibleTripsCount((prev) => prev + 5);
   };
@@ -203,6 +222,17 @@ const Dashboard = () => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (filterDropdownOpen && !event.target.closest(".filter-dropdown")) {
+        setFilterDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [filterDropdownOpen]);
 
   // Delete account state
   const handleDeleteAccount = async () => {
@@ -320,7 +350,8 @@ const Dashboard = () => {
       id: "friends",
       name: "Friends",
       icon: UserGroupIcon,
-      badge: friends.length,
+      badge: friends.length + pendingRequests.length,
+      hasNotification: pendingRequests.length > 0,
     },
     {
       id: "notifications",
@@ -935,7 +966,7 @@ const Dashboard = () => {
     ];
 
     return (
-      <div className="absolute right-0 top-full mt-2 w-96 bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20 dark:border-gray-700/50 z-50 max-h-96 overflow-y-auto">
+      <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20 dark:border-gray-700/50 z-50 max-h-96 overflow-y-auto max-w-[calc(100vw-1rem)] mr-2 sm:mr-0">
         <div className="p-4 border-b border-gray-100 dark:border-gray-700">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
             Notifications
@@ -1002,29 +1033,30 @@ const Dashboard = () => {
   // Section Components
   const TripsSection = () => (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-start">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">
             My Trips
           </h1>
-          <p className="text-gray-600 dark:text-gray-300 mt-1">
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 mt-0.5 sm:mt-1">
             Organize and manage your travel memories
           </p>
         </div>
         <button
           onClick={() => setShowCreateTripModal(true)}
-          className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center gap-2"
+          className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-3 sm:px-6 py-2 sm:py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center gap-1 sm:gap-2 text-sm sm:text-base whitespace-nowrap flex-shrink-0"
         >
-          <PlusIcon className="w-5 h-5" />
-          Create Trip
+          <PlusIcon className="w-4 h-4 sm:w-5 sm:h-5" />
+          <span className="hidden sm:inline">Create Trip</span>
+          <span className="sm:hidden">Create</span>
         </button>
       </div>
 
       {/* Filters */}
-      <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-2xl shadow-lg p-6 border border-white/20 dark:border-gray-700/50">
-        <div className="flex flex-col md:flex-row gap-4">
+      <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-xl sm:rounded-2xl shadow-lg p-2 sm:p-4 lg:p-6 border border-white/20 dark:border-gray-700/50">
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
           <div className="relative flex-1">
-            <MagnifyingGlassIcon className="w-5 h-5 text-gray-400 dark:text-gray-500 absolute left-3 top-1/2 transform -translate-y-1/2" />
+            <MagnifyingGlassIcon className="w-4 h-4 text-gray-400 dark:text-gray-500 absolute left-2.5 top-1/2 transform -translate-y-1/2" />
             <input
               ref={searchInputRef}
               type="text"
@@ -1033,7 +1065,6 @@ const Dashboard = () => {
               onChange={useCallback(
                 (e) => {
                   setSearchTerm(e.target.value);
-                  // Keep focus on the input after state change
                   setTimeout(() => {
                     if (searchInputRef.current) {
                       searchInputRef.current.focus();
@@ -1042,30 +1073,88 @@ const Dashboard = () => {
                 },
                 [setSearchTerm]
               )}
-              className="w-full pl-10 pr-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors bg-white/50 dark:bg-gray-700/50 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+              className="w-full pl-8 pr-3 py-2 sm:py-3 border border-gray-200 dark:border-gray-600 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors bg-white/50 dark:bg-gray-700/50 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 text-sm"
             />
           </div>
 
-          {/* Select dropdown with custom arrow positioning */}
-          <div className="relative min-w-[150px]">
-            <select
-              value={dateFilter}
-              onChange={(e) => setDateFilter(e.target.value)}
-              className="w-full px-4 py-3 pr-8 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white/50 dark:bg-gray-700/50 text-gray-900 dark:text-white appearance-none cursor-pointer"
+          <div className="relative w-full sm:min-w-[140px] sm:w-auto filter-dropdown">
+            <button
+              onClick={() => setFilterDropdownOpen(!filterDropdownOpen)}
+              className="w-full px-3 py-2 sm:py-3 pr-8 border border-gray-200 dark:border-gray-600 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm text-gray-900 dark:text-white cursor-pointer text-sm font-medium shadow-sm hover:bg-white/90 dark:hover:bg-gray-700/90 transition-all duration-200 flex items-center justify-between"
             >
-              <option value="all">All Trips</option>
-              <option value="upcoming">Upcoming</option>
-              <option value="recent">Recent</option>
-              <option value="past">Past</option>
-            </select>
-            {/* Custom arrow positioned more to the left */}
-            <ChevronDownIcon className="w-4 h-4 text-gray-400 dark:text-gray-500 absolute right-2 top-1/2 transform -translate-y-1/2 pointer-events-none" />
+              <span>{getFilterLabel(dateFilter)}</span>
+              <ChevronDownIcon
+                className={`w-4 h-4 text-gray-500 dark:text-gray-400 transition-transform duration-200 ${
+                  filterDropdownOpen ? "rotate-180" : ""
+                }`}
+              />
+            </button>
+
+            {/* Mobile dropdown - pushes content down */}
+            <div
+              className={`sm:hidden overflow-hidden transition-all duration-1000 ease-in-out ${
+                filterDropdownOpen
+                  ? "max-h-48 opacity-100"
+                  : "max-h-0 opacity-0"
+              }`}
+            >
+              <div className="mt-2 bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-lg shadow-xl border border-gray-200 dark:border-gray-600 overflow-hidden">
+                {[
+                  { value: "all", label: "📁 All Trips" },
+                  { value: "upcoming", label: "📅 Upcoming" },
+                  { value: "recent", label: "🕒 Recent" },
+                  { value: "past", label: "✅ Past" },
+                ].map((option) => (
+                  <button
+                    key={option.value}
+                    onClick={() => {
+                      setDateFilter(option.value);
+                      setFilterDropdownOpen(false);
+                    }}
+                    className={`w-full px-4 py-3 text-left text-sm font-medium transition-colors duration-150 ${
+                      dateFilter === option.value
+                        ? "bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300"
+                        : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50"
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Desktop dropdown - overlays */}
+            {filterDropdownOpen && (
+              <div className="hidden sm:block absolute top-full left-0 right-0 mt-1 bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-lg sm:rounded-xl shadow-xl border border-gray-200 dark:border-gray-600 z-50 overflow-hidden">
+                {[
+                  { value: "all", label: "📁 All Trips" },
+                  { value: "upcoming", label: "📅 Upcoming" },
+                  { value: "recent", label: "🕒 Recent" },
+                  { value: "past", label: "✅ Past" },
+                ].map((option) => (
+                  <button
+                    key={option.value}
+                    onClick={() => {
+                      setDateFilter(option.value);
+                      setFilterDropdownOpen(false);
+                    }}
+                    className={`w-full px-4 py-3 text-left text-sm font-medium transition-colors duration-150 ${
+                      dateFilter === option.value
+                        ? "bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300"
+                        : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50"
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
 
       {/* Trips Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-5 xl:gap-6">
         {filteredTrips.length === 0 ? (
           <div className="col-span-full text-center py-16">
             <div className="w-24 h-24 bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/30 dark:to-purple-900/30 rounded-2xl flex items-center justify-center mx-auto mb-6">
@@ -1303,71 +1392,284 @@ const Dashboard = () => {
 
   const FriendsSection = () => (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-start mb-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">
             My Friends
           </h1>
-          <p className="text-gray-600 dark:text-gray-300 mt-1">
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 mt-0.5 sm:mt-1">
             Connect and share memories with friends
           </p>
         </div>
-        <button
-          onClick={() => setShowAddFriendModal(true)}
-          className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center gap-2"
-        >
-          <PlusIcon className="w-5 h-5" />
-          Add Friend
-        </button>
+        {/* Add Friend button - only show when on friends tab */}
+        {friendsActiveTab === "friends" && (
+          <button
+            onClick={() => setShowAddFriendModal(true)}
+            className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-3 sm:px-6 py-2 sm:py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center gap-1 sm:gap-2 text-sm sm:text-base whitespace-nowrap flex-shrink-0"
+          >
+            <PlusIcon className="w-4 h-4 sm:w-5 sm:h-5" />
+            <span className="hidden sm:inline">Add Friend</span>
+            <span className="sm:hidden">Add</span>
+          </button>
+        )}
       </div>
 
-      <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-2xl shadow-lg p-6 border border-white/20 dark:border-gray-700/50">
-        {friends.length === 0 ? (
-          <div className="text-center py-16">
-            <div className="w-24 h-24 bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/30 dark:to-purple-900/30 rounded-2xl flex items-center justify-center mx-auto mb-6">
-              <UserGroupIcon className="w-12 h-12 text-indigo-500 dark:text-indigo-400" />
-            </div>
-            <h3 className="text-xl font-semibold text-gray-600 dark:text-gray-300 mb-2">
-              No friends yet
-            </h3>
-            <p className="text-gray-500 dark:text-gray-400 mb-6">
-              Start connecting with people to share your travel memories
-            </p>
+      {/* Mobile Tab Buttons */}
+      <div className="lg:hidden mb-6">
+        <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-2xl p-1 border border-white/20 dark:border-gray-700/50 shadow-lg">
+          <div className="flex">
             <button
-              onClick={() => setShowAddFriendModal(true)}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-semibold transition-colors"
+              onClick={() => setFriendsActiveTab("friends")}
+              className={`flex-1 px-4 py-3 rounded-xl font-semibold text-sm transition-all duration-300 flex items-center justify-center gap-2 ${
+                friendsActiveTab === "friends"
+                  ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg"
+                  : "text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+              }`}
             >
-              Add Your First Friend
+              <UserGroupIcon className="w-4 h-4" />
+              <span>Your Friends</span>
+              <span className="bg-white/20 text-xs px-2 py-0.5 rounded-full">
+                {friends.length}
+              </span>
+            </button>
+
+            <button
+              onClick={() => setFriendsActiveTab("requests")}
+              className={`flex-1 px-4 py-3 rounded-xl font-semibold text-sm transition-all duration-300 flex items-center justify-center gap-2 relative ${
+                friendsActiveTab === "requests"
+                  ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg"
+                  : "text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+              }`}
+            >
+              <BellIcon className="w-4 h-4" />
+              <span>Friend Requests</span>
+              {pendingRequests.length > 0 && (
+                <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
+                  {pendingRequests.length}
+                </span>
+              )}
             </button>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {friends.map((friend) => (
+        </div>
+      </div>
+
+      {/* Desktop Friend Requests Section */}
+      {showDesktopRequests && pendingRequests.length > 0 && (
+        <div className="hidden lg:block mb-6 bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-2xl shadow-lg p-6 border border-white/20 dark:border-gray-700/50">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
+              <UserGroupIcon className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
+              Friend Requests
+              <span className="bg-red-500 text-white text-sm px-2 py-1 rounded-full">
+                {pendingRequests.length}
+              </span>
+            </h2>
+            <button
+              onClick={() => setShowDesktopRequests(false)}
+              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-300"
+            >
+              <XMarkIcon className="w-5 h-5" />
+            </button>
+          </div>
+
+          <div className="space-y-3">
+            {pendingRequests.map((request) => (
               <div
-                key={friend.uid}
-                className="flex items-center p-4 border border-gray-200 dark:border-gray-600 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors cursor-pointer"
-                onClick={() => handleOpenUserProfile(friend.uid)}
+                key={request.id}
+                className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-600 rounded-xl bg-white/30 dark:bg-gray-700/30"
               >
-                <img
-                  src={
-                    friend.photoURL ||
-                    "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg"
-                  }
-                  alt={friend.displayName}
-                  className="w-12 h-12 rounded-full object-cover mr-4"
-                />
-                <div className="flex-1">
-                  <h3 className="font-semibold text-gray-800 dark:text-white">
-                    {friend.displayName}
-                  </h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    {friend.email}
-                  </p>
+                <div className="flex items-center gap-3">
+                  <img
+                    src="https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg"
+                    alt="Profile"
+                    className="w-12 h-12 rounded-full object-cover"
+                  />
+                  <div>
+                    <p className="font-semibold text-gray-800 dark:text-white">
+                      {request.displayName || request.email}
+                    </p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      wants to be your friend
+                    </p>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleAccept(request.from)}
+                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-1"
+                  >
+                    <CheckCircleIcon className="w-4 h-4" />
+                    Accept
+                  </button>
+                  <button
+                    onClick={() => handleReject(request.from)}
+                    className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-1"
+                  >
+                    <XCircleIcon className="w-4 h-4" />
+                    Decline
+                  </button>
                 </div>
               </div>
             ))}
           </div>
-        )}
+        </div>
+      )}
+
+      <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-2xl shadow-lg p-4 sm:p-6 border border-white/20 dark:border-gray-700/50">
+        {/* Mobile: Show content based on active tab */}
+        <div className="lg:hidden">
+          {friendsActiveTab === "friends" ? (
+            // Your existing friends content
+            friends.length === 0 ? (
+              <div className="text-center py-16">
+                <div className="w-24 h-24 bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/30 dark:to-purple-900/30 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                  <UserGroupIcon className="w-12 h-12 text-indigo-500 dark:text-indigo-400" />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-600 dark:text-gray-300 mb-2">
+                  No friends yet
+                </h3>
+                <p className="text-gray-500 dark:text-gray-400 mb-6">
+                  Start connecting with people to share your travel memories
+                </p>
+                <button
+                  onClick={() => setShowAddFriendModal(true)}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-semibold transition-colors"
+                >
+                  Add Your First Friend
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {friends.map((friend) => (
+                  <div
+                    key={friend.uid}
+                    className="flex items-center p-3 border border-gray-200 dark:border-gray-600 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors cursor-pointer"
+                    onClick={() => handleOpenUserProfile(friend.uid)}
+                  >
+                    <img
+                      src={
+                        friend.photoURL ||
+                        "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg"
+                      }
+                      alt={friend.displayName}
+                      className="w-12 h-12 rounded-full object-cover mr-4"
+                    />
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-gray-800 dark:text-white">
+                        {friend.displayName}
+                      </h3>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        {friend.email}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )
+          ) : // Friend Requests for mobile
+          pendingRequests.length === 0 ? (
+            <div className="text-center py-16">
+              <div className="w-24 h-24 bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <BellIcon className="w-12 h-12 text-green-500 dark:text-green-400" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-600 dark:text-gray-300 mb-2">
+                No friend requests
+              </h3>
+              <p className="text-gray-500 dark:text-gray-400">
+                When someone sends you a friend request, it will appear here
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {pendingRequests.map((request) => (
+                <div
+                  key={request.id}
+                  className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-600 rounded-xl bg-white/30 dark:bg-gray-700/30"
+                >
+                  <div className="flex items-center gap-3">
+                    <img
+                      src="https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg"
+                      alt="Profile"
+                      className="w-12 h-12 rounded-full object-cover"
+                    />
+                    <div>
+                      <p className="font-semibold text-gray-800 dark:text-white">
+                        {request.displayName || request.email}
+                      </p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        wants to be your friend
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-2 sm:flex-row">
+                    <button
+                      onClick={() => handleAccept(request.from)}
+                      className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg font-medium transition-colors text-sm"
+                    >
+                      Accept
+                    </button>
+                    <button
+                      onClick={() => handleReject(request.from)}
+                      className="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg font-medium transition-colors text-sm"
+                    >
+                      Decline
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Desktop: Show only friends (requests are above) */}
+        <div className="hidden lg:block">
+          {friends.length === 0 ? (
+            <div className="text-center py-16">
+              <div className="w-24 h-24 bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/30 dark:to-purple-900/30 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <UserGroupIcon className="w-12 h-12 text-indigo-500 dark:text-indigo-400" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-600 dark:text-gray-300 mb-2">
+                No friends yet
+              </h3>
+              <p className="text-gray-500 dark:text-gray-400 mb-6">
+                Start connecting with people to share your travel memories
+              </p>
+              <button
+                onClick={() => setShowAddFriendModal(true)}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-semibold transition-colors"
+              >
+                Add Your First Friend
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {friends.map((friend) => (
+                <div
+                  key={friend.uid}
+                  className="flex items-center p-4 border border-gray-200 dark:border-gray-600 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors cursor-pointer"
+                  onClick={() => handleOpenUserProfile(friend.uid)}
+                >
+                  <img
+                    src={
+                      friend.photoURL ||
+                      "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg"
+                    }
+                    alt={friend.displayName}
+                    className="w-12 h-12 rounded-full object-cover mr-4"
+                  />
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-gray-800 dark:text-white">
+                      {friend.displayName}
+                    </h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      {friend.email}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -1826,7 +2128,9 @@ const Dashboard = () => {
                           className={`text-xs px-2 py-1 rounded-full ${
                             isActive
                               ? "bg-white text-indigo-600"
-                              : "bg-red-500 text-white"
+                              : item.hasNotification
+                              ? "bg-red-500 text-white"
+                              : "bg-gray-500 text-white"
                           }`}
                         >
                           {item.badge}
