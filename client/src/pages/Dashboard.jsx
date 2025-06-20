@@ -128,6 +128,10 @@ const Dashboard = () => {
   const [pendingFriendRequests, setPendingFriendRequests] = useState([]);
   const [friendsActiveTab, setFriendsActiveTab] = useState("friends"); // "friends" or "requests"
   const [showDesktopRequests, setShowDesktopRequests] = useState(true);
+  const [desktopRequestsExpanded, setDesktopRequestsExpanded] = useState(true);
+  const [tripInvitesExpanded, setTripInvitesExpanded] = useState(false);
+  const [tripsActiveTab, setTripsActiveTab] = useState("trips"); // "trips" or "invitations"
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   // Delete account modal state
   const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false);
@@ -353,12 +357,6 @@ const Dashboard = () => {
       badge: friends.length + pendingRequests.length,
       hasNotification: pendingRequests.length > 0,
     },
-    {
-      id: "notifications",
-      name: "Notifications",
-      icon: BellIcon,
-      badge: pendingRequests.length + tripInvites.length,
-    },
     { id: "settings", name: "Settings", icon: Cog6ToothIcon },
   ];
 
@@ -435,7 +433,10 @@ const Dashboard = () => {
   // Handle window resize for responsive sidebar
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth >= 1024) {
+      const width = window.innerWidth;
+      setIsMobile(width < 768);
+
+      if (width >= 1024) {
         setSidebarOpen(true);
       } else {
         setSidebarOpen(false);
@@ -800,6 +801,7 @@ const Dashboard = () => {
                 ? senderSnap.data().displayName
                 : "",
               email: senderSnap.exists() ? senderSnap.data().email : "",
+              photoURL: senderSnap.exists() ? senderSnap.data().photoURL : null,
               createdAt: data.createdAt,
             });
           } catch (err) {
@@ -1030,7 +1032,6 @@ const Dashboard = () => {
     );
   };
 
-  // Section Components
   const TripsSection = () => (
     <div className="space-y-6">
       <div className="flex justify-between items-start">
@@ -1042,148 +1043,394 @@ const Dashboard = () => {
             Organize and manage your travel memories
           </p>
         </div>
-        <button
-          onClick={() => setShowCreateTripModal(true)}
-          className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-3 sm:px-6 py-2 sm:py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center gap-1 sm:gap-2 text-sm sm:text-base whitespace-nowrap flex-shrink-0"
-        >
-          <PlusIcon className="w-4 h-4 sm:w-5 sm:h-5" />
-          <span className="hidden sm:inline">Create Trip</span>
-          <span className="sm:hidden">Create</span>
-        </button>
+        {/* Create Trip button - only show when on trips tab */}
+        {tripsActiveTab === "trips" && (
+          <button
+            onClick={() => setShowCreateTripModal(true)}
+            className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-3 sm:px-6 py-2 sm:py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center gap-1 sm:gap-2 text-sm sm:text-base whitespace-nowrap flex-shrink-0"
+          >
+            <PlusIcon className="w-4 h-4 sm:w-5 sm:h-5" />
+            <span className="hidden sm:inline">Create Trip</span>
+            <span className="sm:hidden">Create</span>
+          </button>
+        )}
       </div>
 
-      {/* Filters */}
-      <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-xl sm:rounded-2xl shadow-lg p-2 sm:p-4 lg:p-6 border border-white/20 dark:border-gray-700/50">
-        <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
-          <div className="relative flex-1">
-            <MagnifyingGlassIcon className="w-4 h-4 text-gray-400 dark:text-gray-500 absolute left-2.5 top-1/2 transform -translate-y-1/2" />
-            <input
-              ref={searchInputRef}
-              type="text"
-              placeholder="Search trips..."
-              value={searchTerm}
-              onChange={useCallback(
-                (e) => {
-                  setSearchTerm(e.target.value);
-                  setTimeout(() => {
-                    if (searchInputRef.current) {
-                      searchInputRef.current.focus();
-                    }
-                  }, 0);
-                },
-                [setSearchTerm]
-              )}
-              className="w-full pl-8 pr-3 py-2 sm:py-3 border border-gray-200 dark:border-gray-600 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors bg-white/50 dark:bg-gray-700/50 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 text-sm"
-            />
-          </div>
-
-          <div className="relative w-full sm:min-w-[140px] sm:w-auto filter-dropdown">
+      {/* Mobile Tab Buttons */}
+      <div className="lg:hidden mb-6">
+        <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-2xl p-1 border border-white/20 dark:border-gray-700/50 shadow-lg">
+          <div className="flex">
             <button
-              onClick={() => setFilterDropdownOpen(!filterDropdownOpen)}
-              className="w-full px-3 py-2 sm:py-3 pr-8 border border-gray-200 dark:border-gray-600 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm text-gray-900 dark:text-white cursor-pointer text-sm font-medium shadow-sm hover:bg-white/90 dark:hover:bg-gray-700/90 transition-all duration-200 flex items-center justify-between"
-            >
-              <span>{getFilterLabel(dateFilter)}</span>
-              <ChevronDownIcon
-                className={`w-4 h-4 text-gray-500 dark:text-gray-400 transition-transform duration-200 ${
-                  filterDropdownOpen ? "rotate-180" : ""
-                }`}
-              />
-            </button>
-
-            {/* Mobile dropdown - pushes content down */}
-            <div
-              className={`sm:hidden overflow-hidden transition-all duration-1000 ease-in-out ${
-                filterDropdownOpen
-                  ? "max-h-48 opacity-100"
-                  : "max-h-0 opacity-0"
+              onClick={() => setTripsActiveTab("trips")}
+              className={`flex-1 px-4 py-3 rounded-xl font-semibold text-sm transition-all duration-300 flex items-center justify-center gap-2 ${
+                tripsActiveTab === "trips"
+                  ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg"
+                  : "text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
               }`}
             >
-              <div className="mt-2 bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-lg shadow-xl border border-gray-200 dark:border-gray-600 overflow-hidden">
-                {[
-                  { value: "all", label: "📁 All Trips" },
-                  { value: "upcoming", label: "📅 Upcoming" },
-                  { value: "recent", label: "🕒 Recent" },
-                  { value: "past", label: "✅ Past" },
-                ].map((option) => (
-                  <button
-                    key={option.value}
-                    onClick={() => {
-                      setDateFilter(option.value);
-                      setFilterDropdownOpen(false);
-                    }}
-                    className={`w-full px-4 py-3 text-left text-sm font-medium transition-colors duration-150 ${
-                      dateFilter === option.value
-                        ? "bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300"
-                        : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50"
-                    }`}
-                  >
-                    {option.label}
-                  </button>
-                ))}
-              </div>
-            </div>
+              <MapIcon className="w-4 h-4" />
+              <span>My Trips</span>
+              <span className="bg-white/20 text-xs px-2 py-0.5 rounded-full">
+                {trips.length}
+              </span>
+            </button>
 
-            {/* Desktop dropdown - overlays */}
-            {filterDropdownOpen && (
-              <div className="hidden sm:block absolute top-full left-0 right-0 mt-1 bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-lg sm:rounded-xl shadow-xl border border-gray-200 dark:border-gray-600 z-50 overflow-hidden">
-                {[
-                  { value: "all", label: "📁 All Trips" },
-                  { value: "upcoming", label: "📅 Upcoming" },
-                  { value: "recent", label: "🕒 Recent" },
-                  { value: "past", label: "✅ Past" },
-                ].map((option) => (
-                  <button
-                    key={option.value}
-                    onClick={() => {
-                      setDateFilter(option.value);
-                      setFilterDropdownOpen(false);
-                    }}
-                    className={`w-full px-4 py-3 text-left text-sm font-medium transition-colors duration-150 ${
-                      dateFilter === option.value
-                        ? "bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300"
-                        : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50"
-                    }`}
-                  >
-                    {option.label}
-                  </button>
-                ))}
-              </div>
-            )}
+            <button
+              onClick={() => setTripsActiveTab("invitations")}
+              className={`flex-1 px-4 py-3 rounded-xl font-semibold text-sm transition-all duration-300 flex items-center justify-center gap-2 relative ${
+                tripsActiveTab === "invitations"
+                  ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg"
+                  : "text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+              }`}
+            >
+              <BellIcon className="w-4 h-4" />
+              <span>Trip Invitations</span>
+              {tripInvites.length > 0 && (
+                <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
+                  {tripInvites.length}
+                </span>
+              )}
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Trips Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-5 xl:gap-6">
-        {filteredTrips.length === 0 ? (
-          <div className="col-span-full text-center py-16">
-            <div className="w-24 h-24 bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/30 dark:to-purple-900/30 rounded-2xl flex items-center justify-center mx-auto mb-6">
-              <MapIcon className="w-12 h-12 text-indigo-500 dark:text-indigo-400" />
+      {/* Filters - only show on desktop or when on trips tab on mobile */}
+      {(tripsActiveTab === "trips" || window.innerWidth >= 1024) && (
+        <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-xl sm:rounded-2xl shadow-lg p-2 sm:p-4 lg:p-6 border border-white/20 dark:border-gray-700/50">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
+            <div className="relative flex-1">
+              <MagnifyingGlassIcon className="w-4 h-4 text-gray-400 dark:text-gray-500 absolute left-2.5 top-1/2 transform -translate-y-1/2" />
+              <input
+                ref={searchInputRef}
+                type="text"
+                placeholder="Search trips..."
+                value={searchTerm}
+                onChange={useCallback(
+                  (e) => {
+                    setSearchTerm(e.target.value);
+                    setTimeout(() => {
+                      if (searchInputRef.current) {
+                        searchInputRef.current.focus();
+                      }
+                    }, 0);
+                  },
+                  [setSearchTerm]
+                )}
+                className="w-full pl-8 pr-3 py-2 sm:py-3 border border-gray-200 dark:border-gray-600 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors bg-white/50 dark:bg-gray-700/50 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 text-sm"
+              />
             </div>
-            <h3 className="text-xl font-semibold text-gray-600 dark:text-gray-300 mb-2">
-              {searchTerm || dateFilter !== "all"
-                ? "No trips match your filters"
-                : "No trips yet"}
-            </h3>
-            <p className="text-gray-500 dark:text-gray-400 mb-6">
-              {searchTerm || dateFilter !== "all"
-                ? "Try adjusting your search or filters"
-                : "Create your first trip to get started"}
-            </p>
-            {!searchTerm && dateFilter === "all" && (
+
+            <div className="relative w-full sm:min-w-[140px] sm:w-auto filter-dropdown">
               <button
-                onClick={() => setShowCreateTripModal(true)}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-semibold transition-colors"
+                onClick={() => setFilterDropdownOpen(!filterDropdownOpen)}
+                className="w-full px-3 py-2 sm:py-3 pr-8 border border-gray-200 dark:border-gray-600 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm text-gray-900 dark:text-white cursor-pointer text-sm font-medium shadow-sm hover:bg-white/90 dark:hover:bg-gray-700/90 transition-all duration-200 flex items-center justify-between"
               >
-                Create Your First Trip
+                <span>{getFilterLabel(dateFilter)}</span>
+                <ChevronDownIcon
+                  className={`w-4 h-4 text-gray-500 dark:text-gray-400 transition-transform duration-200 ${
+                    filterDropdownOpen ? "rotate-180" : ""
+                  }`}
+                />
               </button>
+
+              {/* Mobile dropdown - pushes content down */}
+              <div
+                className={`sm:hidden overflow-hidden transition-all duration-1000 ease-in-out ${
+                  filterDropdownOpen
+                    ? "max-h-48 opacity-100"
+                    : "max-h-0 opacity-0"
+                }`}
+              >
+                <div className="mt-2 bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-lg shadow-xl border border-gray-200 dark:border-gray-600 overflow-hidden">
+                  {[
+                    { value: "all", label: "📁 All Trips" },
+                    { value: "upcoming", label: "📅 Upcoming" },
+                    { value: "recent", label: "🕒 Recent" },
+                    { value: "past", label: "✅ Past" },
+                  ].map((option) => (
+                    <button
+                      key={option.value}
+                      onClick={() => {
+                        setDateFilter(option.value);
+                        setFilterDropdownOpen(false);
+                      }}
+                      className={`w-full px-4 py-3 text-left text-sm font-medium transition-colors duration-150 ${
+                        dateFilter === option.value
+                          ? "bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300"
+                          : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50"
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Desktop dropdown - overlays */}
+              {filterDropdownOpen && (
+                <div className="hidden sm:block absolute top-full left-0 right-0 mt-1 bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-lg sm:rounded-xl shadow-xl border border-gray-200 dark:border-gray-600 z-50 overflow-hidden">
+                  {[
+                    { value: "all", label: "📁 All Trips" },
+                    { value: "upcoming", label: "📅 Upcoming" },
+                    { value: "recent", label: "🕒 Recent" },
+                    { value: "past", label: "✅ Past" },
+                  ].map((option) => (
+                    <button
+                      key={option.value}
+                      onClick={() => {
+                        setDateFilter(option.value);
+                        setFilterDropdownOpen(false);
+                      }}
+                      className={`w-full px-4 py-3 text-left text-sm font-medium transition-colors duration-150 ${
+                        dateFilter === option.value
+                          ? "bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300"
+                          : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50"
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Desktop Trip Invitations Section */}
+      <div className="hidden lg:block">
+        <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-2xl shadow-lg border border-white/20 dark:border-gray-700/50">
+          <div className="flex justify-between items-center p-4 border-b border-gray-200/50 dark:border-gray-700/50">
+            <h2 className="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
+              <MapIcon className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+              Trip Invitations
+              {tripInvites.length > 0 && (
+                <span className="bg-red-500 text-white text-sm px-2 py-1 rounded-full">
+                  {tripInvites.length}
+                </span>
+              )}
+            </h2>
+            <button
+              onClick={() => setTripInvitesExpanded(!tripInvitesExpanded)}
+              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-300"
+            >
+              {tripInvitesExpanded ? (
+                <ChevronDownIcon className="w-5 h-5 transition-transform duration-300" />
+              ) : (
+                <ChevronRightIcon className="w-5 h-5 transition-transform duration-300" />
+              )}
+            </button>
+          </div>
+
+          <div
+            className={`overflow-hidden transition-all duration-500 ease-in-out ${
+              tripInvitesExpanded ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+            }`}
+          >
+            <div className="p-6">
+              {tripInvites.length === 0 ? (
+                <div className="text-center py-4">
+                  <p className="text-gray-500 dark:text-gray-400 text-sm">
+                    No pending trip invitations
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {tripInvites.map((invite) => (
+                    <div
+                      key={invite.id}
+                      className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-600 rounded-xl bg-white/30 dark:bg-gray-700/30"
+                    >
+                      <div>
+                        <p className="font-semibold text-gray-800 dark:text-white">
+                          {invite.tripName}
+                        </p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          Invited by {invite.inviterName}
+                        </p>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={async () => {
+                            await acceptTripInvite(invite.id, currentUser.uid);
+                            setTripInvites((prev) =>
+                              prev.filter((i) => i.id !== invite.id)
+                            );
+                            const refreshedTrips = await getUserTrips(
+                              currentUser.uid
+                            );
+                            setTrips(refreshedTrips);
+                            toast.success("Trip invitation accepted");
+                          }}
+                          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-1"
+                        >
+                          <CheckCircleIcon className="w-4 h-4" />
+                          Accept
+                        </button>
+                        <button
+                          onClick={async () => {
+                            await declineTripInvite(invite.id);
+                            setTripInvites((prev) =>
+                              prev.filter((i) => i.id !== invite.id)
+                            );
+                            toast.success("Trip invitation declined");
+                          }}
+                          className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-1"
+                        >
+                          <XCircleIcon className="w-4 h-4" />
+                          Decline
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile: Show content based on active tab */}
+      <div className="lg:hidden">
+        {tripsActiveTab === "trips" ? (
+          /* Trips Grid for Mobile */
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+            {filteredTrips.length === 0 ? (
+              <div className="col-span-full text-center py-16">
+                <div className="w-24 h-24 bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/30 dark:to-purple-900/30 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                  <MapIcon className="w-12 h-12 text-indigo-500 dark:text-indigo-400" />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-600 dark:text-gray-300 mb-2">
+                  {searchTerm || dateFilter !== "all"
+                    ? "No trips match your filters"
+                    : "No trips yet"}
+                </h3>
+                <p className="text-gray-500 dark:text-gray-400 mb-6">
+                  {searchTerm || dateFilter !== "all"
+                    ? "Try adjusting your search or filters"
+                    : "Create your first trip to get started"}
+                </p>
+                {!searchTerm && dateFilter === "all" && (
+                  <button
+                    onClick={() => setShowCreateTripModal(true)}
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-semibold transition-colors"
+                  >
+                    Create Your First Trip
+                  </button>
+                )}
+              </div>
+            ) : (
+              filteredTrips.map((trip) => (
+                <TripCard
+                  key={trip.id}
+                  trip={trip}
+                  onViewTrip={handleViewTrip}
+                />
+              ))
             )}
           </div>
         ) : (
-          filteredTrips.map((trip) => (
-            <TripCard key={trip.id} trip={trip} onViewTrip={handleViewTrip} />
-          ))
+          /* Trip Invitations for Mobile */
+          <div className="space-y-4">
+            {tripInvites.length === 0 ? (
+              <div className="text-center py-16">
+                <div className="w-24 h-24 bg-gradient-to-br from-purple-100 to-indigo-100 dark:from-purple-900/30 dark:to-indigo-900/30 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                  <BellIcon className="w-12 h-12 text-purple-500 dark:text-purple-400" />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-600 dark:text-gray-300 mb-2">
+                  No trip invitations
+                </h3>
+                <p className="text-gray-500 dark:text-gray-400">
+                  When someone invites you to a trip, it will appear here
+                </p>
+              </div>
+            ) : (
+              tripInvites.map((invite) => (
+                <div
+                  key={invite.id}
+                  className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-2xl shadow-lg p-4 border border-white/20 dark:border-gray-700/50"
+                >
+                  <div className="mb-4">
+                    <h3 className="font-semibold text-gray-800 dark:text-white text-lg">
+                      {invite.tripName}
+                    </h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      Invited by {invite.inviterName}
+                    </p>
+                  </div>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={async () => {
+                        await acceptTripInvite(invite.id, currentUser.uid);
+                        setTripInvites((prev) =>
+                          prev.filter((i) => i.id !== invite.id)
+                        );
+                        const refreshedTrips = await getUserTrips(
+                          currentUser.uid
+                        );
+                        setTrips(refreshedTrips);
+                        toast.success("Trip invitation accepted");
+                      }}
+                      className="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
+                    >
+                      <CheckCircleIcon className="w-4 h-4" />
+                      Accept
+                    </button>
+                    <button
+                      onClick={async () => {
+                        await declineTripInvite(invite.id);
+                        setTripInvites((prev) =>
+                          prev.filter((i) => i.id !== invite.id)
+                        );
+                        toast.success("Trip invitation declined");
+                      }}
+                      className="flex-1 bg-red-600 hover:bg-red-700 text-white py-3 px-4 rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
+                    >
+                      <XCircleIcon className="w-4 h-4" />
+                      Decline
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
         )}
+      </div>
+
+      {/* Desktop: Show trips grid */}
+      <div className="hidden lg:block">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-3 gap-3 sm:gap-4 lg:gap-5 xl:gap-6">
+          {filteredTrips.length === 0 ? (
+            <div className="col-span-full text-center py-16">
+              <div className="w-24 h-24 bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/30 dark:to-purple-900/30 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <MapIcon className="w-12 h-12 text-indigo-500 dark:text-indigo-400" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-600 dark:text-gray-300 mb-2">
+                {searchTerm || dateFilter !== "all"
+                  ? "No trips match your filters"
+                  : "No trips yet"}
+              </h3>
+              <p className="text-gray-500 dark:text-gray-400 mb-6">
+                {searchTerm || dateFilter !== "all"
+                  ? "Try adjusting your search or filters"
+                  : "Create your first trip to get started"}
+              </p>
+              {!searchTerm && dateFilter === "all" && (
+                <button
+                  onClick={() => setShowCreateTripModal(true)}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-semibold transition-colors"
+                >
+                  Create Your First Trip
+                </button>
+              )}
+            </div>
+          ) : (
+            filteredTrips.map((trip) => (
+              <TripCard key={trip.id} trip={trip} onViewTrip={handleViewTrip} />
+            ))
+          )}
+        </div>
       </div>
     </div>
   );
@@ -1454,63 +1701,94 @@ const Dashboard = () => {
       </div>
 
       {/* Desktop Friend Requests Section */}
-      {showDesktopRequests && pendingRequests.length > 0 && (
-        <div className="hidden lg:block mb-6 bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-2xl shadow-lg p-6 border border-white/20 dark:border-gray-700/50">
-          <div className="flex justify-between items-center mb-4">
+      {showDesktopRequests && (
+        <div className="hidden lg:block mb-6 bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-2xl shadow-lg border border-white/20 dark:border-gray-700/50">
+          <div className="flex justify-between items-center p-4 border-b border-gray-200/50 dark:border-gray-700/50">
             <h2 className="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
               <UserGroupIcon className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
               Friend Requests
-              <span className="bg-red-500 text-white text-sm px-2 py-1 rounded-full">
-                {pendingRequests.length}
-              </span>
+              {pendingRequests.length > 0 && (
+                <span className="bg-red-500 text-white text-sm px-2 py-1 rounded-full">
+                  {pendingRequests.length}
+                </span>
+              )}
             </h2>
-            <button
-              onClick={() => setShowDesktopRequests(false)}
-              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-300"
-            >
-              <XMarkIcon className="w-5 h-5" />
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() =>
+                  setDesktopRequestsExpanded(!desktopRequestsExpanded)
+                }
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-300"
+              >
+                {desktopRequestsExpanded ? (
+                  <ChevronDownIcon className="w-5 h-5 transition-transform duration-300" />
+                ) : (
+                  <ChevronRightIcon className="w-5 h-5 transition-transform duration-300" />
+                )}
+              </button>
+            </div>
           </div>
 
-          <div className="space-y-3">
-            {pendingRequests.map((request) => (
-              <div
-                key={request.id}
-                className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-600 rounded-xl bg-white/30 dark:bg-gray-700/30"
-              >
-                <div className="flex items-center gap-3">
-                  <img
-                    src="https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg"
-                    alt="Profile"
-                    className="w-12 h-12 rounded-full object-cover"
-                  />
-                  <div>
-                    <p className="font-semibold text-gray-800 dark:text-white">
-                      {request.displayName || request.email}
-                    </p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                      wants to be your friend
-                    </p>
-                  </div>
+          <div
+            className={`overflow-hidden transition-all duration-700 ease-in-out ${
+              desktopRequestsExpanded
+                ? "max-h-96 opacity-100"
+                : "max-h-0 opacity-0"
+            }`}
+          >
+            <div className="p-6">
+              {pendingRequests.length === 0 ? (
+                <div className="text-center py-4">
+                  <p className="text-gray-500 dark:text-gray-400 text-sm">
+                    No pending friend requests
+                  </p>
                 </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleAccept(request.from)}
-                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-1"
-                  >
-                    <CheckCircleIcon className="w-4 h-4" />
-                    Accept
-                  </button>
-                  <button
-                    onClick={() => handleReject(request.from)}
-                    className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-1"
-                  >
-                    <XCircleIcon className="w-4 h-4" />
-                    Decline
-                  </button>
+              ) : (
+                <div className="space-y-3">
+                  {pendingRequests.map((request) => (
+                    <div
+                      key={request.id}
+                      className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-600 rounded-xl bg-white/30 dark:bg-gray-700/30"
+                    >
+                      <div className="flex items-center gap-3">
+                        <img
+                          src={
+                            request.photoURL ||
+                            "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg"
+                          }
+                          alt="Profile"
+                          className="w-12 h-12 rounded-full object-cover"
+                        />
+                        <div>
+                          <p className="font-semibold text-gray-800 dark:text-white">
+                            {request.displayName || request.email}
+                          </p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                            wants to be your friend
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleAccept(request.from)}
+                          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-1"
+                        >
+                          <CheckCircleIcon className="w-4 h-4" />
+                          Accept
+                        </button>
+                        <button
+                          onClick={() => handleReject(request.from)}
+                          className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-1"
+                        >
+                          <XCircleIcon className="w-4 h-4" />
+                          Decline
+                        </button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              </div>
-            ))}
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -1670,141 +1948,6 @@ const Dashboard = () => {
             </div>
           )}
         </div>
-      </div>
-    </div>
-  );
-
-  const NotificationsSection = () => (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-          Notifications
-        </h1>
-        <p className="text-gray-600 dark:text-gray-300 mt-1">
-          Manage your friend requests and trip invitations
-        </p>
-      </div>
-
-      {/* Friend Requests */}
-      <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-2xl shadow-lg p-6 border border-white/20 dark:border-gray-700/50">
-        <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4 flex items-center gap-2">
-          <UserGroupIcon className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
-          Friend Requests
-          {pendingRequests.length > 0 && (
-            <span className="bg-red-500 text-white text-sm px-2 py-1 rounded-full">
-              {pendingRequests.length}
-            </span>
-          )}
-        </h2>
-
-        {pendingRequests.length === 0 ? (
-          <p className="text-gray-500 dark:text-gray-400 py-8 text-center">
-            No pending friend requests
-          </p>
-        ) : (
-          <div className="space-y-3">
-            {pendingRequests.map((request) => (
-              <div
-                key={request.id}
-                className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-600 rounded-xl bg-white/30 dark:bg-gray-700/30"
-              >
-                <div>
-                  <p className="font-semibold text-gray-800 dark:text-white">
-                    {request.displayName || request.email}
-                  </p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    wants to be your friend
-                  </p>
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleAccept(request.from)}
-                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-1"
-                  >
-                    <CheckCircleIcon className="w-4 h-4" />
-                    Accept
-                  </button>
-                  <button
-                    onClick={() => handleReject(request.from)}
-                    className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-1"
-                  >
-                    <XCircleIcon className="w-4 h-4" />
-                    Decline
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Trip Invitations */}
-      <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-2xl shadow-lg p-6 border border-white/20 dark:border-gray-700/50">
-        <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4 flex items-center gap-2">
-          <MapIcon className="w-6 h-6 text-purple-600 dark:text-purple-400" />
-          Trip Invitations
-          {tripInvites.length > 0 && (
-            <span className="bg-red-500 text-white text-sm px-2 py-1 rounded-full">
-              {tripInvites.length}
-            </span>
-          )}
-        </h2>
-
-        {tripInvites.length === 0 ? (
-          <p className="text-gray-500 dark:text-gray-400 py-8 text-center">
-            No pending trip invitations
-          </p>
-        ) : (
-          <div className="space-y-3">
-            {tripInvites.map((invite) => (
-              <div
-                key={invite.id}
-                className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-600 rounded-xl bg-white/30 dark:bg-gray-700/30"
-              >
-                <div>
-                  <p className="font-semibold text-gray-800 dark:text-white">
-                    {invite.tripName}
-                  </p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Invited by {invite.inviterName}
-                  </p>
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={async () => {
-                      await acceptTripInvite(invite.id, currentUser.uid);
-                      setTripInvites((prev) =>
-                        prev.filter((i) => i.id !== invite.id)
-                      );
-                      const refreshedTrips = await getUserTrips(
-                        currentUser.uid
-                      );
-                      setTrips(refreshedTrips);
-                      toast.success("Trip invitation accepted");
-                    }}
-                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-1"
-                  >
-                    <CheckCircleIcon className="w-4 h-4" />
-                    Accept
-                  </button>
-                  <button
-                    onClick={async () => {
-                      await declineTripInvite(invite.id);
-                      setTripInvites((prev) =>
-                        prev.filter((i) => i.id !== invite.id)
-                      );
-                      toast.success("Trip invitation declined");
-                    }}
-                    className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-1"
-                  >
-                    <XCircleIcon className="w-4 h-4" />
-                    Decline
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
     </div>
   );
@@ -1991,8 +2134,6 @@ const Dashboard = () => {
         return <FaceProfileSection />;
       case "friends":
         return <FriendsSection />;
-      case "notifications":
-        return <NotificationsSection />;
       case "settings":
         return <SettingsSection />;
       default:
@@ -2017,9 +2158,13 @@ const Dashboard = () => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 flex w-full transition-colors duration-500">
       {/* Sidebar */}
       <div
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg shadow-xl border-r border-white/20 dark:border-gray-700/50 transform ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } transition-transform duration-300 ease-in-out`}
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg shadow-xl border-r border-white/20 dark:border-gray-700/50 transform transition-transform duration-300 ease-in-out ${
+          isMobile
+            ? "hidden"
+            : sidebarOpen
+            ? "translate-x-0"
+            : "-translate-x-full"
+        }`}
       >
         {/* Logo */}
         <div className="p-6 border-b border-gray-200/50 dark:border-gray-700/50">
@@ -2234,19 +2379,22 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Overlay for mobile */}
-      {sidebarOpen && (
+      {sidebarOpen && !isMobile && window.innerWidth < 1024 && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          className="fixed inset-0 bg-black bg-opacity-50 z-40"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       {/* Main Content */}
       <div
-        className={`flex-1 flex flex-col min-h-screen w-full overflow-hidden transition-all duration-300 ${
-          sidebarOpen ? "lg:ml-64" : "ml-0"
-        }`}
+        className={`flex-1 flex flex-col min-h-screen transition-all duration-300 ${
+          isMobile
+            ? "mb-20 w-full"
+            : sidebarOpen
+            ? "ml-64 w-[calc(100%-16rem)]"
+            : "w-full"
+        } overflow-hidden`}
       >
         {" "}
         {/* Header */}
@@ -2255,12 +2403,14 @@ const Dashboard = () => {
             <div className="flex justify-between items-center h-16 w-full">
               {/* Left section - Mobile menu button */}
               <div className="flex items-center gap-4">
-                <button
-                  onClick={() => setSidebarOpen(!sidebarOpen)}
-                  className="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
-                >
-                  <Bars3Icon className="w-6 h-6 text-gray-600 dark:text-gray-400" />
-                </button>
+                {!isMobile && (
+                  <button
+                    onClick={() => setSidebarOpen(!sidebarOpen)}
+                    className="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+                  >
+                    <Bars3Icon className="w-6 h-6 text-gray-600 dark:text-gray-400" />
+                  </button>
+                )}
                 <button
                   onClick={() => setSidebarOpen(!sidebarOpen)}
                   className="hidden lg:block p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
@@ -2340,7 +2490,7 @@ const Dashboard = () => {
         </header>
         {/* Main Content */}
         <main className="flex-1 overflow-y-auto">
-          <div className="w-full px-2 sm:px-4 lg:px-8 py-2 sm:py-4">
+          <div className="w-full px-2 sm:px-4 lg:px-8 py-2 sm:py-4 max-w-full overflow-hidden">
             {error && (
               <div className="bg-red-50/90 dark:bg-red-900/30 backdrop-blur-sm border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-6 py-4 rounded-2xl mb-6 flex items-center space-x-3">
                 <ExclamationTriangleIcon className="w-6 h-6 text-red-500 dark:text-red-400" />
@@ -2352,6 +2502,61 @@ const Dashboard = () => {
           </div>
         </main>
       </div>
+
+      {/* Bottom Navigation Bar for Mobile */}
+      {isMobile && (
+        <div className="fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg border-t border-gray-200/50 dark:border-gray-700/50 z-40">
+          <div className="flex justify-around items-center py-2">
+            {[
+              { id: "trips", name: "Trips", icon: MapIcon },
+              { id: "faceprofile", name: "Profile", icon: UserCircleIcon },
+              { id: "friends", name: "Friends", icon: UserGroupIcon },
+              { id: "settings", name: "Settings", icon: Cog6ToothIcon },
+            ].map((item) => {
+              const Icon = item.icon;
+              const isActive =
+                activeSection === item.id && currentView === "home";
+              const badgeCount =
+                item.id === "friends"
+                  ? friends.length + pendingRequests.length
+                  : item.id === "trips"
+                  ? trips.length
+                  : 0;
+
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    setActiveSection(item.id);
+                    setCurrentView("home");
+                  }}
+                  className={`flex flex-col items-center px-3 py-2 rounded-xl transition-all duration-200 relative ${
+                    isActive
+                      ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg"
+                      : "text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+                  }`}
+                >
+                  <Icon className="w-5 h-5 mb-1" />
+                  <span className="text-xs font-medium">{item.name}</span>
+                  {badgeCount > 0 && (
+                    <span
+                      className={`absolute -top-1 -right-1 text-xs px-1.5 py-0.5 rounded-full ${
+                        isActive
+                          ? "bg-white text-indigo-600"
+                          : item.id === "friends" && pendingRequests.length > 0
+                          ? "bg-red-500 text-white"
+                          : "bg-gray-500 text-white"
+                      }`}
+                    >
+                      {badgeCount}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Modals */}
       <CreateTripModal
