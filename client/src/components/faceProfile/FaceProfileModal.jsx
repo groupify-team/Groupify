@@ -67,7 +67,7 @@ const FaceProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
     },
     {
       id: "slight_left",
-      title: "Slight Left Turn", 
+      title: "Slight Left Turn",
       instruction: "Turn your head just 15-20° to the left",
       icon: "👤↖️",
       tip: "Gentle turn - both eyes should still be clearly visible",
@@ -186,13 +186,10 @@ const FaceProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
     );
   };
 
-
   // Dynamic guide component
   const DynamicGuide = ({ step }) => {
     return <Modern3DHead step={step} captureSteps={captureSteps} />;
   };
-
-=======
 
   // Cleanup function
   const cleanup = () => {
@@ -361,7 +358,8 @@ const FaceProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
         return;
       }
 
-      if (selectedFiles.length >= 5) { // Reduced from 10 to 5 for better quality
+      if (selectedFiles.length >= 5) {
+        // Reduced from 10 to 5 for better quality
         setError("Maximum 5 photos allowed");
         return;
       }
@@ -414,14 +412,14 @@ const FaceProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
         current: 0,
         total: photos.length,
       });
-      
+
       // Upload files first
       const imageUrls = await uploadFiles(photos);
 
       // Create profile using new face-api.js service
       const profile = await createFaceProfile(
         currentUser.uid,
-        imageUrls.map(url => ({ url })), // Convert to expected format
+        imageUrls.map((url) => ({ url })), // Convert to expected format
         (progressData) => {
           setProgress(progressData);
         }
@@ -437,7 +435,7 @@ const FaceProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
         })),
         createdAt: new Date().toISOString(),
         method: setupMethod,
-        engine: 'face-api.js',
+        engine: "face-api.js",
         metadata: profile.metadata,
       });
 
@@ -497,7 +495,8 @@ const FaceProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
               Setup Face Profile (Enhanced)
             </h2>
             <p className="text-sm text-gray-600 dark:text-gray-300">
-              AI-powered face recognition using face-api.js for superior accuracy
+              AI-powered face recognition using face-api.js for superior
+              accuracy
             </p>
           </div>
           <button
@@ -527,7 +526,8 @@ const FaceProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
               <div className="flex items-center gap-2">
                 <CheckCircleIcon className="w-4 h-4 text-green-600 dark:text-green-400" />
                 <p className="text-sm text-green-800 dark:text-green-400">
-                  Enhanced face profile created successfully! Now enjoy much more accurate photo recognition.
+                  Enhanced face profile created successfully! Now enjoy much
+                  more accurate photo recognition.
                 </p>
               </div>
             </div>
@@ -566,8 +566,9 @@ const FaceProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
                       🚀 Enhanced Face Recognition
                     </h3>
                     <p className="text-sm text-indigo-700 dark:text-indigo-300">
-                      Now powered by <strong>face-api.js</strong> for significantly better accuracy. 
-                      Expect 90%+ accuracy with proper lighting and fewer false positives!
+                      Now powered by <strong>face-api.js</strong> for
+                      significantly better accuracy. Expect 90%+ accuracy with
+                      proper lighting and fewer false positives!
                     </p>
                   </div>
                 </div>
@@ -608,7 +609,8 @@ const FaceProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
                     </h3>
 
                     <p className="text-gray-600 dark:text-gray-400 text-sm mb-4 text-center">
-                      AI-guided capture with quality assessment - now only 3 optimized photos needed
+                      AI-guided capture with quality assessment - now only 3
+                      optimized photos needed
                     </p>
 
                     <div className="space-y-2 mb-6">
@@ -696,7 +698,8 @@ const FaceProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
                   Back to options
                 </button>
                 <div className="text-sm text-gray-500 dark:text-gray-400">
-                  Enhanced with face-api.js • Step {capturedPhotos.length + 1} of {captureSteps.length}
+                  Enhanced with face-api.js • Step {capturedPhotos.length + 1}{" "}
+                  of {captureSteps.length}
                 </div>
               </div>
 
@@ -830,10 +833,12 @@ const FaceProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
                   <CheckCircleIcon className="w-5 h-5 text-green-600 dark:text-green-400" />
                   <div>
                     <p className="font-medium text-green-800 dark:text-green-400">
-                      Perfect! All {captureSteps.length} photos captured successfully
+                      Perfect! All {captureSteps.length} photos captured
+                      successfully
                     </p>
                     <p className="text-sm text-green-600 dark:text-green-300">
-                      These will be processed with face-api.js for superior recognition accuracy
+                      These will be processed with face-api.js for superior
+                      recognition accuracy
                     </p>
                   </div>
                 </div>
@@ -843,11 +848,15 @@ const FaceProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
               <div className="flex justify-center">
                 <button
                   onClick={handleCreateProfile}
-                  disabled={isCreating || capturedPhotos.length < captureSteps.length}
+                  disabled={
+                    isCreating || capturedPhotos.length < captureSteps.length
+                  }
                   className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-400 text-white py-3 px-8 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 shadow-lg disabled:transform-none disabled:shadow-none flex items-center gap-2"
                 >
                   <SparklesIcon className="w-5 h-5" />
-                  {isCreating ? "Creating Enhanced Profile..." : "Create Enhanced Profile"}
+                  {isCreating
+                    ? "Creating Enhanced Profile..."
+                    : "Create Enhanced Profile"}
                 </button>
               </div>
             </div>
@@ -950,15 +959,23 @@ const FaceProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
                   <>
                     <li className="flex items-start gap-2">
                       <CheckCircleIcon className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
-                      <span>Look directly at camera for the front shot - this is most important</span>
+                      <span>
+                        Look directly at camera for the front shot - this is
+                        most important
+                      </span>
                     </li>
                     <li className="flex items-start gap-2">
                       <CheckCircleIcon className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
-                      <span>Gentle head turns only - both eyes should always be visible</span>
+                      <span>
+                        Gentle head turns only - both eyes should always be
+                        visible
+                      </span>
                     </li>
                     <li className="flex items-start gap-2">
                       <CheckCircleIcon className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
-                      <span>Good lighting is crucial - avoid shadows on your face</span>
+                      <span>
+                        Good lighting is crucial - avoid shadows on your face
+                      </span>
                     </li>
                     <li className="flex items-start gap-2">
                       <CheckCircleIcon className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
@@ -973,7 +990,9 @@ const FaceProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
                     </li>
                     <li className="flex items-start gap-2">
                       <CheckCircleIcon className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
-                      <span>Include different angles but keep face clearly visible</span>
+                      <span>
+                        Include different angles but keep face clearly visible
+                      </span>
                     </li>
                     <li className="flex items-start gap-2">
                       <CheckCircleIcon className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
@@ -981,13 +1000,18 @@ const FaceProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
                     </li>
                     <li className="flex items-start gap-2">
                       <CheckCircleIcon className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
-                      <span>Photos should be sharp and at least 300x300 pixels</span>
+                      <span>
+                        Photos should be sharp and at least 300x300 pixels
+                      </span>
                     </li>
                   </>
                 )}
                 <li className="flex items-start gap-2">
                   <SparklesIcon className="w-4 h-4 text-indigo-500 mt-0.5 flex-shrink-0" />
-                  <span><strong>New:</strong> AI will automatically assess photo quality and optimize recognition</span>
+                  <span>
+                    <strong>New:</strong> AI will automatically assess photo
+                    quality and optimize recognition
+                  </span>
                 </li>
               </ul>
             </div>

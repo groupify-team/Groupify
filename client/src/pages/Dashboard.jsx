@@ -35,7 +35,7 @@ import {
   UserCircleIcon,
   UserGroupIcon,
   XCircleIcon,
-  XMarkIcon
+  XMarkIcon,
 } from "@heroicons/react/24/outline";
 
 // functions
@@ -48,7 +48,7 @@ import {
   onSnapshot,
   query,
   where,
-  writeBatch
+  writeBatch,
 } from "firebase/firestore";
 import {
   deleteObject,
@@ -86,7 +86,7 @@ import {
   getUserProfile,
   rejectFriendRequest,
   removeFriend,
-  sendFriendRequest
+  sendFriendRequest,
 } from "../services/firebase/users";
 
 const Dashboard = () => {
@@ -99,7 +99,7 @@ const Dashboard = () => {
   const notificationRef = useRef(null);
 
   // Sidebar state
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth >= 1024);
   // Navigation state
   const [activeSection, setActiveSection] = useState("trips");
 
@@ -158,12 +158,20 @@ const Dashboard = () => {
   const handleViewTrip = (tripId) => {
     setCurrentView("trip");
     setSelectedTripId(tripId);
-    setTripsDropdownOpen(false); // Close dropdown when navigating to trip
+    setTripsDropdownOpen(false);
+    // Close sidebar on mobile when navigating
+    if (window.innerWidth < 1024) {
+      setSidebarOpen(false);
+    }
   };
 
   const handleBackToDashboard = () => {
     setCurrentView("home");
     setSelectedTripId(null);
+    // Close sidebar on mobile when going back
+    if (window.innerWidth < 1024) {
+      setSidebarOpen(false);
+    }
   };
 
   // NEW: Handle trips dropdown
@@ -393,6 +401,20 @@ const Dashboard = () => {
     }
   }, [location.search, navigate]);
 
+  // Handle window resize for responsive sidebar
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) {
+        setSidebarOpen(true);
+      } else {
+        setSidebarOpen(false);
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   // Updated loadUserFaceProfile function
   const loadUserFaceProfile = async () => {
     if (!currentUser?.uid) return;
@@ -556,67 +578,72 @@ const Dashboard = () => {
   };
 
   // Delete entire profile
-const deleteCurrentProfile = async () => {
-  toast((t) => (
-    <div className="text-center">
-      <p className="text-sm text-gray-800 font-medium">
-        Delete your face profile?
-      </p>
-      <p className="text-xs text-gray-500 mt-1">
-        This action cannot be undone.
-      </p>
-      <div className="mt-3 flex justify-center gap-3">
-        <button
-          onClick={async () => {
-            toast.dismiss(t.id); 
-            setIsManagingProfile(true);
+  const deleteCurrentProfile = async () => {
+    toast(
+      (t) => (
+        <div className="text-center">
+          <p className="text-sm text-gray-800 font-medium">
+            Delete your face profile?
+          </p>
+          <p className="text-xs text-gray-500 mt-1">
+            This action cannot be undone.
+          </p>
+          <div className="mt-3 flex justify-center gap-3">
+            <button
+              onClick={async () => {
+                toast.dismiss(t.id);
+                setIsManagingProfile(true);
 
-            try {
-              // 1. Delete from memory
-              deleteFaceProfile(currentUser.uid);
+                try {
+                  // 1. Delete from memory
+                  deleteFaceProfile(currentUser.uid);
 
-              // 2. Delete from Firebase Storage
-              try {
-                await deleteFaceProfileFromStorage(currentUser.uid);
-                console.log("✅ Face profile deleted from Firebase Storage");
-              } catch (storageError) {
-                console.warn(
-                  "⚠️ Could not delete from Firebase Storage:",
-                  storageError
-                );
-              }
+                  // 2. Delete from Firebase Storage
+                  try {
+                    await deleteFaceProfileFromStorage(currentUser.uid);
+                    console.log(
+                      "✅ Face profile deleted from Firebase Storage"
+                    );
+                  } catch (storageError) {
+                    console.warn(
+                      "⚠️ Could not delete from Firebase Storage:",
+                      storageError
+                    );
+                  }
 
-              // 3. Update state
-              setHasProfile(false);
-              setProfile(null);
-              setProfilePhotos([]);
-              setShowProfileManagement(false);
+                  // 3. Update state
+                  setHasProfile(false);
+                  setProfile(null);
+                  setProfilePhotos([]);
+                  setShowProfileManagement(false);
 
-              toast.success("Face profile deleted successfully");
-            } catch (error) {
-              console.error("Failed to delete profile:", error);
-              toast.error("Failed to delete profile: " + error.message);
-            } finally {
-              setIsManagingProfile(false);
-            }
-          }}
-          className="px-3 py-1 bg-red-500 text-white text-sm rounded-md shadow hover:bg-red-600"
-        >
-          Delete
-        </button>
-        <button
-          onClick={() => toast.dismiss(t.id)}
-          className="px-3 py-1 bg-gray-200 text-gray-700 text-sm rounded-md shadow hover:bg-gray-300"
-        >
-          Cancel
-        </button>
-      </div>
-    </div>
-  ), {
-    duration: 10000,
-    id: "delete-profile-confirmation", 
-  });
-};
+                  toast.success("Face profile deleted successfully");
+                } catch (error) {
+                  console.error("Failed to delete profile:", error);
+                  toast.error("Failed to delete profile: " + error.message);
+                } finally {
+                  setIsManagingProfile(false);
+                }
+              }}
+              className="px-3 py-1 bg-red-500 text-white text-sm rounded-md shadow hover:bg-red-600"
+            >
+              Delete
+            </button>
+            <button
+              onClick={() => toast.dismiss(t.id)}
+              className="px-3 py-1 bg-gray-200 text-gray-700 text-sm rounded-md shadow hover:bg-gray-300"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      ),
+      {
+        duration: 10000,
+        id: "delete-profile-confirmation",
+      }
+    );
+  };
 
   // Toggle photo selection for removal
   const togglePhotoSelection = (photoUrl) => {
@@ -1038,7 +1065,7 @@ const deleteCurrentProfile = async () => {
       </div>
 
       {/* Trips Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {filteredTrips.length === 0 ? (
           <div className="col-span-full text-center py-16">
             <div className="w-24 h-24 bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/30 dark:to-purple-900/30 rounded-2xl flex items-center justify-center mx-auto mb-6">
@@ -1314,7 +1341,7 @@ const deleteCurrentProfile = async () => {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {friends.map((friend) => (
               <div
                 key={friend.uid}
@@ -1700,6 +1727,10 @@ const deleteCurrentProfile = async () => {
                 setActiveSection("trips");
                 setCurrentView("home");
                 setTripsDropdownOpen(false);
+                // Close sidebar on mobile when clicking logo
+                if (window.innerWidth < 1024) {
+                  setSidebarOpen(false);
+                }
               }}
               className="flex items-center gap-3 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded-xl p-2 transition-colors cursor-pointer group"
             >
@@ -1775,6 +1806,10 @@ const deleteCurrentProfile = async () => {
                       onClick={() => {
                         setActiveSection(item.id);
                         setCurrentView("home");
+                        // Close sidebar on mobile when changing sections
+                        if (window.innerWidth < 1024) {
+                          setSidebarOpen(false);
+                        }
                       }}
                       className={`flex-1 flex items-center px-4 py-3 rounded-xl font-medium transition-all duration-200 ${
                         isActive
@@ -1912,7 +1947,7 @@ const deleteCurrentProfile = async () => {
         {" "}
         {/* Header */}
         <header className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg shadow-sm border-b border-white/20 dark:border-gray-700/50 sticky top-0 z-30">
-          <div className="w-full px-4 sm:px-6 lg:px-8">
+          <div className="w-full px-2 sm:px-4 lg:px-8">
             <div className="flex justify-between items-center h-16 w-full">
               {/* Left section - Mobile menu button */}
               <div className="flex items-center gap-4">
@@ -2001,7 +2036,7 @@ const deleteCurrentProfile = async () => {
         </header>
         {/* Main Content */}
         <main className="flex-1 overflow-y-auto">
-          <div className="w-full px-4 sm:px-6 lg:px-8 py-4">
+          <div className="w-full px-2 sm:px-4 lg:px-8 py-2 sm:py-4">
             {error && (
               <div className="bg-red-50/90 dark:bg-red-900/30 backdrop-blur-sm border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-6 py-4 rounded-2xl mb-6 flex items-center space-x-3">
                 <ExclamationTriangleIcon className="w-6 h-6 text-red-500 dark:text-red-400" />
