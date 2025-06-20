@@ -12,6 +12,7 @@ import TripCard from "../components/trips/TripCard";
 import TripDetailView from "../components/trips/TripDetailView";
 import { useAuth } from "../contexts/AuthContext";
 import { useTheme } from "../contexts/ThemeContext";
+import { UserIcon } from "@heroicons/react/24/outline";
 
 // Icons
 import {
@@ -102,6 +103,8 @@ const Dashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth >= 1024);
   // Navigation state
   const [activeSection, setActiveSection] = useState("trips");
+  const [showMobileUserMenu, setShowMobileUserMenu] = useState(false);
+  const mobileUserMenuRef = useRef(null);
 
   // Trip dropdown state
   const [tripsDropdownOpen, setTripsDropdownOpen] = useState(false);
@@ -216,15 +219,17 @@ const Dashboard = () => {
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
-        notificationRef.current &&
-        !notificationRef.current.contains(event.target)
+        mobileUserMenuRef.current &&
+        !mobileUserMenuRef.current.contains(event.target)
       ) {
-        setNotificationsDropdownOpen(false);
+        setShowMobileUserMenu(false);
       }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
   }, []);
 
   useEffect(() => {
@@ -417,6 +422,23 @@ const Dashboard = () => {
       fetchPendingRequests();
     }
   }, [currentUser]);
+
+  // Close mobile user menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        mobileUserMenuRef.current &&
+        !mobileUserMenuRef.current.contains(event.target)
+      ) {
+        setShowMobileUserMenu(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
@@ -1057,38 +1079,64 @@ const Dashboard = () => {
 
       {/* Mobile Tab Buttons */}
       <div className="lg:hidden mb-6">
-        <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-2xl p-1 border border-white/20 dark:border-gray-700/50 shadow-lg">
-          <div className="flex">
+        <div className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-lg shadow-lg p-1 border border-white/20 dark:border-gray-700/50">
+          <div className="relative flex bg-gray-100 dark:bg-gray-700 rounded-md p-0.5">
+            {/* Background slider */}
+            <div
+              className={`absolute top-0.5 bottom-0.5 w-1/2 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-md transition-transform duration-500 ease-out ${
+                tripsActiveTab === "trips"
+                  ? "translate-x-0"
+                  : "translate-x-full"
+              }`}
+            />
+
+            {/* Tab buttons */}
             <button
               onClick={() => setTripsActiveTab("trips")}
-              className={`flex-1 px-4 py-3 rounded-xl font-semibold text-sm transition-all duration-300 flex items-center justify-center gap-2 ${
+              className={`relative z-10 flex-1 py-2 px-1.5 text-xs font-medium rounded-md transition-all duration-300 ${
                 tripsActiveTab === "trips"
-                  ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg"
+                  ? "text-white"
                   : "text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
               }`}
             >
-              <MapIcon className="w-4 h-4" />
-              <span>My Trips</span>
-              <span className="bg-white/20 text-xs px-2 py-0.5 rounded-full">
-                {trips.length}
-              </span>
+              <div className="flex items-center justify-center gap-1">
+                <MapIcon className="w-3 h-3" />
+                <span>Trips</span>
+                <span
+                  className={`text-xs px-1 py-0.5 rounded-full ${
+                    tripsActiveTab === "trips"
+                      ? "bg-white/20 text-white"
+                      : "bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400"
+                  }`}
+                >
+                  {trips.length}
+                </span>
+              </div>
             </button>
 
             <button
               onClick={() => setTripsActiveTab("invitations")}
-              className={`flex-1 px-4 py-3 rounded-xl font-semibold text-sm transition-all duration-300 flex items-center justify-center gap-2 relative ${
+              className={`relative z-10 flex-1 py-2 px-1.5 text-xs font-medium rounded-md transition-all duration-300 ${
                 tripsActiveTab === "invitations"
-                  ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg"
+                  ? "text-white"
                   : "text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
               }`}
             >
-              <BellIcon className="w-4 h-4" />
-              <span>Trip Invitations</span>
-              {tripInvites.length > 0 && (
-                <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
-                  {tripInvites.length}
-                </span>
-              )}
+              <div className="flex items-center justify-center gap-1">
+                <BellIcon className="w-3 h-3" />
+                <span>Invites</span>
+                {tripInvites.length > 0 && (
+                  <span
+                    className={`text-xs px-1 py-0.5 rounded-full ${
+                      tripsActiveTab === "invitations"
+                        ? "bg-white/20 text-white"
+                        : "bg-red-500 text-white"
+                    }`}
+                  >
+                    {tripInvites.length}
+                  </span>
+                )}
+              </div>
             </button>
           </div>
         </div>
@@ -1771,14 +1819,91 @@ const Dashboard = () => {
         <div className="bg-gray-50/50 dark:bg-gray-700/30 rounded-xl p-4 mb-6">
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4">
             <div className="relative">
-              <img
-                src={
-                  userData?.photoURL ||
-                  "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg"
-                }
-                alt="Profile"
-                className="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover border-4 border-white dark:border-gray-600 shadow-lg"
-              />
+              {/* User avatar with mobile menu */}
+              <div className="relative" ref={mobileUserMenuRef}>
+                <img
+                  src={
+                    userData?.photoURL ||
+                    "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg"
+                  }
+                  alt="Profile"
+                  onClick={() => setShowMobileUserMenu(!showMobileUserMenu)}
+                  className="w-8 h-8 rounded-full object-cover border border-gray-200 dark:border-gray-600 cursor-pointer hover:ring-2 hover:ring-indigo-500 transition-all duration-200 sm:cursor-default sm:hover:ring-0"
+                />
+
+                {/* Mobile User Menu - Only visible on mobile */}
+                {showMobileUserMenu && (
+                  <div className="sm:hidden absolute right-0 top-10 w-64 bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-xl shadow-2xl border border-white/20 dark:border-gray-700/50 z-50 overflow-hidden">
+                    {/* Header */}
+                    <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        <img
+                          src={
+                            userData?.photoURL ||
+                            "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg"
+                          }
+                          alt="Profile"
+                          className="w-10 h-10 rounded-full object-cover border-2 border-white/30"
+                        />
+                        <div>
+                          <p className="text-white font-semibold text-sm">
+                            {userData?.displayName ||
+                              currentUser?.displayName ||
+                              "User"}
+                          </p>
+                          <p className="text-white/70 text-xs">
+                            {userData?.email || currentUser?.email}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Menu Items */}
+                    <div className="p-2">
+                      <button
+                        onClick={() => {
+                          setShowMobileUserMenu(false);
+                          // Add any profile view logic here if needed
+                        }}
+                        className="w-full flex items-center gap-3 px-3 py-2 text-left text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors text-sm"
+                      >
+                        <UserIcon className="w-4 h-4" />
+                        <span>View Profile</span>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setShowMobileUserMenu(false);
+                          toggleTheme();
+                        }}
+                        className="w-full flex items-center gap-3 px-3 py-2 text-left text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors text-sm"
+                      >
+                        {theme === "dark" ? (
+                          <SunIcon className="w-4 h-4" />
+                        ) : (
+                          <MoonIcon className="w-4 h-4" />
+                        )}
+                        <span>
+                          {theme === "dark" ? "Light Mode" : "Dark Mode"}
+                        </span>
+                      </button>
+
+                      <div className="border-t border-gray-200 dark:border-gray-700 my-2"></div>
+
+                      <button
+                        onClick={() => {
+                          setShowMobileUserMenu(false);
+                          logout();
+                        }}
+                        className="w-full flex items-center gap-3 px-3 py-2 text-left text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors text-sm"
+                      >
+                        <ArrowRightOnRectangleIcon className="w-4 h-4" />
+                        <span>Logout</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
               <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 border-2 border-white dark:border-gray-800 rounded-full"></div>
             </div>
             <div className="flex-1 text-center sm:text-left">
@@ -2570,15 +2695,77 @@ const Dashboard = () => {
                   {notificationsDropdownOpen && <NotificationsDropdown />}
                 </div>
 
-                {/* User avatar */}
-                <img
-                  src={
-                    userData?.photoURL ||
-                    "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg"
-                  }
-                  alt="Profile"
-                  className="w-8 h-8 rounded-full object-cover border border-gray-200 dark:border-gray-600"
-                />
+                {/* User avatar with mobile menu */}
+                <div className="relative" ref={mobileUserMenuRef}>
+                  <img
+                    src={
+                      userData?.photoURL ||
+                      "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg"
+                    }
+                    alt="Profile"
+                    onClick={() => {
+                      console.log("Profile clicked!");
+                      setShowMobileUserMenu(!showMobileUserMenu);
+                    }}
+                    className="w-8 h-8 rounded-full object-cover border border-gray-200 dark:border-gray-600 cursor-pointer hover:ring-2 hover:ring-indigo-500 transition-all duration-200 sm:cursor-default sm:hover:ring-0"
+                  />
+
+                  {/* Mobile User Menu - Only visible on mobile */}
+                  {showMobileUserMenu && (
+                    <div className="sm:hidden absolute right-0 top-10 w-64 bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-xl shadow-2xl border border-white/20 dark:border-gray-700/50 z-50 overflow-hidden">
+                      {/* Header */}
+                      <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-4 py-3">
+                        <div className="flex items-center gap-3">
+                          <img
+                            src={
+                              userData?.photoURL ||
+                              "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg"
+                            }
+                            alt="Profile"
+                            className="w-10 h-10 rounded-full object-cover border-2 border-white/30"
+                          />
+                          <div>
+                            <p className="text-white font-semibold text-sm">
+                              {userData?.displayName ||
+                                currentUser?.displayName ||
+                                "User"}
+                            </p>
+                            <p className="text-white/70 text-xs">
+                              {userData?.email || currentUser?.email}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Menu Items */}
+                      <div className="p-2">
+                        <button
+                          onClick={() => {
+                            setShowMobileUserMenu(false);
+                            // Add any profile view logic here if needed
+                          }}
+                          className="w-full flex items-center gap-3 px-3 py-2 text-left text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors text-sm"
+                        >
+                          <UserIcon className="w-4 h-4" />
+                          <span>View Profile</span>
+                        </button>
+
+                        <div className="border-t border-gray-200 dark:border-gray-700 my-2"></div>
+
+                        <button
+                          onClick={() => {
+                            setShowMobileUserMenu(false);
+                            logout();
+                          }}
+                          className="w-full flex items-center gap-3 px-3 py-2 text-left text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors text-sm"
+                        >
+                          <ArrowRightOnRectangleIcon className="w-4 h-4" />
+                          <span>Logout</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
