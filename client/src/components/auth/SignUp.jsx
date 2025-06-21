@@ -196,7 +196,7 @@ const SignUp = () => {
   return (
     <div className="min-h-screen flex">
       {/* Left Side - Visual */}
-      <div className="hidden lg:flex lg:flex-1 lg:flex-col lg:justify-center lg:px-20 xl:px-24 bg-gradient-to-br from-purple-600 via-indigo-600 to-blue-600 relative overflow-hidden">
+      <div className="hidden md:flex md:flex-1 md:flex-col md:justify-center md:items-center md:px-6 lg:px-8 xl:px-12 2xl:px-20 bg-gradient-to-br from-purple-600 via-indigo-600 to-blue-600 relative overflow-hidden">
         {/* Background Decoration */}
         <div className="absolute inset-0">
           <div className="absolute top-0 left-0 w-96 h-96 bg-white/10 rounded-full blur-3xl"></div>
@@ -204,11 +204,11 @@ const SignUp = () => {
         </div>
 
         {/* Content */}
-        <div className="relative z-10 text-white">
-          <h2 className="text-4xl font-bold mb-6">
+        <div className="relative z-10 text-white max-w-md lg:max-w-lg xl:max-w-xl 2xl:max-w-2xl text-center md:text-left">
+          <h2 className="text-2xl lg:text-3xl xl:text-4xl font-bold mb-3 lg:mb-4 xl:mb-6">
             Join thousands of travelers
           </h2>
-          <p className="text-xl text-purple-100 mb-8 leading-relaxed">
+          <p className="text-base lg:text-lg xl:text-xl text-purple-100 mb-4 lg:mb-6 xl:mb-8 leading-relaxed">
             Start organizing your travel photos with AI-powered face
             recognition. Create albums, share with friends, and never lose a
             memory again.
@@ -257,18 +257,18 @@ const SignUp = () => {
       </div>
 
       {/* Right Side - Form */}
-      <div className="flex-1 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-20 xl:px-24 bg-white dark:bg-gray-900">
-        <div className="mx-auto w-full max-w-sm lg:max-w-md">
+      <div className="flex-1 flex flex-col justify-center py-3 px-3 sm:py-6 sm:px-4 md:py-8 md:px-6 lg:py-12 lg:px-12 xl:px-20 2xl:px-24 bg-white dark:bg-gray-900">
+        <div className="mx-auto w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-md">
           {/* Header */}
           <div className="mb-8">
             {/* Navigation */}
-            <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center justify-between mb-2 sm:mb-4 md:mb-6 lg:mb-8 -mt-2 sm:-mt-0 md:-mt-0">
               <Link
                 to="/"
                 className="inline-flex items-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
               >
-                <ArrowLeftIcon className="w-5 h-5 mr-2" />
-                Back to Home
+                <ArrowLeftIcon className="w-5 h-5 sm:mr-2" />
+                <span className="hidden sm:inline">Back to Home</span>
               </Link>
 
               <button
@@ -284,30 +284,33 @@ const SignUp = () => {
             </div>
 
             {/* Logo and Title */}
-            <div className="flex items-center mb-6">
-              <div className="w-10 h-10 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl flex items-center justify-center">
-                <CameraIcon className="w-6 h-6 text-white" />
+            <div className="flex items-center justify-center md:justify-start mb-6 sm:mb-8 md:mb-10 -mt-4 sm:-mt-0 md:-mt-0">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-10 md:h-10 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl flex items-center justify-center">
+                <CameraIcon className="w-5 h-5 sm:w-7 sm:h-7 md:w-6 md:h-6 text-white" />
               </div>
-              <span className="ml-3 text-2xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
+              <span className="ml-2 sm:ml-3 text-2xl sm:text-3xl md:text-2xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
                 Groupify
               </span>
             </div>
 
-            <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-white text-center md:text-left">
               Create your account
             </h2>
-            <p className="mt-2 text-gray-600 dark:text-gray-400">
+            <p className="mt-1 sm:mt-2 text-xs sm:text-sm md:text-base text-gray-600 dark:text-gray-400 text-center md:text-left">
               Join Groupify and start organizing your travel memories
             </p>
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-3 sm:space-y-4 md:space-y-5 text-sm md:text-base"
+          >
             {/* Display Name */}
             <div>
               <label
                 htmlFor="displayName"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                className="block text-xs sm:text-sm md:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 sm:mb-2"
               >
                 Full Name *
               </label>
@@ -319,7 +322,7 @@ const SignUp = () => {
                 required
                 value={formData.displayName}
                 onChange={handleInputChange}
-                className="input-primary"
+                className="input-primary py-1.5 sm:py-2 md:py-3"
                 placeholder="John Doe"
                 disabled={loading}
               />
@@ -329,7 +332,7 @@ const SignUp = () => {
             <div>
               <label
                 htmlFor="email"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                className="block text-xs sm:text-sm md:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 sm:mb-2"
               >
                 Email Address *
               </label>
@@ -341,7 +344,7 @@ const SignUp = () => {
                 required
                 value={formData.email}
                 onChange={handleInputChange}
-                className="input-primary"
+                className="input-primary py-1.5 sm:py-2 md:py-3"
                 placeholder="you@example.com"
                 disabled={loading}
               />
@@ -351,7 +354,7 @@ const SignUp = () => {
             <div>
               <label
                 htmlFor="password"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                className="block text-xs sm:text-sm md:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 sm:mb-2"
               >
                 Password *
               </label>
@@ -364,7 +367,7 @@ const SignUp = () => {
                   required
                   value={formData.password}
                   onChange={handleInputChange}
-                  className="input-primary pr-12"
+                  className="input-primary pr-12 py-1.5 sm:py-2 md:py-3"
                   placeholder="••••••••"
                   disabled={loading}
                 />
@@ -532,7 +535,7 @@ const SignUp = () => {
             <div>
               <label
                 htmlFor="confirmPassword"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                className="block text-xs sm:text-sm md:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 sm:mb-2"
               >
                 Confirm Password *
               </label>
@@ -545,7 +548,7 @@ const SignUp = () => {
                   required
                   value={formData.confirmPassword}
                   onChange={handleInputChange}
-                  className="input-primary pr-12"
+                  className="input-primary pr-12 py-1.5 sm:py-2 md:py-3"
                   placeholder="••••••••"
                   disabled={loading}
                 />
@@ -566,10 +569,10 @@ const SignUp = () => {
 
             {/* Gender Selection */}
             <div>
-              <p className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+              <p className="block text-xs sm:text-sm md:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 sm:mb-3">
                 Gender (Optional)
               </p>
-              <div className="flex space-x-3">
+              <div className="flex space-x-2 sm:space-x-3">
                 {["male", "female", "other"].map((option) => (
                   <button
                     key={option}
@@ -578,7 +581,7 @@ const SignUp = () => {
                       setFormData((prev) => ({ ...prev, gender: option }))
                     }
                     disabled={loading}
-                    className={`flex-1 py-2 px-4 rounded-lg border text-sm font-medium transition-all ${
+                    className={`flex-1 py-1.5 sm:py-2 px-2 sm:px-4 rounded-lg border text-xs sm:text-sm font-medium transition-all ${
                       formData.gender === option
                         ? "bg-indigo-600 text-white border-indigo-600"
                         : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
@@ -603,10 +606,10 @@ const SignUp = () => {
                   disabled={loading}
                 />
               </div>
-              <div className="ml-3 text-sm">
+              <div className="ml-3 text-xs sm:text-sm">
                 <label
                   htmlFor="terms"
-                  className="text-gray-700 dark:text-gray-300"
+                  className="text-gray-700 dark:text-gray-300 leading-tight"
                 >
                   I agree to the{" "}
                   <Link
@@ -630,7 +633,7 @@ const SignUp = () => {
             <button
               type="submit"
               disabled={loading || !agreedToTerms}
-              className="w-full btn-primary flex items-center justify-center py-3 relative overflow-hidden"
+              className="w-full btn-primary flex items-center justify-center py-2 sm:py-2.5 md:py-3 text-xs sm:text-sm md:text-base relative overflow-hidden"
             >
               {loading ? (
                 <>
@@ -644,7 +647,7 @@ const SignUp = () => {
           </form>
 
           {/* Divider */}
-          <div className="mt-6">
+          <div className="mt-4 sm:mt-6 md:mt-8">
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-gray-300 dark:border-gray-600" />
@@ -661,7 +664,7 @@ const SignUp = () => {
               type="button"
               onClick={handleGoogleSignUp}
               disabled={loading || !agreedToTerms}
-              className="mt-4 w-full flex justify-center items-center py-3 px-4 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm bg-white dark:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="mt-3 sm:mt-4 md:mt-6 w-full flex justify-center items-center py-2 sm:py-2.5 md:py-3 px-3 sm:px-4 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm bg-white dark:bg-gray-800 text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {loading ? (
                 <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-600 mr-2"></div>
@@ -677,7 +680,7 @@ const SignUp = () => {
           </div>
 
           {/* Sign In Link */}
-          <p className="mt-6 text-center text-sm text-gray-600 dark:text-gray-400">
+          <p className="mt-4 sm:mt-6 md:mt-8 text-center text-xs sm:text-sm text-gray-600 dark:text-gray-400">
             Already have an account?{" "}
             <Link
               to="/signin"
