@@ -1054,7 +1054,7 @@ const Dashboard = () => {
   };
 
   const TripsSection = () => (
-    <div className="space-y-6">
+    <div className="space-y-3 sm:space-y-6">
       <div className="flex justify-between items-start">
         <div>
           <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">
@@ -1077,33 +1077,36 @@ const Dashboard = () => {
         )}
       </div>
 
-      {/* Mobile Tab Buttons */}
+      {/* Mobile Tab Switcher */}
       <div className="lg:hidden mb-6">
-        <div className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-lg shadow-lg p-1 border border-white/20 dark:border-gray-700/50">
-          <div className="relative flex bg-gray-100 dark:bg-gray-700 rounded-md p-0.5">
+        <div className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-lg shadow-lg p-1.5 border border-white/20 dark:border-gray-700/50">
+          <div className="relative flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
             {/* Background slider */}
             <div
-              className={`absolute top-0.5 bottom-0.5 w-1/2 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-md transition-transform duration-500 ease-out ${
-                tripsActiveTab === "trips"
-                  ? "translate-x-0"
-                  : "translate-x-full"
-              }`}
+              className="absolute top-1 bottom-1 w-1/2 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-md"
+              style={{
+                transform:
+                  tripsActiveTab === "trips"
+                    ? "translateX(0%)"
+                    : "translateX(100%)",
+                transition: "transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)",
+              }}
             />
 
             {/* Tab buttons */}
             <button
               onClick={() => setTripsActiveTab("trips")}
-              className={`relative z-10 flex-1 py-2 px-1.5 text-xs font-medium rounded-md transition-all duration-300 ${
+              className={`relative z-10 flex-1 py-1.5 px-1.5 text-xs font-medium rounded-md transition-all duration-300 ${
                 tripsActiveTab === "trips"
                   ? "text-white"
                   : "text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
               }`}
             >
-              <div className="flex items-center justify-center gap-1">
-                <MapIcon className="w-3 h-3" />
+              <div className="flex items-center justify-center gap-2">
+                <MapIcon className="w-4 h-4" />
                 <span>Trips</span>
                 <span
-                  className={`text-xs px-1 py-0.5 rounded-full ${
+                  className={`text-xs px-1.5 py-0.5 rounded-full ${
                     tripsActiveTab === "trips"
                       ? "bg-white/20 text-white"
                       : "bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400"
@@ -1116,18 +1119,18 @@ const Dashboard = () => {
 
             <button
               onClick={() => setTripsActiveTab("invitations")}
-              className={`relative z-10 flex-1 py-2 px-1.5 text-xs font-medium rounded-md transition-all duration-300 ${
+              className={`relative z-10 flex-1 py-1.5 px-1.5 text-xs font-medium rounded-md transition-all duration-300 ${
                 tripsActiveTab === "invitations"
                   ? "text-white"
                   : "text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
               }`}
             >
-              <div className="flex items-center justify-center gap-1">
-                <BellIcon className="w-3 h-3" />
+              <div className="flex items-center justify-center gap-2">
+                <BellIcon className="w-4 h-4" />
                 <span>Invites</span>
                 {tripInvites.length > 0 && (
                   <span
-                    className={`text-xs px-1 py-0.5 rounded-full ${
+                    className={`text-xs px-1.5 py-0.5 rounded-full ${
                       tripsActiveTab === "invitations"
                         ? "bg-white/20 text-white"
                         : "bg-red-500 text-white"
@@ -1506,40 +1509,69 @@ const Dashboard = () => {
         )}
       </div>
 
-      {/* Mobile Tab Buttons */}
+      {/* Mobile Tab Switcher */}
       <div className="lg:hidden mb-6">
-        <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-2xl p-1 border border-white/20 dark:border-gray-700/50 shadow-lg">
-          <div className="flex">
+        <div className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-lg shadow-lg p-1.5 border border-white/20 dark:border-gray-700/50">
+          <div className="relative flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+            {/* Background slider */}
+            <div
+              className="absolute top-1 bottom-1 w-1/2 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-md"
+              style={{
+                transform:
+                  friendsActiveTab === "friends"
+                    ? "translateX(0%)"
+                    : "translateX(100%)",
+                transition: "transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)",
+              }}
+            />
+
+            {/* Tab buttons */}
             <button
               onClick={() => setFriendsActiveTab("friends")}
-              className={`flex-1 px-4 py-3 rounded-xl font-semibold text-sm transition-all duration-300 flex items-center justify-center gap-2 ${
+              className={`relative z-10 flex-1 py-1.5 px-1.5 text-xs font-medium rounded-md transition-all duration-300 ${
                 friendsActiveTab === "friends"
-                  ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg"
+                  ? "text-white"
                   : "text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
               }`}
             >
-              <UserGroupIcon className="w-4 h-4" />
-              <span>Your Friends</span>
-              <span className="bg-white/20 text-xs px-2 py-0.5 rounded-full">
-                {friends.length}
-              </span>
+              <div className="flex items-center justify-center gap-2">
+                <UserGroupIcon className="w-4 h-4" />
+                <span>Friends</span>
+                <span
+                  className={`text-xs px-1.5 py-0.5 rounded-full ${
+                    friendsActiveTab === "friends"
+                      ? "bg-white/20 text-white"
+                      : "bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400"
+                  }`}
+                >
+                  {friends.length}
+                </span>
+              </div>
             </button>
 
             <button
               onClick={() => setFriendsActiveTab("requests")}
-              className={`flex-1 px-4 py-3 rounded-xl font-semibold text-sm transition-all duration-300 flex items-center justify-center gap-2 relative ${
+              className={`relative z-10 flex-1 py-1.5 px-1.5 text-xs font-medium rounded-md transition-all duration-300 ${
                 friendsActiveTab === "requests"
-                  ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg"
+                  ? "text-white"
                   : "text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
               }`}
             >
-              <BellIcon className="w-4 h-4" />
-              <span>Friend Requests</span>
-              {pendingRequests.length > 0 && (
-                <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
-                  {pendingRequests.length}
-                </span>
-              )}
+              <div className="flex items-center justify-center gap-2">
+                <BellIcon className="w-4 h-4" />
+                <span>Requests</span>
+                {pendingRequests.length > 0 && (
+                  <span
+                    className={`text-xs px-1.5 py-0.5 rounded-full ${
+                      friendsActiveTab === "requests"
+                        ? "bg-white/20 text-white"
+                        : "bg-red-500 text-white"
+                    }`}
+                  >
+                    {pendingRequests.length}
+                  </span>
+                )}
+              </div>
             </button>
           </div>
         </div>
@@ -1815,243 +1847,178 @@ const Dashboard = () => {
           Account Information
         </h2>
 
-        {/* Profile Section */}
-        <div className="bg-gray-50/50 dark:bg-gray-700/30 rounded-xl p-4 mb-6">
-          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4">
-            <div className="relative">
-              {/* User avatar with mobile menu */}
-              <div className="relative" ref={mobileUserMenuRef}>
-                <img
-                  src={
-                    userData?.photoURL ||
-                    "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg"
-                  }
-                  alt="Profile"
-                  onClick={() => setShowMobileUserMenu(!showMobileUserMenu)}
-                  className="w-8 h-8 rounded-full object-cover border border-gray-200 dark:border-gray-600 cursor-pointer hover:ring-2 hover:ring-indigo-500 transition-all duration-200 sm:cursor-default sm:hover:ring-0"
-                />
-
-                {/* Mobile User Menu - Only visible on mobile */}
-                {showMobileUserMenu && (
-                  <div className="sm:hidden absolute right-0 top-10 w-64 bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-xl shadow-2xl border border-white/20 dark:border-gray-700/50 z-50 overflow-hidden">
-                    {/* Header */}
-                    <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-4 py-3">
-                      <div className="flex items-center gap-3">
-                        <img
-                          src={
-                            userData?.photoURL ||
-                            "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg"
-                          }
-                          alt="Profile"
-                          className="w-10 h-10 rounded-full object-cover border-2 border-white/30"
-                        />
-                        <div>
-                          <p className="text-white font-semibold text-sm">
-                            {userData?.displayName ||
-                              currentUser?.displayName ||
-                              "User"}
-                          </p>
-                          <p className="text-white/70 text-xs">
-                            {userData?.email || currentUser?.email}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Menu Items */}
-                    <div className="p-2">
-                      <button
-                        onClick={() => {
-                          setShowMobileUserMenu(false);
-                          // Add any profile view logic here if needed
-                        }}
-                        className="w-full flex items-center gap-3 px-3 py-2 text-left text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors text-sm"
-                      >
-                        <UserIcon className="w-4 h-4" />
-                        <span>View Profile</span>
-                      </button>
-
-                      <button
-                        onClick={() => {
-                          setShowMobileUserMenu(false);
-                          toggleTheme();
-                        }}
-                        className="w-full flex items-center gap-3 px-3 py-2 text-left text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors text-sm"
-                      >
-                        {theme === "dark" ? (
-                          <SunIcon className="w-4 h-4" />
-                        ) : (
-                          <MoonIcon className="w-4 h-4" />
-                        )}
-                        <span>
-                          {theme === "dark" ? "Light Mode" : "Dark Mode"}
-                        </span>
-                      </button>
-
-                      <div className="border-t border-gray-200 dark:border-gray-700 my-2"></div>
-
-                      <button
-                        onClick={() => {
-                          setShowMobileUserMenu(false);
-                          logout();
-                        }}
-                        className="w-full flex items-center gap-3 px-3 py-2 text-left text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors text-sm"
-                      >
-                        <ArrowRightOnRectangleIcon className="w-4 h-4" />
-                        <span>Logout</span>
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-              <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 border-2 border-white dark:border-gray-800 rounded-full"></div>
+        {/* Profile Section - Updated for better responsiveness */}
+        <div className="bg-gray-50/50 dark:bg-gray-700/30 rounded-xl p-4 sm:p-6 mb-6">
+          <div className="flex flex-col items-center text-center sm:flex-row sm:text-left sm:items-start gap-4 sm:gap-6">
+            {/* Profile Image - Larger and more responsive */}
+            <div className="relative flex-shrink-0">
+              <img
+                src={
+                  userData?.photoURL ||
+                  "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg"
+                }
+                alt="Profile"
+                className="w-20 h-20 sm:w-24 sm:h-24 lg:w-28 lg:h-28 rounded-full object-cover border-4 border-white dark:border-gray-600 shadow-lg"
+              />
+              {/* Online status indicator */}
+              <div className="absolute -bottom-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 bg-green-500 border-2 sm:border-3 lg:border-4 border-white dark:border-gray-800 rounded-full shadow-lg"></div>{" "}
             </div>
-            <div className="flex-1 text-center sm:text-left">
-              <h3 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-white mb-1">
-                {userData?.displayName || currentUser?.displayName || "User"}
-              </h3>
-              <p className="text-gray-600 dark:text-gray-300 text-sm sm:text-base mb-3">
-                {userData?.email || currentUser?.email}
-              </p>
+
+            {/* Profile Info - Better spacing and responsive text */}
+            <div className="flex-1 space-y-3 sm:space-y-4 min-w-0">
+              <div>
+                <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800 dark:text-white truncate">
+                  {userData?.displayName || currentUser?.displayName || "User"}
+                </h3>
+                <p className="text-gray-600 dark:text-gray-300 text-sm sm:text-base lg:text-lg mt-1 break-all sm:break-normal">
+                  {userData?.email || currentUser?.email}
+                </p>
+              </div>
+
+              {/* Edit Profile Button - Full width on mobile */}
               <button
                 onClick={() => setShowEditProfileModal(true)}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium transition-colors text-sm flex items-center gap-2 mx-auto sm:mx-0"
+                className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg sm:rounded-xl font-medium text-sm sm:text-base flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
               >
-                <UserCircleIcon className="w-4 h-4" />
+                <UserCircleIcon className="w-4 h-4 sm:w-5 sm:h-5" />
                 Edit Profile
               </button>
             </div>
           </div>
         </div>
 
-        {/* Settings Grid */}
-        <div className="space-y-6 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-8">
-          {/* Preferences */}
-          <div className="bg-blue-50/50 dark:bg-blue-900/20 rounded-xl p-4 sm:p-5">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-                <span className="text-white text-sm font-bold">⚙️</span>
+        {/* Settings Grid - Better responsive layout */}
+        <div className="space-y-6 xl:space-y-0 xl:grid xl:grid-cols-2 xl:gap-8">
+          {/* Preferences - Improved spacing and touch targets */}
+          <div className="bg-blue-50/50 dark:bg-blue-900/20 rounded-xl p-4 sm:p-6">
+            <div className="flex items-center gap-3 mb-4 sm:mb-6">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-500 rounded-xl flex items-center justify-center shadow-lg">
+                <span className="text-white text-lg sm:text-xl font-bold">
+                  ⚙️
+                </span>
               </div>
-              <h4 className="text-lg font-bold text-gray-800 dark:text-white">
+              <h4 className="text-lg sm:text-xl font-bold text-gray-800 dark:text-white">
                 Notification Preferences
               </h4>
             </div>
-            <div className="space-y-4">
-              <label className="flex items-center justify-between p-3 bg-white/50 dark:bg-gray-700/30 rounded-lg hover:bg-white/70 dark:hover:bg-gray-700/50 transition-colors cursor-pointer">
-                <div className="flex items-center gap-3">
-                  <div className="w-6 h-6 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
-                    <span className="text-green-600 dark:text-green-400 text-xs">
+            <div className="space-y-3 sm:space-y-4">
+              <label className="flex items-center justify-between p-3 sm:p-4 bg-white/50 dark:bg-gray-700/30 rounded-lg sm:rounded-xl hover:bg-white/70 dark:hover:bg-gray-700/50 transition-colors cursor-pointer group min-h-[60px] sm:min-h-[68px]">
+                <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center flex-shrink-0">
+                    <span className="text-green-600 dark:text-green-400 text-sm sm:text-base">
                       📧
                     </span>
                   </div>
-                  <span className="text-gray-700 dark:text-gray-300 text-sm sm:text-base font-medium">
+                  <span className="text-gray-700 dark:text-gray-300 text-sm sm:text-base font-medium truncate">
                     Email notifications
                   </span>
                 </div>
                 <input
                   type="checkbox"
-                  className="w-5 h-5 rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-indigo-600 focus:ring-indigo-500"
+                  className="w-5 h-5 sm:w-6 sm:h-6 rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-indigo-600 focus:ring-indigo-500 flex-shrink-0 ml-3"
                   defaultChecked
                 />
               </label>
 
-              <label className="flex items-center justify-between p-3 bg-white/50 dark:bg-gray-700/30 rounded-lg hover:bg-white/70 dark:hover:bg-gray-700/50 transition-colors cursor-pointer">
-                <div className="flex items-center gap-3">
-                  <div className="w-6 h-6 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center">
-                    <span className="text-purple-600 dark:text-purple-400 text-xs">
+              <label className="flex items-center justify-between p-3 sm:p-4 bg-white/50 dark:bg-gray-700/30 rounded-lg sm:rounded-xl hover:bg-white/70 dark:hover:bg-gray-700/50 transition-colors cursor-pointer group min-h-[60px] sm:min-h-[68px]">
+                <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center flex-shrink-0">
+                    <span className="text-purple-600 dark:text-purple-400 text-sm sm:text-base">
                       ✈️
                     </span>
                   </div>
-                  <span className="text-gray-700 dark:text-gray-300 text-sm sm:text-base font-medium">
+                  <span className="text-gray-700 dark:text-gray-300 text-sm sm:text-base font-medium truncate">
                     Trip invitations
                   </span>
                 </div>
                 <input
                   type="checkbox"
-                  className="w-5 h-5 rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-indigo-600 focus:ring-indigo-500"
+                  className="w-5 h-5 sm:w-6 sm:h-6 rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-indigo-600 focus:ring-indigo-500 flex-shrink-0 ml-3"
                   defaultChecked
                 />
               </label>
 
-              <label className="flex items-center justify-between p-3 bg-white/50 dark:bg-gray-700/30 rounded-lg hover:bg-white/70 dark:hover:bg-gray-700/50 transition-colors cursor-pointer">
-                <div className="flex items-center gap-3">
-                  <div className="w-6 h-6 bg-orange-100 dark:bg-orange-900/30 rounded-full flex items-center justify-center">
-                    <span className="text-orange-600 dark:text-orange-400 text-xs">
+              <label className="flex items-center justify-between p-3 sm:p-4 bg-white/50 dark:bg-gray-700/30 rounded-lg sm:rounded-xl hover:bg-white/70 dark:hover:bg-gray-700/50 transition-colors cursor-pointer group min-h-[60px] sm:min-h-[68px]">
+                <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-orange-100 dark:bg-orange-900/30 rounded-full flex items-center justify-center flex-shrink-0">
+                    <span className="text-orange-600 dark:text-orange-400 text-sm sm:text-base">
                       👥
                     </span>
                   </div>
-                  <span className="text-gray-700 dark:text-gray-300 text-sm sm:text-base font-medium">
+                  <span className="text-gray-700 dark:text-gray-300 text-sm sm:text-base font-medium truncate">
                     Friend requests
                   </span>
                 </div>
                 <input
                   type="checkbox"
-                  className="w-5 h-5 rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-indigo-600 focus:ring-indigo-500"
+                  className="w-5 h-5 sm:w-6 sm:h-6 rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-indigo-600 focus:ring-indigo-500 flex-shrink-0 ml-3"
                 />
               </label>
             </div>
           </div>
 
-          {/* Privacy */}
-          <div className="bg-green-50/50 dark:bg-green-900/20 rounded-xl p-4 sm:p-5">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
-                <span className="text-white text-sm font-bold">🔒</span>
+          {/* Privacy - Improved spacing and touch targets */}
+          <div className="bg-green-50/50 dark:bg-green-900/20 rounded-xl p-4 sm:p-6">
+            <div className="flex items-center gap-3 mb-4 sm:mb-6">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-500 rounded-xl flex items-center justify-center shadow-lg">
+                <span className="text-white text-lg sm:text-xl font-bold">
+                  🔒
+                </span>
               </div>
-              <h4 className="text-lg font-bold text-gray-800 dark:text-white">
+              <h4 className="text-lg sm:text-xl font-bold text-gray-800 dark:text-white">
                 Privacy Settings
               </h4>
             </div>
-            <div className="space-y-4">
-              <label className="flex items-center justify-between p-3 bg-white/50 dark:bg-gray-700/30 rounded-lg hover:bg-white/70 dark:hover:bg-gray-700/50 transition-colors cursor-pointer">
-                <div className="flex items-center gap-3">
-                  <div className="w-6 h-6 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
-                    <span className="text-blue-600 dark:text-blue-400 text-xs">
+            <div className="space-y-3 sm:space-y-4">
+              <label className="flex items-center justify-between p-3 sm:p-4 bg-white/50 dark:bg-gray-700/30 rounded-lg sm:rounded-xl hover:bg-white/70 dark:hover:bg-gray-700/50 transition-colors cursor-pointer group min-h-[60px] sm:min-h-[68px]">
+                <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center flex-shrink-0">
+                    <span className="text-blue-600 dark:text-blue-400 text-sm sm:text-base">
                       👤
                     </span>
                   </div>
-                  <span className="text-gray-700 dark:text-gray-300 text-sm sm:text-base font-medium">
+                  <span className="text-gray-700 dark:text-gray-300 text-sm sm:text-base font-medium truncate">
                     Profile visible to friends
                   </span>
                 </div>
                 <input
                   type="checkbox"
-                  className="w-5 h-5 rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-indigo-600 focus:ring-indigo-500"
+                  className="w-5 h-5 sm:w-6 sm:h-6 rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-indigo-600 focus:ring-indigo-500 flex-shrink-0 ml-3"
                   defaultChecked
                 />
               </label>
 
-              <label className="flex items-center justify-between p-3 bg-white/50 dark:bg-gray-700/30 rounded-lg hover:bg-white/70 dark:hover:bg-gray-700/50 transition-colors cursor-pointer">
-                <div className="flex items-center gap-3">
-                  <div className="w-6 h-6 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center">
-                    <span className="text-purple-600 dark:text-purple-400 text-xs">
+              <label className="flex items-center justify-between p-3 sm:p-4 bg-white/50 dark:bg-gray-700/30 rounded-lg sm:rounded-xl hover:bg-white/70 dark:hover:bg-gray-700/50 transition-colors cursor-pointer group min-h-[60px] sm:min-h-[68px]">
+                <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center flex-shrink-0">
+                    <span className="text-purple-600 dark:text-purple-400 text-sm sm:text-base">
                       🔍
                     </span>
                   </div>
-                  <span className="text-gray-700 dark:text-gray-300 text-sm sm:text-base font-medium">
+                  <span className="text-gray-700 dark:text-gray-300 text-sm sm:text-base font-medium truncate">
                     Allow face recognition
                   </span>
                 </div>
                 <input
                   type="checkbox"
-                  className="w-5 h-5 rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-indigo-600 focus:ring-indigo-500"
+                  className="w-5 h-5 sm:w-6 sm:h-6 rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-indigo-600 focus:ring-indigo-500 flex-shrink-0 ml-3"
                 />
               </label>
 
-              <label className="flex items-center justify-between p-3 bg-white/50 dark:bg-gray-700/30 rounded-lg hover:bg-white/70 dark:hover:bg-gray-700/50 transition-colors cursor-pointer">
-                <div className="flex items-center gap-3">
-                  <div className="w-6 h-6 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
-                    <span className="text-green-600 dark:text-green-400 text-xs">
+              <label className="flex items-center justify-between p-3 sm:p-4 bg-white/50 dark:bg-gray-700/30 rounded-lg sm:rounded-xl hover:bg-white/70 dark:hover:bg-gray-700/50 transition-colors cursor-pointer group min-h-[60px] sm:min-h-[68px]">
+                <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center flex-shrink-0">
+                    <span className="text-green-600 dark:text-green-400 text-sm sm:text-base">
                       🌐
                     </span>
                   </div>
-                  <span className="text-gray-700 dark:text-gray-300 text-sm sm:text-base font-medium">
+                  <span className="text-gray-700 dark:text-gray-300 text-sm sm:text-base font-medium truncate">
                     Show in search results
                   </span>
                 </div>
                 <input
                   type="checkbox"
-                  className="w-5 h-5 rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-indigo-600 focus:ring-indigo-500"
+                  className="w-5 h-5 sm:w-6 sm:h-6 rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-indigo-600 focus:ring-indigo-500 flex-shrink-0 ml-3"
                   defaultChecked
                 />
               </label>
@@ -2059,86 +2026,90 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Account Actions */}
-        <div className="mt-6 pt-6 border-t border-gray-200/50 dark:border-gray-700/50">
-          <h4 className="text-lg font-bold text-gray-800 dark:text-white mb-4 flex items-center gap-2">
-            <span className="text-lg">⚡</span>
+        {/* Account Actions - Better responsive layout */}
+        <div className="mt-6 sm:mt-8 pt-6 sm:pt-8 border-t border-gray-200/50 dark:border-gray-700/50">
+          <h4 className="text-lg sm:text-xl font-bold text-gray-800 dark:text-white mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3">
+            <span className="text-xl sm:text-2xl">⚡</span>
             Quick Actions
           </h4>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <button className="flex items-center justify-center gap-3 p-4 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl font-medium transition-colors text-gray-800 dark:text-gray-200">
-              <span className="text-lg">📤</span>
-              <span className="text-sm sm:text-base">Export My Data</span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+            <button className="flex items-center justify-center gap-3 sm:gap-4 p-4 sm:p-6 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl sm:rounded-2xl font-medium text-gray-800 dark:text-gray-200 min-h-[64px] sm:min-h-[72px] shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
+              <span className="text-xl sm:text-2xl">📤</span>
+              <span className="text-sm sm:text-base font-semibold">
+                Export My Data
+              </span>
             </button>
-            <button className="flex items-center justify-center gap-3 p-4 bg-blue-100 dark:bg-blue-900/30 hover:bg-blue-200 dark:hover:bg-blue-900/50 rounded-xl font-medium transition-colors text-blue-800 dark:text-blue-400">
-              <span className="text-lg">🔄</span>
-              <span className="text-sm sm:text-base">Backup Settings</span>
+            <button className="flex items-center justify-center gap-3 sm:gap-4 p-4 sm:p-6 bg-blue-100 dark:bg-blue-900/30 hover:bg-blue-200 dark:hover:bg-blue-900/50 rounded-xl sm:rounded-2xl font-medium text-blue-800 dark:text-blue-400 min-h-[64px] sm:min-h-[72px] shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
+              <span className="text-xl sm:text-2xl">🔄</span>
+              <span className="text-sm sm:text-base font-semibold">
+                Backup Settings
+              </span>
             </button>
           </div>
         </div>
       </div>
 
-      {/* Face Profile Management */}
+      {/* Face Profile Management - Better responsive spacing */}
       <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6 border border-white/20 dark:border-gray-700/50">
-        <h2 className="text-lg sm:text-xl font-bold text-gray-800 dark:text-white mb-4 sm:mb-6 flex items-center gap-2">
+        <h2 className="text-lg sm:text-xl font-bold text-gray-800 dark:text-white mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3">
           <UserCircleIcon className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-600 dark:text-indigo-400" />
           Face Profile
         </h2>
 
         {!hasProfile ? (
-          <div className="text-center py-4 sm:py-8">
-            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6">
-              <UserCircleIcon className="w-8 h-8 sm:w-10 sm:h-10 text-indigo-500 dark:text-indigo-400" />
+          <div className="text-center py-6 sm:py-8 lg:py-12">
+            <div className="w-20 h-20 sm:w-24 sm:h-24 lg:w-32 lg:h-32 bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-2xl sm:rounded-3xl flex items-center justify-center mx-auto mb-4 sm:mb-6 lg:mb-8 shadow-lg">
+              <UserCircleIcon className="w-10 h-10 sm:w-12 sm:h-12 lg:w-16 lg:h-16 text-indigo-500 dark:text-indigo-400" />
             </div>
-            <h3 className="text-lg sm:text-xl font-bold text-gray-800 dark:text-white mb-2 sm:mb-4">
+            <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-800 dark:text-white mb-2 sm:mb-4">
               Create Your Face Profile
             </h3>
-            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 mb-6 sm:mb-8 max-w-md mx-auto px-4">
+            <p className="text-sm sm:text-base lg:text-lg text-gray-600 dark:text-gray-300 mb-6 sm:mb-8 lg:mb-10 max-w-md mx-auto px-4">
               Upload 2-10 clear photos of yourself to enable automatic photo
               recognition in your trips
             </p>
             <button
               onClick={() => setShowFaceProfileModal(true)}
               disabled={isLoadingProfile}
-              className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-400 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center gap-2 mx-auto text-sm sm:text-base"
+              className="w-full sm:w-auto bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-400 text-white px-6 sm:px-8 lg:px-10 py-3 sm:py-4 lg:py-5 rounded-xl sm:rounded-2xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center gap-2 sm:gap-3 mx-auto text-sm sm:text-base lg:text-lg min-h-[48px] sm:min-h-[56px]"
             >
-              <SparklesIcon className="w-4 h-4 sm:w-5 sm:h-5" />
+              <SparklesIcon className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6" />
               {isLoadingProfile ? "Loading..." : "Setup Face Profile"}
             </button>
           </div>
         ) : (
           <div>
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center">
-                  <CheckCircleIcon className="w-5 h-5 sm:w-6 sm:h-6 text-green-600 dark:text-green-400" />
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-6 mb-6">
+              <div className="flex items-center gap-3 sm:gap-4">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 bg-green-100 dark:bg-green-900/30 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg">
+                  <CheckCircleIcon className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-green-600 dark:text-green-400" />
                 </div>
                 <div>
-                  <h3 className="text-lg sm:text-xl font-bold text-gray-800 dark:text-white">
+                  <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-800 dark:text-white">
                     Face Profile Active
                   </h3>
-                  <p className="text-green-600 dark:text-green-400 text-sm sm:text-base">
+                  <p className="text-green-600 dark:text-green-400 text-sm sm:text-base lg:text-lg">
                     {profilePhotos.length} photos • Ready for automatic
                     recognition
                   </p>
                 </div>
               </div>
-              <div className="flex gap-2 self-start sm:self-auto">
+              <div className="flex gap-2 sm:gap-3 self-start sm:self-auto">
                 <button
                   onClick={() =>
                     setShowProfileManagement(!showProfileManagement)
                   }
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 sm:px-4 py-2 rounded-lg sm:rounded-xl font-medium transition-colors text-sm"
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 sm:px-4 lg:px-6 py-2 sm:py-2.5 lg:py-3 rounded-lg sm:rounded-xl font-medium text-sm sm:text-base shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
                 >
                   {showProfileManagement ? "Hide" : "Manage"}
                 </button>
                 <button
                   onClick={deleteCurrentProfile}
                   disabled={isManagingProfile}
-                  className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                  className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 p-2 sm:p-2.5 lg:p-3 rounded-lg sm:rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors shadow-lg hover:shadow-xl"
                   title="Delete Face Profile"
                 >
-                  <TrashIcon className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <TrashIcon className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6" />
                 </button>
               </div>
             </div>
@@ -2146,17 +2117,17 @@ const Dashboard = () => {
             {/* Profile Management Options */}
             {showProfileManagement && (
               <div className="bg-gray-50/50 dark:bg-gray-700/30 rounded-xl sm:rounded-2xl p-4 sm:p-6 mb-6">
-                <div className="flex flex-wrap gap-2 mb-4">
+                <div className="flex flex-wrap gap-2 sm:gap-3 mb-4 sm:mb-6">
                   <button
                     onClick={optimizeCurrentProfile}
                     disabled={isManagingProfile}
-                    className="bg-green-600 hover:bg-green-700 text-white px-3 sm:px-4 py-2 rounded-lg sm:rounded-xl font-medium disabled:opacity-50 transition-colors text-sm"
+                    className="bg-green-600 hover:bg-green-700 text-white px-3 sm:px-4 lg:px-6 py-2 sm:py-2.5 lg:py-3 rounded-lg sm:rounded-xl font-medium disabled:opacity-50 text-sm sm:text-base shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
                   >
                     {isManagingProfile ? "Optimizing..." : "Optimize Profile"}
                   </button>
                   <button
                     onClick={() => setShowFaceProfileModal(true)}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-4 py-2 rounded-lg sm:rounded-xl font-medium transition-colors text-sm"
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-4 lg:px-6 py-2 sm:py-2.5 lg:py-3 rounded-lg sm:rounded-xl font-medium text-sm sm:text-base shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
                   >
                     Add More Photos
                   </button>
@@ -2164,7 +2135,7 @@ const Dashboard = () => {
 
                 {/* Add Photos Section */}
                 <div className="mb-6">
-                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                  <label className="block text-sm sm:text-base font-semibold text-gray-700 dark:text-gray-300 mb-3">
                     Add More Photos
                   </label>
                   <div className="flex flex-col sm:flex-row gap-3">
@@ -2173,13 +2144,13 @@ const Dashboard = () => {
                       multiple
                       accept="image/*"
                       onChange={handleProfilePhotoSelect}
-                      className="flex-1 text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 dark:file:bg-indigo-900/30 file:text-indigo-700 dark:file:text-indigo-400 hover:file:bg-indigo-100 dark:hover:file:bg-indigo-900/50"
+                      className="flex-1 text-sm sm:text-base text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 dark:file:bg-indigo-900/30 file:text-indigo-700 dark:file:text-indigo-400 hover:file:bg-indigo-100 dark:hover:file:bg-indigo-900/50"
                     />
                     {uploadingProfilePhotos.length > 0 && (
                       <button
                         onClick={addMorePhotosToProfile}
                         disabled={isManagingProfile}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-medium disabled:opacity-50 transition-colors text-sm whitespace-nowrap"
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl font-medium disabled:opacity-50 transition-colors text-sm sm:text-base whitespace-nowrap shadow-lg hover:shadow-xl"
                       >
                         {isManagingProfile
                           ? "Adding..."
@@ -2191,15 +2162,15 @@ const Dashboard = () => {
 
                 {/* Current Profile Photos */}
                 <div>
-                  <div className="flex justify-between items-center mb-3">
-                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  <div className="flex justify-between items-center mb-3 sm:mb-4">
+                    <label className="block text-sm sm:text-base font-semibold text-gray-700 dark:text-gray-300">
                       Profile Photos ({profilePhotos.length})
                     </label>
                     {selectedPhotosToRemove.length > 0 && (
                       <button
                         onClick={removeSelectedPhotos}
                         disabled={isManagingProfile}
-                        className="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-xl text-sm font-medium disabled:opacity-50 transition-colors"
+                        className="bg-red-600 hover:bg-red-700 text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-sm sm:text-base font-medium disabled:opacity-50 transition-colors shadow-lg hover:shadow-xl"
                       >
                         {isManagingProfile
                           ? "Removing..."
@@ -2208,7 +2179,7 @@ const Dashboard = () => {
                     )}
                   </div>
 
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 max-h-60 overflow-y-auto">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 max-h-60 sm:max-h-80 overflow-y-auto">
                     {profilePhotos.map((photo) => (
                       <div key={photo.id} className="relative group">
                         <div
@@ -2222,7 +2193,7 @@ const Dashboard = () => {
                           <img
                             src={photo.url}
                             alt="Profile"
-                            className="w-full h-16 sm:h-20 object-cover"
+                            className="w-full h-20 sm:h-24 lg:h-28 object-cover"
                           />
                           <div
                             className={`absolute inset-0 flex items-center justify-center transition-all duration-300 ${
@@ -2232,13 +2203,13 @@ const Dashboard = () => {
                             }`}
                           >
                             {selectedPhotosToRemove.includes(photo.url) && (
-                              <CheckCircleIcon className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+                              <CheckCircleIcon className="w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 text-white" />
                             )}
                           </div>
                         </div>
                         <div className="text-center mt-2">
                           <span
-                            className={`inline-block px-2 py-1 rounded-lg text-white text-xs font-bold ${
+                            className={`inline-block px-2 py-1 rounded-lg text-white text-xs sm:text-sm font-bold ${
                               photo.qualityTier === "high"
                                 ? "bg-green-500"
                                 : photo.qualityTier === "medium"
@@ -2257,17 +2228,17 @@ const Dashboard = () => {
             )}
 
             {/* Profile Photos Grid Preview */}
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 sm:gap-4 mb-6">
-              {profilePhotos.slice(0, 6).map((photo, index) => (
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-3 sm:gap-4 mb-6">
+              {profilePhotos.slice(0, 8).map((photo, index) => (
                 <div key={index} className="relative group">
                   <img
                     src={photo.url}
                     alt={`Profile ${index + 1}`}
-                    className="w-full h-16 sm:h-20 md:h-24 object-cover rounded-lg sm:rounded-xl border border-gray-200 dark:border-gray-600"
+                    className="w-full h-16 sm:h-20 md:h-24 lg:h-28 object-cover rounded-lg sm:rounded-xl border border-gray-200 dark:border-gray-600 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
                   />
                   <div className="absolute bottom-1 right-1 sm:bottom-2 sm:right-2">
                     <span
-                      className={`text-xs font-bold px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-full text-white ${
+                      className={`text-xs sm:text-sm font-bold px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-full text-white shadow-lg ${
                         photo.qualityTier === "high"
                           ? "bg-green-500"
                           : photo.qualityTier === "medium"
@@ -2280,10 +2251,10 @@ const Dashboard = () => {
                   </div>
                 </div>
               ))}
-              {profilePhotos.length > 6 && (
-                <div className="w-full h-16 sm:h-20 md:h-24 bg-gray-100 dark:bg-gray-700 rounded-lg sm:rounded-xl border border-gray-200 dark:border-gray-600 flex items-center justify-center">
-                  <span className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">
-                    +{profilePhotos.length - 6}
+              {profilePhotos.length > 8 && (
+                <div className="w-full h-16 sm:h-20 md:h-24 lg:h-28 bg-gray-100 dark:bg-gray-700 rounded-lg sm:rounded-xl border border-gray-200 dark:border-gray-600 flex items-center justify-center shadow-lg">
+                  <span className="text-xs sm:text-sm lg:text-base font-medium text-gray-600 dark:text-gray-400">
+                    +{profilePhotos.length - 8}
                   </span>
                 </div>
               )}
@@ -2292,49 +2263,53 @@ const Dashboard = () => {
         )}
       </div>
 
-      {/* Data & Storage */}
+      {/* Data & Storage - Better responsive layout */}
       <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6 border border-white/20 dark:border-gray-700/50">
-        <h2 className="text-lg sm:text-xl font-bold text-gray-800 dark:text-white mb-4 sm:mb-6 flex items-center gap-2">
+        <h2 className="text-lg sm:text-xl font-bold text-gray-800 dark:text-white mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3">
           <SparklesIcon className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600 dark:text-purple-400" />
           Data & Storage
         </h2>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
-          <div className="text-center p-4 bg-gray-50/50 dark:bg-gray-700/30 rounded-lg sm:rounded-xl">
-            <p className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-white">
+        {/* Stats Grid - Better responsive spacing */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
+          <div className="text-center p-4 sm:p-6 bg-gray-50/50 dark:bg-gray-700/30 rounded-lg sm:rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
+            <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-800 dark:text-white mb-1 sm:mb-2">
               {trips.length}
             </p>
-            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+            <p className="text-xs sm:text-sm lg:text-base text-gray-600 dark:text-gray-400 font-medium">
               Total Trips
             </p>
           </div>
-          <div className="text-center p-4 bg-gray-50/50 dark:bg-gray-700/30 rounded-lg sm:rounded-xl">
-            <p className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-white">
+          <div className="text-center p-4 sm:p-6 bg-gray-50/50 dark:bg-gray-700/30 rounded-lg sm:rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
+            <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-800 dark:text-white mb-1 sm:mb-2">
               {friends.length}
             </p>
-            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+            <p className="text-xs sm:text-sm lg:text-base text-gray-600 dark:text-gray-400 font-medium">
               Friends
             </p>
           </div>
-          <div className="text-center p-4 bg-gray-50/50 dark:bg-gray-700/30 rounded-lg sm:rounded-xl">
-            <p className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-white">
+          <div className="text-center p-4 sm:p-6 bg-gray-50/50 dark:bg-gray-700/30 rounded-lg sm:rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
+            <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-800 dark:text-white mb-1 sm:mb-2">
               {hasProfile ? profilePhotos.length : 0}
             </p>
-            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+            <p className="text-xs sm:text-sm lg:text-base text-gray-600 dark:text-gray-400 font-medium">
               Profile Photos
             </p>
           </div>
         </div>
 
-        <div className="mt-6 space-y-3">
-          <button className="w-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 py-3 px-4 rounded-lg sm:rounded-xl font-medium transition-colors text-sm sm:text-base">
-            Export My Data
+        {/* Action Buttons - Better responsive layout */}
+        <div className="space-y-3 sm:space-y-4">
+          <button className="w-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 py-3 sm:py-4 lg:py-5 px-4 sm:px-6 rounded-lg sm:rounded-xl font-medium text-sm sm:text-base lg:text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 flex items-center justify-center gap-3 min-h-[56px] sm:min-h-[64px]">
+            <span className="text-xl sm:text-2xl">📤</span>
+            <span className="font-semibold">Export My Data</span>
           </button>
           <button
             onClick={() => setShowDeleteAccountModal(true)}
-            className="w-full bg-red-100 dark:bg-red-900/30 hover:bg-red-200 dark:hover:bg-red-900/50 text-red-800 dark:text-red-400 py-3 px-4 rounded-lg sm:rounded-xl font-medium transition-colors text-sm sm:text-base"
+            className="w-full bg-red-100 dark:bg-red-900/30 hover:bg-red-200 dark:hover:bg-red-900/50 text-red-800 dark:text-red-400 py-3 sm:py-4 lg:py-5 px-4 sm:px-6 rounded-lg sm:rounded-xl font-medium text-sm sm:text-base lg:text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 flex items-center justify-center gap-3 min-h-[56px] sm:min-h-[64px]"
           >
-            Delete Account
+            <span className="text-xl sm:text-2xl">🗑️</span>
+            <span className="font-semibold">Delete Account</span>
           </button>
         </div>
       </div>
@@ -2363,7 +2338,7 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen w-full bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 flex items-center justify-center transition-colors duration-500">
+      <div className="min-h-screen w-full bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 flex items-center justify-center transition-all duration-500">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-purple-200 dark:border-purple-700 border-t-indigo-600 dark:border-t-indigo-400 rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-xl text-gray-800 dark:text-white font-medium">
@@ -2640,7 +2615,7 @@ const Dashboard = () => {
                 </button>
 
                 {/* Welcome message - hidden on mobile */}
-                <div className="hidden sm:block">
+                <div className="hidden sm:block lg:block">
                   <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
                     {currentView === "trip"
                       ? "Trip Details"
@@ -2651,17 +2626,50 @@ const Dashboard = () => {
                         }!`}
                   </h2>
                 </div>
+
+                {/* Logo for mobile - shows when welcome message is hidden */}
+                <button
+                  onClick={() => {
+                    setActiveSection("trips");
+                    setCurrentView("home");
+                    // Close sidebar on mobile when clicking logo
+                    if (window.innerWidth < 1024) {
+                      setSidebarOpen(false);
+                    }
+                  }}
+                  className="sm:hidden flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg p-2 transition-colors"
+                >
+                  <div className="w-8 h-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
+                    <CameraIcon className="w-5 h-5 text-white" />
+                  </div>
+                  <span className="text-lg font-bold text-gray-900 dark:text-white">
+                    Groupify
+                  </span>
+                </button>
               </div>
 
-              {/* Center - Logo for mobile */}
-              <div className="lg:hidden flex items-center gap-2">
-                <div className="w-8 h-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
-                  <CameraIcon className="w-5 h-5 text-white" />
-                </div>
-                <span className="text-lg font-bold text-gray-900 dark:text-white">
-                  Groupify
-                </span>
-              </div>
+              {/* Center - Logo for medium screens (640px to 1024px) */}
+              {(!sidebarOpen ||
+                window.innerWidth < 768 ||
+                window.innerWidth >= 1024) && (
+                <button
+                  onClick={() => {
+                    setActiveSection("trips");
+                    setCurrentView("home");
+                    if (window.innerWidth < 1024) {
+                      setSidebarOpen(false);
+                    }
+                  }}
+                  className="hidden sm:flex lg:hidden items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg p-2 transition-colors"
+                >
+                  <div className="w-8 h-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
+                    <CameraIcon className="w-5 h-5 text-white" />
+                  </div>
+                  <span className="text-lg font-bold text-gray-900 dark:text-white">
+                    Groupify
+                  </span>
+                </button>
+              )}
 
               {/* Right section - Theme toggle, Notifications and user menu */}
               <div className="flex items-center gap-4">
