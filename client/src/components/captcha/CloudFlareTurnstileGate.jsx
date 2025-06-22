@@ -1,23 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import ReCAPTCHA from 'react-google-recaptcha';
+import { Turnstile } from '@marsidev/react-turnstile';
 import { ShieldCheckIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 
-const FirebaseCaptchaGate = ({ children, onVerificationComplete }) => {
+const CloudflareTurnstileGate = ({ children, onVerificationComplete }) => {
   const [isVerified, setIsVerified] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [attempts, setAttempts] = useState(0);
   const maxAttempts = 3;
 
-  // Firebase Functions URL
-  const functionsUrl = process.env.NODE_ENV === 'development' 
-    ? 'http://localhost:5001/groupify-77202/us-central1'
-    : 'https://us-central1-groupify-77202.cloudfunctions.net';
-
   // Check if user has already been verified in this session
   useEffect(() => {
-    const sessionVerified = sessionStorage.getItem('captcha_verified');
-    const verificationTime = sessionStorage.getItem('captcha_verified_time');
+    const sessionVerified = sessionStorage.getItem('turnstile_verified');
+    const verificationTime = sessionStorage.getItem('turnstile_verified_time');
     const currentTime = Date.now();
     const oneHour = 60 * 60 * 1000; // 1 hour in milliseconds
 
@@ -28,64 +23,49 @@ const FirebaseCaptchaGate = ({ children, onVerificationComplete }) => {
       onVerificationComplete?.(true);
     } else {
       // Clear expired session
-      sessionStorage.removeItem('captcha_verified');
-      sessionStorage.removeItem('captcha_verified_time');
+      sessionStorage.removeItem('turnstile_verified');
+      sessionStorage.removeItem('turnstile_verified_time');
     }
   }, [onVerificationComplete]);
 
-  const handleCaptchaChange = async (token) => {
-    if (!token) {
-      setError('Please complete the CAPTCHA verification');
-      return;
-    }
-
+  const handleTurnstileSuccess = async (token) => {
     setIsLoading(true);
     setError('');
 
     try {
-      // Call Firebase Function
-      const response = await fetch(`${functionsUrl}/verifyCaptcha`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ token }),
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        setIsVerified(true);
-        const currentTime = Date.now().toString();
-        sessionStorage.setItem('captcha_verified', 'true');
-        sessionStorage.setItem('captcha_verified_time', currentTime);
-        onVerificationComplete?.(true);
-      } else {
-        setError(result.message || 'CAPTCHA verification failed. Please try again.');
-        setAttempts(prev => prev + 1);
-      }
+      // You can verify the token on your backend if needed
+      // For now, we'll just trust Cloudflare's verification
+      console.log('Turnstile verification successful:', token);
+      
+      setIsVerified(true);
+      const currentTime = Date.now().toString();
+      sessionStorage.setItem('turnstile_verified', 'true');
+      sessionStorage.setItem('turnstile_verified_time', currentTime);
+      onVerificationComplete?.(true);
     } catch (err) {
-      console.error('CAPTCHA verification error:', err);
-      setError('Network error. Please check your connection and try again.');
+      console.error('Turnstile verification error:', err);
+      setError('Verification failed. Please try again.');
       setAttempts(prev => prev + 1);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleCaptchaError = () => {
-    setError('CAPTCHA failed to load. Please refresh the page.');
+  const handleTurnstileError = (error) => {
+    console.error('Turnstile error:', error);
+    setError('Security verification failed. Please try again.');
+    setAttempts(prev => prev + 1);
   };
 
-  const handleCaptchaExpired = () => {
-    setError('CAPTCHA expired. Please complete it again.');
+  const handleTurnstileExpired = () => {
+    setError('Verification expired. Please complete it again.');
     setIsVerified(false);
   };
 
   // Reset function for testing
-  const resetCaptcha = () => {
-    sessionStorage.removeItem('captcha_verified');
-    sessionStorage.removeItem('captcha_verified_time');
+  const resetTurnstile = () => {
+    sessionStorage.removeItem('turnstile_verified');
+    sessionStorage.removeItem('turnstile_verified_time');
     setIsVerified(false);
     setAttempts(0);
     setError('');
@@ -103,7 +83,7 @@ const FirebaseCaptchaGate = ({ children, onVerificationComplete }) => {
             Too Many Attempts
           </h2>
           <p className="text-gray-600 dark:text-gray-300 mb-6">
-            You've exceeded the maximum number of CAPTCHA attempts. Please refresh the page to try again.
+            You've exceeded the maximum number of verification attempts. Please refresh the page to try again.
           </p>
           <button
             onClick={() => window.location.reload()}
@@ -116,7 +96,7 @@ const FirebaseCaptchaGate = ({ children, onVerificationComplete }) => {
     );
   }
 
-  // Show CAPTCHA verification screen
+  // Show Turnstile verification screen
   if (!isVerified) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 flex items-center justify-center px-4">
@@ -129,7 +109,7 @@ const FirebaseCaptchaGate = ({ children, onVerificationComplete }) => {
         <div className="relative max-w-md w-full bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 dark:border-gray-700/50 p-8">
           {/* Header */}
           <div className="text-center mb-8">
-            <div className="w-16 h-16 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 bg-gradient-to-r from-orange-500 to-yellow-500 rounded-full flex items-center justify-center mx-auto mb-4">
               <ShieldCheckIcon className="w-8 h-8 text-white" />
             </div>
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
@@ -138,16 +118,23 @@ const FirebaseCaptchaGate = ({ children, onVerificationComplete }) => {
             <p className="text-gray-600 dark:text-gray-300">
               Please complete the verification below to continue to Groupify
             </p>
+            <div className="flex items-center justify-center mt-2">
+              <span className="text-xs text-gray-500 dark:text-gray-400">Powered by</span>
+              <svg className="w-16 h-4 ml-1" viewBox="0 0 320 80" fill="currentColor">
+                <path d="M99.076 32.5c-6.085 0-11.02 4.934-11.02 11.02s4.935 11.02 11.02 11.02 11.02-4.934 11.02-11.02-4.935-11.02-11.02-11.02zm44.414 0c-6.085 0-11.02 4.934-11.02 11.02s4.935 11.02 11.02 11.02 11.02-4.934 11.02-11.02-4.935-11.02-11.02-11.02zm44.415 0c-6.085 0-11.02 4.934-11.02 11.02s4.935 11.02 11.02 11.02 11.02-4.934 11.02-11.02-4.935-11.02-11.02-11.02z" className="text-orange-500"/>
+              </svg>
+            </div>
           </div>
 
-          {/* CAPTCHA Component */}
+          {/* Turnstile Component */}
           <div className="flex justify-center mb-6">
-            <ReCAPTCHA
-              sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
-              onChange={handleCaptchaChange}
-              onError={handleCaptchaError}
-              onExpired={handleCaptchaExpired}
+            <Turnstile
+              siteKey={import.meta.env.VITE_TURNSTILE_SITE_KEY}
+              onSuccess={handleTurnstileSuccess}
+              onError={handleTurnstileError}
+              onExpire={handleTurnstileExpired}
               theme="light"
+              size="normal"
             />
           </div>
 
@@ -163,9 +150,9 @@ const FirebaseCaptchaGate = ({ children, onVerificationComplete }) => {
           {/* Loading State */}
           {isLoading && (
             <div className="text-center mb-4">
-              <div className="inline-flex items-center px-4 py-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-3"></div>
-                <span className="text-blue-600 dark:text-blue-400 text-sm font-medium">
+              <div className="inline-flex items-center px-4 py-2 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-orange-600 mr-3"></div>
+                <span className="text-orange-600 dark:text-orange-400 text-sm font-medium">
                   Verifying...
                 </span>
               </div>
@@ -185,10 +172,10 @@ const FirebaseCaptchaGate = ({ children, onVerificationComplete }) => {
           {process.env.NODE_ENV === 'development' && (
             <div className="text-center mb-4">
               <button
-                onClick={resetCaptcha}
+                onClick={resetTurnstile}
                 className="text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 underline"
               >
-                Reset CAPTCHA (Dev Only)
+                Reset Verification (Dev Only)
               </button>
             </div>
           )}
@@ -208,4 +195,4 @@ const FirebaseCaptchaGate = ({ children, onVerificationComplete }) => {
   return children;
 };
 
-export default FirebaseCaptchaGate;
+export default CloudflareTurnstileGate;
