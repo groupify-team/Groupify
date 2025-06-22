@@ -31,7 +31,7 @@ const SmartFaceScan = ({ isOpen, onClose, onProfileCreated, onBack }) => {
   const [success, setSuccess] = useState(false);
 
   // Mobile-specific states
-  const [showMobileGuide, setShowMobileGuide] = useState(true);
+  const [showMobileGuide, setShowMobileGuide] = useState(false);
   const [mobileGuideAutoOpened, setMobileGuideAutoOpened] = useState(false);
 
   // Refs
@@ -40,7 +40,9 @@ const SmartFaceScan = ({ isOpen, onClose, onProfileCreated, onBack }) => {
   const isCapturingRef = useRef(false);
 
   // Responsive breakpoint detection
-  const [isMobile, setIsMobile] = useState(false);
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== "undefined" ? window.innerWidth < 768 : false
+  );
 
   useEffect(() => {
     const checkMobile = () => {
@@ -509,6 +511,8 @@ const SmartFaceScan = ({ isOpen, onClose, onProfileCreated, onBack }) => {
               onContinue={handleContinueToNext}
               onRetake={handleRetakePhoto}
               onReset={resetCapture}
+              isCreating={isCreating}
+              progress={progress}
             />
           ) : (
             <DesktopCameraView
