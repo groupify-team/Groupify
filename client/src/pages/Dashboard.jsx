@@ -1017,15 +1017,32 @@ const Dashboard = () => {
   // Open User Profile Modal
   const [isUserProfileOpen, setIsUserProfileOpen] = useState(false);
   const [viewingFromAddFriend, setViewingFromAddFriend] = useState(false);
+  const [preservedSearchInput, setPreservedSearchInput] = useState("");
+  const [preservedFoundUser, setPreservedFoundUser] = useState(null);
 
   const handleOpenUserProfile = async (uid, fromAddFriend = false) => {
+    // Preserve search state if coming from AddFriend
+    if (fromAddFriend) {
+      const addFriendInput =
+        document.querySelector('input[type="email"]')?.value || "";
+      setPreservedSearchInput(addFriendInput);
+      // Find the current found user to preserve
+      const foundUserElement = document.querySelector("[data-found-user]");
+      if (foundUserElement) {
+        try {
+          const foundUserData = JSON.parse(foundUserElement.dataset.foundUser);
+          setPreservedFoundUser(foundUserData);
+        } catch (e) {
+          // If parsing fails, we'll just preserve the input
+        }
+      }
+    }
+
     try {
       const userDoc = await getDoc(doc(db, "users", uid));
       if (userDoc.exists()) {
         const userData = userDoc.data();
         setSelectedUserProfile({ uid, ...userData });
-        setViewingFromAddFriend(fromAddFriend);
-        setIsUserProfileOpen(true);
         setViewingFromAddFriend(fromAddFriend);
         setIsUserProfileOpen(true);
         setShowAddFriendModal(false);
@@ -2984,6 +3001,8 @@ const Dashboard = () => {
                   setTimeout(() => setShowError(null), 3000);
                 }
               }}
+              preservedInput={preservedSearchInput}
+              preservedUser={preservedFoundUser}
             />
           </div>
         </div>
@@ -3047,6 +3066,9 @@ const Dashboard = () => {
             setIsUserProfileOpen(false);
             setSelectedUserProfile(null);
             setViewingFromAddFriend(false);
+            // Clear preserved state when closing normally
+            setPreservedSearchInput("");
+            setPreservedFoundUser(null);
           }}
         />
       )}

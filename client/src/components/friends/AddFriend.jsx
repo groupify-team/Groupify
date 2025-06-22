@@ -11,12 +11,26 @@ import {
   EyeIcon,
 } from "@heroicons/react/24/outline";
 
-const AddFriend = ({ onUserSelect, onAddFriendDirect }) => {
+const AddFriend = ({
+  onUserSelect,
+  onAddFriendDirect,
+  preservedInput = "",
+  preservedUser = null,
+}) => {
   const { currentUser } = useAuth();
-  const [input, setInput] = useState("");
-  const [status, setStatus] = useState(null);
+  const [input, setInput] = useState(preservedInput);
+  const [status, setStatus] = useState(
+    preservedUser
+      ? {
+          type: "success",
+          message: `Found user: ${
+            preservedUser.displayName || preservedUser.email
+          }`,
+        }
+      : null
+  );
   const [loading, setLoading] = useState(false);
-  const [foundUser, setFoundUser] = useState(null);
+  const [foundUser, setFoundUser] = useState(preservedUser);
 
   const handleSearch = async () => {
     setLoading(true);
