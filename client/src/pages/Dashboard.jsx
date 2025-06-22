@@ -1,7 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 import FaceProfileModal from "../components/faceProfile/FaceProfileModal";
 import AddFriend from "../components/friends/AddFriend";
 import EditProfileModal from "../components/profile/EditProfileModal";
@@ -13,6 +11,7 @@ import TripDetailView from "../components/trips/TripDetailView";
 import { useAuth } from "../contexts/AuthContext";
 import { useTheme } from "../contexts/ThemeContext";
 import { UserIcon } from "@heroicons/react/24/outline";
+import { toast } from "react-hot-toast";
 
 // Icons
 import {
@@ -35,6 +34,7 @@ import {
   TrashIcon,
   UserCircleIcon,
   UserGroupIcon,
+  UserPlusIcon,
   XCircleIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
@@ -74,14 +74,14 @@ import {
   getFaceProfileFromStorage,
 } from "../services/firebase/faceProfiles";
 import {
-  createTrip, 
-  canUserCreateTrip, 
-  getUserTripCount, 
-  MAX_TRIPS_PER_USER, 
+  createTrip,
+  canUserCreateTrip,
+  getUserTripCount,
+  MAX_TRIPS_PER_USER,
   acceptTripInvite,
   declineTripInvite,
   getPendingInvites,
-  getUserTrips,                    
+  getUserTrips,
 } from "../services/firebase/trips";
 import {
   acceptFriendRequest,
@@ -139,7 +139,8 @@ const Dashboard = () => {
   const [tripInvitesExpanded, setTripInvitesExpanded] = useState(false);
   const [tripsActiveTab, setTripsActiveTab] = useState("trips"); // "trips" or "invitations"
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-
+  const [showSuccess, setShowSuccess] = useState(null);
+  const [showError, setShowError] = useState(null);
   // Delete account modal state
   const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
@@ -180,24 +181,24 @@ const Dashboard = () => {
       setSidebarOpen(false);
     }
   };
-  
+
   const handleBackToDashboard = async () => {
-  setCurrentView("home");
-  setSelectedTripId(null);
-  
-  // Refresh trips when going back to dashboard
-  try {
-    const updatedTrips = await getUserTrips(currentUser.uid);  // Use regular getUserTrips
-    setTrips(updatedTrips);
-  } catch (error) {
-    console.error("Error refreshing trips:", error);
-  }
-  
-  // Close sidebar on mobile when going back
-  if (window.innerWidth < 1024) {
-    setSidebarOpen(false);
-  }
-};
+    setCurrentView("home");
+    setSelectedTripId(null);
+
+    // Refresh trips when going back to dashboard
+    try {
+      const updatedTrips = await getUserTrips(currentUser.uid); // Use regular getUserTrips
+      setTrips(updatedTrips);
+    } catch (error) {
+      console.error("Error refreshing trips:", error);
+    }
+
+    // Close sidebar on mobile when going back
+    if (window.innerWidth < 1024) {
+      setSidebarOpen(false);
+    }
+  };
 
   // NEW: Handle trips dropdown
   const toggleTripsDropdown = () => {
@@ -261,15 +262,16 @@ const Dashboard = () => {
   // Delete account state
   const handleDeleteAccount = async () => {
     if (deleteConfirmText !== "DELETE") {
-      toast.error("Please type 'DELETE' to confirm");
+      setShowError("Please type 'DELETE' to confirm");
+      setTimeout(() => setShowError(null), 3000);
       return;
     }
 
     setIsDeleting(true);
 
     try {
-      toast.info("Deleting account... This may take a moment.");
-
+      setShowSuccess("Deleting account... This may take a moment.");
+      setTimeout(() => setShowSuccess(null), 5000);
       const batch = writeBatch(db);
       const userId = currentUser.uid;
 
@@ -731,132 +733,138 @@ const Dashboard = () => {
     );
   };
 
-  
-
-
   // Load initial data
   useEffect(() => {
     if (!currentUser?.uid) return;
 
     const loadDashboardData = async () => {
-  try {
-    setLoading(true);
-    console.log("🔄 Loading dashboard data for user:", currentUser.uid);
-    
-    // Load data in parallel but use different approach for trips
-    const [userProfile, userFriends, friendRequests, invites] = await Promise.all([
-      getUserProfile(currentUser.uid),
-      getFriends(currentUser.uid),
-      getPendingFriendRequests(currentUser.uid),
-      getPendingInvites(currentUser.uid),
-    ]);
+      try {
+        setLoading(true);
+        console.log("🔄 Loading dashboard data for user:", currentUser.uid);
 
-    console.log("👤 User profile:", userProfile);
-    console.log("👥 Friends:", userFriends);
-    console.log("📬 Friend requests:", friendRequests);
-    console.log("🎫 Trip invites:", invites);
+        // Load data in parallel but use different approach for trips
+        const [userProfile, userFriends, friendRequests, invites] =
+          await Promise.all([
+            getUserProfile(currentUser.uid),
+            getFriends(currentUser.uid),
+            getPendingFriendRequests(currentUser.uid),
+            getPendingInvites(currentUser.uid),
+          ]);
 
-    // Load trips with fallback approach
-    console.log("📋 Loading trips...");
-    let userTrips = [];
-    
-    try {
-      // First try the regular getUserTrips function
-      userTrips = await getUserTrips(currentUser.uid);
-      console.log("📋 getUserTrips result:", userTrips);
-      
-      // If no trips found, try alternative approach
-      if (userTrips.length === 0) {
-        console.log("🔍 No trips from getUserTrips, trying direct queries...");
-        
-        // Import Firebase functions directly
-        const { collection, query, where, getDocs } = await import('firebase/firestore');
-        const { db } = await import('../services/firebase/config');
-        
-        console.log("🔍 Querying trips where user is creator...");
-        const createdTripsQuery = query(
-          collection(db, "trips"),
-          where("createdBy", "==", currentUser.uid)
-        );
-        
-        console.log("🔍 Querying trips where user is member...");
-        const memberTripsQuery = query(
-          collection(db, "trips"),
-          where("members", "array-contains", currentUser.uid)
-        );
-        
-        const [createdSnapshot, memberSnapshot] = await Promise.all([
-          getDocs(createdTripsQuery),
-          getDocs(memberTripsQuery)
-        ]);
-        
-        console.log("📋 Created trips found:", createdSnapshot.size);
-        console.log("📋 Member trips found:", memberSnapshot.size);
-        
-        const foundTripIds = new Set();
-        const foundTrips = [];
-        
-        createdSnapshot.forEach(doc => {
-          const trip = { id: doc.id, ...doc.data() };
-          foundTrips.push(trip);
-          foundTripIds.add(doc.id);
-          console.log("📋 Found created trip:", doc.id, trip.name);
-        });
-        
-        memberSnapshot.forEach(doc => {
-          if (!foundTripIds.has(doc.id)) {
-            const trip = { id: doc.id, ...doc.data() };
-            foundTrips.push(trip);
-            foundTripIds.add(doc.id);
-            console.log("📋 Found member trip:", doc.id, trip.name);
-          }
-        });
-        
-        userTrips = foundTrips;
-        
-        // Update user's trips array if we found trips
-        if (foundTripIds.size > 0) {
-          console.log("🔄 Updating user's trips array...");
-          const { doc, updateDoc } = await import('firebase/firestore');
-          
-          try {
-            const userRef = doc(db, "users", currentUser.uid);
-            await updateDoc(userRef, {
-              trips: Array.from(foundTripIds),
-              updatedAt: new Date().toISOString()
+        console.log("👤 User profile:", userProfile);
+        console.log("👥 Friends:", userFriends);
+        console.log("📬 Friend requests:", friendRequests);
+        console.log("🎫 Trip invites:", invites);
+
+        // Load trips with fallback approach
+        console.log("📋 Loading trips...");
+        let userTrips = [];
+
+        try {
+          // First try the regular getUserTrips function
+          userTrips = await getUserTrips(currentUser.uid);
+          console.log("📋 getUserTrips result:", userTrips);
+
+          // If no trips found, try alternative approach
+          if (userTrips.length === 0) {
+            console.log(
+              "🔍 No trips from getUserTrips, trying direct queries..."
+            );
+
+            // Import Firebase functions directly
+            const { collection, query, where, getDocs } = await import(
+              "firebase/firestore"
+            );
+            const { db } = await import("../services/firebase/config");
+
+            console.log("🔍 Querying trips where user is creator...");
+            const createdTripsQuery = query(
+              collection(db, "trips"),
+              where("createdBy", "==", currentUser.uid)
+            );
+
+            console.log("🔍 Querying trips where user is member...");
+            const memberTripsQuery = query(
+              collection(db, "trips"),
+              where("members", "array-contains", currentUser.uid)
+            );
+
+            const [createdSnapshot, memberSnapshot] = await Promise.all([
+              getDocs(createdTripsQuery),
+              getDocs(memberTripsQuery),
+            ]);
+
+            console.log("📋 Created trips found:", createdSnapshot.size);
+            console.log("📋 Member trips found:", memberSnapshot.size);
+
+            const foundTripIds = new Set();
+            const foundTrips = [];
+
+            createdSnapshot.forEach((doc) => {
+              const trip = { id: doc.id, ...doc.data() };
+              foundTrips.push(trip);
+              foundTripIds.add(doc.id);
+              console.log("📋 Found created trip:", doc.id, trip.name);
             });
-            console.log("✅ User trips array updated successfully!");
-          } catch (updateError) {
-            console.warn("⚠️ Could not update user trips array:", updateError);
+
+            memberSnapshot.forEach((doc) => {
+              if (!foundTripIds.has(doc.id)) {
+                const trip = { id: doc.id, ...doc.data() };
+                foundTrips.push(trip);
+                foundTripIds.add(doc.id);
+                console.log("📋 Found member trip:", doc.id, trip.name);
+              }
+            });
+
+            userTrips = foundTrips;
+
+            // Update user's trips array if we found trips
+            if (foundTripIds.size > 0) {
+              console.log("🔄 Updating user's trips array...");
+              const { doc, updateDoc } = await import("firebase/firestore");
+
+              try {
+                const userRef = doc(db, "users", currentUser.uid);
+                await updateDoc(userRef, {
+                  trips: Array.from(foundTripIds),
+                  updatedAt: new Date().toISOString(),
+                });
+                console.log("✅ User trips array updated successfully!");
+              } catch (updateError) {
+                console.warn(
+                  "⚠️ Could not update user trips array:",
+                  updateError
+                );
+              }
+            }
           }
+        } catch (tripsError) {
+          console.error("❌ Error loading trips:", tripsError);
+          userTrips = []; // Fallback to empty array
         }
+
+        console.log("📋 Final trips result:", userTrips);
+
+        setTrips(userTrips);
+        setUserData(userProfile);
+        setFriends(userFriends);
+        setPendingRequests(friendRequests);
+        setTripInvites(invites);
+
+        // Load face profile
+        if (hasFaceProfile(currentUser.uid)) {
+          setHasProfile(true);
+          setProfilePhotos(getProfilePhotos(currentUser.uid));
+        }
+      } catch (error) {
+        console.error("❌ Error loading dashboard data:", error);
+        setError("Failed to load dashboard data");
+        setShowError("Failed to load dashboard data");
+        setTimeout(() => setShowError(null), 4000);
+      } finally {
+        setLoading(false);
       }
-    } catch (tripsError) {
-      console.error("❌ Error loading trips:", tripsError);
-      userTrips = []; // Fallback to empty array
-    }
-    
-    console.log("📋 Final trips result:", userTrips);
-
-    setTrips(userTrips);
-    setUserData(userProfile);
-    setFriends(userFriends);
-    setPendingRequests(friendRequests);
-    setTripInvites(invites);
-
-    // Load face profile
-    if (hasFaceProfile(currentUser.uid)) {
-      setHasProfile(true);
-      setProfilePhotos(getProfilePhotos(currentUser.uid));
-    }
-  } catch (error) {
-    console.error("❌ Error loading dashboard data:", error);
-    setError("Failed to load dashboard data");
-    toast.error("Failed to load dashboard data");
-  } finally {
-    setLoading(false);
-  }
-};
+    };
 
     // --- Live Friends Listener ---
     let unsubscribeFriends = () => {};
@@ -991,7 +999,8 @@ const Dashboard = () => {
       navigate("/");
     } catch (error) {
       console.error("Failed to log out:", error);
-      toast.error("Failed to log out");
+      setShowError("Failed to log out");
+      setTimeout(() => setShowError(null), 3000);
     }
   };
 
@@ -1000,19 +1009,24 @@ const Dashboard = () => {
     if (loaded) {
       setShowProfileManager(false);
       setProfilePhotos(getProfilePhotos(currentUser.uid));
-      toast.success("Face profile created successfully!");
+      setShowSuccess("Face profile created successfully!");
+      setTimeout(() => setShowSuccess(null), 4000);
     }
   };
 
   // Open User Profile Modal
   const [isUserProfileOpen, setIsUserProfileOpen] = useState(false);
+  const [viewingFromAddFriend, setViewingFromAddFriend] = useState(false);
 
-  const handleOpenUserProfile = async (uid) => {
+  const handleOpenUserProfile = async (uid, fromAddFriend = false) => {
     try {
       const userDoc = await getDoc(doc(db, "users", uid));
       if (userDoc.exists()) {
         const userData = userDoc.data();
         setSelectedUserProfile({ uid, ...userData });
+        setViewingFromAddFriend(fromAddFriend);
+        setIsUserProfileOpen(true);
+        setViewingFromAddFriend(fromAddFriend);
         setIsUserProfileOpen(true);
         setShowAddFriendModal(false);
       }
@@ -1027,10 +1041,12 @@ const Dashboard = () => {
       setPendingRequests((prev) => prev.filter((req) => req.from !== fromUid));
       const updatedFriends = await getFriends(currentUser.uid);
       setFriends(updatedFriends);
-      toast.success("Friend request accepted");
+      setShowSuccess("Friend request accepted");
+      setTimeout(() => setShowSuccess(null), 3000);
     } catch (error) {
       console.error("Error accepting friend request:", error);
-      toast.error("Failed to accept friend request");
+      setShowError("Failed to accept friend request");
+      setTimeout(() => setShowError(null), 4000);
     }
   };
 
@@ -1039,10 +1055,12 @@ const Dashboard = () => {
       await rejectFriendRequest(currentUser.uid, senderUid);
       const updatedPending = await getPendingFriendRequests(currentUser.uid);
       setPendingRequests(updatedPending);
-      toast.success("Friend request declined");
+      setShowSuccess("Friend request declined");
+      setTimeout(() => setShowSuccess(null), 3000);
     } catch (error) {
       console.error("Error rejecting friend request:", error);
-      toast.error("Failed to decline friend request");
+      setShowError("Failed to decline friend request");
+      setTimeout(() => setShowError(null), 4000);
     }
   };
 
@@ -1086,7 +1104,8 @@ const Dashboard = () => {
               setTripInvites((prev) => prev.filter((i) => i.id !== invite.id));
               const refreshedTrips = await getUserTrips(currentUser.uid);
               setTrips(refreshedTrips);
-              toast.success("Trip invitation accepted");
+              setShowSuccess("Trip invitation accepted");
+              setTimeout(() => setShowSuccess(null), 3000);
             },
             type: "accept",
           },
@@ -1095,7 +1114,8 @@ const Dashboard = () => {
             action: async () => {
               await declineTripInvite(invite.id);
               setTripInvites((prev) => prev.filter((i) => i.id !== invite.id));
-              toast.success("Trip invitation declined");
+              setShowSuccess("Trip invitation declined");
+              setTimeout(() => setShowSuccess(null), 3000);
             },
             type: "decline",
           },
@@ -1181,24 +1201,31 @@ const Dashboard = () => {
         </div>
         {/* Create Trip button - only show when on trips tab */}
         {tripsActiveTab === "trips" && (
-        <button
-          onClick={async () => {
-            // Check trip limit before opening modal
-            const canCreate = await canUserCreateTrip(currentUser.uid);
-            if (!canCreate) {
-              const currentCount = await getUserTripCount(currentUser.uid);
-              toast.error(`Trip limit reached! You can only create ${MAX_TRIPS_PER_USER} trips. You currently have ${currentCount} trips. Delete a trip to create a new one.`);
-              return;
-            }
-            setShowCreateTripModal(true);
-          }}
-          className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-3 sm:px-6 py-2 sm:py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center gap-1 sm:gap-2 text-sm sm:text-base whitespace-nowrap flex-shrink-0"
-        >
-          <PlusIcon className="w-4 h-4 sm:w-5 sm:h-5" />
-          <span className="hidden sm:inline">Create Trip ({trips.length}/{MAX_TRIPS_PER_USER})</span>
-          <span className="sm:hidden">Create ({trips.length}/{MAX_TRIPS_PER_USER})</span>
-        </button>
-      )}
+          <button
+            onClick={async () => {
+              // Check trip limit before opening modal
+              const canCreate = await canUserCreateTrip(currentUser.uid);
+              if (!canCreate) {
+                const currentCount = await getUserTripCount(currentUser.uid);
+                setShowError(
+                  `Trip limit reached! You can only create ${MAX_TRIPS_PER_USER} trips. You currently have ${currentCount} trips.`
+                );
+                setTimeout(() => setShowError(null), 6000);
+                return;
+              }
+              setShowCreateTripModal(true);
+            }}
+            className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-3 sm:px-6 py-2 sm:py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center gap-1 sm:gap-2 text-sm sm:text-base whitespace-nowrap flex-shrink-0"
+          >
+            <PlusIcon className="w-4 h-4 sm:w-5 sm:h-5" />
+            <span className="hidden sm:inline">
+              Create Trip ({trips.length}/{MAX_TRIPS_PER_USER})
+            </span>
+            <span className="sm:hidden">
+              Create ({trips.length}/{MAX_TRIPS_PER_USER})
+            </span>
+          </button>
+        )}
       </div>
 
       {/* Mobile Tab Switcher */}
@@ -1435,7 +1462,8 @@ const Dashboard = () => {
                               currentUser.uid
                             );
                             setTrips(refreshedTrips);
-                            toast.success("Trip invitation accepted");
+                            setShowSuccess("Trip invitation accepted");
+                            setTimeout(() => setShowSuccess(null), 3000);
                           }}
                           className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-1"
                         >
@@ -1448,7 +1476,8 @@ const Dashboard = () => {
                             setTripInvites((prev) =>
                               prev.filter((i) => i.id !== invite.id)
                             );
-                            toast.success("Trip invitation declined");
+                            setShowSuccess("Trip invitation declined");
+                            setTimeout(() => setShowSuccess(null), 3000);
                           }}
                           className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-1"
                         >
@@ -1486,21 +1515,28 @@ const Dashboard = () => {
                     : "Create your first trip to get started"}
                 </p>
                 {!searchTerm && dateFilter === "all" && (
-                <button
-                  onClick={async () => {
-                    const canCreate = await canUserCreateTrip(currentUser.uid);
-                    if (!canCreate) {
-                      const currentCount = await getUserTripCount(currentUser.uid);
-                      toast.error(`Trip limit reached! You can only create ${MAX_TRIPS_PER_USER} trips. You currently have ${currentCount} trips.`);
-                      return;
-                    }
-                    setShowCreateTripModal(true);
-                  }}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-semibold transition-colors"
-                >
-                  Create Your First Trip
-                </button>
-              )}
+                  <button
+                    onClick={async () => {
+                      const canCreate = await canUserCreateTrip(
+                        currentUser.uid
+                      );
+                      if (!canCreate) {
+                        const currentCount = await getUserTripCount(
+                          currentUser.uid
+                        );
+                        setShowError(
+                          `Trip limit reached! You can only create ${MAX_TRIPS_PER_USER} trips. You currently have ${currentCount} trips.`
+                        );
+                        setTimeout(() => setShowError(null), 6000);
+                        return;
+                      }
+                      setShowCreateTripModal(true);
+                    }}
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-semibold transition-colors"
+                  >
+                    Create Your First Trip
+                  </button>
+                )}
               </div>
             ) : (
               filteredTrips.map((trip) => (
@@ -1552,7 +1588,8 @@ const Dashboard = () => {
                           currentUser.uid
                         );
                         setTrips(refreshedTrips);
-                        toast.success("Trip invitation accepted");
+                        setShowSuccess("Trip invitation accepted");
+                        setTimeout(() => setShowSuccess(null), 3000);
                       }}
                       className="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
                     >
@@ -1565,7 +1602,8 @@ const Dashboard = () => {
                         setTripInvites((prev) =>
                           prev.filter((i) => i.id !== invite.id)
                         );
-                        toast.success("Trip invitation declined");
+                        setShowSuccess("Trip invitation declined");
+                        setTimeout(() => setShowSuccess(null), 3000);
                       }}
                       className="flex-1 bg-red-600 hover:bg-red-700 text-white py-3 px-4 rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
                     >
@@ -2889,30 +2927,43 @@ const Dashboard = () => {
 
       {/* Modals */}
       <CreateTripModal
-      isOpen={showCreateTripModal}
-      onClose={() => setShowCreateTripModal(false)}
-      onTripCreated={async (newTrip) => {
-        // Check if user can still create more trips
-        const canCreate = await canUserCreateTrip(currentUser.uid);
-        if (!canCreate) {
-          const currentCount = await getUserTripCount(currentUser.uid);
-          toast.error(`Trip limit reached! You can only create ${MAX_TRIPS_PER_USER} trips. You currently have ${currentCount} trips.`);
-          return;
-        }
+        isOpen={showCreateTripModal}
+        onClose={() => setShowCreateTripModal(false)}
+        onTripCreated={async (newTrip) => {
+          // Check if user can still create more trips
+          const canCreate = await canUserCreateTrip(currentUser.uid);
+          if (!canCreate) {
+            const currentCount = await getUserTripCount(currentUser.uid);
+            setShowError(
+              `Trip limit reached! You can only create ${MAX_TRIPS_PER_USER} trips. You currently have ${currentCount} trips.`
+            );
+            setTimeout(() => setShowError(null), 6000);
+            return;
+          }
 
-        setTrips((prev) => [newTrip, ...prev]);
-        setShowCreateTripModal(false);
-        toast.success("Trip created successfully!");
-      }}
-    />
+          setTrips((prev) => [newTrip, ...prev]);
+          setShowCreateTripModal(false);
+          toast.success("Trip created successfully!");
+        }}
+      />
 
       {showAddFriendModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg rounded-2xl shadow-xl w-full max-w-md p-6 border border-white/20 dark:border-gray-700/50">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold text-gray-800 dark:text-white">
-                Add Friend
-              </h2>
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center shadow-lg">
+                  <UserPlusIcon className="w-4 h-4 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-gray-800 dark:text-white">
+                    Add Friend
+                  </h2>
+                  <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                    Search by email address
+                  </p>
+                </div>
+              </div>
               <button
                 onClick={() => setShowAddFriendModal(false)}
                 className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
@@ -2920,7 +2971,20 @@ const Dashboard = () => {
                 <XCircleIcon className="w-6 h-6" />
               </button>
             </div>
-            <AddFriend onUserSelect={handleOpenUserProfile} />
+            <AddFriend
+              onUserSelect={(uid) => handleOpenUserProfile(uid, true)}
+              onAddFriendDirect={async (friendUid) => {
+                try {
+                  await sendFriendRequest(currentUser.uid, friendUid);
+                  setShowSuccess("Friend request sent successfully!");
+                  setTimeout(() => setShowSuccess(null), 3000);
+                } catch (error) {
+                  console.error("Error sending friend request:", error);
+                  setShowError("Failed to send friend request");
+                  setTimeout(() => setShowError(null), 3000);
+                }
+              }}
+            />
           </div>
         </div>
       )}
@@ -2950,10 +3014,16 @@ const Dashboard = () => {
             pendingFriendRequests.some((r) => r.to === selectedUserProfile.uid)
           }
           onlyTripMembers={false}
+          showBackButton={viewingFromAddFriend}
+          onBack={() => {
+            setSelectedUserProfile(null);
+            setViewingFromAddFriend(false);
+            setShowAddFriendModal(true);
+          }}
           onAddFriend={async (uid) => {
             await sendFriendRequest(currentUser.uid, uid);
-            toast.success("Friend request sent");
-
+            setShowSuccess("Friend request sent");
+            setTimeout(() => setShowSuccess(null), 3000);
             setPendingFriendRequests((prev) => [
               ...prev,
               { from: currentUser.uid, to: uid },
@@ -2964,16 +3034,19 @@ const Dashboard = () => {
             setPendingFriendRequests((prev) =>
               prev.filter((r) => r.to !== uid && r.from !== uid)
             );
-            toast.info("Friend request cancelled");
+            setShowSuccess("Friend request cancelled");
+            setTimeout(() => setShowSuccess(null), 3000);
           }}
           onRemoveFriend={async (uid) => {
             await removeFriend(currentUser.uid, uid);
             setFriends((prev) => prev.filter((f) => f.uid !== uid));
-            toast.success("Friend removed");
+            setShowSuccess("Friend removed");
+            setTimeout(() => setShowSuccess(null), 3000);
           }}
           onClose={() => {
             setIsUserProfileOpen(false);
             setSelectedUserProfile(null);
+            setViewingFromAddFriend(false);
           }}
         />
       )}
@@ -3322,17 +3395,32 @@ const Dashboard = () => {
         </div>
       )}
 
-      <ToastContainer
-        position="bottom-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-      />
+      {/* Responsive Custom Success/Error Messages */}
+      {showSuccess && (
+        <div className="fixed top-4 inset-x-0 flex justify-center z-50 px-4 sm:top-8 sm:inset-x-auto sm:right-8 sm:justify-start">
+          <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-4 py-3 sm:px-6 sm:py-4 rounded-xl shadow-2xl animate-bounce backdrop-blur-lg border border-green-400/30 max-w-[90vw] sm:max-w-sm">
+            <div className="flex items-center justify-center gap-2 sm:gap-3">
+              <CheckCircleIcon className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+              <span className="font-medium text-sm sm:text-sm md:text-base whitespace-nowrap overflow-hidden text-ellipsis">
+                {showSuccess}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showError && (
+        <div className="fixed top-4 inset-x-0 flex justify-center z-50 px-4 sm:top-8 sm:inset-x-auto sm:right-8 sm:justify-start">
+          <div className="bg-gradient-to-r from-red-500 to-red-600 text-white px-4 py-3 sm:px-6 sm:py-4 rounded-xl shadow-2xl animate-bounce backdrop-blur-lg border border-red-400/30 max-w-[90vw] sm:max-w-sm">
+            <div className="flex items-center justify-center gap-2 sm:gap-3">
+              <ExclamationTriangleIcon className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+              <span className="font-medium text-sm sm:text-sm md:text-base whitespace-nowrap overflow-hidden text-ellipsis">
+                {showError}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

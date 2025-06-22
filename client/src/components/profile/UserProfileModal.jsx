@@ -16,6 +16,7 @@ import {
   Sparkles,
   Calendar,
   Heart,
+  ArrowLeft,
 } from "lucide-react";
 
 // Mock functions for demo purposes
@@ -46,6 +47,8 @@ const UserProfileModal = ({
   tripMembers,
   setTripMembers,
   onlyTripMembers = true,
+  showBackButton = false,
+  onBack,
 }) => {
   if (!user) return null;
   if (onlyTripMembers && !tripMembers?.some((m) => m.uid === user.uid))
@@ -166,13 +169,23 @@ const UserProfileModal = ({
 
         {/* Content - ORIGINAL PADDING */}
         <div className="relative p-8">
-          {/* Close Button - ORIGINAL SIZE */}
-          <button
-            onClick={handleClose}
-            className="absolute top-4 right-4 p-2 rounded-full bg-white/20 hover:bg-white/30 dark:bg-gray-800/30 dark:hover:bg-gray-700/50 transition-all duration-200 group backdrop-blur-sm"
-          >
-            <X className="w-5 h-5 text-gray-600 group-hover:text-gray-800 dark:text-gray-400 dark:group-hover:text-gray-200 transition-colors" />
-          </button>
+          {/* Header with Back Button and Close Button */}
+          <div className="absolute top-4 left-4 right-4 flex justify-between items-center">
+            {showBackButton && (
+              <button
+                onClick={onBack}
+                className="p-2 rounded-full bg-white/20 hover:bg-white/30 dark:bg-gray-800/30 dark:hover:bg-gray-700/50 transition-all duration-200 group backdrop-blur-sm"
+              >
+                <ArrowLeft className="w-5 h-5 text-gray-600 group-hover:text-gray-800 dark:text-gray-400 dark:group-hover:text-gray-200 transition-colors" />
+              </button>
+            )}
+            <button
+              onClick={handleClose}
+              className="p-2 rounded-full bg-white/20 hover:bg-white/30 dark:bg-gray-800/30 dark:hover:bg-gray-700/50 transition-all duration-200 group backdrop-blur-sm ml-auto"
+            >
+              <X className="w-5 h-5 text-gray-600 group-hover:text-gray-800 dark:text-gray-400 dark:group-hover:text-gray-200 transition-colors" />
+            </button>
+          </div>
 
           {/* Admin Menu - ORIGINAL SIZE */}
           {isAdmin && user.uid !== currentUserId && (
