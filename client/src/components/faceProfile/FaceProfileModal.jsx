@@ -186,14 +186,17 @@ const FaceProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4">
-      <div className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl rounded-2xl shadow-2xl w-full max-w-lg mx-auto border border-white/20 dark:border-gray-700/50 overflow-hidden">
+      <div className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl rounded-2xl shadow-2xl w-full max-w-3xl lg:max-w-[95vw] xl:max-w-[90vw] mx-auto min-h-[85vh] sm:min-h-[80vh] lg:min-h-[75vh] border border-white/20 dark:border-gray-700/50 overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200/50 dark:border-gray-700/50">
-          <div className="flex items-center gap-3">
+          <div className="w-6"></div> {/* Smaller spacer */}
+          <div className="flex items-center gap-3 -ml-4">
+            {" "}
+            {/* Added negative margin to shift left */}
             <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
               <SparklesIcon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
             </div>
-            <div>
+            <div className="text-center">
               <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
                 Face Profile Setup
               </h2>
@@ -276,7 +279,7 @@ const FaceProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
               </div>
 
               {/* Method Selection Cards */}
-              <div className="space-y-4">
+              <div className="space-y-4 md:space-y-0 md:grid md:grid-cols-2 md:gap-6">
                 {/* Smart Face Scan Option */}
                 <div
                   onClick={() => setSetupMethod("guided")}
@@ -285,14 +288,14 @@ const FaceProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
                   <div className="absolute -inset-1 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-2xl blur opacity-20 group-hover:opacity-30 transition duration-300"></div>
                   <div className="relative bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg rounded-xl p-5 sm:p-6 border border-indigo-200 dark:border-indigo-800 group-hover:border-indigo-300 dark:group-hover:border-indigo-700 transition-all duration-300 group-hover:scale-[1.02]">
                     {/* Best Accuracy Badge */}
-                    <div className="absolute top-4 right-4">
-                      <span className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
+                    <div className="absolute top-1 right-3 sm:top-2 sm:right-4 lg:top-3 lg:right-5 z-10">
+                      <span className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold px-2 py-1 sm:px-3 sm:py-1 md:px-2 md:py-0.5 lg:px-3 lg:py-1 xl:px-4 xl:py-1.5 rounded-full shadow-lg text-xs sm:text-xs md:text-[10px] lg:text-xs xl:text-sm">
                         ✨ BEST ACCURACY
                       </span>
                     </div>
 
                     {/* Icon */}
-                    <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg group-hover:scale-105 transition-transform">
+                    <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg group-hover:scale-105 transition-transform mt-8">
                       <CameraIcon className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
                     </div>
 
@@ -336,11 +339,11 @@ const FaceProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
                 {/* Manual Upload Option */}
                 <div
                   onClick={() => setSetupMethod("upload")}
-                  className="cursor-pointer group"
+                  className="cursor-pointer group h-full"
                 >
-                  <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-xl p-5 sm:p-6 border border-gray-200 dark:border-gray-700 group-hover:border-gray-300 dark:group-hover:border-gray-600 transition-all duration-300 group-hover:scale-[1.02]">
+                  <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-xl p-5 sm:p-6 border border-gray-200 dark:border-gray-700 group-hover:border-gray-300 dark:group-hover:border-gray-600 transition-all duration-300 group-hover:scale-[1.02] h-full flex flex-col">
                     {/* Icon */}
-                    <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-r from-gray-500 to-gray-600 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg group-hover:scale-105 transition-transform">
+                    <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-r from-gray-500 to-gray-600 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg group-hover:scale-105 transition-transform mt-8">
                       <PhotoIcon className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
                     </div>
 

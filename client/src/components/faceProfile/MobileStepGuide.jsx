@@ -121,8 +121,8 @@ const MobileStepGuide = ({
       >
         <div className="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
 
-        <div className="absolute inset-x-4 top-4 pointer-events-auto">
-          <div className="bg-blue-50/95 dark:bg-blue-900/95 backdrop-blur-xl rounded-2xl p-4 border border-blue-200/50 dark:border-blue-800/50 shadow-2xl">
+        <div className="absolute inset-3 sm:inset-4 md:inset-5 pointer-events-auto overflow-hidden">
+          <div className="bg-blue-50/95 dark:bg-blue-900/95 backdrop-blur-xl rounded-2xl p-3 border border-blue-200/50 dark:border-blue-800/50 shadow-2xl h-full overflow-y-auto">
             {/* Header */}
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
@@ -142,12 +142,12 @@ const MobileStepGuide = ({
             </div>
 
             {/* 3D Avatar Guide */}
-            <div className="flex items-start gap-4 mb-4">
+            <div className="flex items-start gap-3 mb-3">
               <div className="flex-shrink-0 scale-75">
                 <Modern3DHead step={currentStep} captureSteps={captureSteps} />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-blue-800 dark:text-blue-200 text-sm mb-3 leading-relaxed">
+                <p className="text-blue-800 dark:text-blue-200 text-xs mb-2 leading-relaxed">
                   {currentStepData.mobileGuideText}
                 </p>
                 <div className="bg-blue-100/80 dark:bg-blue-800/30 border border-blue-200/50 dark:border-blue-700/50 rounded-lg p-3">
@@ -268,9 +268,8 @@ const MobileStepGuide = ({
     <div className="flex flex-col h-full relative">
       {/* Initial Welcome Guide */}
       {showInitialGuide && <InitialGuide />}
-
       {/* Dynamic Progress Bar */}
-      <div className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-lg border-b border-gray-200/50 dark:border-gray-700/50 p-4">
+      <div className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-lg border-b border-gray-200/50 dark:border-gray-700/50 p-3 pt-2">
         <div className="flex items-center justify-between mb-3">
           <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">
             Step {currentStep + 1} of {totalSteps}
@@ -291,175 +290,120 @@ const MobileStepGuide = ({
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer"></div>
             </div>
           </div>
-
-          {/* Step Indicators */}
-          <div className="absolute -top-1 left-0 right-0 flex justify-between">
-            {captureSteps.map((step, index) => {
-              const isCompleted = capturedPhotos.some(
-                (photo) => photo.stepIndex === index
-              );
-              const isCurrent = index === currentStep;
-              const isNext = index === currentStep + 1;
-
-              return (
-                <div key={index} className="flex flex-col items-center">
-                  <div
-                    className={`w-5 h-5 rounded-full border-2 transition-all duration-500 ${
-                      isCompleted
-                        ? "bg-green-500 border-green-500 shadow-lg shadow-green-500/30"
-                        : isCurrent
-                        ? `bg-gradient-to-r ${step.color} border-white shadow-lg animate-pulse`
-                        : isNext
-                        ? "bg-white border-blue-400 shadow-md"
-                        : "bg-gray-300 dark:bg-gray-600 border-gray-300 dark:border-gray-600"
-                    } flex items-center justify-center`}
-                  >
-                    {isCompleted && (
-                      <CheckCircleIcon className="w-3 h-3 text-white" />
-                    )}
-                    {isCurrent && (
-                      <div className="w-2 h-2 bg-white rounded-full animate-ping"></div>
-                    )}
-                  </div>
-                  <div
-                    className={`text-xs mt-1 font-medium ${
-                      isCompleted
-                        ? "text-green-600 dark:text-green-400"
-                        : isCurrent
-                        ? "text-gray-800 dark:text-white"
-                        : "text-gray-400 dark:text-gray-500"
-                    }`}
-                  >
-                    {step.icon}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
         </div>
       </div>
-
       {/* Camera Section */}
-      <div className="flex-1 relative bg-black">
-        {/* Video Stream */}
-        <video
-          ref={videoRef}
-          autoPlay
-          playsInline
-          muted
-          className="w-full h-full object-cover"
-        />
+      <div className="flex-1 p-4 pb-20">
+        <div className="relative bg-black rounded-2xl overflow-hidden h-full shadow-2xl">
+          {/* Video Stream */}
+          <video
+            ref={videoRef}
+            autoPlay
+            playsInline
+            muted
+            className="w-full h-full object-cover"
+          />
 
-        {/* Info Button (Top Left) */}
-        <button
-          onClick={toggleMobileGuide}
-          className="absolute top-4 left-4 z-30 w-10 h-10 bg-blue-600/90 hover:bg-blue-700/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg border-2 border-white/20 transition-all duration-300"
-        >
-          <InformationCircleIcon className="w-5 h-5 text-white" />
-        </button>
-
-        {/* Current Step Badge (Top Right) */}
-        <div className="absolute top-4 right-4 z-30">
-          <div
-            className={`bg-gradient-to-r ${currentStepData.color} px-3 py-1.5 rounded-full text-white text-sm font-medium shadow-lg backdrop-blur-sm bg-opacity-90 flex items-center gap-2`}
+          {/* Info Button (Top Left) */}
+          <button
+            onClick={toggleMobileGuide}
+            className="absolute top-4 left-4 z-30 w-10 h-10 bg-blue-600/90 hover:bg-blue-700/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg border-2 border-white/20 transition-all duration-300"
           >
-            <span>{currentStepData.icon}</span>
-            <span className="hidden sm:inline">{currentStepData.title}</span>
-          </div>
-        </div>
+            <InformationCircleIcon className="w-5 h-5 text-white" />
+          </button>
 
-        {/* Face Guide Overlay */}
-        {!showMobileGuide && (
-          <div className="absolute inset-0 pointer-events-none">
-            {/* Focus area with blur effect */}
-            <div
-              className="absolute inset-0 bg-black/20 backdrop-blur-sm"
-              style={{
-                maskImage:
-                  "radial-gradient(circle at center, transparent 100px, black 120px)",
-                WebkitMaskImage:
-                  "radial-gradient(circle at center, transparent 100px, black 120px)",
-              }}
-            ></div>
+          {/* Face Guide Overlay */}
+          {!showMobileGuide && (
+            <div className="absolute inset-0 pointer-events-none">
+              {/* Focus area with blur effect */}
+              <div
+                className="absolute inset-0 bg-black/20 backdrop-blur-sm"
+                style={{
+                  maskImage:
+                    "radial-gradient(circle at center, transparent 100px, black 120px)",
+                  WebkitMaskImage:
+                    "radial-gradient(circle at center, transparent 100px, black 120px)",
+                }}
+              ></div>
 
-            {/* Face guide circle */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="relative">
-                <div className="w-48 h-60 border-3 border-green-400/90 rounded-full border-dashed animate-pulse shadow-xl shadow-green-400/30"></div>
-                <div className="absolute inset-4 border-2 border-white/70 rounded-full border-dotted animate-pulse"></div>
+              {/* Face guide circle */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="relative">
+                  <div className="w-48 h-56 border-3 border-green-400/90 rounded-full border-dashed animate-pulse shadow-xl shadow-green-400/30"></div>
+                  <div className="absolute inset-4 border-2 border-white/70 rounded-full border-dotted animate-pulse"></div>
 
-                {/* Center crosshair */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-1 h-12 bg-green-400/50 rounded-full"></div>
-                  <div className="absolute w-12 h-1 bg-green-400/50 rounded-full"></div>
-                  <div className="w-3 h-3 bg-green-400 rounded-full animate-ping border-2 border-white/50"></div>
+                  {/* Center point only */}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-2 h-2 bg-green-400 rounded-full animate-ping border-2 border-white/50"></div>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Countdown Overlay */}
-        {countdown > 0 && (
-          <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-40">
-            <div className="bg-black/80 backdrop-blur-md rounded-2xl p-6 border border-white/20">
-              <div className="text-center">
-                <div className="text-white text-5xl font-bold animate-ping mb-2">
-                  {countdown}
-                </div>
-                <div className="text-white/90 text-sm font-medium animate-pulse">
-                  Get Ready...
+          {/* Countdown Overlay */}
+          {countdown > 0 && (
+            <div className="absolute top-4 right-4 z-40">
+              <div className="bg-black/90 backdrop-blur-xl rounded-2xl p-4 border border-white/20 shadow-2xl">
+                <div className="text-center">
+                  <div className="text-white text-4xl font-bold animate-ping mb-1">
+                    {countdown}
+                  </div>
+                  <div className="text-white/90 text-xs font-medium animate-pulse">
+                    Ready...
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Scanning Animation */}
-        {isCapturing && (
-          <div className="absolute inset-0 pointer-events-none z-30">
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-blue-500/10 to-transparent animate-pulse">
-              <div className="w-full h-0.5 bg-gradient-to-r from-transparent via-blue-400 to-transparent animate-pulse"></div>
-            </div>
-          </div>
-        )}
-
-        {/* Capture Button (Bottom Center) */}
-        {!showMobileGuide && !showPreview && (
-          <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-30">
-            <button
-              onClick={onCapture}
-              disabled={isCapturing}
-              className="relative group"
-            >
-              {/* Glow effect */}
-              <div className="absolute -inset-2 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-full blur-lg opacity-30 group-hover:opacity-50 transition-opacity duration-300"></div>
-
-              {/* Main button */}
-              <div className="relative w-20 h-20 border-3 border-white/60 rounded-full flex items-center justify-center group-hover:border-white/90 transition-all duration-300 group-active:scale-95 backdrop-blur-sm">
-                <div className="w-16 h-16 bg-white rounded-full shadow-2xl group-hover:bg-gradient-to-r group-hover:from-red-500 group-hover:to-pink-500 transition-all duration-300 flex items-center justify-center overflow-hidden">
-                  {isCapturing ? (
-                    <div className="w-8 h-8 bg-red-500 rounded-sm animate-pulse"></div>
-                  ) : (
-                    <div className="w-12 h-12 bg-red-500 rounded-full group-hover:bg-white transition-all duration-300 group-hover:scale-75"></div>
-                  )}
-                </div>
+          {/* Scanning Animation */}
+          {isCapturing && (
+            <div className="absolute inset-0 pointer-events-none z-30">
+              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-blue-500/10 to-transparent animate-pulse">
+                <div className="w-full h-0.5 bg-gradient-to-r from-transparent via-blue-400 to-transparent animate-pulse"></div>
               </div>
+            </div>
+          )}
 
-              {/* Pulse ring */}
-              {!isCapturing && (
-                <div className="absolute inset-0 w-20 h-20 border-2 border-white/20 rounded-full animate-ping"></div>
-              )}
-            </button>
-          </div>
-        )}
+          {/* Capture Button (Bottom Center) */}
+          {!showMobileGuide && !showPreview && (
+            <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 z-30">
+              <button
+                onClick={onCapture}
+                disabled={isCapturing}
+                className="relative group"
+              >
+                {/* Glow effect */}
+                <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-full blur-lg opacity-30 group-hover:opacity-50 transition-opacity duration-300"></div>
 
-        {/* Mobile Guide Overlay */}
-        <MobileGuideOverlay />
+                {/* Main button */}
+                <div className="relative w-16 h-16 border-2 border-white/60 rounded-full flex items-center justify-center group-hover:border-white/90 transition-all duration-300 group-active:scale-95 backdrop-blur-sm">
+                  <div className="w-12 h-12 bg-white rounded-full shadow-2xl group-hover:bg-gradient-to-r group-hover:from-red-500 group-hover:to-pink-500 transition-all duration-300 flex items-center justify-center overflow-hidden">
+                    {isCapturing ? (
+                      <div className="w-6 h-6 bg-red-500 rounded-sm animate-pulse"></div>
+                    ) : (
+                      <div className="w-8 h-8 bg-red-500 rounded-full group-hover:bg-white transition-all duration-300 group-hover:scale-75"></div>
+                    )}
+                  </div>
+                </div>
 
-        {/* Photo Preview Modal */}
-        <PhotoPreviewModal />
-      </div>
+                {/* Pulse ring */}
+                {!isCapturing && (
+                  <div className="absolute inset-0 w-16 h-16 border-2 border-white/20 rounded-full animate-ping"></div>
+                )}
+              </button>
+            </div>
+          )}
+
+          {/* Mobile Guide Overlay */}
+          <MobileGuideOverlay />
+        </div>{" "}
+        {/* Close the camera container */}
+      </div>{" "}
+      {/* Close the camera section */}
+      {/* Photo Preview Modal */}
+      <PhotoPreviewModal />
     </div>
   );
 };
