@@ -2487,7 +2487,7 @@ const Dashboard = () => {
                         }}
                         className={`ml-1 p-2 rounded-lg transition-all duration-200 ${
                           isActive
-                            ? "text-white hover:bg-white/20"
+                            ? "text-black dark:text-white hover:bg-white/20 dark:hover:bg-white/20"
                             : "text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700/50"
                         }`}
                       >
