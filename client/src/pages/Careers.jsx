@@ -234,27 +234,27 @@ const Careers = () => {
       {/* Navigation Header */}
       <nav className="relative z-10 bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm border-b border-white/20 dark:border-gray-700/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
+          <div className="flex items-center justify-between h-14 sm:h-16">
             {/* Logo */}
             <div className="flex items-center">
               <Link to="/" className="flex items-center">
-                <div className="w-8 h-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
-                  <CameraIcon className="w-5 h-5 text-white" />
+                <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
+                  <CameraIcon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                 </div>
-                <span className="ml-2 text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                <span className="ml-2 text-xl sm:text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
                   Groupify
                 </span>
               </Link>
             </div>
 
             {/* Navigation */}
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 sm:space-x-4">
               <Link
                 to="/"
                 className="inline-flex items-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
               >
-                <ArrowLeftIcon className="w-5 h-5 mr-2" />
-                Back to Home
+                <ArrowLeftIcon className="w-5 h-5 sm:mr-2" />
+                <span className="hidden sm:inline">Back to Home</span>
               </Link>
 
               <button
@@ -273,32 +273,34 @@ const Careers = () => {
       </nav>
 
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-indigo-600 to-purple-600 py-20">
+      <div className="bg-gradient-to-r from-indigo-600 to-purple-600 py-12 sm:py-16 md:py-20">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="inline-flex items-center px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full border border-white/30 mb-6">
-            <BriefcaseIcon className="w-5 h-5 text-white mr-2" />
-            <span className="text-white font-medium">Join Our Team</span>
+          <div className="inline-flex items-center px-3 py-1.5 sm:px-4 sm:py-2 bg-white/20 backdrop-blur-sm rounded-full border border-white/30 mb-4 sm:mb-6">
+            <BriefcaseIcon className="w-4 h-4 sm:w-5 sm:h-5 text-white mr-2" />
+            <span className="text-white font-medium text-sm sm:text-base">
+              Join Our Team
+            </span>
           </div>
 
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4 sm:mb-6">
             Build the Future of Photo Sharing
           </h1>
-          <p className="text-xl text-indigo-100 mb-8 leading-relaxed max-w-2xl mx-auto">
+          <p className="text-base sm:text-lg md:text-xl text-indigo-100 mb-6 sm:mb-8 leading-relaxed max-w-2xl mx-auto">
             Join our passionate team and help millions of people organize and
             share their most precious memories. We're building something
             amazing, and we want you to be part of it.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
             <a
               href="#open-positions"
-              className="inline-flex items-center justify-center bg-white text-indigo-600 px-8 py-4 rounded-xl text-lg font-semibold hover:bg-gray-50 transition-all duration-200 shadow-xl hover:shadow-2xl hover:scale-105"
+              className="inline-flex items-center justify-center bg-white text-indigo-600 px-6 py-3 sm:px-8 sm:py-4 rounded-xl text-base sm:text-lg font-semibold hover:bg-gray-50 transition-all duration-200 shadow-xl hover:shadow-2xl hover:scale-105"
             >
               View Open Positions
             </a>
             <Link
               to="/about"
-              className="inline-flex items-center justify-center bg-white/20 backdrop-blur-sm text-white px-8 py-4 rounded-xl text-lg font-semibold border border-white/30 hover:bg-white/30 transition-all duration-200"
+              className="inline-flex items-center justify-center bg-white/20 backdrop-blur-sm text-white px-6 py-3 sm:px-8 sm:py-4 rounded-xl text-base sm:text-lg font-semibold border border-white/30 hover:bg-white/30 transition-all duration-200"
             >
               Learn About Us
             </Link>
@@ -307,31 +309,31 @@ const Careers = () => {
       </div>
 
       {/* Company Culture Section */}
-      <div className="py-20 bg-white/40 dark:bg-gray-800/40 backdrop-blur-sm">
+      <div className="py-12 sm:py-16 md:py-20 bg-white/40 dark:bg-gray-800/40 backdrop-blur-sm">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+          <div className="text-center mb-12 sm:mb-16">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-3 sm:mb-4">
               Our Culture & Values
             </h2>
-            <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+            <p className="text-base sm:text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
               We're building more than just a product – we're creating a culture
               where talented people can do their best work
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 md:gap-8">
             {cultureValues.map((value, index) => (
               <div
                 key={index}
-                className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-xl border border-white/20 dark:border-gray-700/50 p-6 text-center hover:shadow-lg transition-all duration-300 hover:-translate-y-2"
+                className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-xl border border-white/20 dark:border-gray-700/50 p-4 sm:p-6 text-center hover:shadow-lg transition-all duration-300 hover:-translate-y-2"
               >
-                <div className="w-12 h-12 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-4">
-                  <value.icon className="w-6 h-6 text-white" />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                  <value.icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-2 sm:mb-3">
                   {value.title}
                 </h3>
-                <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">
+                <p className="text-gray-600 dark:text-gray-300 text-xs sm:text-sm leading-relaxed">
                   {value.description}
                 </p>
               </div>
@@ -341,31 +343,31 @@ const Careers = () => {
       </div>
 
       {/* Benefits Section */}
-      <div className="py-20">
+      <div className="py-12 sm:py-16 md:py-20">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+          <div className="text-center mb-12 sm:mb-16">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-3 sm:mb-4">
               Why You'll Love Working Here
             </h2>
-            <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+            <p className="text-base sm:text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
               We offer competitive benefits and perks to support your
               professional growth and personal well-being
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
             {benefits.map((benefit, index) => (
               <div
                 key={index}
-                className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-2xl border border-white/20 dark:border-gray-700/50 p-6 hover:shadow-xl transition-all duration-300"
+                className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-2xl border border-white/20 dark:border-gray-700/50 p-4 sm:p-6 hover:shadow-xl transition-all duration-300"
               >
-                <div className="w-12 h-12 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center mb-4">
-                  <benefit.icon className="w-6 h-6 text-white" />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center mb-3 sm:mb-4">
+                  <benefit.icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-2 sm:mb-3">
                   {benefit.title}
                 </h3>
-                <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
+                <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 leading-relaxed">
                   {benefit.description}
                 </p>
               </div>
@@ -375,85 +377,88 @@ const Careers = () => {
       </div>
 
       {/* Open Positions Section */}
-      <div id="open-positions" className="py-20 bg-white/40 dark:bg-gray-800/40 backdrop-blur-sm">
+      <div
+        id="open-positions"
+        className="py-12 sm:py-16 md:py-20 bg-white/40 dark:bg-gray-800/40 backdrop-blur-sm"
+      >
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+          <div className="text-center mb-12 sm:mb-16">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-3 sm:mb-4">
               Open Positions
             </h2>
-            <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+            <p className="text-base sm:text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
               Join our growing team and help shape the future of photo sharing
               and organization
             </p>
           </div>
 
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             {jobListings.map((job) => (
               <div
                 key={job.id}
-                className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-2xl border border-white/20 dark:border-gray-700/50 p-8 hover:shadow-xl transition-all duration-300"
+                className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-2xl border border-white/20 dark:border-gray-700/50 p-4 sm:p-6 md:p-8 hover:shadow-xl transition-all duration-300"
               >
-                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6">
+                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-4 sm:mb-6">
                   <div className="mb-4 lg:mb-0">
-                    <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                    <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-2">
                       {job.title}
                     </h3>
-                    <div className="flex flex-wrap gap-4 text-sm text-gray-600 dark:text-gray-300">
+                    <div className="flex flex-wrap gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600 dark:text-gray-300">
                       <div className="flex items-center">
-                        <BriefcaseIcon className="w-4 h-4 mr-1" />
+                        <BriefcaseIcon className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                         {job.department}
                       </div>
                       <div className="flex items-center">
-                        <MapPinIcon className="w-4 h-4 mr-1" />
+                        <MapPinIcon className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                         {job.location}
                       </div>
                       <div className="flex items-center">
-                        <ClockIcon className="w-4 h-4 mr-1" />
+                        <ClockIcon className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                         {job.type}
                       </div>
                       <div className="flex items-center">
-                        <AcademicCapIcon className="w-4 h-4 mr-1" />
+                        <AcademicCapIcon className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                         {job.experience}
                       </div>
                     </div>
                   </div>
-                  <button className="self-start lg:self-center bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors shadow-md hover:shadow-lg">
+                  <button className="self-start lg:self-center bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 sm:px-6 sm:py-3 rounded-lg font-semibold transition-colors shadow-md hover:shadow-lg text-sm sm:text-base">
                     Apply Now
                   </button>
                 </div>
 
-                <p className="text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
+                <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 mb-4 sm:mb-6 leading-relaxed">
                   {job.description}
                 </p>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                   <div>
-                    <h4 className="font-semibold text-gray-900 dark:text-white mb-3">
+                    <h4 className="font-semibold text-gray-900 dark:text-white mb-2 sm:mb-3 text-sm sm:text-base">
                       Requirements
                     </h4>
-                    <ul className="space-y-2">
+                    <ul className="space-y-1 sm:space-y-2">
                       {job.requirements.map((req, index) => (
                         <li
                           key={index}
-                          className="flex items-start text-gray-600 dark:text-gray-300 text-sm"
+                          className="flex items-start text-gray-600 dark:text-gray-300 text-xs sm:text-sm"
                         >
-                          <div className="w-2 h-2 bg-indigo-600 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                          <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-indigo-600 rounded-full mt-1.5 sm:mt-2 mr-2 sm:mr-3 flex-shrink-0"></div>
                           {req}
                         </li>
                       ))}
                     </ul>
                   </div>
                   <div>
-                    <h4 className="font-semibold text-gray-900 dark:text-white mb-3">
+                    <h4 className="font-semibold text-gray-900 dark:text-white mb-2 sm:mb-3 text-sm sm:text-base">
                       What We Offer
                     </h4>
-                    <ul className="space-y-2">
+                    <ul className="space-y-1 sm:space-y-2">
                       {job.benefits.map((benefit, index) => (
                         <li
                           key={index}
-                          className="flex items-start text-gray-600 dark:text-gray-300 text-sm"
+                          className="flex items-start text-gray-600 dark:text-gray-300 text-xs sm:text-sm"
                         >
-                          <div className="w-2 h-2 bg-green-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                          <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-500 rounded-full mt-1.5 sm:mt-2 mr-2 sm:mr-3 flex-shrink-0"></div>
                           {benefit}
                         </li>
                       ))}
@@ -464,19 +469,19 @@ const Careers = () => {
             ))}
           </div>
 
-          <div className="text-center mt-16">
-            <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-2xl border border-white/20 dark:border-gray-700/50 p-8">
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+          <div className="text-center mt-12 sm:mt-16">
+            <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-2xl border border-white/20 dark:border-gray-700/50 p-4 sm:p-6 md:p-8">
+              <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-3 sm:mb-4">
                 Don't See a Perfect Match?
               </h3>
-              <p className="text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
+              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 mb-4 sm:mb-6 leading-relaxed">
                 We're always looking for talented individuals to join our team.
                 If you're passionate about our mission and think you'd be a
                 great fit, we'd love to hear from you.
               </p>
               <Link
                 to="/contact"
-                className="inline-flex items-center bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors shadow-md hover:shadow-lg"
+                className="inline-flex items-center bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 sm:px-6 sm:py-3 rounded-lg font-semibold transition-colors shadow-md hover:shadow-lg text-sm sm:text-base"
               >
                 Get in Touch
               </Link>
@@ -486,18 +491,19 @@ const Careers = () => {
       </div>
 
       {/* Application Process Section */}
-      <div className="py-20">
+      <div className="py-12 sm:py-16 md:py-20">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+          <div className="text-center mb-12 sm:mb-16">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-3 sm:mb-4">
               Our Hiring Process
             </h2>
-            <p className="text-lg text-gray-600 dark:text-gray-300">
-              Simple, transparent, and designed to help us get to know each other
+            <p className="text-base sm:text-lg text-gray-600 dark:text-gray-300">
+              Simple, transparent, and designed to help us get to know each
+              other
             </p>
           </div>
 
-          <div className="space-y-8">
+          <div className="space-y-6 sm:space-y-8">
             {[
               {
                 step: "1",
@@ -530,21 +536,18 @@ const Careers = () => {
                   "We'll make our decision quickly and provide feedback regardless of the outcome.",
               },
             ].map((step, index) => (
-              <div
-                key={index}
-                className="flex items-center"
-              >
+              <div key={index} className="flex items-center">
                 <div className="flex-1">
-                  <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-xl border border-white/20 dark:border-gray-700/50 p-6 mr-8">
-                    <div className="flex items-center mb-3">
-                      <div className="w-8 h-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-bold mr-3">
+                  <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-xl border border-white/20 dark:border-gray-700/50 p-4 sm:p-6 mr-4 sm:mr-8">
+                    <div className="flex items-center mb-2 sm:mb-3">
+                      <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full flex items-center justify-center text-white text-xs sm:text-sm font-bold mr-2 sm:mr-3">
                         {step.step}
                       </div>
-                      <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                      <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
                         {step.title}
                       </h3>
                     </div>
-                    <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
+                    <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 leading-relaxed">
                       {step.description}
                     </p>
                   </div>
@@ -556,26 +559,26 @@ const Careers = () => {
       </div>
 
       {/* Call to Action Section */}
-      <div className="py-20 bg-gradient-to-r from-indigo-600 to-purple-600">
+      <div className="py-12 sm:py-16 md:py-20 bg-gradient-to-r from-indigo-600 to-purple-600">
         <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
-          <RocketLaunchIcon className="w-16 h-16 text-white mx-auto mb-6" />
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
+          <RocketLaunchIcon className="w-12 h-12 sm:w-16 sm:h-16 text-white mx-auto mb-4 sm:mb-6" />
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-4 sm:mb-6">
             Ready to Shape the Future?
           </h2>
-          <p className="text-xl text-indigo-100 mb-8 leading-relaxed max-w-2xl mx-auto">
+          <p className="text-base sm:text-lg md:text-xl text-indigo-100 mb-6 sm:mb-8 leading-relaxed max-w-2xl mx-auto">
             Join our mission to help people organize and share their most
             precious memories. Apply today and be part of something amazing.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
             <a
               href="#open-positions"
-              className="inline-flex items-center justify-center bg-white text-indigo-600 px-8 py-4 rounded-xl text-lg font-semibold hover:bg-gray-50 transition-all duration-200 shadow-xl hover:shadow-2xl hover:scale-105"
+              className="inline-flex items-center justify-center bg-white text-indigo-600 px-6 py-3 sm:px-8 sm:py-4 rounded-xl text-base sm:text-lg font-semibold hover:bg-gray-50 transition-all duration-200 shadow-xl hover:shadow-2xl hover:scale-105"
             >
               Browse Open Positions
             </a>
             <Link
               to="/contact"
-              className="inline-flex items-center justify-center bg-white/20 backdrop-blur-sm text-white px-8 py-4 rounded-xl text-lg font-semibold border border-white/30 hover:bg-white/30 transition-all duration-200"
+              className="inline-flex items-center justify-center bg-white/20 backdrop-blur-sm text-white px-6 py-3 sm:px-8 sm:py-4 rounded-xl text-base sm:text-lg font-semibold border border-white/30 hover:bg-white/30 transition-all duration-200"
             >
               Contact Us
             </Link>
@@ -584,18 +587,18 @@ const Careers = () => {
       </div>
 
       {/* Footer */}
-      <footer className="py-12 bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm border-t border-white/20 dark:border-gray-700/50">
+      <footer className="py-8 sm:py-12 bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm border-t border-white/20 dark:border-gray-700/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="flex items-center mb-4 md:mb-0">
-              <div className="w-8 h-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
-                <CameraIcon className="w-5 h-5 text-white" />
+              <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
+                <CameraIcon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
               </div>
-              <span className="ml-2 text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+              <span className="ml-2 text-lg sm:text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
                 Groupify
               </span>
             </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">
+            <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
               © 2025 Groupify. Built with ❤️ by Ofir & Adir.
             </div>
           </div>
