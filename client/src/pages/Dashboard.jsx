@@ -163,6 +163,8 @@ const Dashboard = () => {
   const [selectedUserProfile, setSelectedUserProfile] = useState(null);
   const [showEditProfileModal, setShowEditProfileModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [showFaceProfileManageModal, setShowFaceProfileManageModal] =
+    useState(false);
 
   // NEW: Functions to handle trip viewing
   const handleViewTrip = (tripId) => {
@@ -630,70 +632,79 @@ const Dashboard = () => {
     }
   };
 
-  // Delete entire profile
+  // Delete current face profile
   const deleteCurrentProfile = async () => {
     toast(
       (t) => (
-        <div className="text-center">
-          <p className="text-sm text-gray-800 font-medium">
-            Delete your face profile?
-          </p>
-          <p className="text-xs text-gray-500 mt-1">
-            This action cannot be undone.
-          </p>
-          <div className="mt-3 flex justify-center gap-3">
-            <button
-              onClick={async () => {
-                toast.dismiss(t.id);
-                setIsManagingProfile(true);
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 p-6 max-w-sm w-full">
+          <div className="text-center">
+            <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+              <TrashIcon className="w-8 h-8 text-red-600 dark:text-red-400" />
+            </div>
+            <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-2">
+              Delete Face Profile?
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-6 max-w-xs mx-auto">
+              This will permanently remove your face profile and all recognition
+              data. You can always create a new one later.
+            </p>
+            <div className="flex justify-center gap-3">
+              <button
+                onClick={async () => {
+                  toast.dismiss(t.id);
+                  setIsManagingProfile(true);
 
-                try {
-                  // 1. Delete from memory
-                  deleteFaceProfile(currentUser.uid);
-
-                  // 2. Delete from Firebase Storage
                   try {
-                    await deleteFaceProfileFromStorage(currentUser.uid);
-                    console.log(
-                      "✅ Face profile deleted from Firebase Storage"
-                    );
-                  } catch (storageError) {
-                    console.warn(
-                      "⚠️ Could not delete from Firebase Storage:",
-                      storageError
-                    );
+                    // Delete operations (same as before)
+                    deleteFaceProfile(currentUser.uid);
+
+                    try {
+                      await deleteFaceProfileFromStorage(currentUser.uid);
+                      console.log(
+                        "✅ Face profile deleted from Firebase Storage"
+                      );
+                    } catch (storageError) {
+                      console.warn(
+                        "⚠️ Could not delete from Firebase Storage:",
+                        storageError
+                      );
+                    }
+
+                    setHasProfile(false);
+                    setProfile(null);
+                    setProfilePhotos([]);
+                    setShowProfileManagement(false);
+
+                    toast.success("🗑️ Face profile deleted successfully");
+                  } catch (error) {
+                    console.error("Failed to delete profile:", error);
+                    toast.error("Failed to delete profile: " + error.message);
+                  } finally {
+                    setIsManagingProfile(false);
                   }
-
-                  // 3. Update state
-                  setHasProfile(false);
-                  setProfile(null);
-                  setProfilePhotos([]);
-                  setShowProfileManagement(false);
-
-                  toast.success("Face profile deleted successfully");
-                } catch (error) {
-                  console.error("Failed to delete profile:", error);
-                  toast.error("Failed to delete profile: " + error.message);
-                } finally {
-                  setIsManagingProfile(false);
-                }
-              }}
-              className="px-3 py-1 bg-red-500 text-white text-sm rounded-md shadow hover:bg-red-600"
-            >
-              Delete
-            </button>
-            <button
-              onClick={() => toast.dismiss(t.id)}
-              className="px-3 py-1 bg-gray-200 text-gray-700 text-sm rounded-md shadow hover:bg-gray-300"
-            >
-              Cancel
-            </button>
+                }}
+                className="px-6 py-3 bg-red-500 text-white text-sm rounded-xl shadow hover:bg-red-600 font-semibold transition-colors"
+              >
+                Yes, Delete
+              </button>
+              <button
+                onClick={() => toast.dismiss(t.id)}
+                className="px-6 py-3 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 text-sm rounded-xl shadow hover:bg-gray-300 dark:hover:bg-gray-500 font-semibold transition-colors"
+              >
+                Keep Profile
+              </button>
+            </div>
           </div>
         </div>
       ),
       {
-        duration: 10000,
+        duration: 15000,
         id: "delete-profile-confirmation",
+        style: {
+          background: "transparent",
+          boxShadow: "none",
+          padding: 0,
+        },
       }
     );
   };
@@ -2071,7 +2082,7 @@ const Dashboard = () => {
             <button
               onClick={() => setShowFaceProfileModal(true)}
               disabled={isLoadingProfile}
-              className="w-full sm:w-auto bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-400 text-white px-6 sm:px-8 lg:px-10 py-3 sm:py-4 lg:py-5 rounded-xl sm:rounded-2xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center gap-2 sm:gap-3 mx-auto text-sm sm:text-base lg:text-lg min-h-[48px] sm:min-h-[56px]"
+              className="w-full sm:w-auto bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-400 text-white px-6 sm:px-8 lg:px-10 py-3 sm:py-4 lg:py-5 rounded-xl sm:rounded-2xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center justify-center gap-2 sm:gap-3 mx-auto text-sm sm:text-base lg:text-lg min-h-[48px] sm:min-h-[56px]"
             >
               <SparklesIcon className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6" />
               {isLoadingProfile ? "Loading..." : "Setup Face Profile"}
@@ -2079,185 +2090,85 @@ const Dashboard = () => {
           </div>
         ) : (
           <div>
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-6 mb-6">
-              <div className="flex items-center gap-3 sm:gap-4">
-                <div className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 bg-green-100 dark:bg-green-900/30 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg">
-                  <CheckCircleIcon className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-green-600 dark:text-green-400" />
+            {/* Profile Status Card */}
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border border-green-200 dark:border-green-800 rounded-xl p-4 sm:p-6 mb-4 sm:mb-6">
+              <div className="flex items-center gap-3 sm:gap-4 mb-4">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 bg-green-500 rounded-xl flex items-center justify-center shadow-lg">
+                  <CheckCircleIcon className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
                 </div>
-                <div>
-                  <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-800 dark:text-white">
-                    Face Profile Active
+                <div className="flex-1">
+                  <h3 className="text-lg sm:text-xl font-bold text-green-800 dark:text-green-300 mb-1">
+                    {profile?.metadata?.method === "guided"
+                      ? "🎯 Smart Face Scan Active"
+                      : "Photo Upload Profile Active"}
                   </h3>
-                  <p className="text-green-600 dark:text-green-400 text-sm sm:text-base lg:text-lg">
-                    {profilePhotos.length} photos • Ready for automatic
-                    recognition
+                  <p className="text-green-600 dark:text-green-400 text-sm sm:text-base">
+                    {profilePhotos.length} photos • Enhanced recognition ready
                   </p>
                 </div>
               </div>
-              <div className="flex gap-2 sm:gap-3 self-start sm:self-auto">
-                <button
-                  onClick={() =>
-                    setShowProfileManagement(!showProfileManagement)
-                  }
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 sm:px-4 lg:px-6 py-2 sm:py-2.5 lg:py-3 rounded-lg sm:rounded-xl font-medium text-sm sm:text-base shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
-                >
-                  {showProfileManagement ? "Hide" : "Manage"}
-                </button>
-                <button
-                  onClick={deleteCurrentProfile}
-                  disabled={isManagingProfile}
-                  className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 p-2 sm:p-2.5 lg:p-3 rounded-lg sm:rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors shadow-lg hover:shadow-xl"
-                  title="Delete Face Profile"
-                >
-                  <TrashIcon className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6" />
-                </button>
-              </div>
-            </div>
 
-            {/* Profile Management Options */}
-            {showProfileManagement && (
-              <div className="bg-gray-50/50 dark:bg-gray-700/30 rounded-xl sm:rounded-2xl p-4 sm:p-6 mb-6">
-                <div className="flex flex-wrap gap-2 sm:gap-3 mb-4 sm:mb-6">
-                  <button
-                    onClick={optimizeCurrentProfile}
-                    disabled={isManagingProfile}
-                    className="bg-green-600 hover:bg-green-700 text-white px-3 sm:px-4 lg:px-6 py-2 sm:py-2.5 lg:py-3 rounded-lg sm:rounded-xl font-medium disabled:opacity-50 text-sm sm:text-base shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
-                  >
-                    {isManagingProfile ? "Optimizing..." : "Optimize Profile"}
-                  </button>
-                  <button
-                    onClick={() => setShowFaceProfileModal(true)}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-4 lg:px-6 py-2 sm:py-2.5 lg:py-3 rounded-lg sm:rounded-xl font-medium text-sm sm:text-base shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
-                  >
-                    Add More Photos
-                  </button>
-                </div>
-
-                {/* Add Photos Section */}
-                <div className="mb-6">
-                  <label className="block text-sm sm:text-base font-semibold text-gray-700 dark:text-gray-300 mb-3">
-                    Add More Photos
-                  </label>
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    <input
-                      type="file"
-                      multiple
-                      accept="image/*"
-                      onChange={handleProfilePhotoSelect}
-                      className="flex-1 text-sm sm:text-base text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 dark:file:bg-indigo-900/30 file:text-indigo-700 dark:file:text-indigo-400 hover:file:bg-indigo-100 dark:hover:file:bg-indigo-900/50"
-                    />
-                    {uploadingProfilePhotos.length > 0 && (
-                      <button
-                        onClick={addMorePhotosToProfile}
-                        disabled={isManagingProfile}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl font-medium disabled:opacity-50 transition-colors text-sm sm:text-base whitespace-nowrap shadow-lg hover:shadow-xl"
-                      >
-                        {isManagingProfile
-                          ? "Adding..."
-                          : `Add ${uploadingProfilePhotos.length}`}
-                      </button>
-                    )}
+              {/* Method Description */}
+              <div className="bg-white/50 dark:bg-gray-800/30 rounded-lg p-3 sm:p-4 mb-4">
+                {profile?.metadata?.method === "guided" ? (
+                  <div className="flex items-start gap-3">
+                    <span className="text-xl">✨</span>
+                    <div>
+                      <p className="text-sm sm:text-base text-green-700 dark:text-green-300 font-medium mb-1">
+                        AI-Guided Face Scan
+                      </p>
+                      <p className="text-xs sm:text-sm text-green-600 dark:text-green-400">
+                        Your profile was created using our smart face scanning
+                        technology for maximum accuracy in photo recognition.
+                      </p>
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-3">
+                      <span className="text-xl">📤</span>
+                      <div>
+                        <p className="text-sm sm:text-base text-green-700 dark:text-green-300 font-medium mb-1">
+                          Photo Upload Profile
+                        </p>
+                        <p className="text-xs sm:text-sm text-green-600 dark:text-green-400">
+                          Your profile was created from uploaded photos. Works
+                          great for photo recognition!
+                        </p>
+                      </div>
+                    </div>
 
-                {/* Current Profile Photos */}
-                <div>
-                  <div className="flex justify-between items-center mb-3 sm:mb-4">
-                    <label className="block text-sm sm:text-base font-semibold text-gray-700 dark:text-gray-300">
-                      Profile Photos ({profilePhotos.length})
-                    </label>
-                    {selectedPhotosToRemove.length > 0 && (
-                      <button
-                        onClick={removeSelectedPhotos}
-                        disabled={isManagingProfile}
-                        className="bg-red-600 hover:bg-red-700 text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-sm sm:text-base font-medium disabled:opacity-50 transition-colors shadow-lg hover:shadow-xl"
-                      >
-                        {isManagingProfile
-                          ? "Removing..."
-                          : `Remove ${selectedPhotosToRemove.length}`}
-                      </button>
-                    )}
-                  </div>
-
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 max-h-60 sm:max-h-80 overflow-y-auto">
-                    {profilePhotos.map((photo) => (
-                      <div key={photo.id} className="relative group">
-                        <div
-                          className={`cursor-pointer border-2 rounded-xl overflow-hidden transition-all duration-300 ${
-                            selectedPhotosToRemove.includes(photo.url)
-                              ? "border-red-500 bg-red-100 dark:bg-red-900/30"
-                              : "border-gray-200 dark:border-gray-600 hover:border-indigo-400"
-                          }`}
-                          onClick={() => togglePhotoSelection(photo.url)}
-                        >
-                          <img
-                            src={photo.url}
-                            alt="Profile"
-                            className="w-full h-20 sm:h-24 lg:h-28 object-cover"
-                          />
-                          <div
-                            className={`absolute inset-0 flex items-center justify-center transition-all duration-300 ${
-                              selectedPhotosToRemove.includes(photo.url)
-                                ? "bg-red-500 bg-opacity-60"
-                                : "bg-black bg-opacity-0 group-hover:bg-opacity-20"
-                            }`}
+                    {/* Recommendation for upload method */}
+                    <div className="bg-blue-50/50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                      <div className="flex items-start gap-2">
+                        <span className="text-sm">💡</span>
+                        <div>
+                          <p className="text-xs sm:text-sm text-blue-700 dark:text-blue-300 font-medium">
+                            Pro Tip: Consider using Smart Face Scan for even
+                            better accuracy!
+                          </p>
+                          <button
+                            onClick={() => setShowFaceProfileModal(true)}
+                            className="mt-2 text-xs sm:text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 font-medium underline"
                           >
-                            {selectedPhotosToRemove.includes(photo.url) && (
-                              <CheckCircleIcon className="w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 text-white" />
-                            )}
-                          </div>
-                        </div>
-                        <div className="text-center mt-2">
-                          <span
-                            className={`inline-block px-2 py-1 rounded-lg text-white text-xs sm:text-sm font-bold ${
-                              photo.qualityTier === "high"
-                                ? "bg-green-500"
-                                : photo.qualityTier === "medium"
-                                ? "bg-yellow-500"
-                                : "bg-red-500"
-                            }`}
-                          >
-                            {(photo.confidence * 100).toFixed(0)}%
-                          </span>
+                            Switch to Smart Face Scan →
+                          </button>
                         </div>
                       </div>
-                    ))}
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
-            )}
 
-            {/* Profile Photos Grid Preview */}
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-3 sm:gap-4 mb-6">
-              {profilePhotos.slice(0, 8).map((photo, index) => (
-                <div key={index} className="relative group">
-                  <img
-                    src={photo.url}
-                    alt={`Profile ${index + 1}`}
-                    className="w-full h-16 sm:h-20 md:h-24 lg:h-28 object-cover rounded-lg sm:rounded-xl border border-gray-200 dark:border-gray-600 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
-                  />
-                  <div className="absolute bottom-1 right-1 sm:bottom-2 sm:right-2">
-                    <span
-                      className={`text-xs sm:text-sm font-bold px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-full text-white shadow-lg ${
-                        photo.qualityTier === "high"
-                          ? "bg-green-500"
-                          : photo.qualityTier === "medium"
-                          ? "bg-yellow-500"
-                          : "bg-red-500"
-                      }`}
-                    >
-                      {Math.round(photo.confidence * 100)}%
-                    </span>
-                  </div>
-                </div>
-              ))}
-              {profilePhotos.length > 8 && (
-                <div className="w-full h-16 sm:h-20 md:h-24 lg:h-28 bg-gray-100 dark:bg-gray-700 rounded-lg sm:rounded-xl border border-gray-200 dark:border-gray-600 flex items-center justify-center shadow-lg">
-                  <span className="text-xs sm:text-sm lg:text-base font-medium text-gray-600 dark:text-gray-400">
-                    +{profilePhotos.length - 8}
-                  </span>
-                </div>
-              )}
+              {/* Action Buttons */}
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowFaceProfileManageModal(true)}
+                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 sm:py-3 px-4 sm:px-6 rounded-lg sm:rounded-xl font-medium text-sm sm:text-base shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+                >
+                  Manage & Set Up Face Profile
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -3006,6 +2917,277 @@ const Dashboard = () => {
               >
                 {isDeleting ? "Deleting..." : "Delete Account"}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Face Profile Management Modal */}
+      {showFaceProfileManageModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4">
+          <div className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-xs sm:max-w-md md:max-w-lg lg:max-w-2xl xl:max-w-4xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto border border-white/20 dark:border-gray-700/50">
+            {/* Header */}
+            <div className="sticky top-0 bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg border-b border-gray-200/50 dark:border-gray-700/50 p-4 sm:p-6">
+              <div className="flex justify-between items-center">
+                <div className="flex-1 text-center">
+                  <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-800 dark:text-white">
+                    Manage & Set Up Face Profile
+                  </h2>
+                </div>
+                <button
+                  onClick={() => setShowFaceProfileManageModal(false)}
+                  className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ml-4"
+                >
+                  <XMarkIcon className="w-5 h-5 sm:w-6 sm:h-6" />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-4 sm:p-6">
+              {profile?.metadata?.method === "guided" ? (
+                /* Smart Face Scan Profile */
+                <div className="space-y-4 sm:space-y-6">
+                  {/* Status Header */}
+                  <div className="text-center mb-4 sm:mb-6">
+                    <div className="inline-flex items-center gap-2 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 px-4 py-2 rounded-full font-semibold text-sm sm:text-base mb-3">
+                      <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                      Smart Face Scan Active
+                    </div>
+                    <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
+                      AI-guided scanning with {profilePhotos.length} scan points
+                    </p>
+                  </div>
+
+                  <div className="bg-white/50 dark:bg-gray-800/30 rounded-xl p-4 sm:p-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center mb-6">
+                      <div>
+                        <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-green-600 dark:text-green-400">
+                          {profilePhotos.length}
+                        </p>
+                        <p className="text-xs sm:text-sm lg:text-base text-gray-600 dark:text-gray-400">
+                          Scan Points
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-blue-600 dark:text-blue-400">
+                          High
+                        </p>
+                        <p className="text-xs sm:text-sm lg:text-base text-gray-600 dark:text-gray-400">
+                          Quality
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-purple-600 dark:text-purple-400">
+                          Active
+                        </p>
+                        <p className="text-xs sm:text-sm lg:text-base text-gray-600 dark:text-gray-400">
+                          Status
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+                      <button
+                        onClick={() => {
+                          setShowFaceProfileManageModal(false);
+                          setShowFaceProfileModal(true);
+                        }}
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 sm:py-4 px-4 sm:px-6 rounded-xl font-semibold text-sm sm:text-base transition-all duration-200 transform hover:scale-105 shadow-lg flex items-center justify-center gap-2"
+                      >
+                        <span className="text-lg">🔄</span>
+                        Retake Session
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowFaceProfileManageModal(false);
+                          deleteCurrentProfile();
+                        }}
+                        className="w-full bg-red-600 hover:bg-red-700 text-white py-3 sm:py-4 px-4 sm:px-6 rounded-xl font-semibold text-sm sm:text-base transition-all duration-200 transform hover:scale-105 shadow-lg flex items-center justify-center gap-2"
+                      >
+                        <span className="text-lg">🗑️</span>
+                        Delete Profile
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowFaceProfileManageModal(false);
+                          setShowFaceProfileModal(true);
+                        }}
+                        className="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 sm:py-4 px-4 sm:px-6 rounded-xl font-semibold text-sm sm:text-base transition-all duration-200 transform hover:scale-105 shadow-lg flex items-center justify-center gap-2"
+                      >
+                        <span className="text-lg">🎯</span>
+                        Switch Method
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Profile Preview for Guided */}
+                  <div className="bg-white/50 dark:bg-gray-800/30 rounded-xl p-4 sm:p-6">
+                    <h5 className="font-bold text-gray-800 dark:text-white mb-4 text-center text-lg sm:text-xl">
+                      Scan Preview
+                    </h5>
+                    <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-2 sm:gap-3">
+                      {profilePhotos.slice(0, 20).map((photo, index) => (
+                        <div key={index} className="relative">
+                          <img
+                            src={photo.url}
+                            alt={`Scan ${index + 1}`}
+                            className="w-full aspect-square object-cover rounded-lg border border-gray-200 dark:border-gray-600 shadow-sm"
+                          />
+                        </div>
+                      ))}
+                      {profilePhotos.length > 20 && (
+                        <div className="w-full aspect-square bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 rounded-lg border border-gray-200 dark:border-gray-600 flex items-center justify-center shadow-sm">
+                          <span className="text-xs font-bold text-gray-600 dark:text-gray-400">
+                            +{profilePhotos.length - 20}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-center text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-3">
+                      These photos were captured during your face scanning
+                      session
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                /* Photo Upload Profile */
+                <div className="space-y-4 sm:space-y-6">
+                  {/* Status Header */}
+                  <div className="text-center mb-4 sm:mb-6">
+                    <div className="inline-flex items-center gap-2 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-800 dark:text-indigo-400 px-4 py-2 rounded-full font-semibold text-sm sm:text-base mb-3">
+                      <span className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse"></span>
+                      Photo Upload Profile Active
+                    </div>
+                    <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
+                      Recognition based on {profilePhotos.length} uploaded
+                      photos
+                    </p>
+                  </div>
+
+                  {/* Upload Method Controls */}
+                  <div className="bg-white/50 dark:bg-gray-800/30 rounded-xl p-4 sm:p-6">
+                    <h3 className="text-lg sm:text-xl font-bold text-gray-800 dark:text-white mb-4 text-center">
+                      Add More Photos
+                    </h3>
+                    <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 text-center mb-6">
+                      Upload additional clear photos to improve recognition
+                      accuracy
+                    </p>
+
+                    <div className="space-y-4">
+                      <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-6 sm:p-8 text-center hover:border-indigo-400 dark:hover:border-indigo-500 transition-colors">
+                        <input
+                          type="file"
+                          multiple
+                          accept="image/*"
+                          onChange={handleProfilePhotoSelect}
+                          className="w-full text-sm sm:text-base text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 sm:file:py-3 file:px-4 sm:file:px-6 file:rounded-xl file:border-0 file:text-sm sm:file:text-base file:font-semibold file:bg-indigo-50 dark:file:bg-indigo-900/30 file:text-indigo-700 dark:file:text-indigo-400 hover:file:bg-indigo-100 dark:hover:file:bg-indigo-900/50 file:transition-colors file:cursor-pointer cursor-pointer"
+                        />
+                      </div>
+                      {uploadingProfilePhotos.length > 0 && (
+                        <button
+                          onClick={addMorePhotosToProfile}
+                          disabled={isManagingProfile}
+                          className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white py-3 sm:py-4 px-4 sm:px-6 rounded-xl font-semibold text-sm sm:text-base transition-all duration-200 transform hover:scale-105 shadow-lg disabled:transform-none disabled:opacity-50"
+                        >
+                          {isManagingProfile
+                            ? "Adding Photos..."
+                            : `Add ${uploadingProfilePhotos.length} Photo${
+                                uploadingProfilePhotos.length > 1 ? "s" : ""
+                              }`}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Current Photos Management - Only for uploaded photos */}
+                  <div className="bg-white/50 dark:bg-gray-800/30 rounded-xl p-4 sm:p-6">
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-3">
+                      <h5 className="font-bold text-gray-800 dark:text-white text-lg sm:text-xl text-center sm:text-left">
+                        Uploaded Photos ({profilePhotos.length})
+                      </h5>
+                      {selectedPhotosToRemove.length > 0 && (
+                        <button
+                          onClick={removeSelectedPhotos}
+                          disabled={isManagingProfile}
+                          className="bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-xl text-sm sm:text-base font-semibold transition-all duration-200 disabled:opacity-50 shadow-lg"
+                        >
+                          Remove {selectedPhotosToRemove.length} Photo
+                          {selectedPhotosToRemove.length > 1 ? "s" : ""}
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-2 sm:gap-3 max-h-48 sm:max-h-64 lg:max-h-80 overflow-y-auto">
+                      {profilePhotos.map((photo) => (
+                        <div key={photo.id} className="relative group">
+                          <div
+                            className={`cursor-pointer border-2 rounded-lg overflow-hidden transition-all transform hover:scale-105 ${
+                              selectedPhotosToRemove.includes(photo.url)
+                                ? "border-red-500 bg-red-100 dark:bg-red-900/30 scale-95"
+                                : "border-gray-200 dark:border-gray-600 hover:border-indigo-400 dark:hover:border-indigo-500"
+                            }`}
+                            onClick={() => togglePhotoSelection(photo.url)}
+                          >
+                            <img
+                              src={photo.url}
+                              alt="Uploaded"
+                              className="w-full aspect-square object-cover"
+                            />
+                            <div
+                              className={`absolute inset-0 flex items-center justify-center transition-all ${
+                                selectedPhotosToRemove.includes(photo.url)
+                                  ? "bg-red-500 bg-opacity-60"
+                                  : "bg-black bg-opacity-0 group-hover:bg-opacity-20"
+                              }`}
+                            >
+                              {selectedPhotosToRemove.includes(photo.url) && (
+                                <CheckCircleIcon className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-center text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-3">
+                      Click photos to select for removal. These are photos you
+                      uploaded from your gallery.
+                    </p>
+                  </div>
+
+                  {/* Quick Actions */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+                    <button
+                      onClick={optimizeCurrentProfile}
+                      disabled={isManagingProfile}
+                      className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white py-3 sm:py-4 px-4 sm:px-6 rounded-xl font-semibold text-sm sm:text-base transition-all duration-200 transform hover:scale-105 shadow-lg disabled:transform-none disabled:opacity-50 flex items-center justify-center gap-2"
+                    >
+                      <span className="text-lg">⚡</span>
+                      {isManagingProfile ? "Optimizing..." : "Optimize Photos"}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowFaceProfileManageModal(false);
+                        setShowFaceProfileModal(true);
+                      }}
+                      className="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 sm:py-4 px-4 sm:px-6 rounded-xl font-semibold text-sm sm:text-base transition-all duration-200 transform hover:scale-105 shadow-lg flex items-center justify-center gap-2"
+                    >
+                      <span className="text-lg">🎯</span>
+                      Switch to Smart Scan
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowFaceProfileManageModal(false);
+                        deleteCurrentProfile();
+                      }}
+                      className="w-full bg-red-600 hover:bg-red-700 text-white py-3 sm:py-4 px-4 sm:px-6 rounded-xl font-semibold text-sm sm:text-base transition-all duration-200 transform hover:scale-105 shadow-lg flex items-center justify-center gap-2"
+                    >
+                      <span className="text-lg">🗑️</span>
+                      Delete Profile
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

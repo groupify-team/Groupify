@@ -713,6 +713,17 @@ body {
   );
 }
 
+.blue-block-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+.blue-block-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.blue-block-scroll::-webkit-scrollbar-thumb {
+  background: #3b82f6;
+  border-radius: 2px;
+}
+
 /* ========================================
    UTILITY ANIMATION CLASSES
    ======================================== */

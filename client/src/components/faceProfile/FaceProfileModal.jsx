@@ -288,7 +288,7 @@ const FaceProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
                   <div className="absolute -inset-1 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-2xl blur opacity-20 group-hover:opacity-30 transition duration-300"></div>
                   <div className="relative bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg rounded-xl p-5 sm:p-6 border border-indigo-200 dark:border-indigo-800 group-hover:border-indigo-300 dark:group-hover:border-indigo-700 transition-all duration-300 group-hover:scale-[1.02]">
                     {/* Best Accuracy Badge */}
-                    <div className="absolute top-1 right-3 sm:top-2 sm:right-4 lg:top-3 lg:right-5 z-10">
+                    <div className="absolute top-3 right-3 z-10">
                       <span className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold px-2 py-1 sm:px-3 sm:py-1 md:px-2 md:py-0.5 lg:px-3 lg:py-1 xl:px-4 xl:py-1.5 rounded-full shadow-lg text-xs sm:text-xs md:text-[10px] lg:text-xs xl:text-sm">
                         ✨ BEST ACCURACY
                       </span>
