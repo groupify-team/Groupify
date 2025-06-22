@@ -1,74 +1,92 @@
-import React, { useState, useEffect } from 'react';
-import { Turnstile } from '@marsidev/react-turnstile';
-import { ShieldCheckIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
+import React, { useState, useEffect } from "react";
+import { Turnstile } from "@marsidev/react-turnstile";
+import {
+  ShieldCheckIcon,
+  ExclamationTriangleIcon,
+} from "@heroicons/react/24/outline";
 
 const CloudflareTurnstileGate = ({ children, onVerificationComplete }) => {
   const [isVerified, setIsVerified] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [attempts, setAttempts] = useState(0);
   const maxAttempts = 3;
 
   // Check if user has already been verified in this session
   useEffect(() => {
-    const sessionVerified = sessionStorage.getItem('turnstile_verified');
-    const verificationTime = sessionStorage.getItem('turnstile_verified_time');
+    const sessionVerified = sessionStorage.getItem("turnstile_verified");
+    const verificationTime = sessionStorage.getItem("turnstile_verified_time");
     const currentTime = Date.now();
     const oneHour = 60 * 60 * 1000; // 1 hour in milliseconds
 
     // Verify if session is still valid (within 1 hour)
-    if (sessionVerified === 'true' && verificationTime && 
-        (currentTime - parseInt(verificationTime)) < oneHour) {
+    if (
+      sessionVerified === "true" &&
+      verificationTime &&
+      currentTime - parseInt(verificationTime) < oneHour
+    ) {
       setIsVerified(true);
       onVerificationComplete?.(true);
     } else {
       // Clear expired session
-      sessionStorage.removeItem('turnstile_verified');
-      sessionStorage.removeItem('turnstile_verified_time');
+      sessionStorage.removeItem("turnstile_verified");
+      sessionStorage.removeItem("turnstile_verified_time");
     }
   }, [onVerificationComplete]);
 
   const handleTurnstileSuccess = async (token) => {
     setIsLoading(true);
-    setError('');
+    setError("");
 
     try {
       // You can verify the token on your backend if needed
       // For now, we'll just trust Cloudflare's verification
-      console.log('Turnstile verification successful:', token);
-      
+      console.log("Turnstile verification successful:", token);
+
       setIsVerified(true);
       const currentTime = Date.now().toString();
-      sessionStorage.setItem('turnstile_verified', 'true');
-      sessionStorage.setItem('turnstile_verified_time', currentTime);
+      sessionStorage.setItem("turnstile_verified", "true");
+      sessionStorage.setItem("turnstile_verified_time", currentTime);
       onVerificationComplete?.(true);
     } catch (err) {
-      console.error('Turnstile verification error:', err);
-      setError('Verification failed. Please try again.');
-      setAttempts(prev => prev + 1);
+      console.error("Turnstile verification error:", err);
+      setError("Verification failed. Please try again.");
+      setAttempts((prev) => prev + 1);
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleTurnstileError = (error) => {
-    console.error('Turnstile error:', error);
-    setError('Security verification failed. Please try again.');
-    setAttempts(prev => prev + 1);
+    console.error("Turnstile error:", error);
+    setError("Security verification failed. Please try again.");
+    setAttempts((prev) => prev + 1);
   };
 
   const handleTurnstileExpired = () => {
-    setError('Verification expired. Please complete it again.');
+    setError("Verification expired. Please complete it again.");
     setIsVerified(false);
   };
 
-  // Reset function for testing
+  // Updated reset function for development
   const resetTurnstile = () => {
-    sessionStorage.removeItem('turnstile_verified');
-    sessionStorage.removeItem('turnstile_verified_time');
-    setIsVerified(false);
-    setAttempts(0);
-    setError('');
+    if (process.env.NODE_ENV === "development") {
+      // Clear session storage
+      sessionStorage.removeItem("turnstile_verified");
+      sessionStorage.removeItem("turnstile_verified_time");
+
+      // Set verification as true and bypass the gate
+      sessionStorage.setItem("turnstile_verified", "true");
+      sessionStorage.setItem("turnstile_verified_time", Date.now().toString());
+
+      // Update state to show the protected content
+      setIsVerified(true);
+      setAttempts(0);
+      setError("");
+
+      // Call the completion callback
+      onVerificationComplete?.(true);
+    }
   };
 
   // If too many failed attempts, show error state
@@ -83,7 +101,8 @@ const CloudflareTurnstileGate = ({ children, onVerificationComplete }) => {
             Too Many Attempts
           </h2>
           <p className="text-gray-600 dark:text-gray-300 mb-6">
-            You've exceeded the maximum number of verification attempts. Please refresh the page to try again.
+            You've exceeded the maximum number of verification attempts. Please
+            refresh the page to try again.
           </p>
           <button
             onClick={() => window.location.reload()}
@@ -103,7 +122,10 @@ const CloudflareTurnstileGate = ({ children, onVerificationComplete }) => {
         {/* Background decoration */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-20 left-20 w-64 h-64 bg-gradient-to-br from-purple-400/20 to-blue-400/20 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute bottom-20 right-20 w-96 h-96 bg-gradient-to-tr from-indigo-400/20 to-purple-400/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+          <div
+            className="absolute bottom-20 right-20 w-96 h-96 bg-gradient-to-tr from-indigo-400/20 to-purple-400/20 rounded-full blur-3xl animate-pulse"
+            style={{ animationDelay: "1s" }}
+          ></div>
         </div>
 
         <div className="relative max-w-md w-full bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 dark:border-gray-700/50 p-8">
@@ -119,9 +141,18 @@ const CloudflareTurnstileGate = ({ children, onVerificationComplete }) => {
               Please complete the verification below to continue to Groupify
             </p>
             <div className="flex items-center justify-center mt-2">
-              <span className="text-xs text-gray-500 dark:text-gray-400">Powered by</span>
-              <svg className="w-16 h-4 ml-1" viewBox="0 0 320 80" fill="currentColor">
-                <path d="M99.076 32.5c-6.085 0-11.02 4.934-11.02 11.02s4.935 11.02 11.02 11.02 11.02-4.934 11.02-11.02-4.935-11.02-11.02-11.02zm44.414 0c-6.085 0-11.02 4.934-11.02 11.02s4.935 11.02 11.02 11.02 11.02-4.934 11.02-11.02-4.935-11.02-11.02-11.02zm44.415 0c-6.085 0-11.02 4.934-11.02 11.02s4.935 11.02 11.02 11.02 11.02-4.934 11.02-11.02-4.935-11.02-11.02-11.02z" className="text-orange-500"/>
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                Powered by
+              </span>
+              <svg
+                className="w-16 h-4 ml-1"
+                viewBox="0 0 320 80"
+                fill="currentColor"
+              >
+                <path
+                  d="M99.076 32.5c-6.085 0-11.02 4.934-11.02 11.02s4.935 11.02 11.02 11.02 11.02-4.934 11.02-11.02-4.935-11.02-11.02-11.02zm44.414 0c-6.085 0-11.02 4.934-11.02 11.02s4.935 11.02 11.02 11.02 11.02-4.934 11.02-11.02-4.935-11.02-11.02-11.02zm44.415 0c-6.085 0-11.02 4.934-11.02 11.02s4.935 11.02 11.02 11.02 11.02-4.934 11.02-11.02-4.935-11.02-11.02-11.02z"
+                  className="text-orange-500"
+                />
               </svg>
             </div>
           </div>
@@ -169,13 +200,13 @@ const CloudflareTurnstileGate = ({ children, onVerificationComplete }) => {
           )}
 
           {/* Development Reset Button */}
-          {process.env.NODE_ENV === 'development' && (
+          {process.env.NODE_ENV === "development" && (
             <div className="text-center mb-4">
               <button
                 onClick={resetTurnstile}
-                className="text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 underline"
+                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg font-medium transition-colors"
               >
-                Reset Verification (Dev Only)
+                Skip Verification (Dev Only)
               </button>
             </div>
           )}
