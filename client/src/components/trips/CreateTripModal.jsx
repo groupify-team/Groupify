@@ -8,7 +8,7 @@ import {
   CheckCircleIcon
 } from '@heroicons/react/24/outline';
 import { useAuth } from "../../contexts/AuthContext";
-import { createTrip } from "../../services/firebase/trips";
+import { createTrip, canUserCreateTrip, getUserTripCount, MAX_TRIPS_PER_USER  } from "../../services/firebase/trips";
 
 const CreateTripModal = ({ isOpen, onClose, onTripCreated }) => {
   const [name, setName] = useState("");
@@ -22,55 +22,68 @@ const CreateTripModal = ({ isOpen, onClose, onTripCreated }) => {
   const { currentUser } = useAuth();
 
   const handleSubmit = async (e) => {
-    if (e) e.preventDefault();
+  if (e) e.preventDefault();
 
-    if (!name.trim()) {
-      setError("Trip name is required");
-      return;
-    }
+  if (!name.trim()) {
+    setError("Trip name is required");
+    return;
+  }
 
-    if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
-      setError("End date must be after start date");
-      return;
-    }
+  if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
+    setError("End date must be after start date");
+    return;
+  }
 
-    try {
-      setLoading(true);
-      setError(null);
+  try {
+    setLoading(true);
+    setError(null);
 
-      const newTrip = await createTrip({
-        name,
-        description,
-        location,
-        startDate: startDate || null,
-        endDate: endDate || null,
-        createdBy: currentUser.uid,
-        members: [currentUser.uid],
-        admins: [currentUser.uid], 
-        photoCount: 0,
-      });
-
-      // Reset form
-      setName("");
-      setDescription("");
-      setLocation("");
-      setStartDate("");
-      setEndDate("");
-
-      // Notify parent component
-      if (onTripCreated) {
-        onTripCreated(newTrip);
-      }
-
-      // Close modal
-      onClose();
-    } catch (error) {
-      console.error("Error creating trip:", error);
-      setError("Failed to create trip. Please try again.");
-    } finally {
+    // Check trip limit before creating
+    const canCreate = await canUserCreateTrip(currentUser.uid);
+    if (!canCreate) {
+      const currentCount = await getUserTripCount(currentUser.uid);
+      setError(`Trip limit reached! You can only create ${MAX_TRIPS_PER_USER} trips. You currently have ${currentCount} trips.`);
       setLoading(false);
+      return;
     }
-  };
+
+    const newTrip = await createTrip({
+      name,
+      description,
+      location,
+      startDate: startDate || null,
+      endDate: endDate || null,
+      createdBy: currentUser.uid,
+      members: [currentUser.uid],
+      admins: [currentUser.uid], 
+      photoCount: 0,
+    });
+
+    // Reset form
+    setName("");
+    setDescription("");
+    setLocation("");
+    setStartDate("");
+    setEndDate("");
+
+    // Notify parent component
+    if (onTripCreated) {
+      onTripCreated(newTrip);
+    }
+
+    // Close modal
+    onClose();
+  } catch (error) {
+    console.error("Error creating trip:", error);
+    if (error.message.includes("Trip limit reached")) {
+      setError(error.message);
+    } else {
+      setError("Failed to create trip. Please try again.");
+    }
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleClose = () => {
     if (!loading) {

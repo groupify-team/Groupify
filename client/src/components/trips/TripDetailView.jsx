@@ -38,6 +38,8 @@ import {
   sendTripInvite,
   updateTrip,
 } from "../../services/firebase/trips";
+import { MAX_PHOTOS_PER_TRIP } from "../../services/firebase/trips";
+
 import { getTripPhotos } from "../../services/firebase/storage";
 import {
   getFriends,
@@ -385,6 +387,21 @@ const TripDetailView = ({ tripId: propTripId }) => {
     }
   };
 
+  const checkPhotoLimit = () => {
+  return photos.length < MAX_PHOTOS_PER_TRIP;
+};
+
+const getRemainingPhotoSlots = () => {
+  return Math.max(0, MAX_PHOTOS_PER_TRIP - photos.length);
+};
+
+const getPhotoLimitStatus = () => {
+  const remaining = getRemainingPhotoSlots();
+  if (remaining === 0) return 'full';
+  if (remaining <= 5) return 'warning';
+  return 'normal';
+};
+
   // Cancel face recognition
   const handleCancelFaceRecognition = () => {
     console.log("🛑 Cancelling face recognition...");
@@ -592,17 +609,37 @@ const TripDetailView = ({ tripId: propTripId }) => {
   }, [currentUser]);
 
   const handlePhotoUploaded = (uploadedPhotos) => {
+  // Check if adding these photos would exceed the limit
+  const totalAfterUpload = photos.length + uploadedPhotos.length;
+  
+  if (totalAfterUpload > MAX_PHOTOS_PER_TRIP) {
+    const allowedPhotos = uploadedPhotos.slice(0, MAX_PHOTOS_PER_TRIP - photos.length);
+    const rejectedCount = uploadedPhotos.length - allowedPhotos.length;
+    
+    toast.error(`Photo limit exceeded! Only ${allowedPhotos.length} photos were uploaded. ${rejectedCount} photos were rejected.`);
+    
+    if (allowedPhotos.length > 0) {
+      setPhotos((prev) => [...allowedPhotos, ...prev]);
+      if (trip) {
+        setTrip((prevTrip) => ({
+          ...prevTrip,
+          photoCount: (prevTrip.photoCount || 0) + allowedPhotos.length,
+        }));
+      }
+    }
+  } else {
     setPhotos((prev) => [...uploadedPhotos, ...prev]);
-
     if (trip) {
       setTrip((prevTrip) => ({
         ...prevTrip,
         photoCount: (prevTrip.photoCount || 0) + uploadedPhotos.length,
       }));
     }
+    toast.success(`${uploadedPhotos.length} photos uploaded successfully!`);
+  }
 
-    setShowUploadForm(false);
-  };
+  setShowUploadForm(false);
+};
 
   const handleAddFriend = async (targetUid) => {
     try {
@@ -980,13 +1017,25 @@ const TripDetailView = ({ tripId: propTripId }) => {
                   )}
                   <button
                     onClick={() => setShowUploadForm(!showUploadForm)}
+                    disabled={getPhotoLimitStatus() === 'full' && !showUploadForm}
                     className={`w-full sm:w-auto px-3 py-2 sm:px-4 rounded-lg sm:rounded-xl font-medium transition-all duration-300 transform hover:scale-105 shadow-lg text-xs sm:text-sm flex items-center justify-center gap-2 backdrop-blur-sm ${
-                      showUploadForm
+                      getPhotoLimitStatus() === 'full' && !showUploadForm
+                        ? "bg-gray-400 dark:bg-gray-600 text-gray-600 dark:text-gray-400 cursor-not-allowed"
+                        : showUploadForm
                         ? "bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white"
+                        : getPhotoLimitStatus() === 'warning'
+                        ? "bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700 text-white"
                         : "bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white"
                     }`}
                   >
-                    {showUploadForm ? (
+                    {getPhotoLimitStatus() === 'full' && !showUploadForm ? (
+                      <>
+                        <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364l12.728-12.728" />
+                        </svg>
+                        Limit Reached
+                      </>
+                    ) : showUploadForm ? (
                       <>
                         <XMarkIcon className="w-3 h-3 sm:w-4 sm:h-4" />
                         Cancel
@@ -994,7 +1043,7 @@ const TripDetailView = ({ tripId: propTripId }) => {
                     ) : (
                       <>
                         <PlusIcon className="w-3 h-3 sm:w-4 sm:h-4" />
-                        Add Photos
+                        Add Photos ({getRemainingPhotoSlots()} left)
                       </>
                     )}
                   </button>
@@ -1066,12 +1115,62 @@ const TripDetailView = ({ tripId: propTripId }) => {
               mobileActiveTab === "trip" ? "block" : "hidden xl:block"
             }`}
           >
-            {/* Upload Form - Enhanced with glassmorphism */}
+            {/* Upload Form - Enhanced with limit checking */}
             {showUploadForm && (
-              <PhotoUpload
-                tripId={tripId}
-                onPhotoUploaded={handlePhotoUploaded}
-              />
+              <div className="space-y-4">
+                {/* Photo limit warning */}
+                {getPhotoLimitStatus() === 'full' ? (
+                  <div className="relative group">
+                    <div className="absolute -inset-1 bg-gradient-to-r from-red-600 to-orange-600 rounded-2xl blur opacity-20"></div>
+                    <div className="relative bg-red-50/90 dark:bg-red-900/30 backdrop-blur-lg rounded-xl p-4 border border-red-200/50 dark:border-red-800/50">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-gradient-to-r from-red-500 to-red-600 rounded-lg flex items-center justify-center">
+                          <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                          </svg>
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-red-800 dark:text-red-400">Photo Limit Reached</h3>
+                          <p className="text-red-700 dark:text-red-300 text-sm">
+                            This trip has reached the maximum of {MAX_PHOTOS_PER_TRIP} photos. 
+                            Please delete some photos before uploading new ones.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : getPhotoLimitStatus() === 'warning' ? (
+                  <div className="relative group">
+                    <div className="absolute -inset-1 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-2xl blur opacity-20"></div>
+                    <div className="relative bg-yellow-50/90 dark:bg-yellow-900/30 backdrop-blur-lg rounded-xl p-4 border border-yellow-200/50 dark:border-yellow-800/50">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-lg flex items-center justify-center">
+                          <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M12 17h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                          </svg>
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-yellow-800 dark:text-yellow-400">Almost Full</h3>
+                          <p className="text-yellow-700 dark:text-yellow-300 text-sm">
+                            Only {getRemainingPhotoSlots()} photo slots remaining out of {MAX_PHOTOS_PER_TRIP}.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : null}
+
+                {/* PhotoUpload Component with limits */}
+                <PhotoUpload
+                  tripId={tripId}
+                  onPhotoUploaded={handlePhotoUploaded}
+                  maxPhotos={MAX_PHOTOS_PER_TRIP}
+                  currentPhotoCount={photos.length}
+                  showLimitWarning={getPhotoLimitStatus() === 'warning'}
+                  limitWarningText={`Only ${getRemainingPhotoSlots()} photo slots remaining out of ${MAX_PHOTOS_PER_TRIP}.`}
+                  disabled={getPhotoLimitStatus() === 'full'}
+                />
+              </div>
             )}
 
             {/* Photos Preview Section - Enhanced */}
@@ -1851,14 +1950,29 @@ const TripDetailView = ({ tripId: propTripId }) => {
 
         {/* Edit Trip Modal */}
         <EditTripModal
-          isOpen={showEditModal}
-          onClose={() => setShowEditModal(false)}
-          trip={trip}
-          onTripUpdated={(updatedTrip) => {
-            setTrip(updatedTrip);
-            setShowEditModal(false);
-          }}
-        />
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        trip={trip}
+        onTripUpdated={(updatedTrip) => {
+          setTrip(updatedTrip);
+          setShowEditModal(false);
+          toast.success("Trip updated successfully!");
+        }}
+        onTripDeleted={async (deletedTripId) => {
+          setShowEditModal(false);
+          
+          // Always call the dashboard callback if available
+          if (onTripDeleted) {
+            onTripDeleted(deletedTripId);
+          }
+          
+          // Also always navigate as backup (this will work even if callback fails)
+          setTimeout(() => {
+            navigate('/dashboard');
+            toast.success("Trip deleted successfully!");
+          }, 100);
+        }}
+      />
 
         {/* All Photos Modal - Enhanced for mobile */}
         {showAllPhotosModal && (
@@ -1994,6 +2108,32 @@ const TripDetailView = ({ tripId: propTripId }) => {
           </div>
         )}
       </div>
+      {/* Edit Trip Modal */}
+      <EditTripModal
+      isOpen={showEditModal}
+      onClose={() => setShowEditModal(false)}
+      trip={trip}
+      onTripUpdated={(updatedTrip) => {
+        setTrip(updatedTrip);
+        setShowEditModal(false);
+        toast.success("Trip updated successfully!");
+      }}
+      onTripDeleted={(deletedTripId) => {
+        // Close modal first
+        setShowEditModal(false);
+        
+        // Show success message
+        toast.success("Trip deleted successfully!");
+        
+        // Navigate with a flag to refresh and pass the deleted trip ID
+        navigate('/dashboard', { 
+          state: { 
+            refreshTrips: true, 
+            deletedTripId: deletedTripId 
+          } 
+        });
+      }}
+    />
     </div>
   );
 };

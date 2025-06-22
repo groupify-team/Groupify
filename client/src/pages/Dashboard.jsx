@@ -74,10 +74,14 @@ import {
   getFaceProfileFromStorage,
 } from "../services/firebase/faceProfiles";
 import {
+  createTrip, 
+  canUserCreateTrip, 
+  getUserTripCount, 
+  MAX_TRIPS_PER_USER, 
   acceptTripInvite,
   declineTripInvite,
   getPendingInvites,
-  getUserTrips,
+  getUserTrips,                    
 } from "../services/firebase/trips";
 import {
   acceptFriendRequest,
@@ -174,15 +178,24 @@ const Dashboard = () => {
       setSidebarOpen(false);
     }
   };
-
-  const handleBackToDashboard = () => {
-    setCurrentView("home");
-    setSelectedTripId(null);
-    // Close sidebar on mobile when going back
-    if (window.innerWidth < 1024) {
-      setSidebarOpen(false);
-    }
-  };
+  
+  const handleBackToDashboard = async () => {
+  setCurrentView("home");
+  setSelectedTripId(null);
+  
+  // Refresh trips when going back to dashboard
+  try {
+    const updatedTrips = await getUserTrips(currentUser.uid);  // Use regular getUserTrips
+    setTrips(updatedTrips);
+  } catch (error) {
+    console.error("Error refreshing trips:", error);
+  }
+  
+  // Close sidebar on mobile when going back
+  if (window.innerWidth < 1024) {
+    setSidebarOpen(false);
+  }
+};
 
   // NEW: Handle trips dropdown
   const toggleTripsDropdown = () => {
@@ -707,41 +720,132 @@ const Dashboard = () => {
     );
   };
 
+  
+
+
   // Load initial data
   useEffect(() => {
     if (!currentUser?.uid) return;
 
     const loadDashboardData = async () => {
-      try {
-        setLoading(true);
-        const [userTrips, userProfile, userFriends, friendRequests, invites] =
-          await Promise.all([
-            getUserTrips(currentUser.uid),
-            getUserProfile(currentUser.uid),
-            getFriends(currentUser.uid),
-            getPendingFriendRequests(currentUser.uid),
-            getPendingInvites(currentUser.uid),
-          ]);
+  try {
+    setLoading(true);
+    console.log("🔄 Loading dashboard data for user:", currentUser.uid);
+    
+    // Load data in parallel but use different approach for trips
+    const [userProfile, userFriends, friendRequests, invites] = await Promise.all([
+      getUserProfile(currentUser.uid),
+      getFriends(currentUser.uid),
+      getPendingFriendRequests(currentUser.uid),
+      getPendingInvites(currentUser.uid),
+    ]);
 
-        setTrips(userTrips);
-        setUserData(userProfile);
-        setFriends(userFriends);
-        setPendingRequests(friendRequests);
-        setTripInvites(invites);
+    console.log("👤 User profile:", userProfile);
+    console.log("👥 Friends:", userFriends);
+    console.log("📬 Friend requests:", friendRequests);
+    console.log("🎫 Trip invites:", invites);
 
-        // Load face profile
-        if (hasFaceProfile(currentUser.uid)) {
-          setHasProfile(true);
-          setProfilePhotos(getProfilePhotos(currentUser.uid));
+    // Load trips with fallback approach
+    console.log("📋 Loading trips...");
+    let userTrips = [];
+    
+    try {
+      // First try the regular getUserTrips function
+      userTrips = await getUserTrips(currentUser.uid);
+      console.log("📋 getUserTrips result:", userTrips);
+      
+      // If no trips found, try alternative approach
+      if (userTrips.length === 0) {
+        console.log("🔍 No trips from getUserTrips, trying direct queries...");
+        
+        // Import Firebase functions directly
+        const { collection, query, where, getDocs } = await import('firebase/firestore');
+        const { db } = await import('../services/firebase/config');
+        
+        console.log("🔍 Querying trips where user is creator...");
+        const createdTripsQuery = query(
+          collection(db, "trips"),
+          where("createdBy", "==", currentUser.uid)
+        );
+        
+        console.log("🔍 Querying trips where user is member...");
+        const memberTripsQuery = query(
+          collection(db, "trips"),
+          where("members", "array-contains", currentUser.uid)
+        );
+        
+        const [createdSnapshot, memberSnapshot] = await Promise.all([
+          getDocs(createdTripsQuery),
+          getDocs(memberTripsQuery)
+        ]);
+        
+        console.log("📋 Created trips found:", createdSnapshot.size);
+        console.log("📋 Member trips found:", memberSnapshot.size);
+        
+        const foundTripIds = new Set();
+        const foundTrips = [];
+        
+        createdSnapshot.forEach(doc => {
+          const trip = { id: doc.id, ...doc.data() };
+          foundTrips.push(trip);
+          foundTripIds.add(doc.id);
+          console.log("📋 Found created trip:", doc.id, trip.name);
+        });
+        
+        memberSnapshot.forEach(doc => {
+          if (!foundTripIds.has(doc.id)) {
+            const trip = { id: doc.id, ...doc.data() };
+            foundTrips.push(trip);
+            foundTripIds.add(doc.id);
+            console.log("📋 Found member trip:", doc.id, trip.name);
+          }
+        });
+        
+        userTrips = foundTrips;
+        
+        // Update user's trips array if we found trips
+        if (foundTripIds.size > 0) {
+          console.log("🔄 Updating user's trips array...");
+          const { doc, updateDoc } = await import('firebase/firestore');
+          
+          try {
+            const userRef = doc(db, "users", currentUser.uid);
+            await updateDoc(userRef, {
+              trips: Array.from(foundTripIds),
+              updatedAt: new Date().toISOString()
+            });
+            console.log("✅ User trips array updated successfully!");
+          } catch (updateError) {
+            console.warn("⚠️ Could not update user trips array:", updateError);
+          }
         }
-      } catch (error) {
-        console.error("Error loading dashboard data:", error);
-        setError("Failed to load dashboard data");
-        toast.error("Failed to load dashboard data");
-      } finally {
-        setLoading(false);
       }
-    };
+    } catch (tripsError) {
+      console.error("❌ Error loading trips:", tripsError);
+      userTrips = []; // Fallback to empty array
+    }
+    
+    console.log("📋 Final trips result:", userTrips);
+
+    setTrips(userTrips);
+    setUserData(userProfile);
+    setFriends(userFriends);
+    setPendingRequests(friendRequests);
+    setTripInvites(invites);
+
+    // Load face profile
+    if (hasFaceProfile(currentUser.uid)) {
+      setHasProfile(true);
+      setProfilePhotos(getProfilePhotos(currentUser.uid));
+    }
+  } catch (error) {
+    console.error("❌ Error loading dashboard data:", error);
+    setError("Failed to load dashboard data");
+    toast.error("Failed to load dashboard data");
+  } finally {
+    setLoading(false);
+  }
+};
 
     // --- Live Friends Listener ---
     let unsubscribeFriends = () => {};
@@ -1066,15 +1170,24 @@ const Dashboard = () => {
         </div>
         {/* Create Trip button - only show when on trips tab */}
         {tripsActiveTab === "trips" && (
-          <button
-            onClick={() => setShowCreateTripModal(true)}
-            className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-3 sm:px-6 py-2 sm:py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center gap-1 sm:gap-2 text-sm sm:text-base whitespace-nowrap flex-shrink-0"
-          >
-            <PlusIcon className="w-4 h-4 sm:w-5 sm:h-5" />
-            <span className="hidden sm:inline">Create Trip</span>
-            <span className="sm:hidden">Create</span>
-          </button>
-        )}
+        <button
+          onClick={async () => {
+            // Check trip limit before opening modal
+            const canCreate = await canUserCreateTrip(currentUser.uid);
+            if (!canCreate) {
+              const currentCount = await getUserTripCount(currentUser.uid);
+              toast.error(`Trip limit reached! You can only create ${MAX_TRIPS_PER_USER} trips. You currently have ${currentCount} trips. Delete a trip to create a new one.`);
+              return;
+            }
+            setShowCreateTripModal(true);
+          }}
+          className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-3 sm:px-6 py-2 sm:py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center gap-1 sm:gap-2 text-sm sm:text-base whitespace-nowrap flex-shrink-0"
+        >
+          <PlusIcon className="w-4 h-4 sm:w-5 sm:h-5" />
+          <span className="hidden sm:inline">Create Trip ({trips.length}/{MAX_TRIPS_PER_USER})</span>
+          <span className="sm:hidden">Create ({trips.length}/{MAX_TRIPS_PER_USER})</span>
+        </button>
+      )}
       </div>
 
       {/* Mobile Tab Switcher */}
@@ -1362,13 +1475,21 @@ const Dashboard = () => {
                     : "Create your first trip to get started"}
                 </p>
                 {!searchTerm && dateFilter === "all" && (
-                  <button
-                    onClick={() => setShowCreateTripModal(true)}
-                    className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-semibold transition-colors"
-                  >
-                    Create Your First Trip
-                  </button>
-                )}
+                <button
+                  onClick={async () => {
+                    const canCreate = await canUserCreateTrip(currentUser.uid);
+                    if (!canCreate) {
+                      const currentCount = await getUserTripCount(currentUser.uid);
+                      toast.error(`Trip limit reached! You can only create ${MAX_TRIPS_PER_USER} trips. You currently have ${currentCount} trips.`);
+                      return;
+                    }
+                    setShowCreateTripModal(true);
+                  }}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-semibold transition-colors"
+                >
+                  Create Your First Trip
+                </button>
+              )}
               </div>
             ) : (
               filteredTrips.map((trip) => (
@@ -2857,14 +2978,22 @@ const Dashboard = () => {
 
       {/* Modals */}
       <CreateTripModal
-        isOpen={showCreateTripModal}
-        onClose={() => setShowCreateTripModal(false)}
-        onTripCreated={(newTrip) => {
-          setTrips((prev) => [newTrip, ...prev]);
-          setShowCreateTripModal(false);
-          toast.success("Trip created successfully!");
-        }}
-      />
+      isOpen={showCreateTripModal}
+      onClose={() => setShowCreateTripModal(false)}
+      onTripCreated={async (newTrip) => {
+        // Check if user can still create more trips
+        const canCreate = await canUserCreateTrip(currentUser.uid);
+        if (!canCreate) {
+          const currentCount = await getUserTripCount(currentUser.uid);
+          toast.error(`Trip limit reached! You can only create ${MAX_TRIPS_PER_USER} trips. You currently have ${currentCount} trips.`);
+          return;
+        }
+
+        setTrips((prev) => [newTrip, ...prev]);
+        setShowCreateTripModal(false);
+        toast.success("Trip created successfully!");
+      }}
+    />
 
       {showAddFriendModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">

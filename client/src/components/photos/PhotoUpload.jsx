@@ -13,7 +13,19 @@ import {
 
 console.log("🔍 STORAGE:", storage);
 
-const PhotoUpload = ({ tripId, onPhotoUploaded }) => {
+const PhotoUpload = ({ 
+  tripId, 
+  onPhotoUploaded, 
+  maxPhotos = Infinity, 
+  currentPhotoCount = 0,
+  title = "Upload Photos",
+  subtitle = "Add memories to your trip",
+  acceptedFormats = "JPG, PNG, GIF",
+  maxFileSize = "10MB",
+  showLimitWarning = false,
+  limitWarningText = "",
+  disabled = false
+}) => {
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -21,11 +33,23 @@ const PhotoUpload = ({ tripId, onPhotoUploaded }) => {
   const [dragActive, setDragActive] = useState(false);
   const { currentUser } = useAuth();
 
+  // Calculate remaining slots
+  const remainingSlots = maxPhotos === Infinity ? Infinity : Math.max(0, maxPhotos - currentPhotoCount);
+  const isAtLimit = remainingSlots <= 0;
+
   const handleFileChange = (e) => {
     if (e.target.files) {
-      const filesArray = Array.from(e.target.files);
+      let filesArray = Array.from(e.target.files);
+      
+      // Limit files to remaining slots if there's a limit
+      if (remainingSlots !== Infinity && filesArray.length > remainingSlots) {
+        filesArray = filesArray.slice(0, remainingSlots);
+        setError(`Only ${remainingSlots} more photos can be uploaded. Selected first ${remainingSlots} files.`);
+      } else {
+        setError(null);
+      }
+      
       setSelectedFiles(filesArray);
-      setError(null);
     }
   };
 
@@ -45,9 +69,17 @@ const PhotoUpload = ({ tripId, onPhotoUploaded }) => {
     setDragActive(false);
 
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      const filesArray = Array.from(e.dataTransfer.files);
+      let filesArray = Array.from(e.dataTransfer.files);
+      
+      // Limit files to remaining slots if there's a limit
+      if (remainingSlots !== Infinity && filesArray.length > remainingSlots) {
+        filesArray = filesArray.slice(0, remainingSlots);
+        setError(`Only ${remainingSlots} more photos can be uploaded. Selected first ${remainingSlots} files.`);
+      } else {
+        setError(null);
+      }
+      
       setSelectedFiles(filesArray);
-      setError(null);
     }
   };
 
@@ -66,6 +98,12 @@ const PhotoUpload = ({ tripId, onPhotoUploaded }) => {
   const handleUpload = async () => {
     if (selectedFiles.length === 0) {
       setError("Please select at least one file to upload");
+      return;
+    }
+
+    // Final check before upload
+    if (remainingSlots !== Infinity && selectedFiles.length > remainingSlots) {
+      setError(`Cannot upload ${selectedFiles.length} photos. Only ${remainingSlots} slots remaining.`);
       return;
     }
 
@@ -121,6 +159,11 @@ const PhotoUpload = ({ tripId, onPhotoUploaded }) => {
     }
   };
 
+  // Don't render if disabled and at limit
+  if (disabled || isAtLimit) {
+    return null;
+  }
+
   return (
     <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-xl sm:rounded-2xl shadow-lg p-3 sm:p-6 border border-white/20 dark:border-gray-700/50">
       {/* Header */}
@@ -130,13 +173,26 @@ const PhotoUpload = ({ tripId, onPhotoUploaded }) => {
         </div>
         <div>
           <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
-            Upload Photos
+            {title}
+            {remainingSlots !== Infinity && (
+              <span className="text-sm font-normal text-gray-600 dark:text-gray-400 ml-2">
+                ({remainingSlots} slots left)
+              </span>
+            )}
           </h3>
           <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-            Add memories to your trip
+            {subtitle}
           </p>
         </div>
       </div>
+
+      {/* Limit Warning */}
+      {showLimitWarning && limitWarningText && (
+        <div className="bg-yellow-50/90 dark:bg-yellow-900/30 backdrop-blur-sm border border-yellow-200 dark:border-yellow-800 text-yellow-700 dark:text-yellow-400 px-3 py-2 sm:px-4 sm:py-3 rounded-lg sm:rounded-xl mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3">
+          <ExclamationTriangleIcon className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500 dark:text-yellow-400 flex-shrink-0" />
+          <span className="text-xs sm:text-sm">{limitWarningText}</span>
+        </div>
+      )}
 
       {/* Error Message */}
       {error && (
@@ -191,12 +247,18 @@ const PhotoUpload = ({ tripId, onPhotoUploaded }) => {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-xs text-gray-500 dark:text-gray-400">
               <span className="flex items-center gap-1">
                 <CheckCircleIcon className="w-3 h-3 sm:w-4 sm:h-4 text-green-500" />
-                JPG, PNG, GIF
+                {acceptedFormats}
               </span>
               <span className="flex items-center gap-1">
                 <CheckCircleIcon className="w-3 h-3 sm:w-4 sm:h-4 text-green-500" />
-                Up to 10MB each
+                Up to {maxFileSize} each
               </span>
+              {remainingSlots !== Infinity && (
+                <span className="flex items-center gap-1">
+                  <CheckCircleIcon className="w-3 h-3 sm:w-4 sm:h-4 text-blue-500" />
+                  {remainingSlots} slots left
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -207,6 +269,11 @@ const PhotoUpload = ({ tripId, onPhotoUploaded }) => {
               {selectedFiles.length} file{selectedFiles.length !== 1 ? "s" : ""}{" "}
               selected
             </span>
+            {remainingSlots !== Infinity && (
+              <span className="ml-2">
+                ({remainingSlots - selectedFiles.length} slots will remain)
+              </span>
+            )}
           </div>
         )}
       </div>
