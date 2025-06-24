@@ -209,13 +209,9 @@ const HomePage = () => {
   const location = useLocation();
   const [isLoaded, setIsLoaded] = useState(false);
 
-  
-
   useEffect(() => {
     setIsLoaded(true);
   }, []);
-
-  
 
   // Success message handling from email verification
   useEffect(() => {
@@ -539,6 +535,20 @@ const HomePage = () => {
               </p>
               <div className="flex space-x-4">
                 <a
+                  href="mailto:groupify.ltd@gmail.com"
+                  className="text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                >
+                  <span className="sr-only">Email</span>
+                  <svg
+                    className="h-6 w-6"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path d="M1.5 8.67v8.58a3 3 0 003 3h15a3 3 0 003-3V8.67l-8.928 5.493a3 3 0 01-3.144 0L1.5 8.67z" />
+                    <path d="M22.5 6.908V6.75a3 3 0 00-3-3h-15a3 3 0 00-3 3v.158l9.714 5.978a1.5 1.5 0 001.572 0L22.5 6.908z" />
+                  </svg>
+                </a>
+                <a
                   href="#"
                   className="text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
                 >
@@ -628,20 +638,20 @@ const HomePage = () => {
                   </Link>
                 </li>
                 <li>
-                  <a
-                    href="#"
+                  <Link
+                    to="/features"
                     className="text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
                   >
                     Features
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a
-                    href="#"
+                  <Link
+                    to="/pricing"
                     className="text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
                   >
                     Pricing
-                  </a>
+                  </Link>
                 </li>
               </ul>
             </div>
@@ -669,12 +679,12 @@ const HomePage = () => {
                   </Link>
                 </li>
                 <li>
-                  <a
-                    href="#"
+                  <Link
+                    to="/blog"
                     className="text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
                   >
                     Blog
-                  </a>
+                  </Link>
                 </li>
                 <li>
                   <Link
@@ -706,7 +716,23 @@ const HomePage = () => {
               </p>
               <div className="flex justify-center space-x-3 sm:space-x-4">
                 <a
-                  href="#"
+                  href="mailto:groupify.ltd@gmail.com"
+                  className="text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                >
+                  <span className="sr-only">Email</span>
+                  <svg
+                    className="h-5 w-5 sm:h-6 sm:w-6"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path d="M1.5 8.67v8.58a3 3 0 003 3h15a3 3 0 003-3V8.67l-8.928 5.493a3 3 0 01-3.144 0L1.5 8.67z" />
+                    <path d="M22.5 6.908V6.75a3 3 0 00-3-3h-15a3 3 0 00-3 3v.158l9.714 5.978a1.5 1.5 0 001.572 0L22.5 6.908z" />
+                  </svg>
+                </a>
+                <a
+                  href="https://www.facebook.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
                 >
                   <span className="sr-only">Facebook</span>
@@ -723,7 +749,9 @@ const HomePage = () => {
                   </svg>
                 </a>
                 <a
-                  href="#"
+                  href="https://www.instagram.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
                 >
                   <span className="sr-only">Instagram</span>
@@ -740,7 +768,9 @@ const HomePage = () => {
                   </svg>
                 </a>
                 <a
-                  href="#"
+                  href="https://www.x.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
                 >
                   <span className="sr-only">Twitter</span>
@@ -753,7 +783,9 @@ const HomePage = () => {
                   </svg>
                 </a>
                 <a
-                  href="#"
+                  href="https://www.linkedin.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
                 >
                   <span className="sr-only">LinkedIn</span>
@@ -874,18 +906,18 @@ const HomePage = () => {
                 >
                   Terms of Service
                 </Link>
-                <a
-                  href="#"
+                <Link
+                  to="/help"
                   className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
                 >
                   Help Center
-                </a>
-                <a
-                  href="#"
+                </Link>
+                <Link
+                  to="/status"
                   className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
                 >
                   Status
-                </a>
+                </Link>
               </div>
               <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 text-center sm:text-left">
                 © 2025 Groupify. Made with ❤️ for photo lovers.

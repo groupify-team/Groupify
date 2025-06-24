@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
@@ -19,6 +26,10 @@ import { Toaster } from "react-hot-toast";
 import HelpCenter from "./pages/HelpCenter";
 import Careers from "./pages/Careers";
 import ResetPassword from "./components/auth/ResetPassword";
+import Blog from "./pages/Blog";
+import Features from "./pages/Features";
+import Pricing from "./pages/Pricing";
+import Status from "./pages/Status";
 
 // Centralized Flow Controller - Handles ALL navigation logic
 const FlowController = ({ children }) => {
@@ -34,56 +45,75 @@ const FlowController = ({ children }) => {
 
     const determineFlow = () => {
       const currentPath = location.pathname;
-      const animationShown = sessionStorage.getItem('launch_animation_shown');
-      const lastPageLoad = sessionStorage.getItem('last_page_load');
+      const animationShown = sessionStorage.getItem("launch_animation_shown");
+      const lastPageLoad = sessionStorage.getItem("last_page_load");
       const currentTime = Date.now();
-      
+
       // Detect if this is a new session
-      const isNewSession = !lastPageLoad || (currentTime - parseInt(lastPageLoad) > 300000); // 5 minutes threshold
-      
-      console.log('Flow Controller:', {
+      const isNewSession =
+        !lastPageLoad || currentTime - parseInt(lastPageLoad) > 300000; // 5 minutes threshold
+
+      console.log("Flow Controller:", {
         currentUser: !!currentUser,
         currentPath,
         animationShown,
         isNewSession,
-        authLoading
+        authLoading,
       });
 
       // === AUTHENTICATION-BASED ROUTING ===
-      
+
       // 1. If user is logged in and tries to access auth pages, redirect to dashboard
-      if (currentUser && ['/signin', '/signup', '/forgot-password', '/reset-password'].includes(currentPath)) {
-        console.log('Flow: Logged-in user accessing auth page → Redirect to dashboard');
-        navigate('/dashboard', { replace: true });
+      if (
+        currentUser &&
+        ["/signin", "/signup", "/forgot-password", "/reset-password"].includes(
+          currentPath
+        )
+      ) {
+        console.log(
+          "Flow: Logged-in user accessing auth page → Redirect to dashboard"
+        );
+        navigate("/dashboard", { replace: true });
         return;
       }
 
       // 2. If user is logged in and on homepage, redirect to dashboard
-      if (currentUser && currentPath === '/') {
-        console.log('Flow: Logged-in user on homepage → Redirect to dashboard');
-        navigate('/dashboard', { replace: true });
+      if (currentUser && currentPath === "/") {
+        console.log("Flow: Logged-in user on homepage → Redirect to dashboard");
+        navigate("/dashboard", { replace: true });
         return;
       }
 
       // 3. If user is logged in and accessing allowed pages, proceed normally
-      if (currentUser && !['/signin', '/signup', '/forgot-password', '/reset-password', '/'].includes(currentPath)) {
-        console.log('Flow: Logged-in user accessing allowed page → Direct access');
+      if (
+        currentUser &&
+        ![
+          "/signin",
+          "/signup",
+          "/forgot-password",
+          "/reset-password",
+          "/",
+        ].includes(currentPath)
+      ) {
+        console.log(
+          "Flow: Logged-in user accessing allowed page → Direct access"
+        );
         setShowLaunchAnimation(false);
         setFlowReady(true);
         return;
       }
 
       // === GUEST USER ROUTING ===
-      
+
       // 4. If user is not logged in and on homepage
-      if (!currentUser && currentPath === '/') {
+      if (!currentUser && currentPath === "/") {
         // Show launch animation for first-time visitors or new sessions
         if (!animationShown || isNewSession) {
-          console.log('Flow: Guest user first visit → Show launch animation');
+          console.log("Flow: Guest user first visit → Show launch animation");
           setShowLaunchAnimation(true);
           setFlowReady(false);
         } else {
-          console.log('Flow: Guest user returning → Direct to homepage');
+          console.log("Flow: Guest user returning → Direct to homepage");
           setShowLaunchAnimation(false);
           setFlowReady(true);
         }
@@ -91,35 +121,68 @@ const FlowController = ({ children }) => {
       }
 
       // 5. If user is not logged in and accessing other public pages
-      if (!currentUser && ['/signin', '/signup', '/forgot-password', '/reset-password', '/terms', '/privacy-policy', '/contact', '/about', '/careers', '/help', '/confirm-email'].includes(currentPath)) {
-        console.log('Flow: Guest user accessing public page → Direct access');
+      if (
+        !currentUser &&
+        [
+          "/signin",
+          "/signup",
+          "/forgot-password",
+          "/reset-password",
+          "/terms",
+          "/privacy-policy",
+          "/contact",
+          "/about",
+          "/careers",
+          "/help",
+          "/confirm-email",
+        ].includes(currentPath)
+      ) {
+        console.log("Flow: Guest user accessing public page → Direct access");
         setShowLaunchAnimation(false);
         setFlowReady(true);
         return;
       }
 
       // 6. If user is not logged in and trying to access protected pages
-      if (!currentUser && !['/signin', '/signup', '/forgot-password', '/reset-password', '/terms', '/privacy-policy', '/contact', '/about', '/careers', '/help', '/confirm-email', '/'].includes(currentPath)) {
-        console.log('Flow: Guest user accessing protected page → Redirect to signin');
-        navigate('/signin', { replace: true });
+      if (
+        !currentUser &&
+        ![
+          "/signin",
+          "/signup",
+          "/forgot-password",
+          "/reset-password",
+          "/terms",
+          "/privacy-policy",
+          "/contact",
+          "/about",
+          "/careers",
+          "/help",
+          "/confirm-email",
+          "/",
+        ].includes(currentPath)
+      ) {
+        console.log(
+          "Flow: Guest user accessing protected page → Redirect to signin"
+        );
+        navigate("/signin", { replace: true });
         return;
       }
 
       // Default: proceed normally
-      console.log('Flow: Default case → Direct access');
+      console.log("Flow: Default case → Direct access");
       setShowLaunchAnimation(false);
       setFlowReady(true);
 
       // Update session tracking
-      sessionStorage.setItem('last_page_load', currentTime.toString());
+      sessionStorage.setItem("last_page_load", currentTime.toString());
     };
 
     determineFlow();
   }, [currentUser, authLoading, location.pathname, navigate]);
 
   const handleAnimationComplete = () => {
-    console.log('Flow: Launch animation completed');
-    sessionStorage.setItem('launch_animation_shown', 'true');
+    console.log("Flow: Launch animation completed");
+    sessionStorage.setItem("launch_animation_shown", "true");
     setShowLaunchAnimation(false);
     setFlowReady(true);
   };
@@ -237,6 +300,10 @@ function App() {
               <Route path="/about" element={<About />} />
               <Route path="/careers" element={<Careers />} />
               <Route path="/help" element={<HelpCenter />} />
+              <Route path="/blog" element={<Blog />} />
+              <Route path="/features" element={<Features />} />
+              <Route path="/pricing" element={<Pricing />} />
+              <Route path="/status" element={<Status />} />
 
               {/* Protected Routes - FlowController handles access control */}
               <Route
@@ -282,9 +349,11 @@ function App() {
   return (
     <ThemeProvider>
       {ENABLE_TURNSTILE ? (
-        <CloudflareTurnstileGate onVerificationComplete={(verified) => {
-          console.log('Turnstile verification complete:', verified);
-        }}>
+        <CloudflareTurnstileGate
+          onVerificationComplete={(verified) => {
+            console.log("Turnstile verification complete:", verified);
+          }}
+        >
           <AppContent />
         </CloudflareTurnstileGate>
       ) : (

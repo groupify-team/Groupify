@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@heroicons/react": "^2.2.0",
     "@marsidev/react-turnstile": "^1.1.0",
     "three": "^0.177.0"
   }
