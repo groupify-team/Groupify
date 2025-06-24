@@ -257,12 +257,12 @@ const SignUp = () => {
       </div>
 
       {/* Right Side - Form */}
-      <div className="flex-1 flex flex-col justify-center py-3 px-3 sm:py-6 sm:px-4 md:py-8 md:px-6 lg:py-12 lg:px-12 xl:px-20 2xl:px-24 bg-white dark:bg-gray-900">
+      <div className="flex-1 flex flex-col justify-center py-2 px-3 sm:py-4 sm:px-4 md:py-6 md:px-6 lg:py-8 lg:px-12 xl:px-20 2xl:px-24 bg-white dark:bg-gray-900">
         <div className="mx-auto w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-md">
           {/* Header */}
           <div className="mb-8">
             {/* Navigation */}
-            <div className="flex items-center justify-between mb-2 sm:mb-4 md:mb-6 lg:mb-8 -mt-2 sm:-mt-0 md:-mt-0">
+            <div className="flex items-center justify-between mb-2 sm:mb-4 md:mb-6 lg:mb-8 pt-2 sm:pt-3 md:pt-4">
               <Link
                 to="/"
                 className="inline-flex items-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
@@ -283,22 +283,25 @@ const SignUp = () => {
               </button>
             </div>
 
-            {/* Logo and Title */}
-            <div className="flex items-center justify-center md:justify-start mb-6 sm:mb-8 md:mb-10 -mt-4 sm:-mt-0 md:-mt-0">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-10 md:h-10 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl flex items-center justify-center">
-                <CameraIcon className="w-5 h-5 sm:w-7 sm:h-7 md:w-6 md:h-6 text-white" />
+            {/* Logo positioned in middle between top and title */}
+            <div className="flex items-center justify-center md:justify-start mb-8 [@media(min-width:375px)]:mb-12 sm:mb-16 md:mb-20 lg:mb-24">
+              <div className="w-10 h-10 [@media(min-width:375px)]:w-12 [@media(min-width:375px)]:h-12 sm:w-14 sm:h-14 md:w-12 md:h-12 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl flex items-center justify-center">
+                <CameraIcon className="w-5 h-5 [@media(min-width:375px)]:w-6 [@media(min-width:375px)]:h-6 sm:w-8 sm:h-8 md:w-6 md:h-6 text-white" />
               </div>
-              <span className="ml-2 sm:ml-3 text-2xl sm:text-3xl md:text-2xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
+              <span className="ml-2 text-xl [@media(min-width:375px)]:text-2xl sm:text-3xl md:text-3xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
                 Groupify
               </span>
             </div>
 
-            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-white text-center md:text-left">
-              Create your account
-            </h2>
-            <p className="mt-1 sm:mt-2 text-xs sm:text-sm md:text-base text-gray-600 dark:text-gray-400 text-center md:text-left">
-              Join Groupify and start organizing your travel memories
-            </p>
+            {/* Title section */}
+            <div className="text-center md:text-left mb-3 [@media(min-width:375px)]:mb-4 sm:mb-6 md:mb-8 lg:mb-10">
+              <h2 className="text-lg [@media(min-width:375px)]:text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
+                Create your account
+              </h2>
+              <p className="mt-1 sm:mt-2 text-xs [@media(min-width:375px)]:text-xs sm:text-sm md:text-base text-gray-600 dark:text-gray-400">
+                Join Groupify and start organizing your travel memories
+              </p>
+            </div>
           </div>
 
           {/* Form */}

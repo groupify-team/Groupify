@@ -12,7 +12,13 @@ import { toast } from "react-hot-toast";
 import { useAuth } from "../../contexts/AuthContext";
 import { updateTrip, deleteTrip } from "../../services/firebase/trips";
 
-const EditTripModal = ({ isOpen, onClose, trip, onTripUpdated, onTripDeleted }) => {
+const EditTripModal = ({
+  isOpen,
+  onClose,
+  trip,
+  onTripUpdated,
+  onTripDeleted,
+}) => {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [location, setLocation] = useState("");
@@ -27,7 +33,9 @@ const EditTripModal = ({ isOpen, onClose, trip, onTripUpdated, onTripDeleted }) 
   const { currentUser } = useAuth();
 
   // Check if current user is admin
-  const isAdmin = trip?.admins?.includes(currentUser?.uid) || trip?.createdBy === currentUser?.uid;
+  const isAdmin =
+    trip?.admins?.includes(currentUser?.uid) ||
+    trip?.createdBy === currentUser?.uid;
 
   // Populate form with trip data when trip changes or modal opens
   useEffect(() => {
@@ -92,42 +100,43 @@ const EditTripModal = ({ isOpen, onClose, trip, onTripUpdated, onTripDeleted }) 
     }
   };
 
-const handleDelete = async () => {
-  if (deleteConfirmText !== trip.name) {
-    setError(`Please type "${trip.name}" exactly to confirm deletion`);
-    return;
-  }
+  const handleDelete = async () => {
+    if (deleteConfirmText !== trip.name) {
+      setError(`Please type "${trip.name}" exactly to confirm deletion`);
+      return;
+    }
 
-  try {
-    setDeleting(true);
-    setError(null);
+    try {
+      setDeleting(true);
+      setError(null);
 
-    toast.loading("Deleting trip... This may take a moment.", { id: 'deleting-trip' });
+      toast.loading("Deleting trip... This may take a moment.", {
+        id: "deleting-trip",
+      });
 
-    // Delete the trip
-    await deleteTrip(trip.id);
+      // Delete the trip
+      await deleteTrip(trip.id);
 
-    // Show success message
-    toast.dismiss('deleting-trip');
-    toast.success("Trip deleted successfully!");
+      // Show success message
+      toast.dismiss("deleting-trip");
+      toast.success("Trip deleted successfully!");
 
-    // Close modal
-    onClose();
+      // Close modal
+      onClose();
 
-    // SIMPLE: Just go to dashboard and refresh
-    setTimeout(() => {
-      window.location.href = '/dashboard';
-    }, 500);
-
-  } catch (error) {
-    console.error("Error deleting trip:", error);
-    toast.dismiss('deleting-trip');
-    setError("Failed to delete trip. Please try again.");
-    toast.error("Failed to delete trip. Please try again.");
-  } finally {
-    setDeleting(false);
-  }
-};
+      // SIMPLE: Just go to dashboard and refresh
+      setTimeout(() => {
+        window.location.href = "/dashboard";
+      }, 500);
+    } catch (error) {
+      console.error("Error deleting trip:", error);
+      toast.dismiss("deleting-trip");
+      setError("Failed to delete trip. Please try again.");
+      toast.error("Failed to delete trip. Please try again.");
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   const handleClose = () => {
     if (!loading && !deleting) {
@@ -162,29 +171,31 @@ const handleDelete = async () => {
       className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 overflow-y-auto"
       onClick={handleClose}
     >
-      <div className="min-h-full flex items-center justify-center p-3 sm:p-4">
-        <div className="relative w-full max-w-sm sm:max-w-md my-auto">
+      <div className="min-h-full flex items-center justify-center p-2 sm:p-4">
+        <div className="relative w-full max-w-[300px] sm:max-w-sm md:max-w-md my-0 mx-2 max-[320px]:max-w-[280px]">
           {/* Background blur effect */}
           <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 via-cyan-500 to-teal-500 rounded-2xl blur opacity-20"></div>
 
           {/* Modal content */}
           <div
-            className="relative bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg rounded-xl sm:rounded-2xl shadow-2xl border border-white/20 dark:border-gray-700/50 overflow-hidden"
+            className="relative bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg rounded-lg sm:rounded-xl md:rounded-2xl shadow-2xl border border-white/20 dark:border-gray-700/50 overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Compact Header */}
-            <div className="bg-gradient-to-r from-blue-600 to-cyan-600 px-4 py-3 sm:px-6 sm:py-4">
+            <div className="bg-gradient-to-r from-blue-600 to-cyan-600 px-3 py-2 sm:px-4 sm:py-3 md:px-6 md:py-4">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 sm:gap-3">
-                  <div className="w-6 h-6 sm:w-8 sm:h-8 bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-xl flex items-center justify-center">
-                    <PencilIcon className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
+                <div className="flex items-center gap-1 sm:gap-2 md:gap-3">
+                  <div className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 bg-white/20 backdrop-blur-sm rounded-md sm:rounded-lg md:rounded-xl flex items-center justify-center">
+                    <PencilIcon className="w-2.5 h-2.5 sm:w-3 sm:h-3 md:w-4 md:h-4 text-white" />
                   </div>
                   <div>
-                    <h3 className="text-base sm:text-lg font-bold text-white">
+                    <h3 className="text-sm sm:text-base md:text-lg font-bold text-white">
                       {showDeleteConfirm ? "Delete Trip" : "Edit Trip"}
                     </h3>
                     <p className="text-white/70 text-xs hidden sm:block">
-                      {showDeleteConfirm ? "Confirm deletion" : "Update your adventure"}
+                      {showDeleteConfirm
+                        ? "Confirm deletion"
+                        : "Update your adventure"}
                     </p>
                   </div>
                 </div>
@@ -200,7 +211,7 @@ const handleDelete = async () => {
             </div>
 
             {/* Main Content */}
-            <div className="p-4 sm:p-6 space-y-3 sm:space-y-4">
+            <div className="p-3 sm:p-4 md:p-6 space-y-2 sm:space-y-3 md:space-y-4 max-[320px]:p-2 max-[320px]:space-y-1">
               {/* Error message */}
               {error && (
                 <div className="bg-red-50/80 dark:bg-red-900/30 border border-red-200/50 dark:border-red-800/50 text-red-700 dark:text-red-400 px-3 py-2 sm:px-4 sm:py-3 rounded-lg sm:rounded-xl flex items-center gap-2">
@@ -226,7 +237,7 @@ const handleDelete = async () => {
                         </p>
                       </div>
                     </div>
-                    
+
                     <p className="text-red-700 dark:text-red-300 text-sm mb-3">
                       This will permanently delete:
                     </p>
@@ -250,7 +261,7 @@ const handleDelete = async () => {
                         setError(null);
                       }}
                       placeholder={`Type ${trip.name} here`}
-                      className="w-full px-3 py-2 sm:py-2.5 bg-white/70 dark:bg-gray-700/70 border border-red-300 dark:border-red-600 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 text-sm"
+                      className="w-full px-2 py-2 sm:px-3 sm:py-2.5 bg-white/70 dark:bg-gray-700/70 border border-white/30 dark:border-gray-600/30 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 text-sm max-[320px]:px-2 max-[320px]:py-1.5 max-[320px]:text-xs"
                       disabled={deleting}
                     />
                   </div>
@@ -302,7 +313,7 @@ const handleDelete = async () => {
                       type="text"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className="w-full px-3 py-2 sm:py-2.5 bg-white/70 dark:bg-gray-700/70 border border-white/30 dark:border-gray-600/30 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 text-sm"
+                      className="w-full px-2 py-2 sm:px-3 sm:py-2.5 bg-white/70 dark:bg-gray-700/70 border border-white/30 dark:border-gray-600/30 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 text-sm max-[320px]:px-2 max-[320px]:py-1.5 max-[320px]:text-xs"
                       placeholder="Summer Vacation"
                       required
                       disabled={loading}
@@ -318,7 +329,7 @@ const handleDelete = async () => {
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
                       rows="2"
-                      className="w-full px-3 py-2 sm:py-2.5 bg-white/70 dark:bg-gray-700/70 border border-white/30 dark:border-gray-600/30 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 resize-none text-sm"
+                      className="w-full px-2 py-2 sm:px-3 sm:py-2.5 bg-white/70 dark:bg-gray-700/70 border border-white/30 dark:border-gray-600/30 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 text-sm max-[320px]:px-2 max-[320px]:py-1.5 max-[320px]:text-xs"
                       placeholder="Trip description..."
                       disabled={loading}
                     />
@@ -345,20 +356,20 @@ const handleDelete = async () => {
                   </div>
 
                   {/* Dates */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 gap-3">
                     <div className="space-y-1">
                       <label className="block text-xs sm:text-sm font-medium text-gray-800 dark:text-gray-200">
                         Start Date
                       </label>
                       <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <CalendarIcon className="w-3 h-3 sm:w-4 sm:h-4 text-green-500" />
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
+                          <CalendarIcon className="w-4 h-4 text-green-500" />
                         </div>
                         <input
                           type="date"
                           value={startDate}
                           onChange={(e) => setStartDate(e.target.value)}
-                          className="w-full pl-8 pr-3 sm:pl-10 py-2 sm:py-2.5 bg-white/70 dark:bg-gray-700/70 border border-white/30 dark:border-gray-600/30 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all text-gray-900 dark:text-white text-xs sm:text-sm"
+                          className="w-full pl-10 pr-3 py-3 sm:py-2.5 bg-white/70 dark:bg-gray-700/70 border border-white/30 dark:border-gray-600/30 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all text-gray-900 dark:text-white text-sm"
                           disabled={loading}
                         />
                       </div>
@@ -369,15 +380,15 @@ const handleDelete = async () => {
                         End Date
                       </label>
                       <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <CalendarIcon className="w-3 h-3 sm:w-4 sm:h-4 text-cyan-500" />
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
+                          <CalendarIcon className="w-4 h-4 text-cyan-500" />
                         </div>
                         <input
                           type="date"
                           value={endDate}
                           onChange={(e) => setEndDate(e.target.value)}
                           min={startDate}
-                          className="w-full pl-8 pr-3 sm:pl-10 py-2 sm:py-2.5 bg-white/70 dark:bg-gray-700/70 border border-white/30 dark:border-gray-600/30 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all text-gray-900 dark:text-white text-xs sm:text-sm"
+                          className="w-full pl-10 pr-3 py-3 sm:py-2.5 bg-white/70 dark:bg-gray-700/70 border border-white/30 dark:border-gray-600/30 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all text-gray-900 dark:text-white text-sm"
                           disabled={loading}
                         />
                       </div>
@@ -396,8 +407,8 @@ const handleDelete = async () => {
 
                   {/* Action Buttons */}
                   <div className="space-y-3 pt-3 sm:pt-4">
-                    {/* Update and Cancel buttons */}
-                    <div className="flex flex-row gap-2 sm:gap-3">
+                    {/* Update and Cancel buttons - same line */}
+                    <div className="flex gap-2 sm:gap-3">
                       <button
                         type="button"
                         onClick={handleClose}
@@ -427,7 +438,7 @@ const handleDelete = async () => {
                       </button>
                     </div>
 
-                    {/* Delete button - only show for admins */}
+                    {/* Delete button - separate line below, only show for admins */}
                     {isAdmin && (
                       <button
                         type="button"

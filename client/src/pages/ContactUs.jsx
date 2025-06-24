@@ -15,6 +15,8 @@ import {
   CheckCircleIcon,
 } from "@heroicons/react/24/outline";
 import { toast } from "react-hot-toast";
+import { httpsCallable } from "firebase/functions";
+import { functions } from "../services/firebase/config";
 
 const ContactUs = () => {
   const [formData, setFormData] = useState({
@@ -63,8 +65,9 @@ const ContactUs = () => {
       // TODO: Implement contact form submission
       // await submitContactForm(formData);
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      // Send email via Firebase Function
+      const sendContactEmail = httpsCallable(functions, "sendContactEmail");
+      await sendContactEmail(formData);
 
       setSubmitted(true);
       toast.success("Message sent successfully!");
