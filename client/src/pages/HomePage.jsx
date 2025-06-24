@@ -209,22 +209,9 @@ const HomePage = () => {
   const location = useLocation();
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // ADD THIS STATE FOR LAUNCH ANIMATION
-  const [showLaunch, setShowLaunch] = useState(() => {
-    // Only show launch animation if user hasn't seen it before
-    return !localStorage.getItem("hasSeenLaunchAnimation");
-  });
-
   useEffect(() => {
     setIsLoaded(true);
   }, []);
-
-  // Redirect authenticated users to dashboard
-  useEffect(() => {
-    if (currentUser) {
-      navigate("/dashboard");
-    }
-  }, [currentUser, navigate]);
 
   // Success message handling from email verification
   useEffect(() => {
@@ -238,22 +225,6 @@ const HomePage = () => {
       navigate(location.pathname, { replace: true });
     }
   }, [location, navigate]);
-
-  // Scroll to top when component mounts
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
-
-  // ADD THIS FUNCTION TO HANDLE ANIMATION COMPLETION
-  const handleAnimationComplete = () => {
-    localStorage.setItem("hasSeenLaunchAnimation", "true");
-    setShowLaunch(false);
-  };
-
-  // ADD THIS CHECK TO SHOW LAUNCH ANIMATION FIRST
-  if (showLaunch) {
-    return <LaunchAnimation onAnimationComplete={handleAnimationComplete} />;
-  }
 
   const features = [
     {
