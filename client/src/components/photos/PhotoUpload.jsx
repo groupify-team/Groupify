@@ -13,10 +13,10 @@ import {
 
 console.log("🔍 STORAGE:", storage);
 
-const PhotoUpload = ({ 
-  tripId, 
-  onPhotoUploaded, 
-  maxPhotos = Infinity, 
+const PhotoUpload = ({
+  tripId,
+  onPhotoUploaded,
+  maxPhotos = Infinity,
   currentPhotoCount = 0,
   title = "Upload Photos",
   subtitle = "Add memories to your trip",
@@ -24,7 +24,7 @@ const PhotoUpload = ({
   maxFileSize = "10MB",
   showLimitWarning = false,
   limitWarningText = "",
-  disabled = false
+  disabled = false,
 }) => {
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [uploading, setUploading] = useState(false);
@@ -34,21 +34,26 @@ const PhotoUpload = ({
   const { currentUser } = useAuth();
 
   // Calculate remaining slots
-  const remainingSlots = maxPhotos === Infinity ? Infinity : Math.max(0, maxPhotos - currentPhotoCount);
+  const remainingSlots =
+    maxPhotos === Infinity
+      ? Infinity
+      : Math.max(0, maxPhotos - currentPhotoCount);
   const isAtLimit = remainingSlots <= 0;
 
   const handleFileChange = (e) => {
     if (e.target.files) {
       let filesArray = Array.from(e.target.files);
-      
+
       // Limit files to remaining slots if there's a limit
       if (remainingSlots !== Infinity && filesArray.length > remainingSlots) {
         filesArray = filesArray.slice(0, remainingSlots);
-        setError(`Only ${remainingSlots} more photos can be uploaded. Selected first ${remainingSlots} files.`);
+        setError(
+          `Only ${remainingSlots} more photos can be uploaded. Selected first ${remainingSlots} files.`
+        );
       } else {
         setError(null);
       }
-      
+
       setSelectedFiles(filesArray);
     }
   };
@@ -70,15 +75,17 @@ const PhotoUpload = ({
 
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       let filesArray = Array.from(e.dataTransfer.files);
-      
+
       // Limit files to remaining slots if there's a limit
       if (remainingSlots !== Infinity && filesArray.length > remainingSlots) {
         filesArray = filesArray.slice(0, remainingSlots);
-        setError(`Only ${remainingSlots} more photos can be uploaded. Selected first ${remainingSlots} files.`);
+        setError(
+          `Only ${remainingSlots} more photos can be uploaded. Selected first ${remainingSlots} files.`
+        );
       } else {
         setError(null);
       }
-      
+
       setSelectedFiles(filesArray);
     }
   };
@@ -103,7 +110,9 @@ const PhotoUpload = ({
 
     // Final check before upload
     if (remainingSlots !== Infinity && selectedFiles.length > remainingSlots) {
-      setError(`Cannot upload ${selectedFiles.length} photos. Only ${remainingSlots} slots remaining.`);
+      setError(
+        `Cannot upload ${selectedFiles.length} photos. Only ${remainingSlots} slots remaining.`
+      );
       return;
     }
 
@@ -202,14 +211,14 @@ const PhotoUpload = ({
         </div>
       )}
 
-      {/* Drag & Drop Area */}
+      {/* Drag & Drop Area - Compact Layout */}
       <div className="mb-4 sm:mb-6">
         <label className="block text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 sm:mb-3">
           Select Photos
         </label>
 
         <div
-          className={`relative border-2 border-dashed rounded-xl sm:rounded-2xl p-6 sm:p-8 transition-all duration-300 ${
+          className={`relative border-2 border-dashed rounded-xl sm:rounded-2xl p-4 sm:p-6 transition-all duration-300 ${
             dragActive
               ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20"
               : "border-gray-300 dark:border-gray-600 hover:border-indigo-400 dark:hover:border-indigo-500"
@@ -228,37 +237,45 @@ const PhotoUpload = ({
             disabled={uploading}
           />
 
-          <div className="text-center">
-            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/30 dark:to-purple-900/30 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4">
-              <CloudArrowUpIcon className="w-6 h-6 sm:w-8 sm:h-8 text-indigo-600 dark:text-indigo-400" />
+          {/* Horizontal Layout: Icon Left, Content Right */}
+          <div className="flex items-center gap-4 sm:gap-6">
+            {/* Icon Section - Left */}
+            <div className="flex-shrink-0">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/30 dark:to-purple-900/30 rounded-xl sm:rounded-2xl flex items-center justify-center">
+                <CloudArrowUpIcon className="w-6 h-6 sm:w-8 sm:h-8 text-indigo-600 dark:text-indigo-400" />
+              </div>
             </div>
 
-            <h4 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-2">
-              {dragActive ? "Drop photos here" : "Drag & drop photos"}
-            </h4>
+            {/* Content Section - Right */}
+            <div className="flex-1 min-w-0">
+              <h4 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-1 sm:mb-2">
+                {dragActive ? "Drop photos here" : "Drag & drop photos"}
+              </h4>
 
-            <p className="text-gray-600 dark:text-gray-400 mb-3 sm:mb-4 text-sm">
-              or{" "}
-              <span className="text-indigo-600 dark:text-indigo-400 font-medium cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-300">
-                browse files
-              </span>
-            </p>
-
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-xs text-gray-500 dark:text-gray-400">
-              <span className="flex items-center gap-1">
-                <CheckCircleIcon className="w-3 h-3 sm:w-4 sm:h-4 text-green-500" />
-                {acceptedFormats}
-              </span>
-              <span className="flex items-center gap-1">
-                <CheckCircleIcon className="w-3 h-3 sm:w-4 sm:h-4 text-green-500" />
-                Up to {maxFileSize} each
-              </span>
-              {remainingSlots !== Infinity && (
-                <span className="flex items-center gap-1">
-                  <CheckCircleIcon className="w-3 h-3 sm:w-4 sm:h-4 text-blue-500" />
-                  {remainingSlots} slots left
+              <p className="text-gray-600 dark:text-gray-400 mb-2 sm:mb-3 text-sm">
+                or{" "}
+                <span className="text-indigo-600 dark:text-indigo-400 font-medium cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-300">
+                  browse files
                 </span>
-              )}
+              </p>
+
+              {/* Info Tags - Horizontal on larger screens, stack on mobile */}
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs text-gray-500 dark:text-gray-400">
+                <span className="flex items-center gap-1 bg-green-50 dark:bg-green-900/20 px-2 py-1 rounded-md border border-green-200 dark:border-green-800">
+                  <CheckCircleIcon className="w-3 h-3 text-green-500" />
+                  {acceptedFormats}
+                </span>
+                <span className="flex items-center gap-1 bg-green-50 dark:bg-green-900/20 px-2 py-1 rounded-md border border-green-200 dark:border-green-800">
+                  <CheckCircleIcon className="w-3 h-3 text-green-500" />
+                  Up to {maxFileSize}
+                </span>
+                {remainingSlots !== Infinity && (
+                  <span className="flex items-center gap-1 bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded-md border border-blue-200 dark:border-blue-800">
+                    <CheckCircleIcon className="w-3 h-3 text-blue-500" />
+                    {remainingSlots} slots left
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         </div>

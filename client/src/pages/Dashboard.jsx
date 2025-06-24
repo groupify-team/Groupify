@@ -1141,7 +1141,7 @@ const Dashboard = () => {
     ];
 
     return (
-      <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20 dark:border-gray-700/50 z-50 max-h-96 overflow-y-auto max-w-[calc(100vw-1rem)] mr-2 sm:mr-0">
+      <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 z-50 max-h-96 overflow-y-auto max-w-[calc(100vw-1rem)] mr-2 sm:mr-0">
         <div className="p-4 border-b border-gray-100 dark:border-gray-700">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
             Notifications
@@ -1207,12 +1207,18 @@ const Dashboard = () => {
 
   const TripsSection = () => (
     <div className="space-y-3 sm:space-y-6">
-      <div className="flex justify-between items-start">
-        <div>
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">
+      <div className="flex justify-between items-start gap-2 sm:gap-4">
+        <div className="flex-1 min-w-0">
+          <h1
+            className="text-lg sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white"
+            style={{ fontSize: window.innerWidth <= 320 ? "0.99rem" : "" }}
+          >
             My Trips
           </h1>
-          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 mt-0.5 sm:mt-1">
+          <p
+            className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 mt-0.5 sm:mt-1"
+            style={{ fontSize: window.innerWidth <= 320 ? "0.6rem" : "" }}
+          >
             Organize and manage your travel memories
           </p>
         </div>
@@ -1232,7 +1238,8 @@ const Dashboard = () => {
               }
               setShowCreateTripModal(true);
             }}
-            className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-3 sm:px-6 py-2 sm:py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center gap-1 sm:gap-2 text-sm sm:text-base whitespace-nowrap flex-shrink-0"
+            className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-2 py-2 rounded-lg font-medium transition-all duration-300 shadow-md flex items-center gap-1 sm:gap-2 text-xs sm:text-sm whitespace-nowrap flex-shrink-0 min-w-0"
+            style={{ fontSize: window.innerWidth <= 320 ? "0.55rem" : "" }}
           >
             <PlusIcon className="w-4 h-4 sm:w-5 sm:h-5" />
             <span className="hidden sm:inline">
@@ -1246,18 +1253,20 @@ const Dashboard = () => {
       </div>
 
       {/* Mobile Tab Switcher */}
-      <div className="lg:hidden mb-6">
+      <div
+        className="lg:hidden mb-6"
+        style={{ fontSize: window.innerWidth <= 320 ? "0.65rem" : "" }}
+      >
         <div className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-lg shadow-lg p-1.5 border border-white/20 dark:border-gray-700/50">
-          <div className="relative flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+          <div className="relative flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1 overflow-hidden">
             {/* Background slider */}
             <div
-              className="absolute top-1 bottom-1 w-1/2 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-md"
+              className="absolute top-1 bottom-1 w-1/2 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-md transition-all duration-500 ease-out"
               style={{
                 transform:
                   tripsActiveTab === "trips"
                     ? "translateX(0%)"
                     : "translateX(100%)",
-                transition: "transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)",
               }}
             />
 
@@ -1315,7 +1324,10 @@ const Dashboard = () => {
 
       {/* Filters - only show on desktop or when on trips tab on mobile */}
       {(tripsActiveTab === "trips" || window.innerWidth >= 1024) && (
-        <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-xl sm:rounded-2xl shadow-lg p-2 sm:p-4 lg:p-6 border border-white/20 dark:border-gray-700/50">
+        <div
+          className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-xl sm:rounded-2xl shadow-lg p-2 sm:p-4 lg:p-6 border border-white/20 dark:border-gray-700/50"
+          style={{ fontSize: window.innerWidth <= 320 ? "0.7rem" : "" }}
+        >
           <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
             <div className="relative flex-1">
               <MagnifyingGlassIcon className="w-4 h-4 text-gray-400 dark:text-gray-500 absolute left-2.5 top-1/2 transform -translate-y-1/2" />
@@ -1674,12 +1686,15 @@ const Dashboard = () => {
 
   const FriendsSection = () => (
     <div className="space-y-6">
-      <div className="flex justify-between items-start mb-4">
-        <div>
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">
+      <div className="flex justify-between items-start gap-2 sm:gap-4">
+        <div className="flex-1 min-w-0">
+          <h1
+            className="text-lg sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white"
+            style={{ fontSize: window.innerWidth <= 320 ? "0.85rem" : "" }}
+          >
             My Friends
           </h1>
-          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 mt-0.5 sm:mt-1">
+          <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 mt-0.5 sm:mt-1">
             Connect and share memories with friends
           </p>
         </div>
@@ -1687,7 +1702,7 @@ const Dashboard = () => {
         {friendsActiveTab === "friends" && (
           <button
             onClick={() => setShowAddFriendModal(true)}
-            className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-3 sm:px-6 py-2 sm:py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center gap-1 sm:gap-2 text-sm sm:text-base whitespace-nowrap flex-shrink-0"
+            className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-1 sm:px-6 py-2 sm:py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center gap-1 sm:gap-2 text-sm sm:text-base whitespace-nowrap flex-shrink-0"
           >
             <PlusIcon className="w-4 h-4 sm:w-5 sm:h-5" />
             <span className="hidden sm:inline">Add Friend</span>
@@ -1702,13 +1717,12 @@ const Dashboard = () => {
           <div className="relative flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
             {/* Background slider */}
             <div
-              className="absolute top-1 bottom-1 w-1/2 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-md"
+              className="absolute top-1 bottom-1 w-1/2 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-md transition-all duration-500 ease-out"
               style={{
                 transform:
                   friendsActiveTab === "friends"
                     ? "translateX(0%)"
                     : "translateX(100%)",
-                transition: "transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)",
               }}
             />
 
@@ -2019,7 +2033,7 @@ const Dashboard = () => {
   const SettingsSection = () => (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+        <h1 className="text-lg sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">
           Settings
         </h1>
         <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 mt-1">
@@ -2029,26 +2043,40 @@ const Dashboard = () => {
 
       {/* Account Settings */}
       <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6 border border-white/20 dark:border-gray-700/50">
-        <h2 className="text-lg sm:text-xl font-bold text-gray-800 dark:text-white mb-4 sm:mb-6 flex items-center gap-2">
-          <UserCircleIcon className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-600 dark:text-indigo-400" />
-          Account Information
-        </h2>
+        <div className="flex items-center justify-center gap-2 mb-4 sm:mb-6">
+          <UserCircleIcon className="w-6 h-6 sm:w-7 sm:h-7 text-indigo-600 dark:text-indigo-400" />
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-white">
+            Account Information
+          </h2>
+        </div>
 
         {/* Profile Section - Updated for better responsiveness */}
         <div className="bg-gray-50/50 dark:bg-gray-700/30 rounded-xl p-4 sm:p-6 mb-6">
           <div className="flex flex-col items-center text-center sm:flex-row sm:text-left sm:items-start gap-4 sm:gap-6">
-            {/* Profile Image - Larger and more responsive */}
-            <div className="relative flex-shrink-0">
-              <img
-                src={
-                  userData?.photoURL ||
-                  "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg"
-                }
-                alt="Profile"
-                className="w-20 h-20 sm:w-24 sm:h-24 lg:w-28 lg:h-28 rounded-full object-cover border-4 border-white dark:border-gray-600 shadow-lg"
-              />
-              {/* Online status indicator */}
-              <div className="absolute -bottom-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 bg-green-500 border-2 sm:border-3 lg:border-4 border-white dark:border-gray-800 rounded-full shadow-lg"></div>{" "}
+            {/* Profile Image - Larger photo, same container */}
+            <div className="relative flex-shrink-0 group">
+              <div className="relative">
+                <img
+                  src={
+                    userData?.photoURL ||
+                    "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg"
+                  }
+                  alt="Profile"
+                  className="w-28 h-28 sm:w-32 sm:h-32 lg:w-36 lg:h-36 rounded-full object-cover border-4 border-white dark:border-gray-600 shadow-lg transition-all duration-300 group-hover:shadow-xl group-hover:scale-105 cursor-pointer"
+                />
+
+                {/* Interactive overlay on hover */}
+                <div className="absolute inset-0 bg-black/20 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center">
+                  <div className="bg-white/90 dark:bg-gray-800/90 rounded-full p-2 transform scale-0 group-hover:scale-100 transition-transform duration-300">
+                    <CameraIcon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-700 dark:text-gray-300" />
+                  </div>
+                </div>
+
+                {/* Online status indicator - positioned half on background, half on photo */}
+                <div className="absolute -bottom-2 -right-2 w-7 h-7 sm:w-8 sm:h-8 lg:w-9 lg:h-9 bg-green-500 border-3 sm:border-4 border-white dark:border-gray-800 rounded-full shadow-lg flex items-center justify-center">
+                  <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-white rounded-full animate-pulse"></div>
+                </div>
+              </div>
             </div>
 
             {/* Profile Info - Better spacing and responsive text */}
@@ -2065,7 +2093,7 @@ const Dashboard = () => {
               {/* Edit Profile Button - Full width on mobile */}
               <button
                 onClick={() => setShowEditProfileModal(true)}
-                className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg sm:rounded-xl font-medium text-sm sm:text-base flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+                className="w-full sm:w-auto bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white px-4 sm:px-5 py-2 sm:py-2.5 rounded-full font-semibold text-sm sm:text-base flex items-center justify-center gap-2 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300 border border-white/20"
               >
                 <UserCircleIcon className="w-4 h-4 sm:w-5 sm:h-5" />
                 Edit Profile
@@ -2074,175 +2102,210 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Settings Grid - Better responsive layout */}
-        <div className="space-y-6 xl:space-y-0 xl:grid xl:grid-cols-2 xl:gap-8">
-          {/* Preferences - Improved spacing and touch targets */}
-          <div className="bg-blue-50/50 dark:bg-blue-900/20 rounded-xl p-4 sm:p-6">
-            <div className="flex items-center gap-3 mb-4 sm:mb-6">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-500 rounded-xl flex items-center justify-center shadow-lg">
-                <span className="text-white text-lg sm:text-xl font-bold">
-                  ⚙️
-                </span>
-              </div>
-              <h4 className="text-lg sm:text-xl font-bold text-gray-800 dark:text-white">
-                Notification Preferences
-              </h4>
-            </div>
+        {/* Settings Grid - Modern responsive design */}
+        <div className="bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-800 dark:to-blue-900/20 rounded-xl p-3 sm:p-4 lg:p-6 border border-gray-200/50 dark:border-gray-700/50">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
+            {/* Notifications */}
             <div className="space-y-3 sm:space-y-4">
-              <label className="flex items-center justify-between p-3 sm:p-4 bg-white/50 dark:bg-gray-700/30 rounded-lg sm:rounded-xl hover:bg-white/70 dark:hover:bg-gray-700/50 transition-colors cursor-pointer group min-h-[60px] sm:min-h-[68px]">
-                <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center flex-shrink-0">
-                    <span className="text-green-600 dark:text-green-400 text-sm sm:text-base">
-                      📧
-                    </span>
-                  </div>
-                  <span className="text-gray-700 dark:text-gray-300 text-sm sm:text-base font-medium truncate">
-                    Email notifications
-                  </span>
+              <div className="flex items-center gap-2 mb-2 sm:mb-3">
+                <div className="w-6 h-6 sm:w-7 sm:h-7 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-sm">
+                  <BellIcon className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
                 </div>
-                <input
-                  type="checkbox"
-                  className="w-5 h-5 sm:w-6 sm:h-6 rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-indigo-600 focus:ring-indigo-500 flex-shrink-0 ml-3"
-                  defaultChecked
-                />
-              </label>
-
-              <label className="flex items-center justify-between p-3 sm:p-4 bg-white/50 dark:bg-gray-700/30 rounded-lg sm:rounded-xl hover:bg-white/70 dark:hover:bg-gray-700/50 transition-colors cursor-pointer group min-h-[60px] sm:min-h-[68px]">
-                <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center flex-shrink-0">
-                    <span className="text-purple-600 dark:text-purple-400 text-sm sm:text-base">
-                      ✈️
-                    </span>
-                  </div>
-                  <span className="text-gray-700 dark:text-gray-300 text-sm sm:text-base font-medium truncate">
-                    Trip invitations
-                  </span>
-                </div>
-                <input
-                  type="checkbox"
-                  className="w-5 h-5 sm:w-6 sm:h-6 rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-indigo-600 focus:ring-indigo-500 flex-shrink-0 ml-3"
-                  defaultChecked
-                />
-              </label>
-
-              <label className="flex items-center justify-between p-3 sm:p-4 bg-white/50 dark:bg-gray-700/30 rounded-lg sm:rounded-xl hover:bg-white/70 dark:hover:bg-gray-700/50 transition-colors cursor-pointer group min-h-[60px] sm:min-h-[68px]">
-                <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-orange-100 dark:bg-orange-900/30 rounded-full flex items-center justify-center flex-shrink-0">
-                    <span className="text-orange-600 dark:text-orange-400 text-sm sm:text-base">
-                      👥
-                    </span>
-                  </div>
-                  <span className="text-gray-700 dark:text-gray-300 text-sm sm:text-base font-medium truncate">
-                    Friend requests
-                  </span>
-                </div>
-                <input
-                  type="checkbox"
-                  className="w-5 h-5 sm:w-6 sm:h-6 rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-indigo-600 focus:ring-indigo-500 flex-shrink-0 ml-3"
-                />
-              </label>
-            </div>
-          </div>
-
-          {/* Privacy - Improved spacing and touch targets */}
-          <div className="bg-green-50/50 dark:bg-green-900/20 rounded-xl p-4 sm:p-6">
-            <div className="flex items-center gap-3 mb-4 sm:mb-6">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-500 rounded-xl flex items-center justify-center shadow-lg">
-                <span className="text-white text-lg sm:text-xl font-bold">
-                  🔒
-                </span>
+                <h4 className="text-sm sm:text-base lg:text-lg font-semibold text-gray-800 dark:text-white">
+                  Notifications
+                </h4>
               </div>
-              <h4 className="text-lg sm:text-xl font-bold text-gray-800 dark:text-white">
-                Privacy Settings
-              </h4>
+              <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-3 sm:mb-4">
+                Choose which notifications you'd like to receive
+              </p>
+
+              <div className="space-y-2 sm:space-y-3">
+                {[
+                  {
+                    icon: (
+                      <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center shadow-sm">
+                        <svg
+                          className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                          <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+                        </svg>
+                      </div>
+                    ),
+                    label: "Email Notifications",
+                    defaultChecked: true,
+                  },
+                  {
+                    icon: (
+                      <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center shadow-sm">
+                        <MapIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white" />
+                      </div>
+                    ),
+                    label: "Trip Updates",
+                    defaultChecked: true,
+                  },
+                  {
+                    icon: (
+                      <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-lg flex items-center justify-center shadow-sm">
+                        <UserGroupIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white" />
+                      </div>
+                    ),
+                    label: "Friend Requests",
+                    defaultChecked: false,
+                  },
+                  {
+                    icon: (
+                      <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg flex items-center justify-center shadow-sm">
+                        <CameraIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white" />
+                      </div>
+                    ),
+                    label: "Photo Recognition",
+                    defaultChecked: true,
+                  },
+                ].map((item, index) => (
+                  <div key={index} className="group">
+                    <label className="flex items-center justify-between py-2 sm:py-3 px-3 sm:px-4 bg-white/60 dark:bg-gray-700/40 rounded-lg hover:bg-white/80 dark:hover:bg-gray-700/60 transition-all duration-200 cursor-pointer border border-transparent hover:border-blue-200 dark:hover:border-blue-600/30">
+                      <div className="flex items-center gap-2 sm:gap-3 flex-1">
+                        {item.icon}
+                        <span className="text-xs sm:text-sm lg:text-base font-medium text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white transition-colors">
+                          {item.label}
+                        </span>
+                      </div>
+                      <div className="relative">
+                        <input
+                          type="checkbox"
+                          className="sr-only peer"
+                          defaultChecked={item.defaultChecked}
+                        />
+                        <div className="w-10 h-5 sm:w-11 sm:h-6 bg-gray-200 dark:bg-gray-600 rounded-full peer peer-checked:bg-gradient-to-r peer-checked:from-blue-500 peer-checked:to-indigo-600 transition-all duration-300 shadow-inner"></div>
+                        <div className="absolute top-0.5 left-0.5 w-4 h-4 sm:w-5 sm:h-5 bg-white rounded-full shadow-md transform peer-checked:translate-x-5 sm:peer-checked:translate-x-5 transition-transform duration-300"></div>
+                      </div>
+                    </label>
+                  </div>
+                ))}
+              </div>
             </div>
+
+            {/* Privacy */}
             <div className="space-y-3 sm:space-y-4">
-              <label className="flex items-center justify-between p-3 sm:p-4 bg-white/50 dark:bg-gray-700/30 rounded-lg sm:rounded-xl hover:bg-white/70 dark:hover:bg-gray-700/50 transition-colors cursor-pointer group min-h-[60px] sm:min-h-[68px]">
-                <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center flex-shrink-0">
-                    <span className="text-blue-600 dark:text-blue-400 text-sm sm:text-base">
-                      👤
-                    </span>
-                  </div>
-                  <span className="text-gray-700 dark:text-gray-300 text-sm sm:text-base font-medium truncate">
-                    Profile visible to friends
-                  </span>
+              <div className="flex items-center gap-2 mb-2 sm:mb-3">
+                <div className="w-6 h-6 sm:w-7 sm:h-7 bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg flex items-center justify-center shadow-sm">
+                  <svg
+                    className="w-3 h-3 sm:w-4 sm:h-4 text-white"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
                 </div>
-                <input
-                  type="checkbox"
-                  className="w-5 h-5 sm:w-6 sm:h-6 rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-indigo-600 focus:ring-indigo-500 flex-shrink-0 ml-3"
-                  defaultChecked
-                />
-              </label>
+                <h4 className="text-sm sm:text-base lg:text-lg font-semibold text-gray-800 dark:text-white">
+                  Privacy Settings
+                </h4>
+              </div>
+              <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-3 sm:mb-4">
+                Control your privacy and data sharing preferences
+              </p>
 
-              <label className="flex items-center justify-between p-3 sm:p-4 bg-white/50 dark:bg-gray-700/30 rounded-lg sm:rounded-xl hover:bg-white/70 dark:hover:bg-gray-700/50 transition-colors cursor-pointer group min-h-[60px] sm:min-h-[68px]">
-                <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center flex-shrink-0">
-                    <span className="text-purple-600 dark:text-purple-400 text-sm sm:text-base">
-                      🔍
-                    </span>
+              <div className="space-y-2 sm:space-y-3">
+                {[
+                  {
+                    icon: (
+                      <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg flex items-center justify-center shadow-sm">
+                        <UserCircleIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white" />
+                      </div>
+                    ),
+                    label: "Public Profile",
+                    defaultChecked: true,
+                  },
+                  {
+                    icon: (
+                      <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-r from-pink-500 to-rose-500 rounded-lg flex items-center justify-center shadow-sm">
+                        <svg
+                          className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zm4.261 4.26l1.514 1.515a2.003 2.003 0 012.45 2.45l1.514 1.514a4 4 0 00-5.478-5.478z"
+                            clipRule="evenodd"
+                          />
+                          <path d="M12.454 16.697L9.75 13.992a4 4 0 01-3.742-3.741L2.335 6.578A9.98 9.98 0 00.458 10c1.274 4.057 5.065 7 9.542 7 .847 0 1.669-.105 2.454-.303z" />
+                        </svg>
+                      </div>
+                    ),
+                    label: "Face Recognition",
+                    defaultChecked: false,
+                  },
+                  {
+                    icon: (
+                      <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-lg flex items-center justify-center shadow-sm">
+                        <MagnifyingGlassIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white" />
+                      </div>
+                    ),
+                    label: "Search Visibility",
+                    defaultChecked: true,
+                  },
+                  {
+                    icon: (
+                      <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-r from-violet-500 to-purple-500 rounded-lg flex items-center justify-center shadow-sm">
+                        <svg
+                          className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M4.083 9h1.946c.089-1.546.383-2.97.837-4.118A6.004 6.004 0 004.083 9zM10 2a8 8 0 100 16 8 8 0 000-16zm0 2c-.076 0-.232.032-.465.262-.238.234-.497.623-.737 1.182-.389.907-.673 2.142-.766 3.556h3.936c-.093-1.414-.377-2.649-.766-3.556-.24-.56-.5-.948-.737-1.182C10.232 4.032 10.076 4 10 4zm3.971 5c-.089-1.546-.383-2.97-.837-4.118A6.004 6.004 0 0115.917 9h-1.946zm-2.003 2H8.032c.093 1.414.377 2.649.766 3.556.24.56.5.948.737 1.182.233.23.389.262.465.262.076 0 .232-.032.465-.262.238-.234.498-.623.737-1.182.389-.907.673-2.142.766-3.556zm1.166 4.118c.454-1.147.748-2.572.837-4.118h1.946a6.004 6.004 0 01-2.783 4.118zm-6.268 0C6.412 13.97 6.118 12.546 6.03 11H4.083a6.004 6.004 0 002.783 4.118z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                      </div>
+                    ),
+                    label: "Data Sharing",
+                    defaultChecked: false,
+                  },
+                ].map((item, index) => (
+                  <div key={index} className="group">
+                    <label className="flex items-center justify-between py-2 sm:py-3 px-3 sm:px-4 bg-white/60 dark:bg-gray-700/40 rounded-lg hover:bg-white/80 dark:hover:bg-gray-700/60 transition-all duration-200 cursor-pointer border border-transparent hover:border-green-200 dark:hover:border-green-600/30">
+                      <div className="flex items-center gap-2 sm:gap-3 flex-1">
+                        {item.icon}
+                        <span className="text-xs sm:text-sm lg:text-base font-medium text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white transition-colors">
+                          {item.label}
+                        </span>
+                      </div>
+                      <div className="relative">
+                        <input
+                          type="checkbox"
+                          className="sr-only peer"
+                          defaultChecked={item.defaultChecked}
+                        />
+                        <div className="w-10 h-5 sm:w-11 sm:h-6 bg-gray-200 dark:bg-gray-600 rounded-full peer peer-checked:bg-gradient-to-r peer-checked:from-green-500 peer-checked:to-emerald-600 transition-all duration-300 shadow-inner"></div>
+                        <div className="absolute top-0.5 left-0.5 w-4 h-4 sm:w-5 sm:h-5 bg-white rounded-full shadow-md transform peer-checked:translate-x-5 sm:peer-checked:translate-x-5 transition-transform duration-300"></div>
+                      </div>
+                    </label>
                   </div>
-                  <span className="text-gray-700 dark:text-gray-300 text-sm sm:text-base font-medium truncate">
-                    Allow face recognition
-                  </span>
-                </div>
-                <input
-                  type="checkbox"
-                  className="w-5 h-5 sm:w-6 sm:h-6 rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-indigo-600 focus:ring-indigo-500 flex-shrink-0 ml-3"
-                />
-              </label>
-
-              <label className="flex items-center justify-between p-3 sm:p-4 bg-white/50 dark:bg-gray-700/30 rounded-lg sm:rounded-xl hover:bg-white/70 dark:hover:bg-gray-700/50 transition-colors cursor-pointer group min-h-[60px] sm:min-h-[68px]">
-                <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center flex-shrink-0">
-                    <span className="text-green-600 dark:text-green-400 text-sm sm:text-base">
-                      🌐
-                    </span>
-                  </div>
-                  <span className="text-gray-700 dark:text-gray-300 text-sm sm:text-base font-medium truncate">
-                    Show in search results
-                  </span>
-                </div>
-                <input
-                  type="checkbox"
-                  className="w-5 h-5 sm:w-6 sm:h-6 rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-indigo-600 focus:ring-indigo-500 flex-shrink-0 ml-3"
-                  defaultChecked
-                />
-              </label>
+                ))}
+              </div>
             </div>
-          </div>
-        </div>
-
-        {/* Account Actions - Better responsive layout */}
-        <div className="mt-6 sm:mt-8 pt-6 sm:pt-8 border-t border-gray-200/50 dark:border-gray-700/50">
-          <h4 className="text-lg sm:text-xl font-bold text-gray-800 dark:text-white mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3">
-            <span className="text-xl sm:text-2xl">⚡</span>
-            Quick Actions
-          </h4>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-            <button className="flex items-center justify-center gap-3 sm:gap-4 p-4 sm:p-6 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl sm:rounded-2xl font-medium text-gray-800 dark:text-gray-200 min-h-[64px] sm:min-h-[72px] shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
-              <span className="text-xl sm:text-2xl">📤</span>
-              <span className="text-sm sm:text-base font-semibold">
-                Export My Data
-              </span>
-            </button>
-            <button className="flex items-center justify-center gap-3 sm:gap-4 p-4 sm:p-6 bg-blue-100 dark:bg-blue-900/30 hover:bg-blue-200 dark:hover:bg-blue-900/50 rounded-xl sm:rounded-2xl font-medium text-blue-800 dark:text-blue-400 min-h-[64px] sm:min-h-[72px] shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
-              <span className="text-xl sm:text-2xl">🔄</span>
-              <span className="text-sm sm:text-base font-semibold">
-                Backup Settings
-              </span>
-            </button>
           </div>
         </div>
       </div>
 
       {/* Face Profile Management - Better responsive spacing */}
       <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6 border border-white/20 dark:border-gray-700/50">
-        <h2 className="text-lg sm:text-xl font-bold text-gray-800 dark:text-white mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center justify-center gap-1 mb-3">
           <UserCircleIcon className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-600 dark:text-indigo-400" />
-          Face Profile
-        </h2>
-
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-white">
+            Face Profile
+          </h2>
+        </div>
         {!hasProfile ? (
           <div className="text-center py-6 sm:py-8 lg:py-12">
             <div className="w-20 h-20 sm:w-24 sm:h-24 lg:w-32 lg:h-32 bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-2xl sm:rounded-3xl flex items-center justify-center mx-auto mb-4 sm:mb-6 lg:mb-8 shadow-lg">
@@ -2251,7 +2314,7 @@ const Dashboard = () => {
             <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-800 dark:text-white mb-2 sm:mb-4">
               Create Your Face Profile
             </h3>
-            <p className="text-sm sm:text-base lg:text-lg text-gray-600 dark:text-gray-300 mb-6 sm:mb-8 lg:mb-10 max-w-md mx-auto px-4">
+            <p className="text-sm sm:text-base lg:text-lg text-gray-600 dark:text-gray-300 mb-4 sm:mb-5 lg:mb-6 max-w-md mx-auto px-4">
               Upload 2-10 clear photos of yourself to enable automatic photo
               recognition in your trips
             </p>
@@ -2350,53 +2413,65 @@ const Dashboard = () => {
         )}
       </div>
 
-      {/* Data & Storage - Better responsive layout */}
-      <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6 border border-white/20 dark:border-gray-700/50">
-        <h2 className="text-lg sm:text-xl font-bold text-gray-800 dark:text-white mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3">
-          <SparklesIcon className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600 dark:text-purple-400" />
-          Data & Storage
-        </h2>
+      {/* Data & Storage - Compact design */}
+      <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-xl shadow-lg p-4 border border-white/20 dark:border-gray-700/50">
+        <div className="flex items-center justify-center gap-2 mb-4">
+          <SparklesIcon className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+          <h2 className="text-xl font-bold text-gray-800 dark:text-white">
+            Account Data
+          </h2>
+        </div>
 
-        {/* Stats Grid - Better responsive spacing */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
-          <div className="text-center p-4 sm:p-6 bg-gray-50/50 dark:bg-gray-700/30 rounded-lg sm:rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
-            <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-800 dark:text-white mb-1 sm:mb-2">
+        {/* Compact Stats */}
+        <div className="grid grid-cols-3 gap-3 mb-4">
+          <div className="text-center p-3 bg-gray-50/50 dark:bg-gray-700/30 rounded-lg">
+            <p className="text-lg font-bold text-gray-800 dark:text-white">
               {trips.length}
             </p>
-            <p className="text-xs sm:text-sm lg:text-base text-gray-600 dark:text-gray-400 font-medium">
-              Total Trips
-            </p>
+            <p className="text-xs text-gray-600 dark:text-gray-400">Trips</p>
           </div>
-          <div className="text-center p-4 sm:p-6 bg-gray-50/50 dark:bg-gray-700/30 rounded-lg sm:rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
-            <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-800 dark:text-white mb-1 sm:mb-2">
+          <div className="text-center p-3 bg-gray-50/50 dark:bg-gray-700/30 rounded-lg">
+            <p className="text-lg font-bold text-gray-800 dark:text-white">
               {friends.length}
             </p>
-            <p className="text-xs sm:text-sm lg:text-base text-gray-600 dark:text-gray-400 font-medium">
-              Friends
-            </p>
+            <p className="text-xs text-gray-600 dark:text-gray-400">Friends</p>
           </div>
-          <div className="text-center p-4 sm:p-6 bg-gray-50/50 dark:bg-gray-700/30 rounded-lg sm:rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
-            <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-800 dark:text-white mb-1 sm:mb-2">
+          <div className="text-center p-3 bg-gray-50/50 dark:bg-gray-700/30 rounded-lg">
+            <p className="text-lg font-bold text-gray-800 dark:text-white">
               {hasProfile ? profilePhotos.length : 0}
             </p>
-            <p className="text-xs sm:text-sm lg:text-base text-gray-600 dark:text-gray-400 font-medium">
-              Profile Photos
-            </p>
+            <p className="text-xs text-gray-600 dark:text-gray-400">Photos</p>
           </div>
         </div>
 
-        {/* Action Buttons - Better responsive layout */}
-        <div className="space-y-3 sm:space-y-4">
-          <button className="w-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 py-3 sm:py-4 lg:py-5 px-4 sm:px-6 rounded-lg sm:rounded-xl font-medium text-sm sm:text-base lg:text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 flex items-center justify-center gap-3 min-h-[56px] sm:min-h-[64px]">
-            <span className="text-xl sm:text-2xl">📤</span>
-            <span className="font-semibold">Export My Data</span>
-          </button>
+        {/* Quick Actions */}
+        <div className="mt-4 pt-4 border-t border-gray-200/50 dark:border-gray-700/50">
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <div className="w-6 h-6 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
+              <span className="text-white text-sm">⚡</span>
+            </div>
+            <h3 className="text-base font-bold text-gray-700 dark:text-gray-300">
+              Quick Actions
+            </h3>
+          </div>
+          <div className="grid grid-cols-2 gap-2 mb-2">
+            <button className="flex items-center justify-center gap-2 p-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg font-medium text-gray-800 dark:text-gray-200 transition-colors text-sm">
+              <span>📤</span>
+              <span>Export Data</span>
+            </button>
+            <button className="flex items-center justify-center gap-2 p-3 bg-blue-100 dark:bg-blue-900/30 hover:bg-blue-200 dark:hover:bg-blue-900/50 rounded-lg font-medium text-blue-800 dark:text-blue-400 transition-colors text-sm">
+              <span>🔄</span>
+              <span>Backup</span>
+            </button>
+          </div>
           <button
             onClick={() => setShowDeleteAccountModal(true)}
-            className="w-full bg-red-100 dark:bg-red-900/30 hover:bg-red-200 dark:hover:bg-red-900/50 text-red-800 dark:text-red-400 py-3 sm:py-4 lg:py-5 px-4 sm:px-6 rounded-lg sm:rounded-xl font-medium text-sm sm:text-base lg:text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 flex items-center justify-center gap-3 min-h-[56px] sm:min-h-[64px]"
+            className="w-full flex items-center justify-center gap-2 p-3 bg-red-100 dark:bg-red-900/30 hover:bg-red-200 dark:hover:bg-red-900/50 text-red-800 dark:text-red-400 rounded-lg font-medium transition-colors text-sm"
           >
-            <span className="text-xl sm:text-2xl">🗑️</span>
-            <span className="font-semibold">Delete Account</span>
+            <div className="w-4 h-4 bg-red-500 rounded-sm flex items-center justify-center">
+              <span className="text-white text-xs">🗑</span>
+            </div>
+            <span>Delete Account</span>
           </button>
         </div>
       </div>
@@ -2807,7 +2882,7 @@ const Dashboard = () => {
 
                   {/* Mobile User Menu - Only visible on mobile */}
                   {showMobileUserMenu && (
-                    <div className="sm:hidden absolute right-0 top-10 w-64 bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-xl shadow-2xl border border-white/20 dark:border-gray-700/50 z-50 overflow-hidden">
+                    <div className="sm:hidden absolute right-0 top-10 w-64 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 z-50 overflow-hidden">
                       {/* Header */}
                       <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-4 py-3">
                         <div className="flex items-center gap-3">

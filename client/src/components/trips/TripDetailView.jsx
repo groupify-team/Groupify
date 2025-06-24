@@ -143,49 +143,49 @@ const TripDetailView = ({ tripId: propTripId }) => {
       loadUserFaceProfile();
     }
   }, [currentUser]);
- // Handle keyboard navigation for selected photo
+  // Handle keyboard navigation for selected photo
   useEffect(() => {
-  const handleKeyPress = (e) => {
-    if (!selectedPhoto) return;
+    const handleKeyPress = (e) => {
+      if (!selectedPhoto) return;
 
-    const currentIndex = photos.findIndex(p => p.id === selectedPhoto.id);
+      const currentIndex = photos.findIndex((p) => p.id === selectedPhoto.id);
 
-    switch (e.key) {
-      case 'ArrowLeft':
-        e.preventDefault();
-        if (currentIndex > 0) {
-          setSelectedPhoto(photos[currentIndex - 1]);
-        } else {
-          setSelectedPhoto(photos[photos.length - 1]); // Loop to last
-        }
-        break;
-      
-      case 'ArrowRight':
-        e.preventDefault();
-        if (currentIndex < photos.length - 1) {
-          setSelectedPhoto(photos[currentIndex + 1]);
-        } else {
-          setSelectedPhoto(photos[0]); // Loop to first
-        }
-        break;
-      
-      case 'Escape':
-        e.preventDefault();
-        setSelectedPhoto(null);
-        break;
-    }
-  };
+      switch (e.key) {
+        case "ArrowLeft":
+          e.preventDefault();
+          if (currentIndex > 0) {
+            setSelectedPhoto(photos[currentIndex - 1]);
+          } else {
+            setSelectedPhoto(photos[photos.length - 1]); // Loop to last
+          }
+          break;
 
-  // Only add listener when modal is open
-  if (selectedPhoto) {
-    document.addEventListener('keydown', handleKeyPress);
-    
-    // Cleanup
-    return () => {
-      document.removeEventListener('keydown', handleKeyPress);
+        case "ArrowRight":
+          e.preventDefault();
+          if (currentIndex < photos.length - 1) {
+            setSelectedPhoto(photos[currentIndex + 1]);
+          } else {
+            setSelectedPhoto(photos[0]); // Loop to first
+          }
+          break;
+
+        case "Escape":
+          e.preventDefault();
+          setSelectedPhoto(null);
+          break;
+      }
     };
-  }
-}, [selectedPhoto, photos]);
+
+    // Only add listener when modal is open
+    if (selectedPhoto) {
+      document.addEventListener("keydown", handleKeyPress);
+
+      // Cleanup
+      return () => {
+        document.removeEventListener("keydown", handleKeyPress);
+      };
+    }
+  }, [selectedPhoto, photos]);
 
   // Updated loadUserFaceProfile function - simplified
   const loadUserFaceProfile = async () => {
@@ -388,19 +388,19 @@ const TripDetailView = ({ tripId: propTripId }) => {
   };
 
   const checkPhotoLimit = () => {
-  return photos.length < MAX_PHOTOS_PER_TRIP;
-};
+    return photos.length < MAX_PHOTOS_PER_TRIP;
+  };
 
-const getRemainingPhotoSlots = () => {
-  return Math.max(0, MAX_PHOTOS_PER_TRIP - photos.length);
-};
+  const getRemainingPhotoSlots = () => {
+    return Math.max(0, MAX_PHOTOS_PER_TRIP - photos.length);
+  };
 
-const getPhotoLimitStatus = () => {
-  const remaining = getRemainingPhotoSlots();
-  if (remaining === 0) return 'full';
-  if (remaining <= 5) return 'warning';
-  return 'normal';
-};
+  const getPhotoLimitStatus = () => {
+    const remaining = getRemainingPhotoSlots();
+    if (remaining === 0) return "full";
+    if (remaining <= 5) return "warning";
+    return "normal";
+  };
 
   // Cancel face recognition
   const handleCancelFaceRecognition = () => {
@@ -609,37 +609,42 @@ const getPhotoLimitStatus = () => {
   }, [currentUser]);
 
   const handlePhotoUploaded = (uploadedPhotos) => {
-  // Check if adding these photos would exceed the limit
-  const totalAfterUpload = photos.length + uploadedPhotos.length;
-  
-  if (totalAfterUpload > MAX_PHOTOS_PER_TRIP) {
-    const allowedPhotos = uploadedPhotos.slice(0, MAX_PHOTOS_PER_TRIP - photos.length);
-    const rejectedCount = uploadedPhotos.length - allowedPhotos.length;
-    
-    toast.error(`Photo limit exceeded! Only ${allowedPhotos.length} photos were uploaded. ${rejectedCount} photos were rejected.`);
-    
-    if (allowedPhotos.length > 0) {
-      setPhotos((prev) => [...allowedPhotos, ...prev]);
+    // Check if adding these photos would exceed the limit
+    const totalAfterUpload = photos.length + uploadedPhotos.length;
+
+    if (totalAfterUpload > MAX_PHOTOS_PER_TRIP) {
+      const allowedPhotos = uploadedPhotos.slice(
+        0,
+        MAX_PHOTOS_PER_TRIP - photos.length
+      );
+      const rejectedCount = uploadedPhotos.length - allowedPhotos.length;
+
+      toast.error(
+        `Photo limit exceeded! Only ${allowedPhotos.length} photos were uploaded. ${rejectedCount} photos were rejected.`
+      );
+
+      if (allowedPhotos.length > 0) {
+        setPhotos((prev) => [...allowedPhotos, ...prev]);
+        if (trip) {
+          setTrip((prevTrip) => ({
+            ...prevTrip,
+            photoCount: (prevTrip.photoCount || 0) + allowedPhotos.length,
+          }));
+        }
+      }
+    } else {
+      setPhotos((prev) => [...uploadedPhotos, ...prev]);
       if (trip) {
         setTrip((prevTrip) => ({
           ...prevTrip,
-          photoCount: (prevTrip.photoCount || 0) + allowedPhotos.length,
+          photoCount: (prevTrip.photoCount || 0) + uploadedPhotos.length,
         }));
       }
+      toast.success(`${uploadedPhotos.length} photos uploaded successfully!`);
     }
-  } else {
-    setPhotos((prev) => [...uploadedPhotos, ...prev]);
-    if (trip) {
-      setTrip((prevTrip) => ({
-        ...prevTrip,
-        photoCount: (prevTrip.photoCount || 0) + uploadedPhotos.length,
-      }));
-    }
-    toast.success(`${uploadedPhotos.length} photos uploaded successfully!`);
-  }
 
-  setShowUploadForm(false);
-};
+    setShowUploadForm(false);
+  };
 
   const handleAddFriend = async (targetUid) => {
     try {
@@ -1005,11 +1010,11 @@ const getPhotoLimitStatus = () => {
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex flex-row gap-2 w-full sm:w-auto">
+                <div className="flex flex-row gap-1 w-full sm:w-auto">
                   {isAdmin && (
                     <button
                       onClick={() => setShowEditModal(true)}
-                      className="w-full sm:w-auto px-3 py-2 sm:px-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg sm:rounded-xl font-medium transition-all duration-300 transform hover:scale-105 shadow-lg text-xs sm:text-sm flex items-center justify-center gap-2 backdrop-blur-sm"
+                      className="w-full sm:w-auto px-1 xs:px-2 sm:px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg sm:rounded-xl font-medium transition-all duration-300 transform hover:scale-105 shadow-lg text-xs sm:text-sm flex items-center justify-center gap-2 backdrop-blur-sm max-[320px]:px-0.5 max-[320px]:text-[10px] max-[320px]:gap-1"
                     >
                       <PencilIcon className="w-3 h-3 sm:w-4 sm:h-4" />
                       Edit Trip
@@ -1017,21 +1022,33 @@ const getPhotoLimitStatus = () => {
                   )}
                   <button
                     onClick={() => setShowUploadForm(!showUploadForm)}
-                    disabled={getPhotoLimitStatus() === 'full' && !showUploadForm}
-                    className={`w-full sm:w-auto px-3 py-2 sm:px-4 rounded-lg sm:rounded-xl font-medium transition-all duration-300 transform hover:scale-105 shadow-lg text-xs sm:text-sm flex items-center justify-center gap-2 backdrop-blur-sm ${
-                      getPhotoLimitStatus() === 'full' && !showUploadForm
+                    disabled={
+                      getPhotoLimitStatus() === "full" && !showUploadForm
+                    }
+                    className={`w-full sm:w-auto px-1 xs:px-2 sm:px-4 py-2 rounded-lg sm:rounded-xl font-medium transition-all duration-300 transform hover:scale-105 shadow-lg text-xs sm:text-sm flex items-center justify-center gap-2 backdrop-blur-sm max-[320px]:px-0.5 max-[320px]:text-[10px] max-[320px]:gap-1 ${
+                      getPhotoLimitStatus() === "full" && !showUploadForm
                         ? "bg-gray-400 dark:bg-gray-600 text-gray-600 dark:text-gray-400 cursor-not-allowed"
                         : showUploadForm
                         ? "bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white"
-                        : getPhotoLimitStatus() === 'warning'
+                        : getPhotoLimitStatus() === "warning"
                         ? "bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700 text-white"
                         : "bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white"
                     }`}
                   >
-                    {getPhotoLimitStatus() === 'full' && !showUploadForm ? (
+                    {getPhotoLimitStatus() === "full" && !showUploadForm ? (
                       <>
-                        <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364l12.728-12.728" />
+                        <svg
+                          className="w-3 h-3 sm:w-4 sm:h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364l12.728-12.728"
+                          />
                         </svg>
                         Limit Reached
                       </>
@@ -1119,40 +1136,66 @@ const getPhotoLimitStatus = () => {
             {showUploadForm && (
               <div className="space-y-4">
                 {/* Photo limit warning */}
-                {getPhotoLimitStatus() === 'full' ? (
+                {getPhotoLimitStatus() === "full" ? (
                   <div className="relative group">
                     <div className="absolute -inset-1 bg-gradient-to-r from-red-600 to-orange-600 rounded-2xl blur opacity-20"></div>
                     <div className="relative bg-red-50/90 dark:bg-red-900/30 backdrop-blur-lg rounded-xl p-4 border border-red-200/50 dark:border-red-800/50">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 bg-gradient-to-r from-red-500 to-red-600 rounded-lg flex items-center justify-center">
-                          <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                          <svg
+                            className="w-4 h-4 text-white"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                            />
                           </svg>
                         </div>
                         <div>
-                          <h3 className="font-bold text-red-800 dark:text-red-400">Photo Limit Reached</h3>
+                          <h3 className="font-bold text-red-800 dark:text-red-400">
+                            Photo Limit Reached
+                          </h3>
                           <p className="text-red-700 dark:text-red-300 text-sm">
-                            This trip has reached the maximum of {MAX_PHOTOS_PER_TRIP} photos. 
-                            Please delete some photos before uploading new ones.
+                            This trip has reached the maximum of{" "}
+                            {MAX_PHOTOS_PER_TRIP} photos. Please delete some
+                            photos before uploading new ones.
                           </p>
                         </div>
                       </div>
                     </div>
                   </div>
-                ) : getPhotoLimitStatus() === 'warning' ? (
+                ) : getPhotoLimitStatus() === "warning" ? (
                   <div className="relative group">
                     <div className="absolute -inset-1 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-2xl blur opacity-20"></div>
                     <div className="relative bg-yellow-50/90 dark:bg-yellow-900/30 backdrop-blur-lg rounded-xl p-4 border border-yellow-200/50 dark:border-yellow-800/50">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-lg flex items-center justify-center">
-                          <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M12 17h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                          <svg
+                            className="w-4 h-4 text-white"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M12 9v2m0 4h.01M12 17h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                            />
                           </svg>
                         </div>
                         <div>
-                          <h3 className="font-bold text-yellow-800 dark:text-yellow-400">Almost Full</h3>
+                          <h3 className="font-bold text-yellow-800 dark:text-yellow-400">
+                            Almost Full
+                          </h3>
                           <p className="text-yellow-700 dark:text-yellow-300 text-sm">
-                            Only {getRemainingPhotoSlots()} photo slots remaining out of {MAX_PHOTOS_PER_TRIP}.
+                            Only {getRemainingPhotoSlots()} photo slots
+                            remaining out of {MAX_PHOTOS_PER_TRIP}.
                           </p>
                         </div>
                       </div>
@@ -1166,14 +1209,14 @@ const getPhotoLimitStatus = () => {
                   onPhotoUploaded={handlePhotoUploaded}
                   maxPhotos={MAX_PHOTOS_PER_TRIP}
                   currentPhotoCount={photos.length}
-                  showLimitWarning={getPhotoLimitStatus() === 'warning'}
+                  showLimitWarning={getPhotoLimitStatus() === "warning"}
                   limitWarningText={`Only ${getRemainingPhotoSlots()} photo slots remaining out of ${MAX_PHOTOS_PER_TRIP}.`}
-                  disabled={getPhotoLimitStatus() === 'full'}
+                  disabled={getPhotoLimitStatus() === "full"}
                 />
               </div>
             )}
 
-            {/* Photos Preview Section - Enhanced */}
+            {/* Photos Preview Section - Enhanced with glassmorphism */}
             <div className="relative group">
               <div className="absolute -inset-1 bg-gradient-to-r from-purple-500 via-pink-500 to-rose-500 rounded-2xl blur opacity-20 group-hover:opacity-30 transition duration-300"></div>
               <div className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-xl shadow-lg p-3 sm:p-6 border border-white/20 dark:border-gray-700/50">
@@ -1195,13 +1238,29 @@ const getPhotoLimitStatus = () => {
                     </div>
                   </div>
 
-                  <button
-                    onClick={() => setShowAllPhotosModal(true)}
-                    className="w-full sm:w-auto px-3 py-2 sm:px-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg sm:rounded-xl font-medium transition-all duration-300 transform hover:scale-105 shadow-lg text-xs sm:text-sm flex items-center justify-center gap-2 backdrop-blur-sm"
-                  >
-                    <EyeIcon className="w-3 h-3 sm:w-4 sm:h-4" />
-                    View All
-                  </button>
+                  <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <button
+                      onClick={() => setShowAllPhotosModal(true)}
+                      className="flex-1 sm:flex-none px-3 py-2 sm:px-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg sm:rounded-xl font-medium transition-all duration-300 transform hover:scale-105 shadow-lg text-xs sm:text-sm flex items-center justify-center gap-2 backdrop-blur-sm"
+                    >
+                      <EyeIcon className="w-3 h-3 sm:w-4 sm:h-4" />
+                      View All
+                    </button>
+                    {photos.length > 0 && (
+                      <button
+                        onClick={() => {
+                          const randomIndex = Math.floor(
+                            Math.random() * photos.length
+                          );
+                          setSelectedPhoto(photos[randomIndex]);
+                        }}
+                        className="px-3 py-2 sm:px-4 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white rounded-lg sm:rounded-xl font-medium transition-all duration-300 transform hover:scale-105 shadow-lg text-xs sm:text-sm flex items-center justify-center gap-2 backdrop-blur-sm"
+                      >
+                        <SparklesIcon className="w-3 h-3 sm:w-4 sm:h-4" />
+                        <span className="hidden sm:inline">Random</span>
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 {photos.length === 0 ? (
@@ -1300,10 +1359,12 @@ const getPhotoLimitStatus = () => {
                       <div className="absolute top-0 right-0 w-6 sm:w-8 h-full bg-gradient-to-l from-white/80 dark:from-gray-800/80 to-transparent pointer-events-none rounded-r-xl"></div>
                     </div>
 
-                    {/* Quick stats */}
+                    {/* Enhanced stats */}
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 pt-3 sm:pt-4 border-t border-purple-200/30 dark:border-purple-800/30">
-                      <div className="text-center p-2 sm:p-3 bg-purple-50/50 dark:bg-purple-900/20 rounded-lg border border-purple-200/30 dark:border-purple-800/30">
-                        <PhotoIcon className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600 dark:text-purple-400 mx-auto mb-1" />
+                      <div className="text-center p-2 sm:p-3 bg-purple-50/50 dark:bg-purple-900/20 rounded-lg border border-purple-200/30 dark:border-purple-800/30 hover:scale-105 transition-transform duration-300 group">
+                        <div className="w-6 h-6 sm:w-7 sm:h-7 bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg flex items-center justify-center mx-auto mb-1 shadow-sm">
+                          <PhotoIcon className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
+                        </div>
                         <p className="text-sm sm:text-lg font-bold text-purple-700 dark:text-purple-400">
                           {photos.length}
                         </p>
@@ -1311,8 +1372,10 @@ const getPhotoLimitStatus = () => {
                           Total Photos
                         </p>
                       </div>
-                      <div className="text-center p-2 sm:p-3 bg-pink-50/50 dark:bg-pink-900/20 rounded-lg border border-pink-200/30 dark:border-pink-800/30">
-                        <ClockIcon className="w-4 h-4 sm:w-5 sm:h-5 text-pink-600 dark:text-pink-400 mx-auto mb-1" />
+                      <div className="text-center p-2 sm:p-3 bg-pink-50/50 dark:bg-pink-900/20 rounded-lg border border-pink-200/30 dark:border-pink-800/30 hover:scale-105 transition-transform duration-300 group">
+                        <div className="w-6 h-6 sm:w-7 sm:h-7 bg-gradient-to-r from-pink-500 to-pink-600 rounded-lg flex items-center justify-center mx-auto mb-1 shadow-sm">
+                          <ClockIcon className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
+                        </div>
                         <p className="text-sm sm:text-lg font-bold text-pink-700 dark:text-pink-400">
                           {photos.length > 0
                             ? Math.ceil(
@@ -1330,8 +1393,10 @@ const getPhotoLimitStatus = () => {
                           Days Active
                         </p>
                       </div>
-                      <div className="text-center p-2 sm:p-3 bg-blue-50/50 dark:bg-blue-900/20 rounded-lg border border-blue-200/30 dark:border-blue-800/30">
-                        <UserGroupIcon className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 dark:text-blue-400 mx-auto mb-1" />
+                      <div className="text-center p-2 sm:p-3 bg-blue-50/50 dark:bg-blue-900/20 rounded-lg border border-blue-200/30 dark:border-blue-800/30 hover:scale-105 transition-transform duration-300 group">
+                        <div className="w-6 h-6 sm:w-7 sm:h-7 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg flex items-center justify-center mx-auto mb-1 shadow-sm">
+                          <UserGroupIcon className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
+                        </div>
                         <p className="text-sm sm:text-lg font-bold text-blue-700 dark:text-blue-400">
                           {tripMembers.length}
                         </p>
@@ -1339,8 +1404,10 @@ const getPhotoLimitStatus = () => {
                           Contributors
                         </p>
                       </div>
-                      <div className="text-center p-2 sm:p-3 bg-emerald-50/50 dark:bg-emerald-900/20 rounded-lg border border-emerald-200/30 dark:border-emerald-800/30">
-                        <SparklesIcon className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 dark:text-emerald-400 mx-auto mb-1" />
+                      <div className="text-center p-2 sm:p-3 bg-emerald-50/50 dark:bg-emerald-900/20 rounded-lg border border-emerald-200/30 dark:border-emerald-800/30 hover:scale-105 transition-transform duration-300 group">
+                        <div className="w-6 h-6 sm:w-7 sm:h-7 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-lg flex items-center justify-center mx-auto mb-1 shadow-sm">
+                          <SparklesIcon className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
+                        </div>
                         <p className="text-sm sm:text-lg font-bold text-emerald-700 dark:text-emerald-400">
                           {photos.length > 0
                             ? Math.round(
@@ -1614,33 +1681,6 @@ const getPhotoLimitStatus = () => {
               mobileActiveTab === "members" ? "block" : "hidden xl:block"
             }`}
           >
-            {/* Invite People Card */}
-            <div className="relative group">
-              <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl blur opacity-20 group-hover:opacity-30 transition duration-300"></div>
-              <div className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-xl shadow-lg p-6 border border-white/20 dark:border-gray-700/50">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center shadow-lg">
-                    <PlusIcon className="w-4 h-4 text-white" />
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-bold text-gray-800 dark:text-white">
-                      Invite People
-                    </h2>
-                    <p className="text-gray-600 dark:text-gray-400 text-xs">
-                      Add friends to the trip
-                    </p>
-                  </div>
-                </div>
-                <div className="bg-gradient-to-br from-emerald-50/50 to-teal-50/50 dark:from-emerald-900/20 dark:to-teal-900/20 rounded-xl p-3 border border-emerald-200/30 dark:border-emerald-800/30">
-                  <InviteFriendDropdown
-                    currentUser={currentUser}
-                    onSelect={handleInviteFriend}
-                    excludedUserIds={trip.members}
-                  />
-                </div>
-              </div>
-            </div>
-
             {/* Trip Members Card */}
             <div className="relative group">
               <div className="absolute -inset-1 bg-gradient-to-r from-orange-500 to-red-500 rounded-2xl blur opacity-20 group-hover:opacity-30 transition duration-300"></div>
@@ -1751,6 +1791,33 @@ const getPhotoLimitStatus = () => {
                 )}
               </div>
             </div>
+
+            {/* Invite People Card */}
+            <div className="relative group">
+              <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl blur opacity-20 group-hover:opacity-30 transition duration-300"></div>
+              <div className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-xl shadow-lg p-6 border border-white/20 dark:border-gray-700/50">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center shadow-lg">
+                    <PlusIcon className="w-4 h-4 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-bold text-gray-800 dark:text-white">
+                      Invite People
+                    </h2>
+                    <p className="text-gray-600 dark:text-gray-400 text-xs">
+                      Add friends to the trip
+                    </p>
+                  </div>
+                </div>
+                <div className="bg-gradient-to-br from-emerald-50/50 to-teal-50/50 dark:from-emerald-900/20 dark:to-teal-900/20 rounded-xl p-3 border border-emerald-200/30 dark:border-emerald-800/30">
+                  <InviteFriendDropdown
+                    currentUser={currentUser}
+                    onSelect={handleInviteFriend}
+                    excludedUserIds={trip.members}
+                  />
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -1782,22 +1849,21 @@ const getPhotoLimitStatus = () => {
         {selectedPhoto && (
           <div
             className="fixed bg-black/95 backdrop-blur-lg flex items-center justify-center z-[9999]"
-            style={{ 
-              position: 'fixed',
-              top: '-10px',
-              left: '-10px',
-              right: '-10px',
-              bottom: '-10px',
-              width: 'calc(100vw + 20px)',
-              height: 'calc(100vh + 20px)',
+            style={{
+              position: "fixed",
+              top: "-10px",
+              left: "-10px",
+              right: "-10px",
+              bottom: "-10px",
+              width: "calc(100vw + 20px)",
+              height: "calc(100vh + 20px)",
               margin: 0,
-              padding: 0
+              padding: 0,
             }}
             onClick={() => setSelectedPhoto(null)}
           >
             {/* Fixed container with consistent dimensions */}
             <div className="relative w-full h-full max-w-7xl max-h-screen flex items-center justify-center p-4">
-              
               {/* Image container with fixed aspect ratio */}
               <div className="relative w-full h-full max-w-6xl max-h-[90vh] bg-black rounded-2xl overflow-hidden shadow-2xl flex items-center justify-center">
                 <img
@@ -1808,13 +1874,13 @@ const getPhotoLimitStatus = () => {
                   alt="Full view"
                   className="max-w-full max-h-full object-contain"
                   style={{
-                    maxWidth: '100%',
-                    maxHeight: '100%',
-                    width: 'auto',
-                    height: 'auto'
+                    maxWidth: "100%",
+                    maxHeight: "100%",
+                    width: "auto",
+                    height: "auto",
                   }}
                 />
-                
+
                 {/* Close button */}
                 <button
                   onClick={(e) => {
@@ -1830,7 +1896,9 @@ const getPhotoLimitStatus = () => {
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    const currentIndex = photos.findIndex(p => p.id === selectedPhoto.id);
+                    const currentIndex = photos.findIndex(
+                      (p) => p.id === selectedPhoto.id
+                    );
                     if (currentIndex > 0) {
                       setSelectedPhoto(photos[currentIndex - 1]);
                     } else {
@@ -1839,8 +1907,18 @@ const getPhotoLimitStatus = () => {
                   }}
                   className="absolute left-6 top-1/2 transform -translate-y-1/2 w-14 h-14 bg-black/70 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-black/90 transition-all duration-300 hover:scale-110 shadow-xl z-20"
                 >
-                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                  <svg
+                    className="w-7 h-7"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    strokeWidth={2.5}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M15 19l-7-7 7-7"
+                    />
                   </svg>
                 </button>
 
@@ -1848,7 +1926,9 @@ const getPhotoLimitStatus = () => {
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    const currentIndex = photos.findIndex(p => p.id === selectedPhoto.id);
+                    const currentIndex = photos.findIndex(
+                      (p) => p.id === selectedPhoto.id
+                    );
                     if (currentIndex < photos.length - 1) {
                       setSelectedPhoto(photos[currentIndex + 1]);
                     } else {
@@ -1857,30 +1937,46 @@ const getPhotoLimitStatus = () => {
                   }}
                   className="absolute right-6 top-1/2 transform -translate-y-1/2 w-14 h-14 bg-black/70 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-black/90 transition-all duration-300 hover:scale-110 shadow-xl z-20"
                 >
-                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                  <svg
+                    className="w-7 h-7"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    strokeWidth={2.5}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M9 5l7 7-7 7"
+                    />
                   </svg>
                 </button>
 
                 {/* Photo counter - Fixed position */}
                 <div className="absolute top-6 left-6 bg-black/70 backdrop-blur-sm rounded-full px-4 py-2 text-white text-sm font-medium shadow-xl z-20">
-                  {photos.findIndex(p => p.id === selectedPhoto.id) + 1} / {photos.length}
+                  {photos.findIndex((p) => p.id === selectedPhoto.id) + 1} /{" "}
+                  {photos.length}
                 </div>
 
                 {/* Photo info overlay - Fixed position */}
                 <div className="absolute bottom-6 left-6 right-6 bg-black/70 backdrop-blur-sm rounded-xl p-4 text-white shadow-xl">
-                  <p className="font-medium text-lg">{selectedPhoto.fileName}</p>
+                  <p className="font-medium text-lg">
+                    {selectedPhoto.fileName}
+                  </p>
                   <p className="text-sm text-white/80 mt-1">
                     {new Date(selectedPhoto.uploadedAt).toLocaleDateString()}
                   </p>
                   {selectedPhoto.faceMatch && (
                     <div className="mt-3">
-                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                        selectedPhoto.faceMatch.matchType === "strong" 
-                          ? "bg-green-500/20 text-green-300 border border-green-500/30" 
-                          : "bg-blue-500/20 text-blue-300 border border-blue-500/30"
-                      }`}>
-                        Face Match: {(selectedPhoto.faceMatch.confidence * 100).toFixed(0)}%
+                      <span
+                        className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                          selectedPhoto.faceMatch.matchType === "strong"
+                            ? "bg-green-500/20 text-green-300 border border-green-500/30"
+                            : "bg-blue-500/20 text-blue-300 border border-blue-500/30"
+                        }`}
+                      >
+                        Face Match:{" "}
+                        {(selectedPhoto.faceMatch.confidence * 100).toFixed(0)}%
                       </span>
                     </div>
                   )}
@@ -1948,139 +2044,188 @@ const getPhotoLimitStatus = () => {
           </div>
         )}
 
-        {/* Edit Trip Modal */}
-        <EditTripModal
-        isOpen={showEditModal}
-        onClose={() => setShowEditModal(false)}
-        trip={trip}
-        onTripUpdated={(updatedTrip) => {
-          setTrip(updatedTrip);
-          setShowEditModal(false);
-          toast.success("Trip updated successfully!");
-        }}
-        onTripDeleted={async (deletedTripId) => {
-          setShowEditModal(false);
-          
-          // Always call the dashboard callback if available
-          if (onTripDeleted) {
-            onTripDeleted(deletedTripId);
-          }
-          
-          // Also always navigate as backup (this will work even if callback fails)
-          setTimeout(() => {
-            navigate('/dashboard');
-            toast.success("Trip deleted successfully!");
-          }, 100);
-        }}
-      />
-
-        {/* All Photos Modal - Enhanced for mobile */}
+        {/* Modal Header Section Only - Until Photos Start */}
         {showAllPhotosModal && (
           <div
-            className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-6"
             onClick={() => setShowAllPhotosModal(false)}
           >
             <div
-              className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg rounded-2xl shadow-2xl max-w-7xl max-h-[90vh] overflow-hidden w-full border border-white/20 dark:border-gray-700/50"
+              className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-2xl shadow-2xl max-w-5xl max-h-[75vh] overflow-hidden w-full border border-white/20 dark:border-gray-700/50"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="p-6">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg">
-                      <PhotoIcon className="w-4 h-4 text-white" />
+              {/* Compact Header */}
+              <div className="relative bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-rose-500/10 dark:from-purple-900/30 dark:via-pink-900/30 dark:to-rose-900/30 border-b border-purple-200/30 dark:border-purple-800/30 p-4 sm:p-5">
+                {/* Close Button - Just X, no circle */}
+                <button
+                  onClick={() => setShowAllPhotosModal(false)}
+                  className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center transition-all duration-300 hover:scale-110 z-20 text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400"
+                >
+                  <XMarkIcon className="w-6 h-6 stroke-2" />
+                </button>
+
+                <div className="pr-12">
+                  {/* Title and Info - Reduced margin when not selecting */}
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg">
+                      <PhotoIcon className="w-5 h-5 text-white" />
                     </div>
-                    <h3 className="text-2xl font-bold text-gray-800 dark:text-white flex items-center gap-3">
-                      All Trip Photos
-                      <span className="text-sm font-semibold text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-900/30 px-3 py-1 rounded-full border border-purple-200 dark:border-purple-800">
-                        {photos.length}
-                      </span>
-                    </h3>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-3">
-                    {selectMode && selectedPhotos.length > 0 && (
-                      <button
-                        onClick={handleDeleteSelectedPhotos}
-                        className="px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-xl font-medium transition-all duration-300 text-sm flex items-center gap-2 shadow-lg"
-                      >
-                        <TrashIcon className="w-4 h-4" />
-                        Delete {selectedPhotos.length}
-                      </button>
-                    )}
+                    <div className="flex-1">
+                      <h3 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-white">
+                        Trip Gallery
+                      </h3>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-sm font-semibold text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-900/30 px-2 py-1 rounded-full">
+                          {photos.length} Photos
+                        </span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                          {Math.round(
+                            (photos.length / MAX_PHOTOS_PER_TRIP) * 100
+                          )}
+                          % used
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Select/Cancel Button - Right side of header */}
                     {isAdmin && (
                       <button
                         onClick={() => {
                           setSelectMode(!selectMode);
                           setSelectedPhotos([]);
                         }}
-                        className={`px-4 py-2 rounded-xl font-medium transition-all duration-300 text-sm shadow-lg ${
+                        className={`px-3 py-2 rounded-lg font-medium transition-all duration-300 text-sm shadow-lg transform hover:scale-105 ${
                           selectMode
-                            ? "bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white"
-                            : "bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white"
+                            ? "bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white"
+                            : "bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white"
                         }`}
                       >
-                        {selectMode ? "Cancel" : "Select Photos"}
+                        {selectMode ? "Cancel" : "Select"}
                       </button>
                     )}
-                    <button
-                      onClick={() => setShowAllPhotosModal(false)}
-                      className="px-4 py-2 bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white rounded-xl font-medium transition-all duration-300 text-sm shadow-lg"
-                    >
-                      Close
-                    </button>
                   </div>
-                </div>
 
-                <div className="max-h-[60vh] overflow-y-auto scrollbar-thin scrollbar-thumb-purple-300 dark:scrollbar-thumb-purple-700 scrollbar-track-transparent">
-                  <div
-                    key={`photo-grid-${photos.length}-${selectedPhotos.length}`}
-                    className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-3"
-                  >
-                    {photos.map((photo) => {
-                      const isSelected = selectedPhotos.includes(photo.id);
-                      return (
-                        <div
-                          key={`modal-${photo.id}`}
-                          className={`relative cursor-pointer rounded-xl overflow-hidden shadow-lg transform transition-all duration-300 hover:scale-105 bg-gradient-to-br from-white to-gray-50 dark:from-gray-700 dark:to-gray-800 p-1 ${
-                            selectMode && !isSelected ? "opacity-60" : ""
-                          }`}
-                          onClick={() => {
-                            if (selectMode) {
-                              setSelectedPhotos((prev) =>
-                                prev.includes(photo.id)
-                                  ? prev.filter((id) => id !== photo.id)
-                                  : [...prev, photo.id]
-                              );
-                            } else {
-                              setSelectedPhoto(photo);
-                              setShowAllPhotosModal(false);
-                            }
-                          }}
-                        >
-                          <img
-                            src={photo.downloadURL.replace(
-                              "groupify-77202.appspot.com",
-                              "groupify-77202.firebasestorage.app"
-                            )}
-                            alt={photo.fileName}
-                            className="w-full h-24 sm:h-28 object-cover rounded-lg"
-                          />
-                          {selectMode && (
-                            <div className="absolute top-2 right-2 w-6 h-6 border-2 border-white rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-lg">
-                              {isSelected && (
-                                <CheckIcon className="w-4 h-4 text-green-600" />
-                              )}
+                  {/* Selection Tools - Only shows when selecting */}
+                  {selectMode && (
+                    <div className="flex items-center justify-center gap-4 mt-4">
+                      {/* Selection Counter - Center */}
+                      {selectedPhotos.length > 0 && (
+                        <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/30 dark:to-emerald-900/30 px-4 py-2 rounded-lg border border-green-200 dark:border-green-800 shadow-sm">
+                          <div className="flex items-center gap-2">
+                            <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
+                              <CheckIcon className="w-3 h-3 text-white" />
                             </div>
-                          )}
-                          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2 rounded-b-lg">
-                            <p className="text-white text-xs font-medium">
-                              {new Date(photo.uploadedAt).toLocaleDateString()}
-                            </p>
+                            <span className="text-sm font-bold text-green-700 dark:text-green-300">
+                              {selectedPhotos.length} selected
+                            </span>
                           </div>
                         </div>
-                      );
-                    })}
-                  </div>
+                      )}
+
+                      {/* Delete Button - Only icon */}
+                      {selectedPhotos.length > 0 && (
+                        <button
+                          onClick={handleDeleteSelectedPhotos}
+                          className="w-10 h-10 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg transition-all duration-300 flex items-center justify-center shadow-lg transform hover:scale-105 hover:shadow-xl"
+                        >
+                          <TrashIcon className="w-5 h-5" />
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+              {/* Main Photo Grid - Focused on Photos Only */}
+              <div className="p-4 sm:p-5">
+                <div className="max-h-[50vh] overflow-y-auto scrollbar-thin scrollbar-thumb-purple-300 dark:scrollbar-thumb-purple-700 scrollbar-track-transparent">
+                  {photos.length === 0 ? (
+                    /* Empty State */
+                    <div className="text-center py-12">
+                      <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                        <PhotoIcon className="w-8 h-8 text-purple-500 dark:text-purple-400" />
+                      </div>
+                      <h3 className="text-lg font-bold text-gray-700 dark:text-gray-300 mb-2">
+                        No photos yet
+                      </h3>
+                      <p className="text-gray-500 dark:text-gray-400 text-sm">
+                        Upload photos to start your gallery
+                      </p>
+                    </div>
+                  ) : (
+                    /* Compact Photo Grid */
+                    <div className="grid grid-cols-3 xs:grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-2 sm:gap-3">
+                      {photos.map((photo, index) => {
+                        const isSelected = selectedPhotos.includes(photo.id);
+                        return (
+                          <div
+                            key={`modal-${photo.id}`}
+                            className={`relative cursor-pointer rounded-lg overflow-hidden shadow-lg transform transition-all duration-300 hover:scale-105 bg-gradient-to-br from-white to-gray-50 dark:from-gray-700 dark:to-gray-800 p-1 group ${
+                              selectMode && !isSelected
+                                ? "opacity-60 hover:opacity-80"
+                                : ""
+                            } ${
+                              isSelected
+                                ? "ring-2 ring-purple-500 ring-offset-1 scale-105"
+                                : ""
+                            }`}
+                            onClick={() => {
+                              if (selectMode) {
+                                setSelectedPhotos((prev) =>
+                                  prev.includes(photo.id)
+                                    ? prev.filter((id) => id !== photo.id)
+                                    : [...prev, photo.id]
+                                );
+                              } else {
+                                setSelectedPhoto(photo);
+                                setShowAllPhotosModal(false);
+                              }
+                            }}
+                          >
+                            <img
+                              src={photo.downloadURL.replace(
+                                "groupify-77202.appspot.com",
+                                "groupify-77202.firebasestorage.app"
+                              )}
+                              alt={photo.fileName}
+                              className="w-full h-16 sm:h-20 md:h-24 object-cover rounded-md"
+                              loading="lazy"
+                            />
+
+                            {/* Selection Indicator */}
+                            {selectMode && (
+                              <div className="absolute top-1 right-1 w-5 h-5 border-2 border-white rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-lg">
+                                {isSelected && (
+                                  <CheckIcon className="w-3 h-3 text-green-600" />
+                                )}
+                              </div>
+                            )}
+
+                            {/* Photo Number Badge */}
+                            {!selectMode && (
+                              <div className="absolute top-1 left-1 w-4 h-4 sm:w-5 sm:h-5 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-full flex items-center justify-center text-xs font-bold text-purple-600 dark:text-purple-400 shadow-lg">
+                                {index + 1}
+                              </div>
+                            )}
+
+                            {/* Hover Overlay */}
+                            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-1 rounded-b-md opacity-0 group-hover:opacity-100 transition-all duration-300">
+                              <div className="flex items-center justify-between">
+                                <span className="text-white text-xs">
+                                  {new Date(
+                                    photo.uploadedAt
+                                  ).toLocaleDateString()}
+                                </span>
+                                <EyeIcon className="w-3 h-3 text-white/80" />
+                              </div>
+                            </div>
+
+                            {/* Hover Ring */}
+                            <div className="absolute inset-0 rounded-lg border-2 border-transparent group-hover:border-purple-400/50 transition-all duration-300"></div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -2110,30 +2255,33 @@ const getPhotoLimitStatus = () => {
       </div>
       {/* Edit Trip Modal */}
       <EditTripModal
-      isOpen={showEditModal}
-      onClose={() => setShowEditModal(false)}
-      trip={trip}
-      onTripUpdated={(updatedTrip) => {
-        setTrip(updatedTrip);
-        setShowEditModal(false);
-        toast.success("Trip updated successfully!");
-      }}
-      onTripDeleted={(deletedTripId) => {
-        // Close modal first
-        setShowEditModal(false);
-        
-        // Show success message
-        toast.success("Trip deleted successfully!");
-        
-        // Navigate with a flag to refresh and pass the deleted trip ID
-        navigate('/dashboard', { 
-          state: { 
-            refreshTrips: true, 
-            deletedTripId: deletedTripId 
-          } 
-        });
-      }}
-    />
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        trip={trip}
+        onTripUpdated={(updatedTrip) => {
+          setTrip(updatedTrip);
+          setShowEditModal(false);
+          // Modal already shows success message, no duplicate toast needed
+        }}
+        onTripDeleted={(deletedTripId) => {
+          setShowEditModal(false);
+
+          // Call parent callback if available (for dashboard integration)
+          if (onTripDeleted) {
+            onTripDeleted(deletedTripId);
+          }
+
+          // Navigate to dashboard as backup/fallback
+          setTimeout(() => {
+            navigate("/dashboard", {
+              state: {
+                refreshTrips: true,
+                deletedTripId: deletedTripId,
+              },
+            });
+          }, 100);
+        }}
+      />
     </div>
   );
 };

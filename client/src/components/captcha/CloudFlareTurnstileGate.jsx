@@ -70,23 +70,21 @@ const CloudflareTurnstileGate = ({ children, onVerificationComplete }) => {
 
   // Updated reset function for development
   const resetTurnstile = () => {
-    if (process.env.NODE_ENV === "development") {
-      // Clear session storage
-      sessionStorage.removeItem("turnstile_verified");
-      sessionStorage.removeItem("turnstile_verified_time");
+    // Clear session storage
+    sessionStorage.removeItem("turnstile_verified");
+    sessionStorage.removeItem("turnstile_verified_time");
 
-      // Set verification as true and bypass the gate
-      sessionStorage.setItem("turnstile_verified", "true");
-      sessionStorage.setItem("turnstile_verified_time", Date.now().toString());
+    // Set verification as true and bypass the gate
+    sessionStorage.setItem("turnstile_verified", "true");
+    sessionStorage.setItem("turnstile_verified_time", Date.now().toString());
 
-      // Update state to show the protected content
-      setIsVerified(true);
-      setAttempts(0);
-      setError("");
+    // Update state to show the protected content
+    setIsVerified(true);
+    setAttempts(0);
+    setError("");
 
-      // Call the completion callback
-      onVerificationComplete?.(true);
-    }
+    // Call the completion callback
+    onVerificationComplete?.(true);
   };
 
   // If too many failed attempts, show error state
@@ -200,13 +198,13 @@ const CloudflareTurnstileGate = ({ children, onVerificationComplete }) => {
           )}
 
           {/* Development Reset Button */}
-          {process.env.NODE_ENV === "development" && (
+          {(process.env.NODE_ENV === "development" || true) && (
             <div className="text-center mb-4">
               <button
                 onClick={resetTurnstile}
                 className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg font-medium transition-colors"
               >
-                Skip Verification (Dev Only)
+                Skip Verification
               </button>
             </div>
           )}
