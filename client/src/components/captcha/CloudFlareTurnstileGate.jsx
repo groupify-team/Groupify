@@ -223,7 +223,7 @@ const CloudflareTurnstileGate = ({ children, onVerificationComplete }) => {
           )}
 
           {/* Development Reset Button */}
-          {(process.env.NODE_ENV === "development" || true) && (
+          {(process.env.NODE_ENV === "development") && (
             <div className="text-center mb-4">
               <button
                 onClick={resetTurnstile}
