@@ -2,6 +2,7 @@
   "dependencies": {
     "@heroicons/react": "^2.2.0",
     "@marsidev/react-turnstile": "^1.1.0",
+    "phosphor-react": "^1.4.1",
     "three": "^0.177.0"
   }
 }

@@ -49,6 +49,12 @@ const SignIn = () => {
     }
   }, []);
 
+  // Add to the top of each page component
+  useEffect(() => {
+    document.body.style.opacity = "1";
+    document.body.style.transition = "opacity 0.5s ease-in-out";
+  }, []);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -70,7 +76,13 @@ const SignIn = () => {
 
       await signin(email, password);
       toast.success("Welcome back!");
-      navigate("/dashboard");
+
+      // Add smooth transition
+      document.body.style.opacity = "0";
+      document.body.style.transition = "opacity 0.3s ease-out";
+      setTimeout(() => {
+        navigate("/dashboard");
+      }, 300);
     } catch (error) {
       console.error("Sign in error:", error);
 
@@ -118,7 +130,13 @@ const SignIn = () => {
       setLoading(true);
       await signInWithGoogle();
       toast.success("Welcome to Groupify!");
-      navigate("/dashboard");
+
+      // Add smooth transition
+      document.body.style.opacity = "0";
+      document.body.style.transition = "opacity 0.3s ease-out";
+      setTimeout(() => {
+        navigate("/dashboard");
+      }, 300);
     } catch (error) {
       console.error("Google sign in error:", error);
 

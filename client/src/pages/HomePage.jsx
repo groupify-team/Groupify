@@ -12,7 +12,9 @@ import {
   SunIcon,
   ArrowRightIcon,
   CheckIcon,
+  UserIcon,
 } from "@heroicons/react/24/outline";
+import PhotoStack3D from "../components/auth/3DInteractivePhotoStack";
 
 // Launch Animation Component (add this at the top of your file)
 const LaunchAnimation = ({ onAnimationComplete }) => {
@@ -208,48 +210,9 @@ const HomePage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isLoaded, setIsLoaded] = useState(false);
+  const [activeBenefit, setActiveBenefit] = useState(0);
 
-  // ADD THIS STATE FOR LAUNCH ANIMATION
-  const [showLaunch, setShowLaunch] = useState(() => {
-    // Only show launch animation if user hasn't seen it before
-    return !localStorage.getItem("hasSeenLaunchAnimation");
-  });
-
-  useEffect(() => {
-    setIsLoaded(true);
-  }, []);
-
-  // Redirect authenticated users to dashboard
-  useEffect(() => {
-    if (currentUser) {
-      navigate("/dashboard");
-    }
-  }, [currentUser, navigate]);
-
-  // Success message handling from email verification
-  useEffect(() => {
-    // Check if there's a success message from email verification
-    if (location.state?.message && location.state?.verified) {
-      toast.success(location.state.message, {
-        duration: 5000,
-      });
-
-      // Clear the state to prevent showing the message again
-      navigate(location.pathname, { replace: true });
-    }
-  }, [location, navigate]);
-
-  // ADD THIS FUNCTION TO HANDLE ANIMATION COMPLETION
-  const handleAnimationComplete = () => {
-    localStorage.setItem("hasSeenLaunchAnimation", "true");
-    setShowLaunch(false);
-  };
-
-  // ADD THIS CHECK TO SHOW LAUNCH ANIMATION FIRST
-  if (showLaunch) {
-    return <LaunchAnimation onAnimationComplete={handleAnimationComplete} />;
-  }
-
+  // MOVE THESE ARRAYS TO THE TOP - BEFORE useEFFECTS
   const features = [
     {
       icon: CameraIcon,
@@ -285,6 +248,63 @@ const HomePage = () => {
     "Access from any device",
     "Privacy-focused and secure",
   ];
+
+  // ADD THIS STATE FOR LAUNCH ANIMATION
+  const [showLaunch, setShowLaunch] = useState(() => {
+    // Only show launch animation if user hasn't seen it before
+    return !localStorage.getItem("hasSeenLaunchAnimation");
+  });
+
+  useEffect(() => {
+    setIsLoaded(true);
+  }, []);
+
+  // Redirect authenticated users to dashboard
+  useEffect(() => {
+    if (currentUser) {
+      navigate("/dashboard");
+    }
+  }, [currentUser, navigate]);
+
+  // Benefits carousel animation
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActiveBenefit((prev) => (prev + 1) % benefits.length);
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [benefits.length]);
+
+  // Success message handling from email verification
+  useEffect(() => {
+    // Check if there's a success message from email verification
+    if (location.state?.message && location.state?.verified) {
+      toast.success(location.state.message, {
+        duration: 5000,
+      });
+
+      // Clear the state to prevent showing the message again
+      navigate(location.pathname, { replace: true });
+    }
+  }, [location, navigate]);
+
+  const handleLinkClick = (to) => {
+    document.body.style.opacity = "0";
+    setTimeout(() => {
+      navigate(to);
+    }, 200);
+  };
+
+  // ADD THIS FUNCTION TO HANDLE ANIMATION COMPLETION
+  const handleAnimationComplete = () => {
+    localStorage.setItem("hasSeenLaunchAnimation", "true");
+    setShowLaunch(false);
+  };
+
+  // ADD THIS CHECK TO SHOW LAUNCH ANIMATION FIRST
+  if (showLaunch) {
+    return <LaunchAnimation onAnimationComplete={handleAnimationComplete} />;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 transition-colors duration-500">
@@ -323,12 +343,20 @@ const HomePage = () => {
                 <div className="flex items-center space-x-2 sm:space-x-3">
                   <Link
                     to="/signin"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleLinkClick("/signin");
+                    }}
                     className="text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 px-2 sm:px-3 py-1.5 sm:py-2 rounded-md text-xs sm:text-sm font-medium transition-colors"
                   >
                     Sign In
                   </Link>
                   <Link
                     to="/signup"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleLinkClick("/signup");
+                    }}
                     className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors shadow-md hover:shadow-lg"
                   >
                     Get Started
@@ -389,6 +417,10 @@ const HomePage = () => {
                       </p>
                       <Link
                         to="/signin"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleLinkClick("/signin");
+                        }}
                         className="inline-block mt-3 bg-green-600 text-white px-4 sm:px-6 py-1.5 sm:py-2 rounded-lg text-sm sm:text-base font-medium hover:bg-green-700 transition-colors"
                       >
                         Sign In Now
@@ -403,6 +435,10 @@ const HomePage = () => {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 sm:gap-3 mb-10 sm:mb-14 px-3 sm:px-0">
               <Link
                 to="/signup"
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleLinkClick("/signup");
+                }}
                 className="group inline-flex items-center bg-indigo-600 hover:bg-indigo-700 text-white px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl text-sm sm:text-base font-semibold transition-all duration-200 shadow-xl hover:shadow-2xl hover:scale-105 w-full sm:w-auto justify-center"
               >
                 Start Organizing Photos
@@ -410,6 +446,10 @@ const HomePage = () => {
               </Link>
               <Link
                 to="/signin"
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleLinkClick("/signin");
+                }}
                 className="inline-flex items-center bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm hover:bg-white dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl text-sm sm:text-base font-semibold border border-white/20 dark:border-gray-700/50 transition-all duration-200 hover:shadow-lg w-full sm:w-auto justify-center"
               >
                 Sign In
@@ -471,7 +511,7 @@ const HomePage = () => {
       <div className="py-12 sm:py-16 md:py-20 lg:py-24">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 lg:gap-16 items-center">
-            {/* Benefits List */}
+            {/* Benefits List - Left Side */}
             <div>
               <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-6 sm:mb-8">
                 Why choose Groupify?
@@ -480,16 +520,30 @@ const HomePage = () => {
                 {benefits.map((benefit, index) => (
                   <div
                     key={benefit}
-                    className={`flex items-center p-3 sm:p-4 bg-white/40 dark:bg-gray-800/40 backdrop-blur-sm rounded-lg border border-white/20 dark:border-gray-700/50 transition-all duration-300 ${
+                    className={`flex items-center p-3 sm:p-4 bg-white/40 dark:bg-gray-800/40 backdrop-blur-sm rounded-lg border border-white/20 dark:border-gray-700/50 transition-all duration-500 ${
                       isLoaded
                         ? `opacity-100 translate-x-0 delay-${index * 100}`
                         : "opacity-0 -translate-x-8"
+                    } ${
+                      activeBenefit === index
+                        ? "scale-105 bg-indigo-50/60 dark:bg-indigo-900/20 border-indigo-200 dark:border-indigo-700 shadow-lg"
+                        : "scale-100"
                     }`}
                   >
-                    <div className="w-5 h-5 sm:w-6 sm:h-6 bg-green-500 rounded-full flex items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
+                    <div
+                      className={`w-5 h-5 sm:w-6 sm:h-6 bg-green-500 rounded-full flex items-center justify-center mr-3 sm:mr-4 flex-shrink-0 transition-all duration-500 ${
+                        activeBenefit === index ? "scale-110 bg-indigo-500" : ""
+                      }`}
+                    >
                       <CheckIcon className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
                     </div>
-                    <span className="text-sm sm:text-base text-gray-700 dark:text-gray-300 font-medium">
+                    <span
+                      className={`text-sm sm:text-base text-gray-700 dark:text-gray-300 font-medium transition-all duration-500 ${
+                        activeBenefit === index
+                          ? "text-lg sm:text-xl font-semibold text-indigo-700 dark:text-indigo-300"
+                          : ""
+                      }`}
+                    >
                       {benefit}
                     </span>
                   </div>
@@ -497,22 +551,9 @@ const HomePage = () => {
               </div>
             </div>
 
-            {/* Visual Element */}
+            {/* Right Side - 3D Interactive Photo Stack */}
             <div className="relative">
-              <div className="aspect-square bg-gradient-to-br from-indigo-500/20 to-purple-500/20 rounded-2xl sm:rounded-3xl flex items-center justify-center backdrop-blur-sm border border-white/20 dark:border-gray-700/50">
-                <div className="grid grid-cols-3 gap-2 sm:gap-3 md:gap-4 p-4 sm:p-6 md:p-8">
-                  {[...Array(9)].map((_, i) => (
-                    <div
-                      key={i}
-                      className={`aspect-square bg-gradient-to-br from-indigo-400 to-purple-500 rounded-lg shadow-lg transition-all duration-500 hover:scale-110 ${
-                        isLoaded
-                          ? `opacity-100 scale-100 delay-${i * 50}`
-                          : "opacity-0 scale-95"
-                      }`}
-                    />
-                  ))}
-                </div>
-              </div>
+              <PhotoStack3D />
             </div>
           </div>
         </div>
@@ -530,6 +571,10 @@ const HomePage = () => {
           </p>
           <Link
             to="/signup"
+            onClick={(e) => {
+              e.preventDefault();
+              handleLinkClick("/signup");
+            }}
             className="inline-flex items-center bg-white text-indigo-600 px-6 sm:px-8 py-3 sm:py-4 rounded-xl text-base sm:text-lg font-semibold hover:bg-gray-50 transition-all duration-200 shadow-xl hover:shadow-2xl hover:scale-105"
           >
             Get Started Free
@@ -656,6 +701,10 @@ const HomePage = () => {
                 <li>
                   <Link
                     to="/signup"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleLinkClick("/signup");
+                    }}
                     className="text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
                   >
                     Get Started
@@ -664,6 +713,10 @@ const HomePage = () => {
                 <li>
                   <Link
                     to="/signin"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleLinkClick("/signin");
+                    }}
                     className="text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
                   >
                     Sign In
@@ -847,6 +900,10 @@ const HomePage = () => {
                   <li>
                     <Link
                       to="/signup"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleLinkClick("/signup");
+                      }}
                       className="text-sm sm:text-base text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
                     >
                       Get Started
@@ -855,6 +912,10 @@ const HomePage = () => {
                   <li>
                     <Link
                       to="/signin"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleLinkClick("/signin");
+                      }}
                       className="text-sm sm:text-base text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
                     >
                       Sign In
