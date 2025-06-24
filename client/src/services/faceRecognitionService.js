@@ -1,5 +1,6 @@
 // services/faceRecognitionService.js
-import * as faceapi from 'face-api.js';
+import * as faceapi from '@vladmandic/face-api';
+
 
 class ModernFaceRecognitionService {
   constructor() {
@@ -25,9 +26,10 @@ class ModernFaceRecognitionService {
       
       // Try local models first, then fallback to CDN
       const MODEL_URLS = [
-        '/models', // Local models
-        'https://justadudewhohacks.github.io/face-api.js/models', // CDN fallback
-      ];
+  '/models', // local backup
+  'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@latest/model', // Working CDN
+  
+];
       
       let modelsLoaded = false;
       let lastError = null;
@@ -798,12 +800,12 @@ export const filterPhotosByFace = async (photos, userPhotoURL, onProgress = null
 
     // Create a temporary profile
     const tempProfile = {
-      userId: 'temp_user',
-      allFaces: [bestUserFace],
-      faceMatcher: new (await import('face-api.js')).FaceMatcher(
-        [new (await import('face-api.js')).LabeledFaceDescriptors('temp_user', [bestUserFace.descriptor])],
-        faceRecognitionService.FACE_MATCHER_THRESHOLD
-      ),
+    userId: 'temp_user',
+    allFaces: [bestUserFace],
+    faceMatcher: new faceapi.FaceMatcher(
+      [new faceapi.LabeledFaceDescriptors('temp_user', [bestUserFace.descriptor])],
+      faceRecognitionService.FACE_MATCHER_THRESHOLD
+    ),
       createdAt: Date.now(),
       metadata: {
         totalImages: 1,

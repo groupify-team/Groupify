@@ -88,7 +88,21 @@ const LaunchAnimation = ({ onAnimationComplete }) => {
 
       {/* Main Content */}
       <div className="flex flex-col items-center justify-center min-h-screen px-4">
-        {/* Animated Logo */}
+        {/* Site Logo */}
+        <div className="relative mb-6 sm:mb-8 md:mb-10">
+          <div className="relative">
+            <img
+              src="/groupifyLogo.png"
+              alt="Groupify Logo"
+              className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 lg:w-32 lg:h-32 object-contain animate-pulse drop-shadow-2xl"
+            />
+            
+            {/* Glow Effect around logo */}
+            <div className="absolute inset-0 w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 lg:w-32 lg:h-32 bg-gradient-to-r from-indigo-600/20 to-purple-600/20 rounded-3xl blur-xl animate-pulse"></div>
+          </div>
+        </div>
+
+        {/* Animated Logo Container (keeping original for visual enhancement) */}
         <div className="relative mb-8">
           {/* Glow Effect */}
           <div className="absolute inset-0 w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-3xl blur-xl opacity-60 animate-pulse"></div>
@@ -113,7 +127,7 @@ const LaunchAnimation = ({ onAnimationComplete }) => {
         </div>
 
         {/* Brand Name */}
-        <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 bg-clip-text text-transparent mb-4 animate-pulse">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 bg-clip-text text-transparent mb-4 animate-pulse leading-relaxed pb-2">
           Groupify
         </h1>
 
@@ -182,33 +196,4 @@ LaunchAnimation.propTypes = {
   onAnimationComplete: PropTypes.func,
 };
 
-// Example usage component showing how to integrate with your existing HomePage
-const App = () => {
-  const [showLaunch, setShowLaunch] = useState(true);
-
-  const handleAnimationComplete = () => {
-    setShowLaunch(false);
-  };
-
-  if (showLaunch) {
-    return <LaunchAnimation onAnimationComplete={handleAnimationComplete} />;
-  }
-
-  // Your existing HomePage component would render here
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900">
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
-            Welcome to Groupify!
-          </h1>
-          <p className="text-lg text-gray-600 dark:text-gray-300">
-            Launch animation completed. Your main content loads here.
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export default App;
+export default LaunchAnimation;
