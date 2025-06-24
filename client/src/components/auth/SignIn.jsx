@@ -165,9 +165,9 @@ const SignIn = () => {
         {/* Main Content - Centered */}
         <div className="flex-1 flex flex-col justify-center px-4 sm:px-6 md:px-6 lg:px-12 xl:px-20 2xl:px-24 -mt-8 sm:-mt-12 md:-mt-0">
           <div className="mx-auto w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-md">
-            {/* Logo positioned in middle between top and welcome back */}
-            <div className="text-center mb-16 sm:mb-20 md:mb-24">
-              <div className="flex items-center justify-center">
+            {/* Logo and Title */}
+            <div className="text-center mb-6 sm:mb-8 md:mb-10">
+              <div className="flex items-center justify-center mb-4 sm:mb-6">
                 <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-12 md:h-12 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center">
                   <CameraIcon className="w-6 h-6 sm:w-8 sm:h-8 md:w-6 md:h-6 text-white" />
                 </div>
@@ -175,10 +175,7 @@ const SignIn = () => {
                   Groupify
                 </span>
               </div>
-            </div>
 
-            {/* Title section */}
-            <div className="text-center mb-6 sm:mb-8 md:mb-10">
               <h2 className="text-2xl sm:text-3xl md:text-3xl font-bold text-gray-900 dark:text-white mb-2">
                 Welcome back
               </h2>
