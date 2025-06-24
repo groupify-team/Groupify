@@ -182,33 +182,5 @@ LaunchAnimation.propTypes = {
   onAnimationComplete: PropTypes.func,
 };
 
-// Example usage component showing how to integrate with your existing HomePage
-const App = () => {
-  const [showLaunch, setShowLaunch] = useState(true);
-
-  const handleAnimationComplete = () => {
-    setShowLaunch(false);
-  };
-
-  if (showLaunch) {
-    return <LaunchAnimation onAnimationComplete={handleAnimationComplete} />;
-  }
-
-  // Your existing HomePage component would render here
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900">
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
-            Welcome to Groupify!
-          </h1>
-          <p className="text-lg text-gray-600 dark:text-gray-300">
-            Launch animation completed. Your main content loads here.
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export default App;
+// Export only the LaunchAnimation component
+export default LaunchAnimation;
