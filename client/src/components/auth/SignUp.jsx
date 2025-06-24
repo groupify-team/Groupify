@@ -17,8 +17,19 @@ import { toast } from "react-hot-toast";
 const SignUp = () => {
   // Add to the top of each page component
   useEffect(() => {
-    document.body.style.opacity = "1";
+    // Scroll to top first
+    window.scrollTo(0, 0);
+
+    // Fade in effect
+    document.body.style.opacity = "0";
     document.body.style.transition = "opacity 0.5s ease-in-out";
+
+    // Small delay then fade in
+    const timer = setTimeout(() => {
+      document.body.style.opacity = "1";
+    }, 50);
+
+    return () => clearTimeout(timer);
   }, []);
 
   const [formData, setFormData] = useState({

@@ -67,18 +67,28 @@ const ContactUs = () => {
     try {
       setLoading(true);
 
-      // TODO: Implement contact form submission
-      // await submitContactForm(formData);
+      console.log("Attempting to send contact email with data:", formData);
 
       // Send email via Firebase Function
       const sendContactEmail = httpsCallable(functions, "sendContactEmail");
-      await sendContactEmail(formData);
+      const result = await sendContactEmail(formData);
+
+      console.log("Email sent successfully:", result);
 
       setSubmitted(true);
       toast.success("Message sent successfully!");
     } catch (error) {
-      console.error("Contact form error:", error);
-      toast.error("Failed to send message. Please try again.");
+      console.error("Contact form error details:", error);
+      console.error("Error code:", error.code);
+      console.error("Error message:", error.message);
+
+      if (error.code === "functions/internal") {
+        toast.error("Server error. Please try again later.");
+      } else if (error.code === "functions/unauthenticated") {
+        toast.error("Authentication required. Please refresh the page.");
+      } else {
+        toast.error("Failed to send message. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
@@ -98,22 +108,23 @@ const ContactUs = () => {
       icon: EnvelopeIcon,
       title: "Email Us",
       description: "Get in touch via email",
-      contact: "hello@groupify.com",
-      action: "mailto:hello@groupify.com",
+      contact: "groupify.ltd@gmail.com",
+      action: "mailto:groupify.ltd@gmail.com",
     },
     {
       icon: ChatBubbleLeftRightIcon,
       title: "Live Chat",
       description: "Chat with our support team",
       contact: "Available 9 AM - 6 PM PST",
-      action: "#",
+      action:
+        "https://wa.me/972532448624?text=Hello%20Groupify%20Support%20Team",
     },
     {
       icon: PhoneIcon,
       title: "Call Us",
       description: "Speak directly with our team",
-      contact: "+1 (555) 123-4567",
-      action: "tel:+15551234567",
+      contact: "+972 (53) 244-8624",
+      action: "tel:+972532448624",
     },
   ];
 
@@ -281,7 +292,7 @@ const ContactUs = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12">
             {/* Form */}
             <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-2xl border border-white/20 dark:border-gray-700/50 p-6 sm:p-6 md:p-8">
-              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-4 sm:mb-6">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-4 sm:mb-6 text-center">
                 Send us a message
               </h2>
 
@@ -420,8 +431,8 @@ const ContactUs = () => {
 
             {/* Contact Info */}
             <div className="space-y-6 sm:space-y-8">
-              <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-2xl border border-white/20 dark:border-gray-700/50 p-4 sm:p-6 md:p-8">
-                <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-4 sm:mb-6">
+              <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-2xl border border-white/20 dark:border-gray-700/50 p-4 sm:p-6 md:p-8 text-center sm:text-left">
+                <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-4 sm:mb-6 text-center">
                   Get in touch
                 </h3>
 
@@ -430,14 +441,21 @@ const ContactUs = () => {
                     <MapPinIcon className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-600 dark:text-indigo-400 flex-shrink-0 mt-1" />
                     <div className="ml-2 sm:ml-3">
                       <h4 className="font-medium text-gray-900 dark:text-white text-sm sm:text-base">
-                        Office Location
+                        Office Locations
                       </h4>
                       <p className="text-gray-600 dark:text-gray-400 text-xs sm:text-sm">
+                        <strong>San Francisco Office:</strong>
+                        <br />
                         123 Innovation Drive
                         <br />
-                        San Francisco, CA 94105
+                        San Francisco, CA 94105, United States
                         <br />
-                        United States
+                        <br />
+                        <strong>Tel Aviv Office:</strong>
+                        <br />
+                        HaArba'a Street 28
+                        <br />
+                        Tel Aviv-Yafo, 6473925, Israel
                       </p>
                     </div>
                   </div>
@@ -473,7 +491,7 @@ const ContactUs = () => {
                 </div>
               </div>
 
-              <div className="bg-gradient-to-r from-indigo-500/10 to-purple-500/10 dark:from-indigo-500/20 dark:to-purple-500/20 rounded-xl border border-indigo-200/50 dark:border-indigo-800/50 p-4 sm:p-6">
+              <div className="bg-gradient-to-r from-indigo-500/10 to-purple-500/10 dark:from-indigo-500/20 dark:to-purple-500/20 rounded-xl border border-indigo-200/50 dark:border-indigo-800/50 p-4 sm:p-6 text-center sm:text-left">
                 <h4 className="font-bold text-gray-900 dark:text-white mb-2 sm:mb-3 text-sm sm:text-base">
                   Need immediate help?
                 </h4>

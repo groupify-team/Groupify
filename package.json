@@ -1,8 +1,29 @@
 {
+  "name": "functions",
+  "description": "Cloud Functions for Firebase",
+  "scripts": {
+    "lint": "eslint .",
+    "serve": "firebase emulators:start --only functions",
+    "shell": "firebase functions:shell",
+    "start": "npm run shell",
+    "deploy": "firebase deploy --only functions",
+    "logs": "firebase functions:log"
+  },
+  "engines": {
+    "node": "18"
+  },
+  "main": "index.js",
   "dependencies": {
-    "@heroicons/react": "^2.2.0",
-    "@marsidev/react-turnstile": "^1.1.0",
-    "phosphor-react": "^1.4.1",
-    "three": "^0.177.0"
-  }
+    "axios": "^1.10.0",
+    "cors": "^2.8.5",
+    "firebase-admin": "^12.6.0",
+    "firebase-functions": "^4.9.0",
+    "nodemailer": "^7.0.3"
+  },
+  "devDependencies": {
+    "eslint": "^8.15.0",
+    "eslint-config-google": "^0.14.0",
+    "firebase-functions-test": "^3.1.0"
+  },
+  "private": true
 }
