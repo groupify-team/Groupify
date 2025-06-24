@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { useTheme } from '../contexts/ThemeContext';
+import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { useTheme } from "../contexts/ThemeContext";
 import {
   CameraIcon,
   SunIcon,
@@ -16,13 +16,18 @@ import {
   CogIcon,
   ChatBubbleLeftRightIcon,
   ChevronDownIcon,
-  ChevronUpIcon
-} from '@heroicons/react/24/outline';
+  ChevronUpIcon,
+} from "@heroicons/react/24/outline";
 
 const HelpCenter = () => {
   const { theme, toggleTheme } = useTheme();
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [openFaq, setOpenFaq] = useState(null);
+
+  // Scroll to top on component mount
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   const helpCategories = [
     {
@@ -33,8 +38,8 @@ const HelpCenter = () => {
         "How to create your first trip",
         "Uploading your first photos",
         "Setting up your profile",
-        "Understanding the dashboard"
-      ]
+        "Understanding the dashboard",
+      ],
     },
     {
       icon: SparklesIcon,
@@ -44,8 +49,8 @@ const HelpCenter = () => {
         "How face recognition works",
         "Training the AI with your photos",
         "Improving recognition accuracy",
-        "Privacy and face data"
-      ]
+        "Privacy and face data",
+      ],
     },
     {
       icon: UserGroupIcon,
@@ -55,8 +60,8 @@ const HelpCenter = () => {
         "Inviting friends to trips",
         "Setting sharing permissions",
         "Managing trip collaborators",
-        "Downloading shared photos"
-      ]
+        "Downloading shared photos",
+      ],
     },
     {
       icon: CogIcon,
@@ -66,8 +71,8 @@ const HelpCenter = () => {
         "Changing your password",
         "Updating profile information",
         "Managing privacy settings",
-        "Deleting your account"
-      ]
+        "Deleting your account",
+      ],
     },
     {
       icon: ShieldCheckIcon,
@@ -77,8 +82,8 @@ const HelpCenter = () => {
         "How we protect your photos",
         "Understanding privacy controls",
         "Two-factor authentication",
-        "Data export and deletion"
-      ]
+        "Data export and deletion",
+      ],
     },
     {
       icon: ChatBubbleLeftRightIcon,
@@ -88,59 +93,71 @@ const HelpCenter = () => {
         "Photos not uploading",
         "Face recognition not working",
         "Sharing issues",
-        "Performance problems"
-      ]
-    }
+        "Performance problems",
+      ],
+    },
   ];
 
   const faqs = [
     {
       question: "How does the AI face recognition work?",
-      answer: "Our AI analyzes facial features in your photos to identify and group images of the same person. It uses advanced machine learning algorithms to recognize faces even in different lighting conditions, angles, and expressions. The more photos you upload, the more accurate it becomes."
+      answer:
+        "Our AI analyzes facial features in your photos to identify and group images of the same person. It uses advanced machine learning algorithms to recognize faces even in different lighting conditions, angles, and expressions. The more photos you upload, the more accurate it becomes.",
     },
     {
       question: "Is my data safe and private?",
-      answer: "Absolutely! We use enterprise-grade encryption to protect your photos and data. Your photos are stored securely in the cloud with multiple backups. We never share your personal photos with third parties, and you maintain full control over who can see your trips and photos."
+      answer:
+        "Absolutely! We use enterprise-grade encryption to protect your photos and data. Your photos are stored securely in the cloud with multiple backups. We never share your personal photos with third parties, and you maintain full control over who can see your trips and photos.",
     },
     {
       question: "Can I use Groupify offline?",
-      answer: "While you need an internet connection to upload and sync photos, you can view previously downloaded photos offline. We're working on enhanced offline capabilities for future updates."
+      answer:
+        "While you need an internet connection to upload and sync photos, you can view previously downloaded photos offline. We're working on enhanced offline capabilities for future updates.",
     },
     {
       question: "How many photos can I upload?",
-      answer: "Free accounts get 5GB of storage (approximately 2,500 photos). Premium accounts get unlimited storage. You can upgrade anytime from your account settings."
+      answer:
+        "Free accounts get 5GB of storage (approximately 2,500 photos). Premium accounts get unlimited storage. You can upgrade anytime from your account settings.",
     },
     {
       question: "Can I export my photos?",
-      answer: "Yes! You can download individual photos, entire trips, or export all your data at any time. Go to Settings > Data Export to download your photos in their original quality."
+      answer:
+        "Yes! You can download individual photos, entire trips, or export all your data at any time. Go to Settings > Data Export to download your photos in their original quality.",
     },
     {
       question: "What photo formats are supported?",
-      answer: "We support all major photo formats including JPEG, PNG, HEIC, and RAW files. Videos are also supported in MP4, MOV, and AVI formats."
+      answer:
+        "We support all major photo formats including JPEG, PNG, HEIC, and RAW files. Videos are also supported in MP4, MOV, and AVI formats.",
     },
     {
       question: "How do I invite friends to my trip?",
-      answer: "Open your trip, click the 'Share' button, and enter your friends' email addresses. They'll receive an invitation to view and contribute to your trip. You can set permissions for each person (view-only or full access)."
+      answer:
+        "Open your trip, click the 'Share' button, and enter your friends' email addresses. They'll receive an invitation to view and contribute to your trip. You can set permissions for each person (view-only or full access).",
     },
     {
       question: "Can I delete photos from shared trips?",
-      answer: "Trip owners and users with full access can delete photos. If you only have view access, you can't delete photos, but you can hide them from your personal view."
-    }
+      answer:
+        "Trip owners and users with full access can delete photos. If you only have view access, you can't delete photos, but you can hide them from your personal view.",
+    },
   ];
 
   const toggleFaq = (index) => {
     setOpenFaq(openFaq === index ? null : index);
   };
 
-  const filteredCategories = helpCategories.filter(category =>
-    category.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    category.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    category.articles.some(article => article.toLowerCase().includes(searchQuery.toLowerCase()))
+  const filteredCategories = helpCategories.filter(
+    (category) =>
+      category.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      category.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      category.articles.some((article) =>
+        article.toLowerCase().includes(searchQuery.toLowerCase())
+      )
   );
 
-  const filteredFaqs = faqs.filter(faq =>
-    faq.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    faq.answer.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredFaqs = faqs.filter(
+    (faq) =>
+      faq.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      faq.answer.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
@@ -173,7 +190,7 @@ const HelpCenter = () => {
               onClick={toggleTheme}
               className="p-2 rounded-lg text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
             >
-              {theme === 'dark' ? (
+              {theme === "dark" ? (
                 <SunIcon className="w-5 h-5" />
               ) : (
                 <MoonIcon className="w-5 h-5" />
@@ -191,7 +208,8 @@ const HelpCenter = () => {
             How can we help you?
           </h1>
           <p className="text-xl text-indigo-100 mb-8 max-w-2xl mx-auto">
-            Find answers to your questions, learn how to use Groupify, and get the most out of your photo organization experience.
+            Find answers to your questions, learn how to use Groupify, and get
+            the most out of your photo organization experience.
           </p>
 
           {/* Search Bar */}
@@ -234,16 +252,18 @@ const HelpCenter = () => {
                   {category.description}
                 </p>
                 <ul className="space-y-2">
-                  {category.articles.slice(0, 3).map((article, articleIndex) => (
-                    <li key={articleIndex}>
-                      <a
-                        href="#"
-                        className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 text-sm transition-colors"
-                      >
-                        {article}
-                      </a>
-                    </li>
-                  ))}
+                  {category.articles
+                    .slice(0, 3)
+                    .map((article, articleIndex) => (
+                      <li key={articleIndex}>
+                        <a
+                          href="#"
+                          className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 text-sm transition-colors"
+                        >
+                          {article}
+                        </a>
+                      </li>
+                    ))}
                   {category.articles.length > 3 && (
                     <li className="text-sm text-gray-500 dark:text-gray-400">
                       +{category.articles.length - 3} more articles
@@ -300,7 +320,8 @@ const HelpCenter = () => {
             Still need help?
           </h2>
           <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-2xl mx-auto">
-            Can't find what you're looking for? Our support team is here to help you with any questions or issues you might have.
+            Can't find what you're looking for? Our support team is here to help
+            you with any questions or issues you might have.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link

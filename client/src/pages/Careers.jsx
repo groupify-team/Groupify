@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useTheme } from "../contexts/ThemeContext";
 import {
@@ -27,6 +27,11 @@ import {
 
 const Careers = () => {
   const { theme, toggleTheme } = useTheme();
+
+  // Scroll to top on component mount
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   const jobListings = [
     {

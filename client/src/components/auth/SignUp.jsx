@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
 import { useTheme } from "../../contexts/ThemeContext";
@@ -15,6 +15,12 @@ import {
 import { toast } from "react-hot-toast";
 
 const SignUp = () => {
+  // Add to the top of each page component
+  useEffect(() => {
+    document.body.style.opacity = "1";
+    document.body.style.transition = "opacity 0.5s ease-in-out";
+  }, []);
+
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -112,12 +118,16 @@ const SignUp = () => {
           "Account created! Please check your email to verify your account."
         );
 
-        // Navigate to confirm email page with email data
-        navigate("/confirm-email", {
-          state: {
-            email: formData.email,
-          },
-        });
+        // Add smooth transition
+        document.body.style.opacity = "0";
+        document.body.style.transition = "opacity 0.3s ease-out";
+        setTimeout(() => {
+          navigate("/confirm-email", {
+            state: {
+              email: formData.email,
+            },
+          });
+        }, 300);
       }
     } catch (error) {
       console.error("Signup error:", error);

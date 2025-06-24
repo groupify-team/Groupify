@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useTheme } from "../contexts/ThemeContext";
 import {
@@ -19,6 +19,14 @@ import ofirprofile from "../assets/ofirprofile.jpg";
 import adirprofile from "../assets/adirprofile.jpg";
 
 const About = () => {
+  // Scroll to top on component mount
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    // Restore opacity when page loads
+    document.body.style.opacity = "1";
+    document.body.style.transition = "opacity 0.3s ease-in";
+  }, []);
+
   const { theme, toggleTheme } = useTheme();
 
   const founders = [
