@@ -115,7 +115,23 @@ const CloudflareTurnstileGate = ({ children, onVerificationComplete }) => {
   // If too many failed attempts, show error state
   if (attempts >= maxAttempts) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 dark:from-gray-900 dark:via-red-900 dark:to-orange-900 flex items-center justify-center px-4">
+      <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 dark:from-gray-900 dark:via-red-900 dark:to-orange-900 flex flex-col items-center justify-center px-4">
+        {/* Site Logo */}
+        <div className="relative mb-8">
+          <img
+            src="/groupifyLogo.png"
+            alt="Groupify Logo"
+            className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 object-contain drop-shadow-2xl mx-auto"
+          />
+          {/* Glow Effect around logo */}
+          <div className="absolute inset-0 w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 bg-gradient-to-r from-red-600/20 to-orange-600/20 rounded-3xl blur-xl mx-auto"></div>
+        </div>
+
+        {/* Brand Name */}
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-red-600 via-orange-600 to-yellow-600 bg-clip-text text-transparent mb-8 leading-relaxed pb-2">
+          Groupify
+        </h1>
+
         <div className="max-w-md w-full bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 dark:border-gray-700/50 p-8 text-center">
           <div className="w-16 h-16 bg-red-100 dark:bg-red-900/50 rounded-full flex items-center justify-center mx-auto mb-6">
             <ExclamationTriangleIcon className="w-8 h-8 text-red-600 dark:text-red-400" />
@@ -141,7 +157,7 @@ const CloudflareTurnstileGate = ({ children, onVerificationComplete }) => {
   // Show Turnstile verification screen
   if (!isVerified) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 flex items-center justify-center px-4">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 flex flex-col items-center justify-center px-4">
         {/* Background decoration */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-20 left-20 w-64 h-64 bg-gradient-to-br from-purple-400/20 to-blue-400/20 rounded-full blur-3xl animate-pulse"></div>
@@ -150,6 +166,22 @@ const CloudflareTurnstileGate = ({ children, onVerificationComplete }) => {
             style={{ animationDelay: "1s" }}
           ></div>
         </div>
+
+        {/* Site Logo */}
+        <div className="relative mb-8 z-10">
+          <img
+            src="/groupifyLogo.png"
+            alt="Groupify Logo"
+            className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 object-contain animate-pulse drop-shadow-2xl mx-auto"
+          />
+          {/* Glow Effect around logo */}
+          <div className="absolute inset-0 w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 bg-gradient-to-r from-indigo-600/20 to-purple-600/20 rounded-3xl blur-xl animate-pulse mx-auto"></div>
+        </div>
+
+        {/* Brand Name */}
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 bg-clip-text text-transparent mb-8 z-10 leading-relaxed pb-2">
+          Groupify
+        </h1>
 
         <div className="relative max-w-md w-full bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 dark:border-gray-700/50 p-8">
           {/* Header */}
