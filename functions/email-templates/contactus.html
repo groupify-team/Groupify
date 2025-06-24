@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>New Contact Message - Groupify</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Oxygen, Ubuntu, Cantarell, sans-serif;
+        line-height: 1.6;
+        color: #374151;
+        background-color: #f9fafb;
+      }
+
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        background-color: #ffffff;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      }
+
+      .header {
+        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+        padding: 32px 24px;
+        text-align: center;
+      }
+
+      .logo {
+        display: inline-flex;
+        align-items: center;
+        margin-bottom: 16px;
+      }
+
+      .logo-icon {
+        width: 32px;
+        height: 32px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 12px;
+      }
+
+      .logo-text {
+        font-size: 24px;
+        font-weight: bold;
+        color: white;
+      }
+
+      .header-title {
+        font-size: 28px;
+        font-weight: bold;
+        color: white;
+        margin-bottom: 8px;
+      }
+
+      .header-subtitle {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 16px;
+      }
+
+      .content {
+        padding: 32px 24px;
+      }
+
+      .alert {
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        color: white;
+        padding: 16px;
+        border-radius: 8px;
+        margin-bottom: 24px;
+        font-weight: 600;
+        text-align: center;
+      }
+
+      .field-group {
+        margin-bottom: 24px;
+      }
+
+      .field-label {
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 8px;
+        font-size: 14px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .field-value {
+        background-color: #f9fafb;
+        padding: 12px 16px;
+        border-radius: 8px;
+        border: 1px solid #e5e7eb;
+        font-size: 16px;
+        line-height: 1.5;
+      }
+
+      .message-field .field-value {
+        white-space: pre-wrap;
+        min-height: 100px;
+      }
+
+      .category-badge {
+        display: inline-block;
+        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+        color: white;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .action-buttons {
+        display: flex;
+        gap: 12px;
+        margin-top: 32px;
+        flex-wrap: wrap;
+      }
+
+      .btn {
+        padding: 12px 24px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 14px;
+        text-align: center;
+        transition: all 0.2s;
+        flex: 1;
+        min-width: 140px;
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+        color: white;
+      }
+
+      .btn-secondary {
+        background-color: #f3f4f6;
+        color: #374151;
+        border: 1px solid #d1d5db;
+      }
+
+      .footer {
+        background-color: #f9fafb;
+        padding: 24px;
+        text-align: center;
+        border-top: 1px solid #e5e7eb;
+      }
+
+      .footer-text {
+        color: #6b7280;
+        font-size: 14px;
+        margin-bottom: 8px;
+      }
+
+      .footer-logo {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 16px;
+      }
+
+      .footer-logo-icon {
+        width: 24px;
+        height: 24px;
+        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+        border-radius: 6px;
+        margin-right: 8px;
+      }
+
+      .footer-logo-text {
+        font-weight: bold;
+        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      @media (max-width: 600px) {
+        .container {
+          margin: 0 16px;
+        }
+
+        .action-buttons {
+          flex-direction: column;
+        }
+
+        .btn {
+          flex: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <div class="logo">
+          <div class="logo-icon">📸</div>
+          <div class="logo-text">Groupify</div>
+        </div>
+        <h1 class="header-title">New Contact Message</h1>
+        <p class="header-subtitle">
+          You have received a new message from your website
+        </p>
+      </div>
+
+      <div class="content">
+        <div class="alert">
+          🚨 URGENT: New customer inquiry requires your attention
+        </div>
+
+        <div class="field-group">
+          <div class="field-label">From</div>
+          <div class="field-value">{{name}} &lt;{{email}}&gt;</div>
+        </div>
+
+        <div class="field-group">
+          <div class="field-label">Category</div>
+          <div class="field-value">
+            <span class="category-badge">{{category}}</span>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <div class="field-label">Subject</div>
+          <div class="field-value">{{subject}}</div>
+        </div>
+
+        <div class="field-group message-field">
+          <div class="field-label">Message</div>
+          <div class="field-value">{{message}}</div>
+        </div>
+
+        <div class="action-buttons">
+          <a
+            href="mailto:{{email}}?subject=Re: {{subject}}"
+            class="btn btn-primary"
+          >
+            📧 Reply to {{name}}
+          </a>
+          <a
+            href="https://wa.me/{{whatsapp_number}}?text=Hi {{name}}, thanks for contacting Groupify!"
+            class="btn btn-secondary"
+          >
+            💬 WhatsApp Reply
+          </a>
+        </div>
+      </div>
+
+      <div class="footer">
+        <p class="footer-text">
+          This message was sent from your Groupify contact form
+        </p>
+        <p class="footer-text">Received on: {{timestamp}}</p>
+        <div class="footer-logo">
+          <div class="footer-logo-icon"></div>
+          <div class="footer-logo-text">Groupify</div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

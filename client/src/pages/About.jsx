@@ -181,7 +181,7 @@ const About = () => {
       <div className="py-12 sm:py-16 md:py-20 bg-white/40 dark:bg-gray-800/40 backdrop-blur-sm">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 md:gap-16 items-center">
-            <div>
+            <div className="text-center lg:text-left">
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4 sm:mb-6">
                 Our Mission
               </h2>
@@ -220,15 +220,26 @@ const About = () => {
             <div className="relative">
               <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 <div className="space-y-3 sm:space-y-4">
-                  <div className="aspect-square bg-gradient-to-br from-indigo-400 to-purple-500 rounded-xl sm:rounded-2xl shadow-lg"></div>
-                  <div className="aspect-square bg-gradient-to-br from-blue-400 to-indigo-500 rounded-xl sm:rounded-2xl shadow-lg"></div>
+                  {/* Family Photo */}
+                  <div className="aspect-square bg-gradient-to-br from-orange-300 to-pink-300 rounded-xl sm:rounded-2xl shadow-lg flex items-center justify-center">
+                    <UsersIcon className="w-8 h-8 sm:w-12 sm:h-12 text-white" />
+                  </div>
+                  {/* Travel Photo */}
+                  <div className="aspect-square bg-gradient-to-br from-blue-300 to-indigo-300 rounded-xl sm:rounded-2xl shadow-lg flex items-center justify-center">
+                    <GlobeAltIcon className="w-8 h-8 sm:w-12 sm:h-12 text-white" />
+                  </div>
                 </div>
                 <div className="space-y-3 sm:space-y-4 mt-6 sm:mt-8">
-                  <div className="aspect-square bg-gradient-to-br from-purple-400 to-pink-500 rounded-xl sm:rounded-2xl shadow-lg"></div>
-                  <div className="aspect-square bg-gradient-to-br from-indigo-400 to-blue-500 rounded-xl sm:rounded-2xl shadow-lg"></div>
+                  {/* Friends Photo */}
+                  <div className="aspect-square bg-gradient-to-br from-purple-300 to-pink-300 rounded-xl sm:rounded-2xl shadow-lg flex items-center justify-center">
+                    <HeartIcon className="w-8 h-8 sm:w-12 sm:h-12 text-white" />
+                  </div>
+                  {/* Events Photo */}
+                  <div className="aspect-square bg-gradient-to-br from-green-300 to-teal-300 rounded-xl sm:rounded-2xl shadow-lg flex items-center justify-center">
+                    <StarIcon className="w-8 h-8 sm:w-12 sm:h-12 text-white" />
+                  </div>
                 </div>
               </div>
-              <div className="absolute inset-0 bg-white/10 dark:bg-gray-900/10 backdrop-blur-sm rounded-2xl sm:rounded-3xl border border-white/20 dark:border-gray-700/50"></div>
             </div>
           </div>
         </div>
@@ -406,11 +417,11 @@ const About = () => {
               >
                 <div className="flex-1 w-full">
                   <div
-                    className={`bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-xl border border-white/20 dark:border-gray-700/50 p-4 sm:p-6 ${
+                    className={`bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-xl border border-white/20 dark:border-gray-700/50 p-4 sm:p-6 text-center md:text-left ${
                       index % 2 === 0 ? "md:mr-8" : "md:ml-8"
                     }`}
                   >
-                    <div className="flex items-center mb-2 sm:mb-3">
+                    <div className="flex items-center justify-center md:justify-start mb-2 sm:mb-3">
                       <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full flex items-center justify-center text-white text-xs sm:text-sm font-bold mr-2 sm:mr-3">
                         <StarIcon className="w-3 h-3 sm:w-4 sm:h-4" />
                       </div>
@@ -447,6 +458,10 @@ const About = () => {
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
             <Link
               to="/signup"
+              onClick={() => {
+                document.body.style.opacity = "0";
+                document.body.style.transition = "opacity 0.3s ease-out";
+              }}
               className="inline-flex items-center justify-center bg-white text-indigo-600 px-6 py-3 sm:px-8 sm:py-4 rounded-xl text-base sm:text-lg font-semibold hover:bg-gray-50 transition-all duration-200 shadow-xl hover:shadow-2xl hover:scale-105"
             >
               Start Organizing

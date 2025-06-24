@@ -318,14 +318,14 @@ const HomePage = () => {
                 <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
                   <CameraIcon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                 </div>
-                <span className="ml-2 text-lg sm:text-xl md:text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                <span className="ml-2 text-xl sm:text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
                   Groupify
                 </span>
               </div>
             </div>
 
             {/* Navigation Links */}
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-0">
               {/* Theme Toggle */}
               <button
                 onClick={toggleTheme}
@@ -340,7 +340,7 @@ const HomePage = () => {
 
               {/* Auth Links */}
               {!currentUser && (
-                <div className="flex items-center space-x-2 sm:space-x-3">
+                <div className="flex items-center space-x-1 sm:space-x-2">
                   <Link
                     to="/signin"
                     onClick={(e) => {
@@ -924,7 +924,7 @@ const HomePage = () => {
                   <li>
                     <Link
                       to="/features"
-                      className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                      className="text-sm sm:text-base text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
                     >
                       Features
                     </Link>
@@ -932,7 +932,7 @@ const HomePage = () => {
                   <li>
                     <Link
                       to="/pricing"
-                      className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                      className="text-sm sm:text-base text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
                     >
                       Pricing
                     </Link>
@@ -965,7 +965,7 @@ const HomePage = () => {
                   <li>
                     <Link
                       to="/blog"
-                      className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                      className="text-sm sm:text-base text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
                     >
                       Blog
                     </Link>
