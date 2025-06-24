@@ -107,16 +107,10 @@ const FlowController = ({ children }) => {
 
       // 4. If user is not logged in and on homepage
       if (!currentUser && currentPath === "/") {
-        // Show launch animation for first-time visitors or new sessions
-        if (!animationShown || isNewSession) {
-          console.log("Flow: Guest user first visit → Show launch animation");
-          setShowLaunchAnimation(true);
-          setFlowReady(false);
-        } else {
-          console.log("Flow: Guest user returning → Direct to homepage");
-          setShowLaunchAnimation(false);
-          setFlowReady(true);
-        }
+        // Animation is handled by HomePage.jsx, proceed directly
+        console.log("Flow: Guest user on homepage → Direct to homepage");
+        setShowLaunchAnimation(false);
+        setFlowReady(true);
         return;
       }
 
@@ -135,6 +129,10 @@ const FlowController = ({ children }) => {
           "/careers",
           "/help",
           "/confirm-email",
+          "/blog",
+          "/features",
+          "/pricing",
+          "/status",
         ].includes(currentPath)
       ) {
         console.log("Flow: Guest user accessing public page → Direct access");
@@ -158,6 +156,10 @@ const FlowController = ({ children }) => {
           "/careers",
           "/help",
           "/confirm-email",
+          "/blog",
+          "/features",
+          "/pricing",
+          "/status",
           "/",
         ].includes(currentPath)
       ) {

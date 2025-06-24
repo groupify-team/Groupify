@@ -209,9 +209,22 @@ const HomePage = () => {
   const location = useLocation();
   const [isLoaded, setIsLoaded] = useState(false);
 
+  // ADD THIS STATE FOR LAUNCH ANIMATION
+  const [showLaunch, setShowLaunch] = useState(() => {
+    // Only show launch animation if user hasn't seen it before
+    return !localStorage.getItem("hasSeenLaunchAnimation");
+  });
+
   useEffect(() => {
     setIsLoaded(true);
   }, []);
+
+  // Redirect authenticated users to dashboard
+  useEffect(() => {
+    if (currentUser) {
+      navigate("/dashboard");
+    }
+  }, [currentUser, navigate]);
 
   // Success message handling from email verification
   useEffect(() => {
@@ -225,6 +238,17 @@ const HomePage = () => {
       navigate(location.pathname, { replace: true });
     }
   }, [location, navigate]);
+
+  // ADD THIS FUNCTION TO HANDLE ANIMATION COMPLETION
+  const handleAnimationComplete = () => {
+    localStorage.setItem("hasSeenLaunchAnimation", "true");
+    setShowLaunch(false);
+  };
+
+  // ADD THIS CHECK TO SHOW LAUNCH ANIMATION FIRST
+  if (showLaunch) {
+    return <LaunchAnimation onAnimationComplete={handleAnimationComplete} />;
+  }
 
   const features = [
     {
@@ -549,7 +573,9 @@ const HomePage = () => {
                   </svg>
                 </a>
                 <a
-                  href="#"
+                  href="https://www.facebook.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
                 >
                   <span className="sr-only">Facebook</span>
@@ -566,7 +592,9 @@ const HomePage = () => {
                   </svg>
                 </a>
                 <a
-                  href="#"
+                  href="https://www.instagram.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
                 >
                   <span className="sr-only">Instagram</span>
@@ -583,7 +611,9 @@ const HomePage = () => {
                   </svg>
                 </a>
                 <a
-                  href="#"
+                  href="https://www.x.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
                 >
                   <span className="sr-only">Twitter</span>
@@ -596,7 +626,9 @@ const HomePage = () => {
                   </svg>
                 </a>
                 <a
-                  href="#"
+                  href="https://www.linkedin.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
                 >
                   <span className="sr-only">LinkedIn</span>
@@ -829,20 +861,20 @@ const HomePage = () => {
                     </Link>
                   </li>
                   <li>
-                    <a
-                      href="#"
-                      className="text-sm sm:text-base text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                    <Link
+                      to="/features"
+                      className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
                     >
                       Features
-                    </a>
+                    </Link>
                   </li>
                   <li>
-                    <a
-                      href="#"
-                      className="text-sm sm:text-base text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                    <Link
+                      to="/pricing"
+                      className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
                     >
                       Pricing
-                    </a>
+                    </Link>
                   </li>
                 </ul>
               </div>
@@ -870,12 +902,12 @@ const HomePage = () => {
                     </Link>
                   </li>
                   <li>
-                    <a
-                      href="#"
-                      className="text-sm sm:text-base text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                    <Link
+                      to="/blog"
+                      className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
                     >
                       Blog
-                    </a>
+                    </Link>
                   </li>
                   <li>
                     <Link
