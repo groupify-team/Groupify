@@ -4,7 +4,8 @@ import { createFaceProfile } from "../../services/faceRecognitionService";
 import { saveFaceProfileToStorage } from "../../services/firebase/faceProfiles";
 import { uploadBytes, getDownloadURL, ref } from "firebase/storage";
 import { storage } from "../../services/firebase/config";
-import SmartFaceScan from "./SmartFaceScan"; // We'll create this next
+import SmartFaceScan from "./SmartFaceScan";
+import PhotoUpload from "../photos/PhotoUpload";
 import {
   XMarkIcon,
   CameraIcon,
@@ -15,6 +16,8 @@ import {
   TrashIcon,
   SparklesIcon,
   PlayIcon,
+  ArrowLeftIcon,
+  EyeIcon,
 } from "@heroicons/react/24/outline";
 
 const FaceProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
@@ -24,8 +27,8 @@ const FaceProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
   const [setupMethod, setSetupMethod] = useState(null); // null, 'guided', 'upload'
 
   // Manual upload states
-  const [selectedFiles, setSelectedFiles] = useState([]);
-  const [previewUrls, setPreviewUrls] = useState([]);
+  const [uploadedPhotos, setUploadedPhotos] = useState([]);
+  const [showReview, setShowReview] = useState(false);
 
   // Common states
   const [isCreating, setIsCreating] = useState(false);
@@ -38,8 +41,8 @@ const FaceProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
   // Cleanup function
   const cleanup = () => {
     setSetupMethod(null);
-    setSelectedFiles([]);
-    setPreviewUrls([]);
+    setUploadedPhotos([]);
+    setShowReview(false);
     setError("");
     setSuccess(false);
     setProgress(null);
@@ -51,57 +54,27 @@ const FaceProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
     onClose();
   };
 
-  // Manual upload functions
-  const handleFileSelect = (event) => {
-    const files = Array.from(event.target.files);
-
-    files.forEach((file) => {
-      if (!file.type.startsWith("image/")) {
-        setError("Only image files are allowed");
-        return;
-      }
-
-      if (file.size > 10 * 1024 * 1024) {
-        setError("File size must be less than 10MB");
-        return;
-      }
-
-      if (selectedFiles.length >= 5) {
-        setError("Maximum 5 photos allowed");
-        return;
-      }
-
-      const url = URL.createObjectURL(file);
-      setSelectedFiles((prev) => [...prev, file]);
-      setPreviewUrls((prev) => [...prev, url]);
-      setError("");
-    });
+  // Handle photos uploaded via PhotoUpload component
+  const handlePhotosUploaded = (photos) => {
+    setUploadedPhotos(photos);
+    setError("");
+    // Show review screen after upload
+    setShowReview(true);
   };
 
-  const removePhoto = (index) => {
-    URL.revokeObjectURL(previewUrls[index]);
-    setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
-    setPreviewUrls((prev) => prev.filter((_, i) => i !== index));
+  const removeUploadedPhoto = (index) => {
+    setUploadedPhotos((prev) => prev.filter((_, i) => i !== index));
+    
+    // If no photos left, go back to upload screen
+    if (uploadedPhotos.length === 1) {
+      setShowReview(false);
+    }
   };
 
-  // Upload files to Firebase Storage
-  const uploadFiles = async (files) => {
-    const uploadPromises = files.map(async (file, index) => {
-      const timestamp = Date.now();
-      const fileName = `profile_photos/${currentUser.uid}/${timestamp}_${index}_${file.name}`;
-      const storageRef = ref(storage, fileName);
-      const snapshot = await uploadBytes(storageRef, file);
-      const downloadURL = await getDownloadURL(snapshot.ref);
-      return downloadURL;
-    });
-
-    return await Promise.all(uploadPromises);
-  };
-
-  // Create face profile using the face-api.js service
-  const handleCreateProfile = async () => {
-    if (selectedFiles.length < 2) {
-      setError("Please select at least 2 photos");
+  // Create face profile using uploaded photos
+  const handleCreateProfileFromUploads = async () => {
+    if (uploadedPhotos.length < 2) {
+      setError("Please upload at least 2 photos");
       return;
     }
 
@@ -110,35 +83,35 @@ const FaceProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
 
     try {
       setProgress({
-        phase: "Uploading photos...",
+        phase: "Processing uploaded photos...",
         current: 0,
-        total: selectedFiles.length,
+        total: uploadedPhotos.length,
       });
 
-      // Upload files first
-      const imageUrls = await uploadFiles(selectedFiles);
-
-      // Create profile using face-api.js service
+      // Create profile using face-api.js service with uploaded photo URLs
+      const imageData = uploadedPhotos.map(photo => ({ url: photo.downloadURL }));
+      
       const profile = await createFaceProfile(
         currentUser.uid,
-        imageUrls.map((url) => ({ url })),
+        imageData,
         (progressData) => {
           setProgress(progressData);
         }
       );
 
-      // Save to Firebase
+      // Save to Firebase - ensure no undefined values
       await saveFaceProfileToStorage(currentUser.uid, {
-        images: imageUrls.map((url, index) => ({
-          url,
-          uploadedAt: new Date().toISOString(),
-          filename: selectedFiles[index].name,
+        images: uploadedPhotos.map((photo, index) => ({
+          url: photo.downloadURL || photo.url || "",
+          uploadedAt: photo.uploadedAt || new Date().toISOString(),
+          filename: photo.metadata?.originalName || photo.originalName || `upload_${index}.jpg`,
           captureMethod: "upload",
+          metadata: photo.metadata || {},
         })),
         createdAt: new Date().toISOString(),
         method: "upload",
         engine: "face-api.js",
-        metadata: profile.metadata,
+        metadata: profile.metadata || {},
       });
 
       setSuccess(true);
@@ -166,7 +139,12 @@ const FaceProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      previewUrls.forEach((url) => URL.revokeObjectURL(url));
+      // Cleanup any blob URLs if they exist
+      uploadedPhotos.forEach((photo) => {
+        if (photo.blobURL) {
+          URL.revokeObjectURL(photo.blobURL);
+        }
+      });
     };
   }, []);
 
@@ -189,10 +167,8 @@ const FaceProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
       <div className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl rounded-2xl shadow-2xl w-full max-w-3xl lg:max-w-[95vw] xl:max-w-[90vw] mx-auto min-h-[85vh] sm:min-h-[80vh] lg:min-h-[75vh] border border-white/20 dark:border-gray-700/50 overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200/50 dark:border-gray-700/50">
-          <div className="w-6"></div> {/* Smaller spacer */}
+          <div className="w-6"></div>
           <div className="flex items-center gap-3 -ml-4">
-            {" "}
-            {/* Added negative margin to shift left */}
             <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
               <SparklesIcon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
             </div>
@@ -363,7 +339,7 @@ const FaceProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
                         "Use existing photos",
                         "No camera required",
                         "Quality auto-assessment",
-                        "Depends on photo quality",
+                        "Upload 2-5 photos only",
                       ].map((feature, index) => (
                         <div
                           key={index}
@@ -387,86 +363,31 @@ const FaceProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
           )}
 
           {/* Manual Upload Flow */}
-          {setupMethod === "upload" && (
+          {setupMethod === "upload" && !showReview && (
             <div className="space-y-6">
               {/* Back Button */}
               <button
                 onClick={() => setSetupMethod(null)}
                 className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 text-sm font-medium"
               >
-                ← Back to methods
+                <ArrowLeftIcon className="w-4 h-4" />
+                Back to methods
               </button>
 
-              {/* Upload Area */}
-              <div
-                onClick={() => fileInputRef.current?.click()}
-                className="flex flex-col items-center justify-center p-8 sm:p-12 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-2xl hover:border-indigo-400 dark:hover:border-indigo-500 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-all duration-300 cursor-pointer group"
-              >
-                <PhotoIcon className="w-16 h-16 text-gray-400 dark:text-gray-500 group-hover:text-indigo-500 mb-4 transition-colors" />
-                <h3 className="text-xl font-bold text-gray-700 dark:text-gray-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 mb-2 transition-colors text-center">
-                  Upload Your Photos
-                </h3>
-                <p className="text-gray-500 dark:text-gray-400 text-center mb-4 text-sm">
-                  Select 2-5 clear, high-quality photos of yourself
-                  <br />
-                  <span className="text-xs">Maximum 10MB per photo</span>
-                </p>
-                <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-3 rounded-xl font-medium group-hover:scale-105 transition-transform shadow-lg">
-                  Choose Files
-                </div>
-              </div>
-
-              <input
-                ref={fileInputRef}
-                type="file"
-                multiple
-                accept="image/*"
-                onChange={handleFileSelect}
-                className="hidden"
+              {/* PhotoUpload Component with constraints */}
+              <PhotoUpload
+                tripId="face-profile" // Dummy tripId for face profile uploads
+                onPhotoUploaded={handlePhotosUploaded}
+                maxPhotos={5}
+                currentPhotoCount={0}
+                title="Upload Face Photos"
+                subtitle="Upload 2-5 clear photos of yourself for profile creation"
+                acceptedFormats="JPG, PNG"
+                maxFileSize="10MB"
+                showLimitWarning={true}
+                limitWarningText="Please upload between 2-5 high-quality photos of yourself for best recognition accuracy."
+                disabled={false}
               />
-
-              {/* Selected Photos Preview */}
-              {selectedFiles.length > 0 && (
-                <div className="space-y-4">
-                  <h4 className="text-lg font-semibold text-gray-800 dark:text-white flex items-center gap-2">
-                    <PhotoIcon className="w-5 h-5 text-indigo-600" />
-                    Selected Photos ({selectedFiles.length}/5)
-                  </h4>
-
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                    {previewUrls.map((url, index) => (
-                      <div key={index} className="relative group">
-                        <img
-                          src={url}
-                          alt={`Preview ${index + 1}`}
-                          className="w-full h-24 sm:h-28 object-cover rounded-xl border border-gray-200 dark:border-gray-600"
-                        />
-                        <button
-                          onClick={() => removePhoto(index)}
-                          disabled={isCreating}
-                          className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
-                        >
-                          <TrashIcon className="w-3 h-3" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Create Profile Button for Upload */}
-                  <div className="flex justify-center pt-4">
-                    <button
-                      onClick={handleCreateProfile}
-                      disabled={isCreating || selectedFiles.length < 2}
-                      className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-400 text-white py-3 px-8 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 shadow-lg disabled:transform-none disabled:shadow-none flex items-center gap-2"
-                    >
-                      <SparklesIcon className="w-5 h-5" />
-                      {isCreating
-                        ? "Creating Enhanced Profile..."
-                        : "Create Enhanced Profile"}
-                    </button>
-                  </div>
-                </div>
-              )}
 
               {/* Tips Section */}
               <div className="bg-blue-50/80 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-2xl p-4 sm:p-5">
@@ -488,6 +409,92 @@ const FaceProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
                     </li>
                   ))}
                 </ul>
+              </div>
+            </div>
+          )}
+
+          {/* Photo Review Screen */}
+          {setupMethod === "upload" && showReview && (
+            <div className="space-y-6">
+              {/* Back Button */}
+              <button
+                onClick={() => setShowReview(false)}
+                className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 text-sm font-medium"
+              >
+                <ArrowLeftIcon className="w-4 h-4" />
+                Back to upload
+              </button>
+
+              {/* Review Header */}
+              <div className="text-center">
+                <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                  <EyeIcon className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                  Review Your Photos
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400 mb-4">
+                  {uploadedPhotos.length} photos uploaded • Review before creating profile
+                </p>
+              </div>
+
+              {/* Photo Grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                {uploadedPhotos.map((photo, index) => (
+                  <div key={index} className="relative group">
+                    <img
+                      src={photo.downloadURL}
+                      alt={`Uploaded photo ${index + 1}`}
+                      className="w-full h-32 sm:h-40 object-cover rounded-xl border-2 border-gray-200 dark:border-gray-600 shadow-lg"
+                    />
+                    <button
+                      onClick={() => removeUploadedPhoto(index)}
+                      disabled={isCreating}
+                      className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                    >
+                      <TrashIcon className="w-3 h-3" />
+                    </button>
+                    <div className="absolute bottom-2 left-2 bg-black/50 text-white text-xs px-2 py-1 rounded-full">
+                      Photo {index + 1}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Validation Info */}
+              <div className="bg-green-50/80 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-xl p-4">
+                <div className="flex items-center gap-3 mb-3">
+                  <CheckCircleIcon className="w-5 h-5 text-green-600 dark:text-green-400" />
+                  <div className="text-sm font-semibold text-green-800 dark:text-green-400">
+                    Ready to Create Profile
+                  </div>
+                </div>
+                <ul className="text-sm text-green-700 dark:text-green-300 space-y-1">
+                  <li>✓ {uploadedPhotos.length} photos uploaded (2-5 required)</li>
+                  <li>✓ All photos are high quality</li>
+                  <li>✓ Face detection will be performed during setup</li>
+                </ul>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowReview(false)}
+                  disabled={isCreating}
+                  className="flex-1 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 py-3 px-6 rounded-xl font-medium transition-all duration-300"
+                >
+                  Upload More
+                </button>
+                <button
+                  onClick={handleCreateProfileFromUploads}
+                  disabled={isCreating || uploadedPhotos.length < 2}
+                  className="flex-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-400 text-white py-3 px-6 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 shadow-lg disabled:transform-none disabled:shadow-none flex items-center justify-center gap-2"
+                >
+                  <SparklesIcon className="w-5 h-5" />
+                  {isCreating
+                    ? "Creating Profile..."
+                    : "Create Enhanced Profile"}
+                </button>
               </div>
             </div>
           )}
