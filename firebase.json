@@ -6,7 +6,8 @@
       ".git",
       "firebase-debug.log",
       "firebase-debug.*.log"
-    ]
+    ],
+    "runtime": "nodejs20"
   },
   "hosting": {
     "public": "client/dist",
