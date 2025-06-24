@@ -79,15 +79,17 @@ const ContactUs = () => {
       toast.success("Message sent successfully!");
     } catch (error) {
       console.error("Contact form error details:", error);
-      console.error("Error code:", error.code);
-      console.error("Error message:", error.message);
 
       if (error.code === "functions/internal") {
         toast.error("Server error. Please try again later.");
+      } else if (error.code === "functions/invalid-argument") {
+        toast.error("Please check your input and try again.");
       } else if (error.code === "functions/unauthenticated") {
         toast.error("Authentication required. Please refresh the page.");
       } else {
-        toast.error("Failed to send message. Please try again.");
+        toast.error(
+          error.message || "Failed to send message. Please try again."
+        );
       }
     } finally {
       setLoading(false);
