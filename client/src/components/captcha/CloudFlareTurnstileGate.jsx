@@ -12,6 +12,31 @@ const CloudflareTurnstileGate = ({ children, onVerificationComplete }) => {
   const [attempts, setAttempts] = useState(0);
   const maxAttempts = 3;
 
+  // Initialize theme state based on user preference
+   const [theme, setTheme] = useState(() => {
+    // Check if user prefers dark mode
+    if (typeof window !== 'undefined' && window.matchMedia) {
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    return 'light';
+  });
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.matchMedia) {
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      
+      const handleThemeChange = (e) => {
+        setTheme(e.matches ? 'dark' : 'light');
+      };
+
+      // Add listener for theme changes
+      mediaQuery.addListener(handleThemeChange);
+      
+      // Cleanup listener on unmount
+      return () => mediaQuery.removeListener(handleThemeChange);
+    }
+  }, []);
+
   // Check if user has already been verified in this session
   useEffect(() => {
     const sessionVerified = sessionStorage.getItem("turnstile_verified");
@@ -164,7 +189,7 @@ const CloudflareTurnstileGate = ({ children, onVerificationComplete }) => {
               onSuccess={handleTurnstileSuccess}
               onError={handleTurnstileError}
               onExpire={handleTurnstileExpired}
-              theme="light"
+              theme={theme}
               size="normal"
             />
           </div>
@@ -199,7 +224,7 @@ const CloudflareTurnstileGate = ({ children, onVerificationComplete }) => {
             </div>
           )}
 
-          {/* Development Reset Button */}
+          {/* Development Reset Button
           {process.env.NODE_ENV === "development" && (
             <div className="text-center mb-4">
               <button
@@ -209,7 +234,7 @@ const CloudflareTurnstileGate = ({ children, onVerificationComplete }) => {
                 Skip Verification (Dev Only)
               </button>
             </div>
-          )}
+          )} */}
 
           {/* Footer */}
           <div className="text-center">
