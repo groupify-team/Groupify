@@ -4,8 +4,8 @@ import { createFaceProfile } from "../../services/faceRecognitionService";
 import { saveFaceProfileToStorage } from "../../services/firebase/faceProfiles";
 import { uploadBytes, getDownloadURL, ref } from "firebase/storage";
 import { storage } from "../../services/firebase/config";
-import MobileStepGuide from "./MobileStepGuide"; // Part 2
-import DesktopCameraView from "./DesktopCameraView"; // Part 3
+import MobileStepGuide from "./MobileStepGuide";
+import DesktopCameraView from "./DesktopCameraView";
 import {
   XMarkIcon,
   ArrowLeftIcon,
@@ -138,6 +138,11 @@ const SmartFaceScan = ({ isOpen, onClose, onProfileCreated, onBack }) => {
     if (stream) {
       stream.getTracks().forEach((track) => track.stop());
       setStream(null);
+    }
+    
+    // Also clear video ref
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
     }
   };
 
@@ -336,7 +341,7 @@ const SmartFaceScan = ({ isOpen, onClose, onProfileCreated, onBack }) => {
     }
   };
 
-  // Cleanup
+  // Enhanced cleanup function
   const handleClose = () => {
     stopCamera();
     capturedPhotos.forEach((photo) => URL.revokeObjectURL(photo.url));
@@ -345,7 +350,25 @@ const SmartFaceScan = ({ isOpen, onClose, onProfileCreated, onBack }) => {
     setError("");
     setSuccess(false);
     setProgress(null);
+    setShowPreview(false);
+    setShowMobileGuide(false);
+    setMobileGuideAutoOpened(false);
     onClose();
+  };
+
+  // Enhanced back handler
+  const handleBack = () => {
+    stopCamera();
+    capturedPhotos.forEach((photo) => URL.revokeObjectURL(photo.url));
+    setCapturedPhotos([]);
+    setCurrentStep(0);
+    setError("");
+    setSuccess(false);
+    setProgress(null);
+    setShowPreview(false);
+    setShowMobileGuide(false);
+    setMobileGuideAutoOpened(false);
+    onBack();
   };
 
   // Initialize camera
@@ -374,13 +397,20 @@ const SmartFaceScan = ({ isOpen, onClose, onProfileCreated, onBack }) => {
     };
   }, []);
 
+  // Stop camera when component unmounts or modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      stopCamera();
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   // Mobile Navigation Bar (only for mobile)
   const MobileNavBar = () => (
     <div className="md:hidden bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-700/50 px-4 py-3 flex items-center justify-between">
       <button
-        onClick={onBack}
+        onClick={handleBack}
         className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 p-2 rounded-lg hover:bg-gray-100/50 dark:hover:bg-gray-800/50 transition-all duration-200"
       >
         <ArrowLeftIcon className="w-5 h-5" />
@@ -413,7 +443,7 @@ const SmartFaceScan = ({ isOpen, onClose, onProfileCreated, onBack }) => {
         <div className="hidden md:flex items-center justify-between p-4 border-b border-gray-200/50 dark:border-gray-700/50 flex-shrink-0">
           <div className="flex items-center gap-3">
             <button
-              onClick={onBack}
+              onClick={handleBack}
               className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 text-sm p-2 rounded-lg hover:bg-gray-100/50 dark:hover:bg-gray-800/50 transition-all duration-200"
             >
               <ArrowLeftIcon className="w-4 h-4" />
