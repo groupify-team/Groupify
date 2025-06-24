@@ -18,6 +18,10 @@ import { Toaster } from "react-hot-toast";
 import HelpCenter from "./pages/HelpCenter";
 import Careers from "./pages/Careers";
 import ResetPassword from "./components/auth/ResetPassword";
+import Blog from "./pages/Blog";
+import Features from "./pages/Features";
+import Pricing from "./pages/Pricing";
+import Status from "./pages/Status";
 
 function App() {
   // Enable/disable Turnstile easily
@@ -107,6 +111,10 @@ function App() {
             <Route path="/help" element={<HelpCenter />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/blog" element={<Blog />} />
+            <Route path="/features" element={<Features />} />
+            <Route path="/pricing" element={<Pricing />} />
+            <Route path="/status" element={<Status />} />
 
             {/* Protected Routes with Sidebar Layout */}
             <Route
@@ -151,9 +159,11 @@ function App() {
   return (
     <ThemeProvider>
       {ENABLE_TURNSTILE ? (
-        <CloudflareTurnstileGate onVerificationComplete={(verified) => {
-          console.log('Turnstile verification complete:', verified);
-        }}>
+        <CloudflareTurnstileGate
+          onVerificationComplete={(verified) => {
+            console.log("Turnstile verification complete:", verified);
+          }}
+        >
           <AppContent />
         </CloudflareTurnstileGate>
       ) : (
