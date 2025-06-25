@@ -439,52 +439,72 @@ const ContactUs = () => {
                 </h3>
 
                 <div className="space-y-4 sm:space-y-6">
-                  <div className="flex items-start">
-                    <MapPinIcon className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-600 dark:text-indigo-400 flex-shrink-0 mt-1" />
-                    <div className="ml-2 sm:ml-3">
-                      <h4 className="font-medium text-gray-900 dark:text-white text-sm sm:text-base">
+                  <div className="flex flex-col sm:flex-row sm:items-start text-center sm:text-left">
+                    <MapPinIcon className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-600 dark:text-indigo-400 flex-shrink-0 mt-1 mx-auto sm:mx-0 sm:mr-3" />
+                    <div className="mt-2 sm:mt-0 sm:ml-0">
+                      <h4 className="font-medium text-gray-900 dark:text-white text-sm sm:text-base mb-3 sm:mb-2">
                         Office Locations
                       </h4>
-                      <p className="text-gray-600 dark:text-gray-400 text-xs sm:text-sm">
-                        <strong>San Francisco Office:</strong>
-                        <br />
-                        123 Innovation Drive
-                        <br />
-                        San Francisco, CA 94105, United States
-                        <br />
-                        <br />
-                        <strong>Tel Aviv Office:</strong>
-                        <br />
-                        HaArba'a Street 28
-                        <br />
-                        Tel Aviv-Yafo, 6473925, Israel
-                      </p>
+                      <div className="text-gray-600 dark:text-gray-400 text-xs sm:text-sm">
+                        <div className="grid grid-cols-2 sm:block gap-4 sm:gap-0 sm:space-y-0">
+                          <div className="text-center sm:text-left sm:mb-2">
+                            <p className="font-medium text-gray-800 dark:text-gray-200 mb-1">
+                              San Francisco Office:
+                            </p>
+                            <p className="leading-relaxed">
+                              123 Innovation Drive
+                              <br />
+                              San Francisco, CA 94105
+                              <br />
+                              United States
+                            </p>
+                          </div>
+                          <div className="text-center sm:text-left">
+                            <p className="font-medium text-gray-800 dark:text-gray-200 mb-1">
+                              Tel Aviv Office:
+                            </p>
+                            <p className="leading-relaxed">
+                              HaArba'a Street 28
+                              <br />
+                              Tel Aviv-Yafo, 6473925
+                              <br />
+                              Israel
+                            </p>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="flex items-start">
-                    <ClockIcon className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-600 dark:text-indigo-400 flex-shrink-0 mt-1" />
-                    <div className="ml-2 sm:ml-3">
-                      <h4 className="font-medium text-gray-900 dark:text-white text-sm sm:text-base">
+                  <div className="flex flex-col sm:flex-row sm:items-start text-center sm:text-left">
+                    <ClockIcon className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-600 dark:text-indigo-400 flex-shrink-0 mt-1 mx-auto sm:mx-0 sm:mr-3" />
+                    <div className="mt-2 sm:mt-0 sm:ml-0">
+                      <h4 className="font-medium text-gray-900 dark:text-white text-sm sm:text-base mb-3 sm:mb-2">
                         Business Hours
                       </h4>
-                      <p className="text-gray-600 dark:text-gray-400 text-xs sm:text-sm">
-                        Monday - Friday: 9:00 AM - 6:00 PM PST
-                        <br />
-                        Saturday: 10:00 AM - 4:00 PM PST
-                        <br />
-                        Sunday: Closed
-                      </p>
+                      <div className="text-gray-600 dark:text-gray-400 text-xs sm:text-sm leading-relaxed text-center sm:text-left">
+                        <p>
+                          Monday - Friday:
+                          <br />
+                          9:00 AM - 6:00 PM PST
+                        </p>
+                        <p className="mt-1">
+                          Saturday:
+                          <br />
+                          10:00 AM - 4:00 PM PST
+                        </p>
+                        <p className="mt-1">Sunday: Closed</p>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="flex items-start">
-                    <ChatBubbleLeftRightIcon className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-600 dark:text-indigo-400 flex-shrink-0 mt-1" />
-                    <div className="ml-2 sm:ml-3">
-                      <h4 className="font-medium text-gray-900 dark:text-white text-sm sm:text-base">
+                  <div className="flex flex-col sm:flex-row sm:items-start text-center sm:text-left">
+                    <ChatBubbleLeftRightIcon className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-600 dark:text-indigo-400 flex-shrink-0 mt-1 mx-auto sm:mx-0 sm:mr-3" />
+                    <div className="mt-2 sm:mt-0 sm:ml-0">
+                      <h4 className="font-medium text-gray-900 dark:text-white text-sm sm:text-base mb-3 sm:mb-2">
                         Response Time
                       </h4>
-                      <p className="text-gray-600 dark:text-gray-400 text-xs sm:text-sm">
+                      <p className="text-gray-600 dark:text-gray-400 text-xs sm:text-sm leading-relaxed text-center sm:text-left">
                         We typically respond to all inquiries within 24 hours
                         during business days.
                       </p>

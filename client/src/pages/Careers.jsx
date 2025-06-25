@@ -24,9 +24,12 @@ import {
   ShieldCheckIcon,
   GiftIcon,
 } from "@heroicons/react/24/outline";
+import { toast } from "react-hot-toast";
 
 const Careers = () => {
   const { theme, toggleTheme } = useTheme();
+  const [showApplicationModal, setShowApplicationModal] = useState(false);
+  const [selectedJobId, setSelectedJobId] = useState(null);
 
   // Scroll to top on component mount
   useEffect(() => {
@@ -58,6 +61,29 @@ const Careers = () => {
     },
     {
       id: 2,
+      title: "Junior Full-Stack Developer",
+      department: "Engineering",
+      location: "Remote / Tel Aviv",
+      type: "Full-time",
+      experience: "0-2 years",
+      description:
+        "Join our engineering team as a junior developer and grow your skills while building innovative photo management features. Perfect opportunity for recent graduates or career changers.",
+      requirements: [
+        "Basic knowledge of React and JavaScript",
+        "Familiarity with HTML, CSS, and modern web development",
+        "Understanding of version control (Git)",
+        "Eagerness to learn and grow",
+        "Strong problem-solving mindset",
+      ],
+      benefits: [
+        "Competitive salary",
+        "Mentorship program",
+        "Learning budget",
+        "Career growth path",
+      ],
+    },
+    {
+      id: 3,
       title: "AI/ML Engineer",
       department: "Engineering",
       location: "Remote / Tel Aviv",
@@ -79,7 +105,7 @@ const Careers = () => {
       ],
     },
     {
-      id: 3,
+      id: 4,
       title: "Product Designer",
       department: "Design",
       location: "Remote / Tel Aviv",
@@ -98,28 +124,6 @@ const Careers = () => {
         "Equity package",
         "Design tool subscriptions",
         "Creative freedom",
-      ],
-    },
-    {
-      id: 4,
-      title: "DevOps Engineer",
-      department: "Engineering",
-      location: "Remote / Tel Aviv",
-      type: "Full-time",
-      experience: "3-5 years",
-      description:
-        "Build and maintain our cloud infrastructure. Ensure scalability, security, and reliability of our platform as we grow globally.",
-      requirements: [
-        "Experience with Kubernetes and Docker",
-        "Knowledge of AWS/GCP services",
-        "Experience with CI/CD pipelines",
-        "Understanding of security best practices",
-      ],
-      benefits: [
-        "Competitive salary",
-        "Equity package",
-        "Cloud certifications",
-        "On-call compensation",
       ],
     },
     {
@@ -234,6 +238,419 @@ const Careers = () => {
     },
   ];
 
+  const ApplicationModal = ({ job, onClose }) => {
+    const [formData, setFormData] = useState({
+      firstName: "",
+      lastName: "",
+      email: "",
+      phone: "",
+      experience: "",
+      coverLetter: "",
+      portfolio: "",
+      availableDate: "",
+    });
+    const [cvFile, setCvFile] = useState(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const handleFileUpload = (e) => {
+      const file = e.target.files[0];
+      if (file && file.size <= 10 * 1024 * 1024) {
+        // 10MB limit
+        setCvFile(file);
+        toast.success(`CV uploaded: ${file.name}`, {
+          duration: 2000,
+          style: {
+            background: "#10B981",
+            color: "#fff",
+            padding: "12px",
+            borderRadius: "8px",
+            fontSize: "13px",
+          },
+        });
+      } else {
+        toast.error("File size must be less than 10MB", {
+          duration: 3000,
+          style: {
+            background: "#EF4444",
+            color: "#fff",
+            padding: "12px",
+            borderRadius: "8px",
+            fontSize: "13px",
+          },
+        });
+      }
+    };
+
+    const handleSubmit = async (e) => {
+      e.preventDefault();
+      setIsSubmitting(true);
+
+      try {
+        // Convert CV file to base64 for sending
+        let cvFileBase64 = null;
+        if (cvFile) {
+          const reader = new FileReader();
+          cvFileBase64 = await new Promise((resolve) => {
+            reader.onload = () => resolve(reader.result.split(",")[1]);
+            reader.readAsDataURL(cvFile);
+          });
+        }
+
+        // Call Firebase function
+        const { httpsCallable } = await import("firebase/functions");
+        const { functions } = await import("../services/firebase/config");
+        const sendJobApplication = httpsCallable(
+          functions,
+          "sendJobApplicationEmail"
+        );
+
+        const applicationData = {
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          phone: formData.phone,
+          experience: formData.experience,
+          coverLetter: formData.coverLetter,
+          portfolio: formData.portfolio,
+          availableDate: formData.availableDate,
+          position: job.title,
+          department: job.department,
+          cvFile: cvFileBase64,
+          cvFileName: cvFile?.name,
+        };
+
+        await sendJobApplication(applicationData);
+
+        // Toast success message
+        toast.success(
+          "Application submitted successfully! We'll get back to you soon.",
+          {
+            duration: 4000,
+            style: {
+              background: "#10B981",
+              color: "#fff",
+              padding: "16px",
+              borderRadius: "10px",
+              fontSize: "14px",
+              fontWeight: "500",
+            },
+          }
+        );
+
+        onClose();
+      } catch (error) {
+        console.error("Application submission error:", error);
+
+        // Toast error message
+        toast.error("Failed to submit application. Please try again.", {
+          duration: 4000,
+          style: {
+            background: "#EF4444",
+            color: "#fff",
+            padding: "16px",
+            borderRadius: "10px",
+            fontSize: "14px",
+            fontWeight: "500",
+          },
+        });
+      } finally {
+        setIsSubmitting(false);
+      }
+    };
+
+    if (!job) return null;
+
+    return (
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-2xl w-full max-h-[90vh] flex flex-col">
+          {/* Fixed Header */}
+          <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between bg-white dark:bg-gray-800 rounded-t-2xl relative">
+            <div className="flex-1 text-center sm:text-left">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
+                Apply for {job.title}
+              </h2>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                {job.department} • {job.location}
+              </p>
+            </div>
+            <button
+              onClick={onClose}
+              className="absolute top-2 right-2 sm:top-3 sm:right-3 p-1.5 sm:p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors z-10 text-lg sm:text-xl"
+            >
+              ✕
+            </button>
+          </div>
+          {/* Scrollable Content */}
+          <div className="flex-1 overflow-y-auto">
+            <form
+              onSubmit={handleSubmit}
+              className="p-4 sm:p-6 space-y-4 sm:space-y-6"
+            >
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    First Name *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.firstName}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        firstName: e.target.value,
+                      }))
+                    }
+                    className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm sm:text-base"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Last Name *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.lastName}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        lastName: e.target.value,
+                      }))
+                    }
+                    className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm sm:text-base"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Email *
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    value={formData.email}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        email: e.target.value,
+                      }))
+                    }
+                    className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm sm:text-base"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Phone
+                  </label>
+                  <input
+                    type="tel"
+                    value={formData.phone}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        phone: e.target.value,
+                      }))
+                    }
+                    className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm sm:text-base"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Years of Experience
+                </label>
+                <select
+                  value={formData.experience}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      experience: e.target.value,
+                    }))
+                  }
+                  className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm sm:text-base"
+                >
+                  <option value="">Select experience level</option>
+                  <option value="0-1">0-1 years</option>
+                  <option value="1-3">1-3 years</option>
+                  <option value="3-5">3-5 years</option>
+                  <option value="5+">5+ years</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                  Upload CV/Resume *
+                </label>
+                <div className="relative">
+                  <input
+                    type="file"
+                    required
+                    accept=".pdf,.doc,.docx"
+                    onChange={handleFileUpload}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                    id="cv-upload"
+                  />
+                  <div className="flex items-center justify-center w-full h-24 sm:h-28 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:border-indigo-500 dark:hover:border-indigo-400 transition-all duration-200 bg-gray-50 dark:bg-gray-700/50 hover:bg-indigo-50 dark:hover:bg-indigo-900/20">
+                    <div>
+                      {cvFile ? (
+                        <div className="flex flex-row items-center">
+                          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
+                            <svg
+                              className="w-5 h-5 sm:w-6 sm:h-6 text-green-600 dark:text-green-400"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                              />
+                            </svg>
+                          </div>
+                          <div className="flex-1 text-left">
+                            <p className="text-sm font-medium text-green-700 dark:text-green-400 mb-1">
+                              File Selected
+                            </p>
+                            <p className="text-xs text-gray-600 dark:text-gray-400 truncate">
+                              {cvFile.name}
+                            </p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                              Click to change file
+                            </p>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex flex-row items-center">
+                          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-indigo-100 dark:bg-indigo-900/30 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
+                            <svg
+                              className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-600 dark:text-indigo-400"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                              />
+                            </svg>
+                          </div>
+                          <div className="flex-1 text-left">
+                            <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                              <span className="text-indigo-600 dark:text-indigo-400 font-semibold">
+                                Click to upload
+                              </span>{" "}
+                              or drag and drop
+                            </p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                              PDF, DOC, DOCX (max 10MB)
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Portfolio/LinkedIn URL
+                </label>
+                <input
+                  type="url"
+                  value={formData.portfolio}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      portfolio: e.target.value,
+                    }))
+                  }
+                  className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm sm:text-base"
+                  placeholder="https://"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Available Start Date
+                </label>
+                <input
+                  type="date"
+                  value={formData.availableDate}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      availableDate: e.target.value,
+                    }))
+                  }
+                  className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm sm:text-base"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Cover Letter
+                </label>
+                <textarea
+                  value={formData.coverLetter}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      coverLetter: e.target.value,
+                    }))
+                  }
+                  rows={4}
+                  className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-none text-sm sm:text-base"
+                  placeholder="Tell us why you're interested in this position..."
+                />
+              </div>
+
+              <div className="flex justify-center sm:justify-center space-x-4 pt-4">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="flex-1 sm:flex-none px-4 py-2 sm:px-6 sm:py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm sm:text-base"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting || !cvFile}
+                  className="flex-1 sm:flex-none px-4 py-2 sm:px-6 sm:py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-indigo-400 transition-colors flex items-center justify-center text-sm sm:text-base"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                      <span className="hidden sm:inline">Submitting...</span>
+                      <span className="sm:hidden">Submitting...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="hidden sm:inline">
+                        Submit Application
+                      </span>
+                      <span className="sm:hidden">Submit</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>{" "}
+          {/* End of scrollable content */}
+        </div>{" "}
+        {/* End of modal container */}
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 transition-colors duration-500">
       {/* Navigation Header */}
@@ -305,7 +722,7 @@ const Careers = () => {
             </a>
             <Link
               to="/about"
-              className="inline-flex items-center justify-center bg-white/20 backdrop-blur-sm text-white px-6 py-3 sm:px-8 sm:py-4 rounded-xl text-base sm:text-lg font-semibold border border-white/30 hover:bg-white/30 transition-all duration-200"
+              className="inline-flex items-center justify-center bg-white/20 backdrop-blur-sm text-white px-6 py-3 sm:px-8 sm:py-4 rounded-xl text-base sm:text-lg font-semibold border border-white/30 hover:bg-white/30 hover:scale-105 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1"
             >
               Learn About Us
             </Link>
@@ -364,9 +781,9 @@ const Careers = () => {
             {benefits.map((benefit, index) => (
               <div
                 key={index}
-                className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-2xl border border-white/20 dark:border-gray-700/50 p-4 sm:p-6 hover:shadow-xl transition-all duration-300"
+                className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-2xl border border-white/20 dark:border-gray-700/50 p-4 sm:p-6 hover:shadow-xl transition-all duration-300 text-center sm:text-left"
               >
-                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center mb-3 sm:mb-4">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center mb-3 sm:mb-4 mx-auto sm:mx-0">
                   <benefit.icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                 </div>
                 <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-2 sm:mb-3">
@@ -387,7 +804,7 @@ const Careers = () => {
         className="py-12 sm:py-16 md:py-20 bg-white/40 dark:bg-gray-800/40 backdrop-blur-sm"
       >
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12 sm:mb-16">
+          <div className="text-center mb-12 sm:mb-16 flex flex-col items-center">
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-3 sm:mb-4">
               Open Positions
             </h2>
@@ -397,15 +814,15 @@ const Careers = () => {
             </p>
           </div>
 
-          <div className="space-y-4 sm:space-y-6">
+          <div className="space-y-4 sm:space-y-6 flex flex-col items-center lg:items-stretch">
             {jobListings.map((job) => (
               <div
                 key={job.id}
-                className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-2xl border border-white/20 dark:border-gray-700/50 p-4 sm:p-6 md:p-8 hover:shadow-xl transition-all duration-300"
+                className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-2xl border border-white/20 dark:border-gray-700/50 p-4 sm:p-6 md:p-8 hover:shadow-xl transition-all duration-300 max-w-4xl lg:max-w-none w-full"
               >
                 <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-4 sm:mb-6">
                   <div className="mb-4 lg:mb-0">
-                    <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                    <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-2 text-center sm:text-left">
                       {job.title}
                     </h3>
                     <div className="flex flex-wrap gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600 dark:text-gray-300">
@@ -427,18 +844,24 @@ const Careers = () => {
                       </div>
                     </div>
                   </div>
-                  <button className="self-start lg:self-center bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 sm:px-6 sm:py-3 rounded-lg font-semibold transition-colors shadow-md hover:shadow-lg text-sm sm:text-base">
+                  <button
+                    onClick={() => {
+                      setSelectedJobId(job.id);
+                      setShowApplicationModal(true);
+                    }}
+                    className="self-center lg:self-center bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 sm:px-6 sm:py-3 rounded-lg font-semibold transition-colors shadow-md hover:shadow-lg text-sm sm:text-base"
+                  >
                     Apply Now
                   </button>
                 </div>
 
-                <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 mb-4 sm:mb-6 leading-relaxed">
+                <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 mb-4 sm:mb-6 leading-relaxed text-center sm:text-left">
                   {job.description}
                 </p>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                   <div>
-                    <h4 className="font-semibold text-gray-900 dark:text-white mb-2 sm:mb-3 text-sm sm:text-base">
+                    <h4 className="font-semibold text-gray-900 dark:text-white mb-2 sm:mb-3 text-sm sm:text-base text-center sm:text-left">
                       Requirements
                     </h4>
                     <ul className="space-y-1 sm:space-y-2">
@@ -454,7 +877,7 @@ const Careers = () => {
                     </ul>
                   </div>
                   <div>
-                    <h4 className="font-semibold text-gray-900 dark:text-white mb-2 sm:mb-3 text-sm sm:text-base">
+                    <h4 className="font-semibold text-gray-900 dark:text-white mb-2 sm:mb-3 text-sm sm:text-base text-center sm:text-left">
                       What We Offer
                     </h4>
                     <ul className="space-y-1 sm:space-y-2">
@@ -544,15 +967,15 @@ const Careers = () => {
               <div key={index} className="flex items-center">
                 <div className="flex-1">
                   <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-xl border border-white/20 dark:border-gray-700/50 p-4 sm:p-6 mr-4 sm:mr-8">
-                    <div className="flex items-center mb-2 sm:mb-3">
+                    <div className="flex flex-col items-center sm:flex-row sm:items-center mb-2 sm:mb-3">
                       <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full flex items-center justify-center text-white text-xs sm:text-sm font-bold mr-2 sm:mr-3">
                         {step.step}
                       </div>
-                      <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
+                      <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white text-center sm:text-left">
                         {step.title}
                       </h3>
                     </div>
-                    <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 leading-relaxed">
+                    <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 leading-relaxed text-center sm:text-left">
                       {step.description}
                     </p>
                   </div>
@@ -609,6 +1032,17 @@ const Careers = () => {
           </div>
         </div>
       </footer>
+
+      {/* Application Modal */}
+      {showApplicationModal && (
+        <ApplicationModal
+          job={jobListings.find((job) => job.id === selectedJobId)}
+          onClose={() => {
+            setShowApplicationModal(false);
+            setSelectedJobId(null);
+          }}
+        />
+      )}
     </div>
   );
 };
