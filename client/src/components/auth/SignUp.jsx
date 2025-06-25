@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../../contexts/AuthContext";
+import { useLocation } from "react-router-dom";
 import { useNavigate, Link } from "react-router-dom";
 import { useTheme } from "../../contexts/ThemeContext";
 import {
@@ -15,23 +16,6 @@ import {
 import { toast } from "react-hot-toast";
 
 const SignUp = () => {
-  // Add to the top of each page component
-  useEffect(() => {
-    // Scroll to top first
-    window.scrollTo(0, 0);
-
-    // Fade in effect
-    document.body.style.opacity = "0";
-    document.body.style.transition = "opacity 0.5s ease-in-out";
-
-    // Small delay then fade in
-    const timer = setTimeout(() => {
-      document.body.style.opacity = "1";
-    }, 50);
-
-    return () => clearTimeout(timer);
-  }, []);
-
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -49,6 +33,21 @@ const SignUp = () => {
   const { signup, signInWithGoogle } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
+  const location = useLocation();
+  const isFromPricingFree = location.search.includes("from=pricing-free");
+
+  // Add to the top of each page component
+  useEffect(() => {
+    window.scrollTo(0, 0);
+
+    // Wait for navigation to complete, then fade in
+    const timer = setTimeout(() => {
+      document.body.style.transition = "opacity 0.2s ease-in";
+      document.body.style.opacity = "1";
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [isFromPricingFree]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useTheme } from "../contexts/ThemeContext";
 import { useAuth } from "../contexts/AuthContext";
 import {
@@ -37,6 +37,7 @@ import {
 const Features = () => {
   const { theme, toggleTheme } = useTheme();
   const { currentUser } = useAuth();
+  const navigate = useNavigate();
   const [isLoaded, setIsLoaded] = useState(false);
   const [activeCategory, setActiveCategory] = useState("all");
 
@@ -370,12 +371,21 @@ const Features = () => {
     { number: "256-bit", label: "Encryption Standard" },
   ];
 
-  const handleGetStarted = () => {
-    if (currentUser) {
-      window.location.href = "/dashboard";
-    } else {
-      window.location.href = "/signup";
-    }
+  const handleGetStarted = (e) => {
+    e.preventDefault();
+
+    // Set the fade-out animation
+    document.body.style.transition = "opacity 0.2s ease-out";
+    document.body.style.opacity = "0";
+
+    // Navigate after fade completes
+    setTimeout(() => {
+      if (currentUser) {
+        navigate("/dashboard");
+      } else {
+        navigate("/signup");
+      }
+    }, 300);
   };
 
   return (
@@ -438,13 +448,14 @@ const Features = () => {
             memories.
           </p>
 
-          <button
+          <Link
+            to="/signup"
             onClick={handleGetStarted}
             className="inline-flex items-center bg-white text-indigo-600 px-6 py-3 sm:px-8 sm:py-4 rounded-xl text-base sm:text-lg font-semibold hover:bg-gray-50 transition-all duration-200 shadow-xl hover:shadow-2xl hover:scale-105"
           >
             Get Started Free
             <ArrowRightIcon className="ml-2 w-5 h-5" />
-          </button>
+          </Link>
         </div>
       </div>
 
@@ -511,45 +522,47 @@ const Features = () => {
                 }`}
               >
                 {/* Premium/Coming Soon Badges */}
-                <div className="absolute top-4 right-4 flex flex-col gap-2">
-                  {feature.premium && (
-                    <span className="px-2 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400 rounded-full text-xs font-medium">
-                      Premium
+                <div className="absolute top-4 right-4 flex flex-col gap-2 items-end">
+                  {feature.comingSoon && (
+                    <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full text-xs font-medium inline-block w-auto">
+                      Coming Soon
                     </span>
                   )}
-                  {feature.comingSoon && (
-                    <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full text-xs font-medium">
-                      Coming Soon
+                  {feature.premium && (
+                    <span className="px-2 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400 rounded-full text-xs font-medium inline-block w-auto">
+                      Premium
                     </span>
                   )}
                 </div>
 
                 <div className="p-6 sm:p-8">
                   {/* Feature Icon */}
-                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center mb-4 sm:mb-6 group-hover:scale-110 transition-transform">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center mb-4 sm:mb-6 group-hover:scale-110 transition-transform mx-auto sm:mx-0">
                     <feature.icon className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
                   </div>
 
                   {/* Feature Content */}
-                  <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-3 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                  <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-3 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors text-center sm:text-left">
                     {feature.title}
                   </h3>
 
-                  <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mb-4 sm:mb-6 leading-relaxed">
+                  <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mb-4 sm:mb-6 leading-relaxed text-center sm:text-left">
                     {feature.description}
                   </p>
 
                   {/* Feature Details */}
-                  <ul className="space-y-2 sm:space-y-3">
-                    {feature.details.map((detail, detailIndex) => (
-                      <li key={detailIndex} className="flex items-start">
-                        <CheckIcon className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 flex-shrink-0 mt-0.5 mr-3" />
-                        <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-                          {detail}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
+                  <div className="flex justify-center sm:justify-start">
+                    <ul className="space-y-2 sm:space-y-3 inline-block">
+                      {feature.details.map((detail, detailIndex) => (
+                        <li key={detailIndex} className="flex items-start">
+                          <CheckIcon className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 flex-shrink-0 mt-0.5 mr-3" />
+                          <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                            {detail}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
               </div>
             ))}
@@ -623,13 +636,14 @@ const Features = () => {
             smarter with Groupify's powerful features.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
-            <button
+            <Link
+              to="/signup"
               onClick={handleGetStarted}
               className="inline-flex items-center justify-center bg-white text-indigo-600 px-6 py-3 sm:px-8 sm:py-4 rounded-xl text-base sm:text-lg font-semibold hover:bg-gray-50 transition-all duration-200 shadow-xl hover:shadow-2xl hover:scale-105"
             >
               Start Free Trial
               <ArrowRightIcon className="ml-2 w-5 h-5" />
-            </button>
+            </Link>
             <Link
               to="/pricing"
               className="inline-flex items-center justify-center bg-white/20 backdrop-blur-sm text-white px-6 py-3 sm:px-8 sm:py-4 rounded-xl text-base sm:text-lg font-semibold border border-white/30 hover:bg-white/30 transition-all duration-200"

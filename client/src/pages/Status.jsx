@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useTheme } from "../contexts/ThemeContext";
+import { toast } from "react-hot-toast";
 import {
   CameraIcon,
   SunIcon,
@@ -24,10 +25,20 @@ import {
   ArrowTrendingUpIcon,
 } from "@heroicons/react/24/outline";
 
+const toastOptions = {
+  style: {
+    textAlign: "center",
+  },
+  className: "sm:text-left text-center",
+  position: "top-center",
+};
+
 const Status = () => {
   const { theme, toggleTheme } = useTheme();
   const [isLoaded, setIsLoaded] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [email, setEmail] = useState("");
+  const [isSubscribing, setIsSubscribing] = useState(false);
 
   // Update current time every second
   useEffect(() => {
@@ -279,6 +290,56 @@ const Status = () => {
     services.reduce((acc, service) => acc + service.uptime, 0) / services.length
   ).toFixed(2);
 
+  const handleEmailSubscription = async (e) => {
+    e.preventDefault();
+
+    // Email validation regex
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!email.trim()) {
+      toast.error("Please enter your email address", toastOptions);
+      return;
+    }
+
+    if (!emailRegex.test(email)) {
+      toast.error("Please enter a valid email address", toastOptions);
+      return;
+    }
+
+    setIsSubscribing(true);
+
+    try {
+      // Get existing subscribers from localStorage
+      const existingSubscribers = JSON.parse(
+        localStorage.getItem("groupify_status_subscribers") || "[]"
+      );
+
+      // Check if email already exists
+      if (existingSubscribers.includes(email.toLowerCase())) {
+        toast.error("This email is already subscribed!", toastOptions);
+        setIsSubscribing(false);
+        return;
+      }
+
+      // Add new subscriber
+      const updatedSubscribers = [...existingSubscribers, email.toLowerCase()];
+      localStorage.setItem(
+        "groupify_status_subscribers",
+        JSON.stringify(updatedSubscribers)
+      );
+
+      toast.success(
+        "Successfully subscribed! Thank you for joining us.",
+        toastOptions
+      );
+      setEmail("");
+    } catch (error) {
+      toast.error("Subscription failed. Please try again.", toastOptions);
+    } finally {
+      setIsSubscribing(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 transition-colors duration-500">
       {/* Navigation Header */}
@@ -365,7 +426,7 @@ const Status = () => {
       {incidents.length > 0 && (
         <div className="py-8 sm:py-12 bg-white/40 dark:bg-gray-800/40 backdrop-blur-sm border-b border-white/20 dark:border-gray-700/50">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-6 sm:mb-8">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-6 sm:mb-8 text-center">
               Current Incidents & Maintenance
             </h2>
             <div className="space-y-4 sm:space-y-6">
@@ -382,7 +443,7 @@ const Status = () => {
                         )} mt-2 mr-3 flex-shrink-0`}
                       ></div>
                       <div>
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                        <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-2 leading-tight">
                           {incident.title}
                         </h3>
                         <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mb-3">
@@ -567,7 +628,7 @@ const Status = () => {
                         )} mt-2 mr-3 flex-shrink-0`}
                       ></div>
                       <div>
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                        <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-2 leading-tight">
                           {incident.title}
                         </h3>
                         <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mb-3">
@@ -611,16 +672,26 @@ const Status = () => {
             Subscribe to status updates and get notified about incidents,
             maintenance, and service updates.
           </p>
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center max-w-md mx-auto">
+          <form
+            onSubmit={handleEmailSubscription}
+            className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center max-w-md mx-auto"
+          >
             <input
               type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter your email"
-              className="flex-1 px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 focus:ring-2 focus:ring-white focus:ring-opacity-50"
+              className="flex-1 px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 focus:ring-2 focus:ring-white focus:ring-opacity-50 text-center sm:text-left"
+              disabled={isSubscribing}
             />
-            <button className="bg-white text-indigo-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-50 transition-colors whitespace-nowrap">
-              Subscribe
+            <button
+              type="submit"
+              disabled={isSubscribing}
+              className="bg-white text-indigo-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-50 disabled:bg-gray-100 transition-colors whitespace-nowrap"
+            >
+              {isSubscribing ? "Subscribing..." : "Subscribe"}
             </button>
-          </div>
+          </form>
         </div>
       </div>
 
