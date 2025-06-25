@@ -27,6 +27,14 @@ import {
 } from "@heroicons/react/24/outline";
 import { toast } from "react-hot-toast";
 
+const toastOptions = {
+  style: {
+    textAlign: "center",
+  },
+  className: "sm:text-left text-center",
+  position: "top-center",
+};
+
 const Blog = () => {
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -38,8 +46,11 @@ const Blog = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [isTagFiltered, setIsTagFiltered] = useState(false);
   const [selectedPost, setSelectedPost] = useState(null);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [email, setEmail] = useState("");
+  const [isSubscribing, setIsSubscribing] = useState(false);
 
   // Load posts from localStorage on component mount
   useEffect(() => {
@@ -147,6 +158,66 @@ const Blog = () => {
     );
   };
 
+  const handleEmailSubscription = async (e) => {
+    e.preventDefault();
+
+    // Email validation regex
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!email.trim()) {
+      toast.error("Please enter your email address", toastOptions);
+      return;
+    }
+
+    if (!emailRegex.test(email)) {
+      toast.error("Please enter a valid email address", toastOptions);
+      return;
+    }
+
+    setIsSubscribing(true);
+
+    try {
+      // Get existing subscribers from localStorage
+      const existingSubscribers = JSON.parse(
+        localStorage.getItem("groupify_subscribers") || "[]"
+      );
+
+      // Check if email already exists
+      if (existingSubscribers.includes(email.toLowerCase())) {
+        toast.error("This email is already subscribed!", toastOptions);
+        setIsSubscribing(false);
+        return;
+      }
+
+      // Add new subscriber
+      const updatedSubscribers = [...existingSubscribers, email.toLowerCase()];
+      localStorage.setItem(
+        "groupify_subscribers",
+        JSON.stringify(updatedSubscribers)
+      );
+
+      toast.success(
+        "Successfully subscribed! Thank you for joining us.",
+        toastOptions
+      );
+      setEmail("");
+    } catch (error) {
+      toast.error("Subscription failed. Please try again.", toastOptions);
+    } finally {
+      setIsSubscribing(false);
+    }
+  };
+
+  const handleTagClick = (tag) => {
+    setSearchQuery(tag);
+    setIsTagFiltered(true);
+  };
+
+  const handleClearTagFilter = () => {
+    setSearchQuery("");
+    setIsTagFiltered(false);
+  };
+
   const CreatePostModal = () => {
     const [formData, setFormData] = useState({
       title: "",
@@ -161,7 +232,7 @@ const Blog = () => {
       e.preventDefault();
 
       if (!formData.title || !formData.excerpt || !formData.content) {
-        toast.error("Please fill in all required fields");
+        toast.error("Please fill in all required fields", toastOptions);
         return;
       }
 
@@ -183,7 +254,7 @@ const Blog = () => {
 
       setPosts((prev) => [newPost, ...prev]);
       setShowCreateModal(false);
-      toast.success("Post created successfully!");
+      toast.success("Post created successfully!", toastOptions);
 
       // Reset form
       setFormData({
@@ -198,8 +269,8 @@ const Blog = () => {
 
     return (
       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-          <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto mx-4 sm:mx-0">
+          <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
               Create New Post
             </h2>
@@ -349,96 +420,103 @@ const Blog = () => {
 
     return (
       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-          <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <span className="px-3 py-1 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-full text-sm font-medium capitalize">
-                {post.category}
-              </span>
-              {post.featured && (
-                <span className="px-3 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400 rounded-full text-sm font-medium">
-                  Featured
-                </span>
-              )}
-            </div>
+        <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-4xl w-full max-h-[90vh] flex flex-col">
+          {/* Fixed Header */}
+          <div className="bg-white dark:bg-gray-800 rounded-t-2xl relative">
             <button
               onClick={onClose}
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              className="absolute top-1 right-1 sm:top-2 sm:right-2 p-1 sm:p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors z-10 text-lg"
             >
-              <XMarkIcon className="w-6 h-6 text-gray-500" />
+              <XMarkIcon className="w-5 h-5 sm:w-6 sm:h-6 text-gray-500" />
             </button>
+
+            <div className="p-4 sm:p-6 text-center sm:text-left">
+              <div className="flex items-center justify-center sm:justify-start space-x-4 mb-4">
+                <span className="px-3 py-1 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-full text-sm font-medium capitalize">
+                  {post.category}
+                </span>
+                {post.featured && (
+                  <span className="px-3 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400 rounded-full text-sm font-medium">
+                    Featured
+                  </span>
+                )}
+              </div>
+
+              <h1 className="text-xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-4">
+                {post.title}
+              </h1>
+
+              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 text-sm text-gray-600 dark:text-gray-400 pb-4 border-b border-gray-200 dark:border-gray-700">
+                <div className="flex items-center">
+                  <UserIcon className="w-4 h-4 mr-1" />
+                  {post.author}
+                </div>
+                <div className="flex items-center">
+                  <CalendarIcon className="w-4 h-4 mr-1" />
+                  {new Date(post.date).toLocaleDateString()}
+                </div>
+                <div className="flex items-center">
+                  <ClockIcon className="w-4 h-4 mr-1" />
+                  {post.readTime}
+                </div>
+                <div className="flex items-center">
+                  <EyeIcon className="w-4 h-4 mr-1" />
+                  {post.views} views
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div className="p-6">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
-              {post.title}
-            </h1>
+          {/* Scrollable Content */}
+          <div className="flex-1 overflow-y-auto">
+            <div className="p-4 sm:p-6 text-center sm:text-left">
+              <div className="prose prose-lg dark:prose-invert max-w-none mb-8">
+                {post.content.split("\n\n").map((paragraph, index) => (
+                  <p
+                    key={index}
+                    className="mb-4 text-gray-700 dark:text-gray-300 leading-relaxed"
+                  >
+                    {paragraph}
+                  </p>
+                ))}
+              </div>
 
-            <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 dark:text-gray-400 mb-6">
-              <div className="flex items-center">
-                <UserIcon className="w-4 h-4 mr-1" />
-                {post.author}
-              </div>
-              <div className="flex items-center">
-                <CalendarIcon className="w-4 h-4 mr-1" />
-                {new Date(post.date).toLocaleDateString()}
-              </div>
-              <div className="flex items-center">
-                <ClockIcon className="w-4 h-4 mr-1" />
-                {post.readTime}
-              </div>
-              <div className="flex items-center">
-                <EyeIcon className="w-4 h-4 mr-1" />
-                {post.views} views
-              </div>
-            </div>
-
-            <div className="prose prose-lg dark:prose-invert max-w-none mb-8">
-              {post.content.split("\n\n").map((paragraph, index) => (
-                <p
-                  key={index}
-                  className="mb-4 text-gray-700 dark:text-gray-300 leading-relaxed"
-                >
-                  {paragraph}
-                </p>
-              ))}
-            </div>
-
-            {post.tags && post.tags.length > 0 && (
-              <div className="mb-6">
-                <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Tags:
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {post.tags.map((tag, index) => (
-                    <span
-                      key={index}
-                      className="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full text-sm"
-                    >
-                      #{tag}
-                    </span>
-                  ))}
+              {post.tags && post.tags.length > 0 && (
+                <div className="mb-6">
+                  <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Tags:
+                  </h3>
+                  <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
+                    {post.tags.map((tag, index) => (
+                      <span
+                        key={index}
+                        className="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full text-sm"
+                      >
+                        #{tag}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            <div className="flex items-center justify-between pt-6 border-t border-gray-200 dark:border-gray-700">
-              <div className="flex items-center space-x-6">
-                <button
-                  onClick={() => handleLike(post.id)}
-                  className="flex items-center space-x-2 text-gray-600 dark:text-gray-400 hover:text-red-500 transition-colors"
-                >
-                  <HeartIcon className="w-5 h-5" />
-                  <span>{post.likes}</span>
-                </button>
-                <div className="flex items-center space-x-2 text-gray-600 dark:text-gray-400">
-                  <ChatBubbleLeftIcon className="w-5 h-5" />
-                  <span>{post.comments}</span>
+              <div className="flex items-center justify-center sm:justify-between pt-6 border-t border-gray-200 dark:border-gray-700">
+                <div className="flex items-center space-x-6">
+                  <button
+                    onClick={() => handleLike(post.id)}
+                    className="flex items-center space-x-2 text-gray-600 dark:text-gray-400 hover:text-red-500 transition-colors"
+                  >
+                    <HeartIcon className="w-5 h-5" />
+                    <span>{post.likes}</span>
+                  </button>
+                  <div className="flex items-center space-x-2 text-gray-600 dark:text-gray-400">
+                    <ChatBubbleLeftIcon className="w-5 h-5" />
+                    <span>{post.comments}</span>
+                  </div>
+                  <button className="flex items-center space-x-2 text-gray-600 dark:text-gray-400 hover:text-indigo-500 transition-colors">
+                    <ShareIcon className="w-5 h-5" />
+                    <span>Share</span>
+                  </button>
                 </div>
-                <button className="flex items-center space-x-2 text-gray-600 dark:text-gray-400 hover:text-indigo-500 transition-colors">
-                  <ShareIcon className="w-5 h-5" />
-                  <span>Share</span>
-                </button>
               </div>
             </div>
           </div>
@@ -530,7 +608,7 @@ const Blog = () => {
                 placeholder="Search articles..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 sm:py-4 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm text-gray-900 dark:text-white placeholder-gray-500 rounded-xl border-0 shadow-lg focus:ring-2 focus:ring-white/50 text-base sm:text-lg"
+                className="w-full pl-12 pr-4 py-3 sm:py-4 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm text-gray-900 dark:text-white placeholder-gray-500 rounded-xl border-0 shadow-lg focus:ring-2 focus:ring-white/50 text-base sm:text-lg text-center sm:text-left"
               />
             </div>
           </div>
@@ -540,14 +618,20 @@ const Blog = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 md:py-16">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 sm:gap-8">
           {/* Main Content */}
-          <div className="lg:col-span-3">
+          <div className="lg:col-span-3 flex flex-col items-center lg:items-start">
             {/* Category Filter */}
             <div className="mb-6 sm:mb-8">
-              <div className="flex flex-wrap gap-2 sm:gap-3">
+              <div className="flex flex-wrap gap-2 sm:gap-3 justify-center sm:justify-start">
                 {categories.map((category) => (
                   <button
                     key={category.id}
-                    onClick={() => setSelectedCategory(category.id)}
+                    onClick={() => {
+                      setSelectedCategory(category.id);
+                      if (category.id === "all") {
+                        setSearchQuery("");
+                        setIsTagFiltered(false);
+                      }
+                    }}
                     className={`inline-flex items-center px-3 py-2 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
                       selectedCategory === category.id
                         ? "bg-indigo-600 text-white"
@@ -565,11 +649,11 @@ const Blog = () => {
             {featuredPosts.length > 0 &&
               selectedCategory === "all" &&
               searchQuery === "" && (
-                <div className="mb-8 sm:mb-12">
-                  <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-4 sm:mb-6">
+                <div className="mb-8 sm:mb-12 w-full flex flex-col items-center lg:items-start">
+                  <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-4 sm:mb-6 text-center lg:text-left">
                     Featured Posts
                   </h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 justify-center md:justify-start">
                     {featuredPosts.slice(0, 2).map((post) => (
                       <article
                         key={post.id}
@@ -581,7 +665,7 @@ const Blog = () => {
                         onClick={() => setSelectedPost(post)}
                       >
                         <div className="p-4 sm:p-6">
-                          <div className="flex items-center justify-between mb-3 sm:mb-4">
+                          <div className="flex items-start justify-between mb-3 sm:mb-4">
                             <span className="px-2 py-1 sm:px-3 sm:py-1 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-full text-xs sm:text-sm font-medium capitalize">
                               {post.category}
                             </span>
@@ -590,7 +674,7 @@ const Blog = () => {
                             </span>
                           </div>
 
-                          <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-2 sm:mb-3 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors line-clamp-2">
+                          <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-2 sm:mb-3 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors line-clamp-2 text-center lg:text-left">
                             {post.title}
                           </h3>
 
@@ -648,8 +732,8 @@ const Blog = () => {
               )}
 
             {/* All Posts */}
-            <div>
-              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-4 sm:mb-6">
+            <div className="w-full flex flex-col items-center lg:items-start">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-4 sm:mb-6 text-center lg:text-left">
                 {selectedCategory === "all"
                   ? "All Posts"
                   : categories.find((c) => c.id === selectedCategory)?.name}
@@ -671,11 +755,11 @@ const Blog = () => {
                   </p>
                 </div>
               ) : (
-                <div className="space-y-4 sm:space-y-6">
+                <div className="space-y-4 sm:space-y-6 flex flex-col items-center lg:items-stretch">
                   {filteredPosts.map((post, index) => (
                     <article
                       key={post.id}
-                      className={`group bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-xl border border-white/20 dark:border-gray-700/50 overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer ${
+                      className={`group bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-xl border border-white/20 dark:border-gray-700/50 overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer max-w-2xl lg:max-w-none w-full ${
                         isLoaded
                           ? `opacity-100 translate-y-0 delay-${index * 100}`
                           : "opacity-0 translate-y-8"
@@ -685,7 +769,7 @@ const Blog = () => {
                       <div className="p-4 sm:p-6">
                         <div className="flex flex-col sm:flex-row sm:items-start gap-4">
                           <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-2 sm:mb-3">
+                            <div className="flex items-start justify-between mb-2 sm:mb-3">
                               <span className="px-2 py-1 sm:px-3 sm:py-1 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-full text-xs sm:text-sm font-medium capitalize">
                                 {post.category}
                               </span>
@@ -696,7 +780,7 @@ const Blog = () => {
                               )}
                             </div>
 
-                            <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                            <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors text-center lg:text-left">
                               {post.title}
                             </h3>
 
@@ -761,11 +845,11 @@ const Blog = () => {
           </div>
 
           {/* Sidebar */}
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 flex flex-col items-center lg:items-start">
             <div className="sticky top-8 space-y-6">
               {/* Recent Posts */}
               <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-xl border border-white/20 dark:border-gray-700/50 p-4 sm:p-6">
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 text-center lg:text-left">
                   Recent Posts
                 </h3>
                 <div className="space-y-4">
@@ -789,42 +873,78 @@ const Blog = () => {
 
               {/* Popular Tags */}
               <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-xl border border-white/20 dark:border-gray-700/50 p-4 sm:p-6">
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
-                  Popular Tags
-                </h3>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-white text-center lg:text-left">
+                    Popular Tags
+                  </h3>
+                  {isTagFiltered && (
+                    <button
+                      onClick={handleClearTagFilter}
+                      className="text-xs text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 transition-colors font-medium"
+                    >
+                      Clear Filter
+                    </button>
+                  )}
+                </div>
                 <div className="flex flex-wrap gap-2">
                   {Array.from(new Set(posts.flatMap((post) => post.tags || [])))
                     .slice(0, 10)
                     .map((tag) => (
                       <button
                         key={tag}
-                        onClick={() => setSearchQuery(tag)}
-                        className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md text-xs hover:bg-indigo-100 dark:hover:bg-indigo-900/30 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                        onClick={() => handleTagClick(tag)}
+                        className={`px-2 py-1 rounded-md text-xs transition-colors ${
+                          searchQuery === tag
+                            ? "bg-indigo-600 text-white"
+                            : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 hover:text-indigo-600 dark:hover:text-indigo-400"
+                        }`}
                       >
                         #{tag}
                       </button>
                     ))}
                 </div>
+                {isTagFiltered && (
+                  <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                        Filtering by: #{searchQuery}
+                      </span>
+                      <button
+                        onClick={handleClearTagFilter}
+                        className="text-xs bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 px-2 py-1 rounded-md hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors"
+                      >
+                        Show All
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Newsletter Signup */}
               <div className="bg-gradient-to-r from-indigo-500/10 to-purple-500/10 dark:from-indigo-500/20 dark:to-purple-500/20 rounded-xl border border-indigo-200/50 dark:border-indigo-800/50 p-4 sm:p-6">
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2 text-center lg:text-left">
                   Stay Updated
                 </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 text-center lg:text-left">
                   Get the latest posts and updates delivered to your inbox.
                 </p>
-                <div className="space-y-3">
+                <form onSubmit={handleEmailSubscription} className="space-y-3">
                   <input
                     type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     placeholder="Enter your email"
-                    className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500"
+                    className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 text-center lg:text-left"
+                    disabled={isSubscribing}
                   />
-                  <button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-lg text-sm font-medium transition-colors">
-                    Subscribe
+                  <button
+                    type="submit"
+                    disabled={isSubscribing}
+                    className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white py-2 rounded-lg text-sm font-medium transition-colors"
+                  >
+                    {isSubscribing ? "Subscribing..." : "Subscribe"}
                   </button>
-                </div>
+                </form>
               </div>
             </div>
           </div>
