@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useTheme } from "../contexts/ThemeContext";
 import { useAuth } from "../contexts/AuthContext";
 import {
@@ -27,10 +27,13 @@ import { toast } from "react-hot-toast";
 
 const Pricing = () => {
   const { theme, toggleTheme } = useTheme();
+  const navigate = useNavigate();
   const { currentUser } = useAuth();
   const [isLoaded, setIsLoaded] = useState(false);
   const [billingCycle, setBillingCycle] = useState("monthly"); // 'monthly' or 'yearly'
   const [openFaq, setOpenFaq] = useState(null);
+  const [showFreeModal, setShowFreeModal] = useState(false);
+  const [showEnterpriseModal, setShowEnterpriseModal] = useState(false);
 
   // Scroll to top on component mount
   useEffect(() => {
@@ -232,12 +235,12 @@ const Pricing = () => {
       if (currentUser) {
         toast.success("You're already on the free plan!");
       } else {
-        // Redirect to signup
-        window.location.href = "/signup";
+        // Show modal first to try converting to paid plan
+        setShowFreeModal(true);
       }
     } else if (plan.name === "Enterprise") {
       // Redirect to contact
-      window.location.href = "/contact";
+      setShowEnterpriseModal(true);
     } else {
       // For Pro and Family plans
       if (currentUser) {
@@ -343,11 +346,10 @@ const Pricing = () => {
             that fits your needs. Start free and upgrade anytime.
           </p>
 
-          {/* Billing Toggle */}
           <div className="inline-flex items-center bg-white/20 backdrop-blur-sm rounded-xl p-1 mb-6 sm:mb-8">
             <button
               onClick={() => setBillingCycle("monthly")}
-              className={`px-4 py-2 sm:px-6 sm:py-3 rounded-lg text-sm sm:text-base font-medium transition-all ${
+              className={`px-6 py-3 sm:px-6 sm:py-3 rounded-lg text-base sm:text-base font-medium transition-all ${
                 billingCycle === "monthly"
                   ? "bg-white text-indigo-600 shadow-md"
                   : "text-white hover:text-indigo-200"
@@ -357,14 +359,14 @@ const Pricing = () => {
             </button>
             <button
               onClick={() => setBillingCycle("yearly")}
-              className={`px-4 py-2 sm:px-6 sm:py-3 rounded-lg text-sm sm:text-base font-medium transition-all relative ${
+              className={`px-6 py-3 sm:px-6 sm:py-3 rounded-lg text-base sm:text-base font-medium transition-all relative ${
                 billingCycle === "yearly"
                   ? "bg-white text-indigo-600 shadow-md"
                   : "text-white hover:text-indigo-200"
               }`}
             >
               Yearly
-              <span className="absolute -top-2 -right-2 bg-yellow-400 text-yellow-900 text-xs px-2 py-0.5 rounded-full font-bold">
+              <span className="absolute -top-2 -right-5 bg-yellow-400 text-yellow-900 text-xs px-2 py-0.5 rounded-full font-bold cursor-pointer hover:bg-yellow-300 hover:scale-110 hover:shadow-lg hover:rotate-12 transition-all duration-300 ease-out hover:animate-pulse">
                 Save 20%
               </span>
             </button>
@@ -395,7 +397,7 @@ const Pricing = () => {
                     )} text-center py-2`}
                   >
                     <span
-                      className={`text-sm font-semibold ${getPlanTextColor(
+                      className={`text-base sm:text-sm font-semibold ${getPlanTextColor(
                         plan.color
                       )}`}
                     >
@@ -450,22 +452,24 @@ const Pricing = () => {
                       onClick={() => handlePlanSelect(plan)}
                       className={`w-full ${getPlanButtonColor(
                         plan.color
-                      )} text-white px-6 py-3 sm:py-4 rounded-xl text-sm sm:text-base font-semibold transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-105 mb-6`}
+                      )} text-white px-6 py-3 sm:py-4 rounded-xl text-sm sm:text-base font-semibold transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-105 mb-4 sm:mb-6`}
                     >
                       {plan.cta}
                     </button>
                   </div>
 
-                  {/* Features */}
-                  <div className="space-y-3 sm:space-y-4">
-                    <h4 className="font-semibold text-gray-900 dark:text-white text-sm sm:text-base">
+                  <div className="space-y-3 sm:space-y-4 mt-4 sm:mt-6">
+                    <h4 className="font-semibold text-gray-900 dark:text-white text-base sm:text-base text-center sm:text-left">
                       What's included:
                     </h4>
-                    <ul className="space-y-2 sm:space-y-3">
+                    <ul className="space-y-2 sm:space-y-3 flex flex-col items-center sm:items-start pl-[25%] sm:pl-0">
                       {plan.features.map((feature, featureIndex) => (
-                        <li key={featureIndex} className="flex items-start">
+                        <li
+                          key={featureIndex}
+                          className="flex items-start w-full max-w-xs sm:max-w-none"
+                        >
                           <CheckIcon className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 flex-shrink-0 mt-0.5 mr-3" />
-                          <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                          <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 text-left">
                             {feature}
                           </span>
                         </li>
@@ -475,14 +479,17 @@ const Pricing = () => {
                     {/* Limitations */}
                     {plan.limitations.length > 0 && (
                       <div className="mt-4 sm:mt-6">
-                        <h4 className="font-semibold text-gray-900 dark:text-white text-sm mb-2 sm:mb-3">
+                        <h4 className="font-semibold text-gray-900 dark:text-white text-base mb-2 sm:mb-3 text-center sm:text-left">
                           Limitations:
                         </h4>
-                        <ul className="space-y-2">
+                        <ul className="space-y-2 flex flex-col items-center sm:items-start pl-[25%] sm:pl-0">
                           {plan.limitations.map((limitation, limitIndex) => (
-                            <li key={limitIndex} className="flex items-start">
+                            <li
+                              key={limitIndex}
+                              className="flex items-start w-full max-w-xs sm:max-w-none"
+                            >
                               <XMarkIcon className="w-4 h-4 sm:w-5 sm:h-5 text-red-400 flex-shrink-0 mt-0.5 mr-3" />
-                              <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+                              <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 text-left">
                                 {limitation}
                               </span>
                             </li>
@@ -581,13 +588,19 @@ const Pricing = () => {
                     )}
                   </div>
                 </button>
-                {openFaq === index && (
-                  <div className="px-4 pb-4 sm:px-6 sm:pb-6">
+                <div
+                  className={`overflow-hidden transition-all duration-500 ease-in-out ${
+                    openFaq === index
+                      ? "max-h-96 opacity-100"
+                      : "max-h-0 opacity-0"
+                  }`}
+                >
+                  <div className="px-4 sm:px-6 pb-4 sm:pb-6 pt-2">
                     <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 leading-relaxed">
                       {faq.answer}
                     </p>
                   </div>
-                )}
+                </div>
               </div>
             ))}
           </div>
@@ -641,6 +654,257 @@ const Pricing = () => {
           </div>
         </div>
       </footer>
+
+      {/* Free Plan Confirmation Modal */}
+      {showFreeModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-lg w-full p-6 sm:p-8 relative animate-in fade-in zoom-in duration-300">
+            {/* Close Button */}
+            <button
+              onClick={() => setShowFreeModal(false)}
+              className="absolute top-4 right-4 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+            >
+              <svg
+                className="w-5 h-5 text-gray-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+
+            {/* Modal Content */}
+            <div className="text-center">
+              <div className="w-16 h-16 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg
+                  className="w-8 h-8 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.99-.833-2.76 0L4.054 16.5c-.77.833.192 2.5 1.732 2.5z"
+                  />
+                </svg>
+              </div>
+
+              <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-3">
+                Wait! Before you go with Free...
+              </h3>
+
+              <p className="text-gray-600 dark:text-gray-400 mb-6 leading-relaxed">
+                Our Pro plan gives you 20x more storage, advanced AI
+                recognition, and unlimited sharing.
+                <span className="font-semibold text-indigo-600 dark:text-indigo-400">
+                  {" "}
+                  Plus, you get a 14-day free trial!
+                </span>
+              </p>
+
+              <div className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-lg p-4 mb-6">
+                <div className="flex items-center justify-center mb-2">
+                  <span className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
+                    $9.99/month
+                  </span>
+                  <span className="ml-2 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 px-2 py-1 rounded text-sm font-medium">
+                    14-day trial
+                  </span>
+                </div>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Cancel anytime during trial
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                <button
+                  onClick={() => {
+                    setShowFreeModal(false);
+                    handlePlanSelect(
+                      pricingPlans.find((p) => p.name === "Pro")
+                    );
+                  }}
+                  className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+                >
+                  Start Pro Trial (Free for 14 days)
+                </button>
+
+                <button
+                  onClick={() => {
+                    setShowFreeModal(false);
+                    navigate("/signup?from=pricing-free");
+                  }}
+                  className="w-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-6 py-3 rounded-xl font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                >
+                  Continue with Free Plan
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Enterprise Plan Confirmation Modal */}
+      {showEnterpriseModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-xl w-full p-6 sm:p-8 relative animate-in fade-in zoom-in duration-300">
+            {/* Close Button */}
+            <button
+              onClick={() => setShowEnterpriseModal(false)}
+              className="absolute top-4 right-4 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+            >
+              <svg
+                className="w-5 h-5 text-gray-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+
+            {/* Modal Content */}
+            <div className="text-center">
+              <div className="w-16 h-16 bg-gradient-to-r from-emerald-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg
+                  className="w-8 h-8 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H3m2 0h-2m8 0V9a2 2 0 012-2h2a2 2 0 012 2v8m-6 0v-6"
+                  />
+                </svg>
+              </div>
+
+              <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-3">
+                Transform Your Organization's Photo Management
+              </h3>
+
+              <p className="text-gray-600 dark:text-gray-400 mb-6 leading-relaxed">
+                Join leading companies using Groupify Enterprise for team
+                events, corporate retreats, and organizational memories.
+                <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                  {" "}
+                  Get custom pricing and dedicated support.
+                </span>
+              </p>
+
+              <div className="bg-gradient-to-r from-emerald-50 to-blue-50 dark:from-emerald-900/20 dark:to-blue-900/20 rounded-lg p-4 mb-6">
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div className="flex items-center">
+                    <svg
+                      className="w-4 h-4 text-emerald-600 mr-2"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                    <span>Unlimited Storage</span>
+                  </div>
+                  <div className="flex items-center">
+                    <svg
+                      className="w-4 h-4 text-emerald-600 mr-2"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                    <span>Custom Integrations</span>
+                  </div>
+                  <div className="flex items-center">
+                    <svg
+                      className="w-4 h-4 text-emerald-600 mr-2"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                    <span>Dedicated Manager</span>
+                  </div>
+                  <div className="flex items-center">
+                    <svg
+                      className="w-4 h-4 text-emerald-600 mr-2"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                    <span>24/7 Priority Support</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 mb-6">
+                <p className="text-sm text-blue-800 dark:text-blue-200 font-medium">
+                  💼 Perfect for: Corporate Events • Team Building • Company
+                  Retreats • Product Launches
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                <button
+                  onClick={() => {
+                    setShowEnterpriseModal(false);
+                    navigate("/contact?from=pricing-enterprise");
+                  }}
+                  className="w-full bg-gradient-to-r from-emerald-600 to-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-emerald-700 hover:to-blue-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+                >
+                  Get Custom Enterprise Quote
+                </button>
+
+                <button
+                  onClick={() => setShowEnterpriseModal(false)}
+                  className="w-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-6 py-3 rounded-xl font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                >
+                  Maybe Later
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

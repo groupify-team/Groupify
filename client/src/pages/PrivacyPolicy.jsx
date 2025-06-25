@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useTheme } from "../contexts/ThemeContext";
 import {
   CameraIcon,
@@ -14,7 +14,7 @@ import {
 
 const PrivacyPolicy = () => {
   const { theme, toggleTheme } = useTheme();
-
+  const navigate = useNavigate();
   // Scroll to top on component mount
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -229,9 +229,9 @@ const PrivacyPolicy = () => {
 
         {/* Contact Information */}
         <div className="mt-12 sm:mt-16 bg-gradient-to-r from-blue-500/10 to-indigo-500/10 dark:from-blue-500/20 dark:to-indigo-500/20 rounded-xl border border-blue-200/50 dark:border-blue-800/50 p-4 sm:p-6 md:p-8">
-          <div className="flex items-start">
-            <ShieldCheckIcon className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-1" />
-            <div className="ml-3 sm:ml-4">
+          <div className="flex items-start flex-col text-center sm:flex-row sm:text-left">
+            <ShieldCheckIcon className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-1 mx-auto sm:mx-0 mb-3 sm:mb-0" />
+            <div className="sm:ml-4">
               <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-2 sm:mb-3">
                 Questions About Your Privacy?
               </h3>
@@ -269,18 +269,30 @@ const PrivacyPolicy = () => {
               settings, export your photos, or delete your account at any time.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
-              <Link
-                to="/signup"
+              <button
+                onClick={() => {
+                  document.body.style.opacity = "0";
+                  document.body.style.transition = "opacity 0.3s ease-out";
+                  setTimeout(() => {
+                    navigate("/signup");
+                  }, 300);
+                }}
                 className="inline-flex items-center justify-center bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-2.5 sm:px-8 sm:py-3 rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl text-sm sm:text-base"
               >
                 Start Using Groupify
-              </Link>
-              <Link
-                to="/signin"
+              </button>
+              <button
+                onClick={() => {
+                  document.body.style.opacity = "0";
+                  document.body.style.transition = "opacity 0.3s ease-out";
+                  setTimeout(() => {
+                    navigate("/signin");
+                  }, 300);
+                }}
                 className="inline-flex items-center justify-center bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 px-6 py-2.5 sm:px-8 sm:py-3 rounded-lg font-medium border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm sm:text-base"
               >
                 Sign In
-              </Link>
+              </button>
             </div>
           </div>
         </div>
