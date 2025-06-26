@@ -35,19 +35,35 @@ const SignUp = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const isFromPricingFree = location.search.includes("from=pricing-free");
+  const planFromUrl = new URLSearchParams(location.search).get("plan");
 
-  // Add to the top of each page component
+  // Set initial form data based on URL params
   useEffect(() => {
     window.scrollTo(0, 0);
 
+    // Show plan-specific message
+    if (planFromUrl) {
+      setTimeout(() => {
+        const planName =
+          planFromUrl.charAt(0).toUpperCase() + planFromUrl.slice(1);
+        toast.success(
+          `Great choice! Let's set up your account for the ${planName} plan 🎯`,
+          {
+            duration: 4000,
+            icon: "⭐",
+          }
+        );
+      }, 500);
+    }
+
     // Wait for navigation to complete, then fade in
     const timer = setTimeout(() => {
-      document.body.style.transition = "opacity 0.2s ease-in";
+      document.body.style.transition = "opacity 0.3s ease-in";
       document.body.style.opacity = "1";
-    }, 100);
+    }, 50);
 
     return () => clearTimeout(timer);
-  }, [isFromPricingFree]);
+  }, [isFromPricingFree, planFromUrl]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -123,7 +139,6 @@ const SignUp = () => {
       console.log("Signup result:", result);
 
       if (result.success) {
-        // Show ONE success message here
         toast.success(
           "Account created! Please check your email to verify your account."
         );
@@ -135,11 +150,13 @@ const SignUp = () => {
           navigate("/confirm-email", {
             state: {
               email: formData.email,
+              plan: planFromUrl,
             },
           });
         }, 300);
       }
     } catch (error) {
+      // ... rest of error handling stays the same
       console.error("Signup error:", error);
 
       let errorMessage = "Failed to create account";
@@ -158,6 +175,14 @@ const SignUp = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleNavigateToSignIn = () => {
+    document.body.style.opacity = "0";
+    document.body.style.transition = "opacity 0.3s ease-out";
+    setTimeout(() => {
+      navigate("/signin");
+    }, 300);
   };
 
   const handleGoogleSignUp = async () => {
@@ -277,10 +302,10 @@ const SignUp = () => {
       </div>
 
       {/* Right Side - Form */}
-      <div className="flex-1 flex flex-col justify-center py-2 px-3 sm:py-4 sm:px-4 md:py-6 md:px-6 lg:py-8 lg:px-12 xl:px-20 2xl:px-24 bg-white dark:bg-gray-900">
-        <div className="mx-auto w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-md">
+      <div className="flex-1 flex flex-col justify-center py-2 sm:py-4 md:py-6 lg:py-8 px-3 sm:px-4 md:px-6 lg:px-12 xl:px-20 2xl:px-24 bg-white dark:bg-gray-900 min-h-0">
+        <div className="mx-auto w-full max-w-[280px] sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-md">
           {/* Header */}
-          <div className="mb-8">
+          <div className="mb-4 sm:mb-6 md:mb-8">
             {/* Navigation */}
             <div className="flex items-center justify-between mb-2 sm:mb-4 md:mb-6 lg:mb-8 pt-2 sm:pt-3 md:pt-4">
               <Link
@@ -304,7 +329,7 @@ const SignUp = () => {
             </div>
 
             {/* Logo positioned in middle between top and title */}
-            <div className="flex items-center justify-center md:justify-start mb-8 [@media(min-width:375px)]:mb-12 sm:mb-16 md:mb-20 lg:mb-24">
+            <div className="flex items-center justify-center md:justify-start mb-4 sm:mb-6 md:mb-8">
               <div className="w-10 h-10 [@media(min-width:375px)]:w-12 [@media(min-width:375px)]:h-12 sm:w-14 sm:h-14 md:w-12 md:h-12 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl flex items-center justify-center">
                 <CameraIcon className="w-5 h-5 [@media(min-width:375px)]:w-6 [@media(min-width:375px)]:h-6 sm:w-8 sm:h-8 md:w-6 md:h-6 text-white" />
               </div>
@@ -314,7 +339,7 @@ const SignUp = () => {
             </div>
 
             {/* Title section */}
-            <div className="text-center md:text-left mb-3 [@media(min-width:375px)]:mb-4 sm:mb-6 md:mb-8 lg:mb-10">
+            <div className="text-center md:text-left mb-3 sm:mb-4 md:mb-6">
               <h2 className="text-lg [@media(min-width:375px)]:text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
                 Create your account
               </h2>
@@ -656,7 +681,11 @@ const SignUp = () => {
             <button
               type="submit"
               disabled={loading || !agreedToTerms}
-              className="w-full btn-primary flex items-center justify-center py-2 sm:py-2.5 md:py-3 text-xs sm:text-sm md:text-base relative overflow-hidden"
+              className={`w-full flex items-center justify-center py-2 sm:py-2.5 md:py-3 text-xs sm:text-sm md:text-base relative overflow-hidden rounded-lg font-medium transition-all duration-300 ease-in-out transform ${
+                loading || !agreedToTerms
+                  ? "bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed opacity-50 scale-95"
+                  : "bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl scale-100 hover:scale-[1.02]"
+              }`}
             >
               {loading ? (
                 <>
@@ -687,7 +716,11 @@ const SignUp = () => {
               type="button"
               onClick={handleGoogleSignUp}
               disabled={loading || !agreedToTerms}
-              className="mt-3 sm:mt-4 md:mt-6 w-full flex justify-center items-center py-2 sm:py-2.5 md:py-3 px-3 sm:px-4 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm bg-white dark:bg-gray-800 text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className={`mt-3 sm:mt-4 md:mt-6 w-full flex justify-center items-center py-2 sm:py-2.5 md:py-3 px-3 sm:px-4 border rounded-lg shadow-sm text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-300 ease-in-out transform ${
+                loading || !agreedToTerms
+                  ? "border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed opacity-50 scale-95"
+                  : "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 scale-100 hover:scale-[1.02] hover:shadow-md"
+              }`}
             >
               {loading ? (
                 <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-600 mr-2"></div>
@@ -705,12 +738,12 @@ const SignUp = () => {
           {/* Sign In Link */}
           <p className="mt-4 sm:mt-6 md:mt-8 text-center text-xs sm:text-sm text-gray-600 dark:text-gray-400">
             Already have an account?{" "}
-            <Link
-              to="/signin"
-              className="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
+            <button
+              onClick={handleNavigateToSignIn}
+              className="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300 bg-transparent border-none cursor-pointer"
             >
               Sign in instead
-            </Link>
+            </button>
           </p>
         </div>
       </div>

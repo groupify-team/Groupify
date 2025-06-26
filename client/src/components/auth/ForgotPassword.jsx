@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { useTheme } from "../../contexts/ThemeContext";
 import {
   CameraIcon,
@@ -16,8 +16,19 @@ const ForgotPassword = () => {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
-
   const { theme, toggleTheme } = useTheme();
+  const navigate = useNavigate();
+
+  // Add this useEffect for fade-in animation
+  useEffect(() => {
+    // Wait for navigation to complete, then fade in
+    const timer = setTimeout(() => {
+      document.body.style.transition = "opacity 0.3s ease-in";
+      document.body.style.opacity = "1";
+    }, 50);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   // Email validation function
   const validateEmail = (email) => {
@@ -107,13 +118,20 @@ const ForgotPassword = () => {
             <div className="mb-8">
               {/* Navigation */}
               <div className="flex items-center justify-between mb-8 sm:mb-12 md:mb-16 lg:mb-20">
-                <Link
-                  to="/signin"
-                  className="inline-flex items-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
+                {/* NEW */}
+                <button
+                  onClick={() => {
+                    document.body.style.opacity = "0";
+                    document.body.style.transition = "opacity 0.3s ease-out";
+                    setTimeout(() => {
+                      navigate("/signin");
+                    }, 300);
+                  }}
+                  className="inline-flex items-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors bg-transparent border-none cursor-pointer"
                 >
                   <ArrowLeftIcon className="w-5 h-5 sm:mr-2" />
                   <span className="hidden sm:inline">Back to Sign In</span>
-                </Link>
+                </button>
 
                 <button
                   onClick={toggleTheme}
@@ -128,7 +146,7 @@ const ForgotPassword = () => {
               </div>
 
               {/* Logo and Title */}
-              <div className="flex items-center justify-center md:justify-start mb-12 sm:mb-16 md:mb-20">
+              <div className="flex items-center justify-center mb-12 sm:mb-16 md:mb-20">
                 <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-10 md:h-10 bg-gradient-to-r from-green-600 to-blue-600 rounded-xl flex items-center justify-center">
                   <CheckCircleIcon className="w-5 h-5 sm:w-7 sm:h-7 md:w-6 md:h-6 text-white" />
                 </div>
@@ -139,11 +157,11 @@ const ForgotPassword = () => {
             </div>
 
             {/* Main Content - Centered */}
-            <div className="flex flex-col items-center md:items-start justify-center min-h-[50vh]">
-              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-white text-center md:text-left">
+            <div className="flex flex-col items-center justify-center min-h-[50vh]">
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-white text-center">
                 Check your inbox
               </h2>
-              <p className="mt-1 sm:mt-2 text-xs sm:text-sm md:text-base text-gray-600 dark:text-gray-400 text-center md:text-left">
+              <p className="mt-1 sm:mt-2 text-xs sm:text-sm md:text-base text-gray-600 dark:text-gray-400 text-center">
                 We've sent a password reset link to{" "}
                 <span className="font-medium text-indigo-600 dark:text-indigo-400">
                   {email}
@@ -177,12 +195,18 @@ const ForgotPassword = () => {
                     Send another email
                   </button>
 
-                  <Link
-                    to="/signin"
+                  <button
+                    onClick={() => {
+                      document.body.style.opacity = "0";
+                      document.body.style.transition = "opacity 0.3s ease-out";
+                      setTimeout(() => {
+                        navigate("/signin");
+                      }, 300);
+                    }}
                     className="w-full btn-primary text-center py-3"
                   >
                     Back to Sign In
-                  </Link>
+                  </button>
                 </div>
               </div>
             </div>
@@ -241,13 +265,19 @@ const ForgotPassword = () => {
           <div className="mb-8">
             {/* Navigation */}
             <div className="flex items-center justify-between mb-8 sm:mb-12 md:mb-16 lg:mb-20">
-              <Link
-                to="/signin"
-                className="inline-flex items-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
+              <button
+                onClick={() => {
+                  document.body.style.opacity = "0";
+                  document.body.style.transition = "opacity 0.3s ease-out";
+                  setTimeout(() => {
+                    navigate("/signin");
+                  }, 300);
+                }}
+                className="inline-flex items-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors bg-transparent border-none cursor-pointer"
               >
                 <ArrowLeftIcon className="w-5 h-5 sm:mr-2" />
                 <span className="hidden sm:inline">Back to Sign In</span>
-              </Link>
+              </button>
 
               <button
                 onClick={toggleTheme}
@@ -262,7 +292,7 @@ const ForgotPassword = () => {
             </div>
 
             {/* Logo and Title */}
-            <div className="flex items-center justify-center md:justify-start mb-12 sm:mb-16 md:mb-20">
+            <div className="flex items-center justify-center mb-12 sm:mb-16 md:mb-20">
               <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-10 md:h-10 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center">
                 <CameraIcon className="w-5 h-5 sm:w-7 sm:h-7 md:w-6 md:h-6 text-white" />
               </div>
@@ -273,11 +303,11 @@ const ForgotPassword = () => {
           </div>
 
           {/* Main Content - Centered */}
-          <div className="flex flex-col items-center md:items-start justify-center min-h-[50vh]">
-            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-white text-center md:text-left">
+          <div className="flex flex-col items-center justify-center min-h-[50vh]">
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-white text-center">
               Forgot your password?
             </h2>
-            <p className="mt-1 sm:mt-2 text-xs sm:text-sm md:text-base text-gray-600 dark:text-gray-400 text-center md:text-left">
+            <p className="mt-1 sm:mt-2 text-xs sm:text-sm md:text-base text-gray-600 dark:text-gray-400 text-center">
               No worries! Enter your email and we'll send you a reset link
             </p>
 
@@ -331,12 +361,18 @@ const ForgotPassword = () => {
             <div className="mt-6 w-full">
               <p className="text-center text-sm text-gray-600 dark:text-gray-400">
                 Remember your password?{" "}
-                <Link
-                  to="/signin"
-                  className="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
+                <button
+                  onClick={() => {
+                    document.body.style.opacity = "0";
+                    document.body.style.transition = "opacity 0.3s ease-out";
+                    setTimeout(() => {
+                      navigate("/signin");
+                    }, 300);
+                  }}
+                  className="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300 bg-transparent border-none cursor-pointer"
                 >
                   Sign in instead
-                </Link>
+                </button>
               </p>
             </div>
           </div>

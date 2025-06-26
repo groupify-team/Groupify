@@ -322,7 +322,7 @@ const HelpCenter = () => {
                 key={category.title}
                 className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-md hover:shadow-lg transition-shadow border border-gray-200 dark:border-gray-700"
               >
-                <div className="flex items-center mb-4">
+                <div className="flex items-center mb-4 justify-center md:justify-start">
                   <div className="w-12 h-12 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
                     <category.icon className="w-6 h-6 text-white" />
                   </div>
@@ -330,11 +330,11 @@ const HelpCenter = () => {
                     {category.title}
                   </h3>
                 </div>
-                <p className="text-gray-600 dark:text-gray-400 mb-4">
+                <p className="text-gray-600 dark:text-gray-400 mb-4 text-center md:text-left">
                   {category.description}
                 </p>
 
-                <ul className="space-y-2">
+                <ul className="space-y-2 text-center md:text-left">
                   {category.articles
                     .slice(0, 3)
                     .map((article, articleIndex) => (

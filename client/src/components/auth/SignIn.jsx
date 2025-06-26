@@ -55,6 +55,7 @@ const SignIn = () => {
     document.body.style.transition = "opacity 0.5s ease-in-out";
   }, []);
 
+  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -65,9 +66,8 @@ const SignIn = () => {
 
     try {
       setLoading(true);
-      setShowVerificationAlert(false); // Hide alert when attempting login
+      setShowVerificationAlert(false);
 
-      // Remember email if checkbox is checked
       if (rememberMe) {
         localStorage.setItem("rememberedEmail", email);
       } else {
@@ -76,17 +76,10 @@ const SignIn = () => {
 
       await signin(email, password);
       toast.success("Welcome back!");
-
-      // Add smooth transition
-      document.body.style.opacity = "0";
-      document.body.style.transition = "opacity 0.3s ease-out";
-      setTimeout(() => {
-        navigate("/dashboard");
-      }, 300);
     } catch (error) {
+      // ... rest of error handling stays the same
       console.error("Sign in error:", error);
 
-      // Provide user-friendly error messages
       let errorMessage = "Failed to sign in";
 
       if (error.message?.includes("verify your email")) {
@@ -95,12 +88,12 @@ const SignIn = () => {
             <ExclamationTriangleIcon className="h-6 w-6 text-black flex-shrink-0" />
           ),
           style: {
-            background: "#fbbf24", // yellow-400
-            color: "#000000", // black
-            border: "1px solid #f59e0b", // yellow-500
-            padding: "16px", // Add more padding to expand the message
-            textAlign: "center", // Center the text
-            minWidth: "300px", // Make it wider
+            background: "#fbbf24",
+            color: "#000000",
+            border: "1px solid #f59e0b",
+            padding: "16px",
+            textAlign: "center",
+            minWidth: "300px",
           },
         });
         setShowVerificationAlert(true);
@@ -125,6 +118,15 @@ const SignIn = () => {
     }
   };
 
+  const handleNavigateToSignUp = () => {
+    document.body.style.opacity = "0";
+    document.body.style.transition = "opacity 0.3s ease-out";
+    setTimeout(() => {
+      navigate("/signup");
+    }, 300);
+  };
+
+  // Handle Google Sign In
   const handleGoogleSignIn = async () => {
     try {
       setLoading(true);
@@ -181,23 +183,23 @@ const SignIn = () => {
         </div>
 
         {/* Main Content - Centered */}
-        <div className="flex-1 flex flex-col justify-center px-4 sm:px-6 md:px-6 lg:px-12 xl:px-20 2xl:px-24 -mt-8 sm:-mt-12 md:-mt-0">
-          <div className="mx-auto w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-md">
+        <div className="flex-1 flex flex-col justify-center px-4 sm:px-6 md:px-6 lg:px-12 xl:px-20 2xl:px-24 py-4 sm:py-6 md:py-8">
+          <div className="mx-auto w-full max-w-[280px] sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-md">
             {/* Logo and Title */}
-            <div className="text-center mb-6 sm:mb-8 md:mb-10">
-              <div className="flex items-center justify-center mb-4 sm:mb-6">
-                <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-12 md:h-12 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center">
-                  <CameraIcon className="w-6 h-6 sm:w-8 sm:h-8 md:w-6 md:h-6 text-white" />
+            <div className="text-center mb-4 sm:mb-6 md:mb-8">
+              <div className="flex items-center justify-center mb-3 sm:mb-4 md:mb-6">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center">
+                  <CameraIcon className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-white" />
                 </div>
-                <span className="ml-3 text-2xl sm:text-3xl md:text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                <span className="ml-2 text-xl sm:text-2xl md:text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
                   Groupify
                 </span>
               </div>
 
-              <h2 className="text-2xl sm:text-3xl md:text-3xl font-bold text-gray-900 dark:text-white mb-2">
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-2">
                 Welcome back
               </h2>
-              <p className="text-sm sm:text-base md:text-base text-gray-600 dark:text-gray-400">
+              <p className="text-xs sm:text-sm md:text-base text-gray-600 dark:text-gray-400">
                 Sign in to your account to continue organizing your memories
               </p>
             </div>
@@ -205,7 +207,7 @@ const SignIn = () => {
             {/* Form */}
             <form
               onSubmit={handleSubmit}
-              className="space-y-4 sm:space-y-5 md:space-y-6 text-sm md:text-base"
+              className="space-y-3 sm:space-y-4 md:space-y-6 text-sm md:text-base"
             >
               {/* Email Field */}
               <div>
@@ -286,12 +288,19 @@ const SignIn = () => {
                 </div>
 
                 <div className="text-sm">
-                  <Link
-                    to="/forgot-password"
-                    className="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
+                  <button
+                    type="button"
+                    onClick={() => {
+                      document.body.style.opacity = "0";
+                      document.body.style.transition = "opacity 0.3s ease-out";
+                      setTimeout(() => {
+                        navigate("/forgot-password");
+                      }, 300);
+                    }}
+                    className="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300 bg-transparent border-none cursor-pointer"
                   >
                     Forgot your password?
-                  </Link>
+                  </button>
                 </div>
               </div>
 
@@ -299,7 +308,7 @@ const SignIn = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full btn-primary flex items-center justify-center py-3 sm:py-3.5 text-sm sm:text-base relative overflow-hidden disabled:opacity-50"
+                className="w-full btn-primary flex items-center justify-center py-2.5 sm:py-3 md:py-3.5 text-sm sm:text-base relative overflow-hidden disabled:opacity-50"
               >
                 {loading ? (
                   <>
@@ -367,7 +376,7 @@ const SignIn = () => {
             )}
 
             {/* Divider */}
-            <div className="mt-6 sm:mt-7 md:mt-8">
+            <div className="mt-4 sm:mt-6 md:mt-8">
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
                   <div className="w-full border-t border-gray-300 dark:border-gray-600" />
@@ -384,7 +393,7 @@ const SignIn = () => {
                 type="button"
                 onClick={handleGoogleSignIn}
                 disabled={loading}
-                className="mt-4 sm:mt-5 md:mt-6 w-full flex justify-center items-center py-3 sm:py-3.5 px-4 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm bg-white dark:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="mt-3 sm:mt-4 md:mt-6 w-full flex justify-center items-center py-2.5 sm:py-3 md:py-3.5 px-4 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm bg-white dark:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {loading ? (
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-600 mr-2"></div>
@@ -400,20 +409,17 @@ const SignIn = () => {
             </div>
 
             {/* Sign Up Link */}
-            <p className="mt-6 sm:mt-7 md:mt-8 text-center text-sm text-gray-600 dark:text-gray-400">
-              Don't have an account?{" "}
-              <Link
-                to="/signup"
-                className="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
+            <p className="mt-4 sm:mt-6 md:mt-8 text-center text-sm text-gray-600 dark:text-gray-400">
+              Don't have an account? {/* NEW */}
+              <button
+                onClick={handleNavigateToSignUp}
+                className="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300 bg-transparent border-none cursor-pointer"
               >
                 Create one now
-              </Link>
+              </button>
             </p>
           </div>
         </div>
-
-        {/* Bottom Spacing for mobile */}
-        <div className="h-8 sm:h-12 md:hidden"></div>
       </div>
 
       {/* Right Side - Visual (Hidden on mobile/tablet) */}
