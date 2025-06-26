@@ -239,16 +239,20 @@ const Pricing = () => {
         setShowFreeModal(true);
       }
     } else if (plan.name === "Enterprise") {
-      // Redirect to contact
+      // Show enterprise modal
       setShowEnterpriseModal(true);
-    } else {
+    } else if (plan.name === "Pro" || plan.name === "Family") {
       // For Pro and Family plans
       if (currentUser) {
-        toast.success(`Upgrading to ${plan.name} plan...`);
-        // Here you would typically integrate with a payment processor
+        // User is logged in - go directly to billing with billing cycle
+        navigate(
+          `/billing?plan=${plan.name.toLowerCase()}&billing=${billingCycle}`
+        );
       } else {
-        toast.info("Please sign up to subscribe to a paid plan");
-        window.location.href = "/signup";
+        // User not logged in - signup with plan parameter and billing cycle
+        navigate(
+          `/signup?plan=${plan.name.toLowerCase()}&billing=${billingCycle}`
+        );
       }
     }
   };

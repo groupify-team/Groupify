@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import FaceProfileModal from "../components/faceProfile/FaceProfileModal";
 import AddFriend from "../components/friends/AddFriend";
 import EditProfileModal from "../components/profile/EditProfileModal";
@@ -141,6 +141,11 @@ const Dashboard = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [showSuccess, setShowSuccess] = useState(null);
   const [showError, setShowError] = useState(null);
+  const [showUsageModal, setShowUsageModal] = useState(false);
+  const [showBillingHistoryModal, setShowBillingHistoryModal] = useState(false);
+  const [showCancelPlanModal, setShowCancelPlanModal] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+
   // Delete account modal state
   const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
@@ -995,12 +1000,52 @@ const Dashboard = () => {
 
   const handleLogout = async () => {
     try {
-      await logout();
-      navigate("/");
+      setShowLogoutModal(false);
+
+      // Nice transition effect
+      document.body.style.transition =
+        "opacity 0.6s ease-out, transform 0.6s ease-out";
+      document.body.style.opacity = "0";
+      document.body.style.transform = "scale(0.95)";
+
+      // Wait for animation, then logout and navigate
+      setTimeout(async () => {
+        try {
+          // Clear all state first
+          setTrips([]);
+          setFriends([]);
+          setPendingRequests([]);
+          setTripInvites([]);
+          setUserData(null);
+
+          // Then logout
+          await logout();
+
+          // Navigate immediately after logout
+          navigate("/");
+
+          // Reset body styles after navigation
+          setTimeout(() => {
+            document.body.style.opacity = "1";
+            document.body.style.transform = "scale(1)";
+          }, 100);
+        } catch (logoutError) {
+          // Even if logout has errors, still navigate away
+          console.log("Logout completed with expected Firebase cleanup errors");
+          navigate("/");
+          setTimeout(() => {
+            document.body.style.opacity = "1";
+            document.body.style.transform = "scale(1)";
+          }, 100);
+        }
+      }, 600);
     } catch (error) {
       console.error("Failed to log out:", error);
-      setShowError("Failed to log out");
-      setTimeout(() => setShowError(null), 3000);
+      // Reset styles on error
+      document.body.style.opacity = "1";
+      document.body.style.transform = "scale(1)";
+      // Still try to navigate
+      navigate("/");
     }
   };
 
@@ -2413,7 +2458,1018 @@ const Dashboard = () => {
         )}
       </div>
 
-      {/* Data & Storage - Compact design */}
+      {/* Enhanced Subscription & Billing Section */}
+      <div
+        data-section="settings"
+        className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6 border border-white/20 dark:border-gray-700/50"
+      >
+        {" "}
+        <div className="flex items-center justify-center gap-2 mb-4 sm:mb-6">
+          <div className="w-6 h-6 sm:w-7 sm:h-7 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center shadow-lg">
+            <svg
+              className="w-3 h-3 sm:w-4 sm:h-4 text-white"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
+              <path
+                fillRule="evenodd"
+                d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z"
+                clipRule="evenodd"
+              />
+            </svg>
+          </div>
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-white">
+            Subscription & Billing
+          </h2>
+        </div>
+        {(() => {
+          // Get user's current plan (check localStorage first, then fallback to default)
+          const storedPlan = localStorage.getItem("userPlan");
+          const userPlan = storedPlan
+            ? JSON.parse(storedPlan)
+            : { plan: "free", billing: "monthly" };
+          const currentUserPlan = userPlan.plan;
+          const currentBilling = userPlan.billing;
+          const purchaseDate = userPlan.purchaseDate;
+
+          // Plan configurations
+          const planConfigs = {
+            free: {
+              name: "Free Plan",
+              icon: "F",
+              gradient: "from-indigo-500 to-purple-600",
+              storage: "2GB",
+              photos: "500",
+              price: "$0",
+              billing: "Forever",
+              features: [
+                "Basic AI recognition",
+                "2 trip albums",
+                "Share with 3 friends",
+              ],
+            },
+            pro: {
+              name: "Pro Plan",
+              icon: "P",
+              gradient: "from-blue-500 to-indigo-600",
+              storage: "50GB",
+              photos: "10,000",
+              price: currentBilling === "yearly" ? "$99.99" : "$9.99",
+              billing: currentBilling === "yearly" ? "Yearly" : "Monthly",
+              features: [
+                "Advanced AI recognition",
+                "Unlimited albums",
+                "Share with 20 friends",
+                "Priority support",
+              ],
+            },
+            family: {
+              name: "Family Plan",
+              icon: "F",
+              gradient: "from-purple-500 to-pink-600",
+              storage: "250GB",
+              photos: "50,000",
+              price: currentBilling === "yearly" ? "$199.99" : "$19.99",
+              billing: currentBilling === "yearly" ? "Yearly" : "Monthly",
+              features: [
+                "Premium AI recognition",
+                "Unlimited albums",
+                "Unlimited sharing",
+                "24/7 support",
+                "Family management",
+              ],
+            },
+          };
+
+          const currentPlanConfig = planConfigs[currentUserPlan];
+          const isPaidPlan = currentUserPlan !== "free";
+
+          // Calculate expiry date
+          const getExpiryDate = () => {
+            if (!isPaidPlan || !purchaseDate) return null;
+            const purchase = new Date(purchaseDate);
+            const expiry = new Date(purchase);
+
+            if (currentBilling === "yearly") {
+              expiry.setFullYear(expiry.getFullYear() + 1);
+            } else {
+              expiry.setMonth(expiry.getMonth() + 1);
+            }
+
+            return expiry.toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            });
+          };
+
+          const expiryDate = getExpiryDate();
+
+          return (
+            <>
+              {/* Current Plan Card - Unified Design */}
+              <div className="bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-800 dark:to-blue-900/20 rounded-xl p-4 sm:p-6 mb-4 sm:mb-6 border border-gray-200/50 dark:border-gray-700/50">
+                {/* Plan Header */}
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4 sm:mb-6">
+                  <div className="flex items-center gap-3 sm:gap-4">
+                    <div
+                      className={`w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br ${currentPlanConfig.gradient} rounded-xl flex items-center justify-center shadow-lg`}
+                    >
+                      <span className="text-white font-bold text-lg sm:text-xl">
+                        {currentPlanConfig.icon}
+                      </span>
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-800 dark:text-white">
+                          {currentPlanConfig.name}
+                        </h3>
+                        {isPaidPlan && (
+                          <span className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs px-2 py-1 rounded-full font-bold">
+                            ⭐ PREMIUM
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
+                        {isPaidPlan
+                          ? "Premium features unlocked"
+                          : "Perfect for getting started"}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Status Badge */}
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full animate-pulse bg-green-500"></div>
+                    <span className="text-sm font-medium text-green-600 dark:text-green-400">
+                      Active
+                    </span>
+                  </div>
+                </div>
+
+                {/* Plan Details Grid + Plan Dates */}
+                <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 mb-4 sm:mb-6">
+                  {/* Original 4 blocks */}
+                  <div className="bg-white/50 dark:bg-gray-700/30 rounded-lg p-4 sm:p-6 text-center">
+                    <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-800 dark:text-white">
+                      {currentPlanConfig.storage}
+                    </p>
+                    <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                      Storage
+                    </p>
+                  </div>
+                  <div className="bg-white/50 dark:bg-gray-700/30 rounded-lg p-4 sm:p-6 text-center">
+                    <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-800 dark:text-white">
+                      {currentPlanConfig.photos}
+                    </p>
+                    <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                      Photos
+                    </p>
+                  </div>
+                  <div className="bg-white/50 dark:bg-gray-700/30 rounded-lg p-4 sm:p-6 text-center">
+                    <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-800 dark:text-white">
+                      {currentPlanConfig.price}
+                    </p>
+                    <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                      {currentPlanConfig.billing}
+                    </p>
+                  </div>
+                  <div className="bg-white/50 dark:bg-gray-700/30 rounded-lg p-4 sm:p-6 text-center">
+                    <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-800 dark:text-white">
+                      {isPaidPlan ? "14 days" : "∞"}
+                    </p>
+                    <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                      {isPaidPlan ? "Trial" : "Free"}
+                    </p>
+                  </div>
+
+                  {/* Plan Dates - Text lines with same height as blocks */}
+                  <div className="bg-white/60 dark:bg-gray-700/40 rounded-lg p-4 sm:p-6 flex flex-col justify-center space-y-2">
+                    <div className="text-center">
+                      <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                        Plan started:{" "}
+                      </span>
+                      <span className="font-medium text-gray-800 dark:text-white text-sm sm:text-base">
+                        {purchaseDate
+                          ? new Date(purchaseDate).toLocaleDateString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
+                            })
+                          : userData?.createdAt
+                          ? new Date(userData.createdAt).toLocaleDateString(
+                              "en-US",
+                              {
+                                month: "short",
+                                day: "numeric",
+                                year: "numeric",
+                              }
+                            )
+                          : "Recently"}
+                      </span>
+                    </div>
+                    <div className="text-center">
+                      <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                        Plan expires:{" "}
+                      </span>
+                      <span className="font-medium text-gray-800 dark:text-white text-sm sm:text-base">
+                        {isPaidPlan && expiryDate
+                          ? new Date(expiryDate).toLocaleDateString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
+                            })
+                          : "Never"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Usage Progress */}
+                <div className="mb-6">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Storage Usage
+                    </span>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                      {hasProfile
+                        ? `${profilePhotos.length} photos`
+                        : "0 photos"}{" "}
+                      used
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
+                    <div
+                      className="h-2 rounded-full transition-all duration-500 bg-gradient-to-r from-indigo-500 to-purple-600"
+                      style={{
+                        width: `${Math.min(
+                          ((hasProfile ? profilePhotos.length : 0) /
+                            parseInt(
+                              currentPlanConfig.photos.replace(",", "")
+                            )) *
+                            100,
+                          100
+                        )}%`,
+                      }}
+                    ></div>
+                  </div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    {parseInt(currentPlanConfig.photos.replace(",", "")) -
+                      (hasProfile ? profilePhotos.length : 0)}{" "}
+                    photos remaining
+                  </p>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="space-y-3">
+                  {!isPaidPlan ? (
+                    <button
+                      onClick={() => {
+                        document.body.style.transition =
+                          "opacity 0.4s ease-out";
+                        document.body.style.opacity = "0";
+                        setTimeout(() => {
+                          document.body.style.opacity = "1";
+                          navigate("/pricing");
+                        }, 400);
+                      }}
+                      className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-4 sm:px-6 py-3 sm:py-4 rounded-xl font-semibold text-sm sm:text-base transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                    >
+                      Upgrade to Pro - Get 20x More Storage 🚀
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        document.body.style.transition =
+                          "opacity 0.4s ease-out";
+                        document.body.style.opacity = "0";
+                        setTimeout(() => {
+                          document.body.style.opacity = "1";
+                          navigate("/pricing");
+                        }, 400);
+                      }}
+                      className="w-full bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-4 sm:px-6 py-3 sm:py-4 rounded-xl font-semibold text-sm sm:text-base transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                    >
+                      Compare All Plans
+                    </button>
+                  )}
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
+                    <button
+                      onClick={() => setShowUsageModal(true)}
+                      className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 sm:py-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg font-medium text-gray-800 dark:text-gray-200 transition-colors text-sm"
+                    >
+                      <span>📊</span>
+                      <span>Usage Details</span>
+                    </button>
+                    <button
+                      onClick={() => setShowBillingHistoryModal(true)}
+                      className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 sm:py-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg font-medium text-gray-800 dark:text-gray-200 transition-colors text-sm"
+                    >
+                      <span>💳</span>
+                      <span>Billing History</span>
+                    </button>
+                  </div>
+
+                  {/* Cancel Plan Button for Paid Plans */}
+                  {isPaidPlan && (
+                    <button
+                      onClick={() => setShowCancelPlanModal(true)}
+                      className="w-full text-xs text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 py-2 font-medium transition-colors"
+                    >
+                      Cancel Plan
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Quick Plan Comparison - Only show for free users */}
+              {!isPaidPlan && (
+                <div className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-xl p-4 sm:p-6 border border-indigo-200/50 dark:border-indigo-800/50">
+                  <h4 className="text-lg font-bold text-gray-800 dark:text-white mb-4 text-center">
+                    See What You're Missing 👀
+                  </h4>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                    {/* Pro Plan Preview */}
+                    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200/50 dark:border-blue-700/50 rounded-xl p-4">
+                      <div className="flex justify-between items-start mb-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+                            <span className="text-white font-bold text-lg">
+                              P
+                            </span>
+                          </div>
+                          <div>
+                            <h3 className="text-lg font-bold text-gray-800 dark:text-white">
+                              Pro Plan
+                            </h3>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                              Perfect for individuals
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-3 mb-4">
+                        <div className="bg-white/60 dark:bg-gray-700/40 rounded-lg p-3 text-center">
+                          <p className="text-lg font-bold text-gray-800 dark:text-white">
+                            50GB
+                          </p>
+                          <p className="text-xs text-gray-600 dark:text-gray-400">
+                            Storage
+                          </p>
+                        </div>
+                        <div className="bg-white/60 dark:bg-gray-700/40 rounded-lg p-3 text-center">
+                          <p className="text-lg font-bold text-gray-800 dark:text-white">
+                            10K
+                          </p>
+                          <p className="text-xs text-gray-600 dark:text-gray-400">
+                            Photos
+                          </p>
+                        </div>
+                        <div className="bg-white/60 dark:bg-gray-700/40 rounded-lg p-3 text-center">
+                          <p className="text-lg font-bold text-gray-800 dark:text-white">
+                            $9.99
+                          </p>
+                          <p className="text-xs text-gray-600 dark:text-gray-400">
+                            Monthly
+                          </p>
+                        </div>
+                      </div>
+
+                      <ul className="space-y-2 text-sm mb-4">
+                        <li className="flex items-center gap-2">
+                          <span className="text-green-500">✓</span>
+                          <span className="text-gray-700 dark:text-gray-300">
+                            Advanced AI recognition
+                          </span>
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <span className="text-green-500">✓</span>
+                          <span className="text-gray-700 dark:text-gray-300">
+                            Unlimited albums
+                          </span>
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <span className="text-green-500">✓</span>
+                          <span className="text-gray-700 dark:text-gray-300">
+                            Priority support
+                          </span>
+                        </li>
+                      </ul>
+                    </div>
+
+                    {/* Family Plan Preview */}
+                    <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border border-purple-200/50 dark:border-purple-700/50 rounded-xl p-4">
+                      <div className="flex justify-between items-start mb-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center shadow-lg">
+                            <span className="text-white font-bold text-lg">
+                              F
+                            </span>
+                          </div>
+                          <div>
+                            <h3 className="text-lg font-bold text-gray-800 dark:text-white">
+                              Family Plan
+                            </h3>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                              Perfect for families
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-3 mb-4">
+                        <div className="bg-white/60 dark:bg-gray-700/40 rounded-lg p-3 text-center">
+                          <p className="text-lg font-bold text-gray-800 dark:text-white">
+                            250GB
+                          </p>
+                          <p className="text-xs text-gray-600 dark:text-gray-400">
+                            Storage
+                          </p>
+                        </div>
+                        <div className="bg-white/60 dark:bg-gray-700/40 rounded-lg p-3 text-center">
+                          <p className="text-lg font-bold text-gray-800 dark:text-white">
+                            50K
+                          </p>
+                          <p className="text-xs text-gray-600 dark:text-gray-400">
+                            Photos
+                          </p>
+                        </div>
+                        <div className="bg-white/60 dark:bg-gray-700/40 rounded-lg p-3 text-center">
+                          <p className="text-lg font-bold text-gray-800 dark:text-white">
+                            $19.99
+                          </p>
+                          <p className="text-xs text-gray-600 dark:text-gray-400">
+                            Monthly
+                          </p>
+                        </div>
+                      </div>
+
+                      <ul className="space-y-2 text-sm mb-4">
+                        <li className="flex items-center gap-2">
+                          <span className="text-green-500">✓</span>
+                          <span className="text-gray-700 dark:text-gray-300">
+                            Premium AI recognition
+                          </span>
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <span className="text-green-500">✓</span>
+                          <span className="text-gray-700 dark:text-gray-300">
+                            Unlimited sharing
+                          </span>
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <span className="text-green-500">✓</span>
+                          <span className="text-gray-700 dark:text-gray-300">
+                            Family management
+                          </span>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  <div className="text-center">
+                    <button
+                      onClick={() => {
+                        document.body.style.transition =
+                          "opacity 0.4s ease-out";
+                        document.body.style.opacity = "0";
+                        setTimeout(() => {
+                          document.body.style.opacity = "1";
+                          navigate("/pricing");
+                        }, 400);
+                      }}
+                      className="inline-flex items-center gap-2 bg-white dark:bg-gray-800 text-indigo-600 dark:text-indigo-400 px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-semibold text-sm sm:text-base border border-indigo-200 dark:border-indigo-700 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-all duration-200 hover:scale-105"
+                    >
+                      <span>Compare All Plans</span>
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 5l7 7-7 7"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
+          );
+        })()}
+        {/* Billing History Modal */}
+        {showBillingHistoryModal && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4 animate-fadeIn">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-lg w-full p-6 relative transform transition-all duration-500 ease-out scale-100 animate-slideIn">
+              <button
+                onClick={() => setShowBillingHistoryModal(false)}
+                className="absolute top-4 right-4 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              >
+                <svg
+                  className="w-5 h-5 text-gray-500"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+
+              <div className="text-center mb-6">
+                <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-2xl">💳</span>
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                  Billing History
+                </h3>
+              </div>
+
+              <div className="space-y-4">
+                {(() => {
+                  const storedPlan = localStorage.getItem("userPlan");
+                  const userPlan = storedPlan ? JSON.parse(storedPlan) : null;
+
+                  if (!userPlan || userPlan.plan === "free") {
+                    return (
+                      <div className="text-center py-8">
+                        <div className="w-20 h-20 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+                          <svg
+                            className="w-8 h-8 text-gray-400"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                            />
+                          </svg>
+                        </div>
+                        <p className="text-gray-500 dark:text-gray-400 mb-4 font-medium">
+                          No billing history available
+                        </p>
+                        <p className="text-sm text-gray-400 dark:text-gray-500 mb-4">
+                          You're currently on the free plan
+                        </p>
+                        <button
+                          onClick={() => {
+                            setShowBillingHistoryModal(false);
+                            document.body.style.transition =
+                              "opacity 0.4s ease-out";
+                            document.body.style.opacity = "0";
+                            setTimeout(() => {
+                              document.body.style.opacity = "1";
+                              navigate("/pricing");
+                            }, 400);
+                          }}
+                          className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-6 py-2 rounded-lg font-semibold text-sm transition-all duration-200"
+                        >
+                          Upgrade to Pro
+                        </button>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div className="space-y-3">
+                      {/* Current Active Plan */}
+                      <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+                        <div className="flex justify-between items-start mb-2">
+                          <div>
+                            <h4 className="font-semibold text-green-800 dark:text-green-200 flex items-center gap-2">
+                              <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                              {userPlan.plan.charAt(0).toUpperCase() +
+                                userPlan.plan.slice(1)}{" "}
+                              Plan
+                            </h4>
+                            <p className="text-sm text-green-700 dark:text-green-300">
+                              {userPlan.billing === "yearly"
+                                ? "Annual"
+                                : "Monthly"}{" "}
+                              Subscription
+                            </p>
+                          </div>
+                          <span className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 px-2 py-1 rounded text-xs font-medium">
+                            Active
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="text-green-700 dark:text-green-300">
+                            Started:{" "}
+                            {new Date(
+                              userPlan.purchaseDate
+                            ).toLocaleDateString()}
+                          </span>
+                          <span className="font-semibold text-green-800 dark:text-green-200">
+                            ${userPlan.price}
+                            {userPlan.billing === "yearly" ? "/year" : "/month"}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Payment History */}
+                      <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                        <h4 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                            />
+                          </svg>
+                          Transaction History
+                        </h4>
+
+                        <div className="space-y-2">
+                          {/* Trial Period */}
+                          <div className="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-600">
+                            <div>
+                              <p className="text-sm font-medium text-gray-900 dark:text-white">
+                                14-Day Free Trial
+                              </p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400">
+                                {new Date(
+                                  userPlan.purchaseDate
+                                ).toLocaleDateString()}
+                              </p>
+                            </div>
+                            <span className="text-green-600 dark:text-green-400 font-semibold text-sm">
+                              $0.00
+                            </span>
+                          </div>
+
+                          {/* Upcoming Payment */}
+                          <div className="flex justify-between items-center py-2">
+                            <div>
+                              <p className="text-sm font-medium text-gray-900 dark:text-white">
+                                Next Payment Due
+                              </p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400">
+                                {(() => {
+                                  const nextPayment = new Date(
+                                    userPlan.purchaseDate
+                                  );
+                                  nextPayment.setDate(
+                                    nextPayment.getDate() + 14
+                                  ); // Add 14 days for trial
+                                  if (userPlan.billing === "yearly") {
+                                    nextPayment.setFullYear(
+                                      nextPayment.getFullYear() + 1
+                                    );
+                                  } else {
+                                    nextPayment.setMonth(
+                                      nextPayment.getMonth() + 1
+                                    );
+                                  }
+                                  return nextPayment.toLocaleDateString();
+                                })()}
+                              </p>
+                            </div>
+                            <span className="font-semibold text-gray-900 dark:text-white text-sm">
+                              ${userPlan.price}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Payment Method */}
+                      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                        <h4 className="font-semibold text-blue-800 dark:text-blue-200 mb-2 flex items-center gap-2">
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                            />
+                          </svg>
+                          Payment Method
+                        </h4>
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-600 rounded flex items-center justify-center">
+                            <span className="text-white font-bold text-xs">
+                              💳
+                            </span>
+                          </div>
+                          <div>
+                            <p className="text-sm text-blue-700 dark:text-blue-300">
+                              •••• •••• •••• 1234
+                            </p>
+                            <p className="text-xs text-blue-600 dark:text-blue-400">
+                              Expires 12/28
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="text-center pt-4">
+                        <button
+                          onClick={() => {
+                            // In a real app, this would generate and download a PDF
+                            toast.success("Billing history downloaded!");
+                          }}
+                          className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 text-sm font-medium flex items-center gap-2 mx-auto transition-colors"
+                        >
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                            />
+                          </svg>
+                          Download Full History
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+            </div>
+          </div>
+        )}
+        {/* Usage Details Modal */}
+        {showUsageModal && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4 animate-fadeIn">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-lg w-full p-6 relative transform transition-all duration-300 scale-100">
+              <button
+                onClick={() => setShowUsageModal(false)}
+                className="absolute top-4 right-4 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              >
+                <svg
+                  className="w-5 h-5 text-gray-500"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+
+              <div className="text-center mb-6">
+                <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-2xl">📊</span>
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                  Usage Details
+                </h3>
+              </div>
+
+              <div className="space-y-4">
+                <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-gray-600 dark:text-gray-400">
+                      Photos Used
+                    </span>
+                    <span className="font-semibold text-gray-900 dark:text-white">
+                      {hasProfile ? profilePhotos.length : 0} /{" "}
+                      {(() => {
+                        const storedPlan = localStorage.getItem("userPlan");
+                        const userPlan = storedPlan
+                          ? JSON.parse(storedPlan)
+                          : { plan: "free" };
+                        const planConfigs = {
+                          free: "500",
+                          pro: "10,000",
+                          family: "50,000",
+                          custom: "Unlimited",
+                        };
+                        return planConfigs[userPlan.plan];
+                      })()}
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
+                    <div
+                      className="bg-gradient-to-r from-blue-500 to-purple-600 h-2 rounded-full transition-all duration-500"
+                      style={{
+                        width: `${(() => {
+                          const storedPlan = localStorage.getItem("userPlan");
+                          const userPlan = storedPlan
+                            ? JSON.parse(storedPlan)
+                            : { plan: "free" };
+                          const limits = {
+                            free: 500,
+                            pro: 10000,
+                            family: 50000,
+                            custom: 999999,
+                          };
+                          return Math.min(
+                            ((hasProfile ? profilePhotos.length : 0) /
+                              limits[userPlan.plan]) *
+                              100,
+                            100
+                          );
+                        })()}%`,
+                      }}
+                    ></div>
+                  </div>
+                </div>
+
+                <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                  <h4 className="font-semibold text-gray-900 dark:text-white mb-2">
+                    Storage Breakdown
+                  </h4>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">
+                        Face Profile Photos
+                      </span>
+                      <span className="text-gray-900 dark:text-white">
+                        {hasProfile ? profilePhotos.length : 0}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">
+                        Trip Albums
+                      </span>
+                      <span className="text-gray-900 dark:text-white">
+                        {trips.length}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">
+                        Friends Connected
+                      </span>
+                      <span className="text-gray-900 dark:text-white">
+                        {friends.length}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        {/* Cancel Plan Modal */}
+        {showCancelPlanModal && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-lg w-full p-6 relative transform transition-all duration-500 ease-out scale-100 animate-slideIn">
+              <button
+                onClick={() => setShowCancelPlanModal(false)}
+                className="absolute top-4 right-4 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              >
+                <svg
+                  className="w-5 h-5 text-gray-500"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+
+              <div className="text-center mb-6">
+                <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-2xl">🚫</span>
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                  Cancel{" "}
+                  {(() => {
+                    const storedPlan = localStorage.getItem("userPlan");
+                    const userPlan = storedPlan
+                      ? JSON.parse(storedPlan)
+                      : { plan: "free" };
+                    return (
+                      userPlan.plan.charAt(0).toUpperCase() +
+                      userPlan.plan.slice(1)
+                    );
+                  })()}{" "}
+                  Plan?
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400">
+                  This action will immediately downgrade your account
+                </p>
+              </div>
+
+              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-6">
+                <h4 className="font-semibold text-red-800 dark:text-red-200 mb-2 flex items-center gap-2">
+                  <span>⚠️</span>
+                  You will immediately lose access to:
+                </h4>
+                <ul className="space-y-1 text-sm text-red-700 dark:text-red-300">
+                  {(() => {
+                    const storedPlan = localStorage.getItem("userPlan");
+                    const userPlan = storedPlan
+                      ? JSON.parse(storedPlan)
+                      : { plan: "free" };
+                    const planConfigs = {
+                      pro: { storage: "50GB", photos: "10,000" },
+                      family: { storage: "250GB", photos: "50,000" },
+                    };
+                    const config = planConfigs[userPlan.plan];
+                    return config
+                      ? [
+                          `• ${config.storage} storage (downgrade to 2GB)`,
+                          `• ${config.photos} photo limit (downgrade to 500)`,
+                          "• Premium AI recognition",
+                          "• Priority support",
+                        ]
+                      : [];
+                  })().map((item, index) => (
+                    <li key={index}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
+                <p className="text-sm text-blue-700 dark:text-blue-300 flex items-start gap-2">
+                  <span>💡</span>
+                  <span>
+                    Your data will be preserved, but you'll be limited to free
+                    plan features. You can upgrade again anytime.
+                  </span>
+                </p>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowCancelPlanModal(false)}
+                  className="flex-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 py-3 px-4 rounded-xl font-medium transition-colors"
+                >
+                  Keep Plan
+                </button>
+                <button
+                  onClick={() => {
+                    localStorage.removeItem("userPlan");
+                    setShowCancelPlanModal(false);
+                    toast.error(
+                      "Plan canceled successfully! You've been downgraded to the free plan.",
+                      {
+                        style: {
+                          background: "#ef4444",
+                          color: "white",
+                          textAlign: "center",
+                          fontWeight: "600",
+                          padding: "12px 20px",
+                          borderRadius: "12px",
+                        },
+                      }
+                    );
+                    // Smooth scroll to top of settings section
+                    setTimeout(() => {
+                      const settingsElement = document.querySelector(
+                        '[data-section="settings"]'
+                      );
+                      if (settingsElement) {
+                        settingsElement.scrollIntoView({
+                          behavior: "smooth",
+                          block: "start",
+                        });
+                      }
+                    }, 100);
+                  }}
+                  className="flex-1 bg-red-600 hover:bg-red-700 text-white py-3 px-4 rounded-xl font-medium transition-colors"
+                >
+                  Yes, Cancel Plan
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Data & Storage - Mobile Responsive */}
       <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-xl shadow-lg p-4 border border-white/20 dark:border-gray-700/50">
         <div className="flex items-center justify-center gap-2 mb-4">
           <SparklesIcon className="w-5 h-5 text-purple-600 dark:text-purple-400" />
@@ -2422,8 +3478,8 @@ const Dashboard = () => {
           </h2>
         </div>
 
-        {/* Compact Stats */}
-        <div className="grid grid-cols-3 gap-3 mb-4">
+        {/* Mobile-Responsive Stats Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
           <div className="text-center p-3 bg-gray-50/50 dark:bg-gray-700/30 rounded-lg">
             <p className="text-lg font-bold text-gray-800 dark:text-white">
               {trips.length}
@@ -2436,7 +3492,7 @@ const Dashboard = () => {
             </p>
             <p className="text-xs text-gray-600 dark:text-gray-400">Friends</p>
           </div>
-          <div className="text-center p-3 bg-gray-50/50 dark:bg-gray-700/30 rounded-lg">
+          <div className="text-center p-3 bg-gray-50/50 dark:bg-gray-700/30 rounded-lg col-span-2 md:col-span-1">
             <p className="text-lg font-bold text-gray-800 dark:text-white">
               {hasProfile ? profilePhotos.length : 0}
             </p>
@@ -2444,7 +3500,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Quick Actions */}
+        {/* Mobile-Responsive Quick Actions */}
         <div className="mt-4 pt-4 border-t border-gray-200/50 dark:border-gray-700/50">
           <div className="flex items-center justify-center gap-2 mb-4">
             <div className="w-6 h-6 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
@@ -2454,16 +3510,22 @@ const Dashboard = () => {
               Quick Actions
             </h3>
           </div>
-          <div className="grid grid-cols-2 gap-2 mb-2">
+
+          {/* Mobile: 2x2 Grid Layout for Actions */}
+          <div className="grid grid-cols-2 gap-2 mb-2 md:grid-cols-2">
             <button className="flex items-center justify-center gap-2 p-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg font-medium text-gray-800 dark:text-gray-200 transition-colors text-sm">
               <span>📤</span>
-              <span>Export Data</span>
+              <span className="hidden sm:inline">Export Data</span>
+              <span className="sm:hidden">Export</span>
             </button>
             <button className="flex items-center justify-center gap-2 p-3 bg-blue-100 dark:bg-blue-900/30 hover:bg-blue-200 dark:hover:bg-blue-900/50 rounded-lg font-medium text-blue-800 dark:text-blue-400 transition-colors text-sm">
               <span>🔄</span>
-              <span>Backup</span>
+              <span className="hidden sm:inline">Backup</span>
+              <span className="sm:hidden">Backup</span>
             </button>
           </div>
+
+          {/* Delete Account Button - Full Width */}
           <button
             onClick={() => setShowDeleteAccountModal(true)}
             className="w-full flex items-center justify-center gap-2 p-3 bg-red-100 dark:bg-red-900/30 hover:bg-red-200 dark:hover:bg-red-900/50 text-red-800 dark:text-red-400 rounded-lg font-medium transition-colors text-sm"
@@ -2475,6 +3537,345 @@ const Dashboard = () => {
           </button>
         </div>
       </div>
+
+      {/* Mobile-Specific Styling for Phone Users */}
+      <style jsx>{`
+        @media (max-width: 768px) {
+          /* Enhanced mobile responsiveness for phone users */
+          .subscription-section {
+            padding: 1rem;
+          }
+
+          .plan-details-grid {
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+          }
+
+          .plan-started-expiry {
+            grid-template-columns: 1fr;
+            gap: 0.75rem;
+          }
+
+          .usage-billing-buttons {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            justify-content: space-between;
+            height: auto;
+          }
+
+          .usage-billing-buttons button {
+            flex: 1;
+            padding: 0.75rem;
+            font-size: 0.875rem;
+          }
+
+          .plan-comparison-grid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+          }
+
+          /* Pro and Family plan buttons side by side on mobile */
+          .pro-family-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+            margin-top: 1rem;
+          }
+
+          .pro-family-buttons button {
+            padding: 0.75rem 0.5rem;
+            font-size: 0.875rem;
+            text-align: center;
+          }
+        }
+
+        @media (min-width: 769px) {
+          /* Desktop-specific overrides */
+          .plan-details-grid {
+            grid-template-columns: repeat(4, 1fr);
+          }
+
+          .plan-started-expiry {
+            grid-template-columns: 1fr 1fr;
+          }
+
+          .usage-billing-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+          }
+
+          .plan-comparison-grid {
+            grid-template-columns: 1fr 1fr;
+          }
+
+          .pro-family-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+          }
+        }
+      `}</style>
+
+      {/* Enhanced Mobile Layout for Storage Blocks */}
+      {(() => {
+        const isMobileView = window.innerWidth < 768;
+        const storedPlan = localStorage.getItem("userPlan");
+        const userPlan = storedPlan ? JSON.parse(storedPlan) : { plan: "free" };
+        const isPaidPlan = userPlan.plan !== "free";
+
+        if (isMobileView) {
+          return (
+            <div className="mt-6 md:hidden">
+              {/* Mobile: Enhanced Layout for Storage Info */}
+              <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-xl shadow-lg p-4 border border-white/20 dark:border-gray-700/50">
+                {/* Mobile: 2x2 Grid for Storage Blocks */}
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg p-3 text-center border border-blue-200/30 dark:border-blue-700/30">
+                    <p className="text-sm font-semibold text-blue-800 dark:text-blue-200">
+                      2GB
+                    </p>
+                    <p className="text-xs text-blue-600 dark:text-blue-400">
+                      Storage
+                    </p>
+                  </div>
+                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-lg p-3 text-center border border-green-200/30 dark:border-green-700/30">
+                    <p className="text-sm font-semibold text-green-800 dark:text-green-200">
+                      500
+                    </p>
+                    <p className="text-xs text-green-600 dark:text-green-400">
+                      Photos
+                    </p>
+                  </div>
+                  <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-lg p-3 text-center border border-purple-200/30 dark:border-purple-700/30">
+                    <p className="text-sm font-semibold text-purple-800 dark:text-purple-200">
+                      3
+                    </p>
+                    <p className="text-xs text-purple-600 dark:text-purple-400">
+                      Friends
+                    </p>
+                  </div>
+                  <div className="bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 rounded-lg p-3 text-center border border-orange-200/30 dark:border-orange-700/30">
+                    <p className="text-sm font-semibold text-orange-800 dark:text-orange-200">
+                      ∞
+                    </p>
+                    <p className="text-xs text-orange-600 dark:text-orange-400">
+                      {isPaidPlan ? "Premium" : "Basic"}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Mobile: Plan Details on Right Side */}
+                <div className="flex justify-between items-center mb-4">
+                  <div className="text-left">
+                    <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Plan Started
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      {userPlan.purchaseDate
+                        ? new Date(userPlan.purchaseDate).toLocaleDateString()
+                        : "Recently"}
+                    </p>
+                  </div>
+                  {isPaidPlan && (
+                    <div className="text-right">
+                      <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Plan Expires
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        {(() => {
+                          if (!userPlan.purchaseDate) return "N/A";
+                          const expiry = new Date(userPlan.purchaseDate);
+                          if (userPlan.billing === "yearly") {
+                            expiry.setFullYear(expiry.getFullYear() + 1);
+                          } else {
+                            expiry.setMonth(expiry.getMonth() + 1);
+                          }
+                          return expiry.toLocaleDateString();
+                        })()}
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Mobile: Usage and Billing Buttons at Same Height */}
+                <div className="grid grid-cols-2 gap-2 mb-3 usage-billing-buttons">
+                  <button
+                    onClick={() => setShowUsageModal(true)}
+                    className="flex items-center justify-center gap-1 px-3 py-2 bg-blue-100 dark:bg-blue-900/30 hover:bg-blue-200 dark:hover:bg-blue-900/50 rounded-lg font-medium text-blue-800 dark:text-blue-400 transition-colors text-xs"
+                  >
+                    <span>📊</span>
+                    <span>Usage</span>
+                  </button>
+                  <button
+                    onClick={() => setShowBillingHistoryModal(true)}
+                    className="flex items-center justify-center gap-1 px-3 py-2 bg-green-100 dark:bg-green-900/30 hover:bg-green-200 dark:hover:bg-green-900/50 rounded-lg font-medium text-green-800 dark:text-green-400 transition-colors text-xs"
+                  >
+                    <span>💳</span>
+                    <span>Billing</span>
+                  </button>
+                </div>
+
+                {/* Mobile: Pro and Family Plans at Same Height */}
+                <div className="grid grid-cols-2 gap-2 pro-family-buttons">
+                  <button
+                    onClick={() => {
+                      document.body.style.transition = "opacity 0.4s ease-out";
+                      document.body.style.opacity = "0";
+                      setTimeout(() => {
+                        document.body.style.opacity = "1";
+                        navigate("/billing?plan=pro");
+                      }, 400);
+                    }}
+                    className="bg-gradient-to-r from-indigo-500 to-blue-600 hover:from-indigo-600 hover:to-blue-700 text-white py-2 px-3 rounded-lg font-semibold text-xs transition-all duration-200 shadow-md hover:shadow-lg"
+                  >
+                    Pro Plan
+                  </button>
+                  <button
+                    onClick={() => {
+                      document.body.style.transition = "opacity 0.4s ease-out";
+                      document.body.style.opacity = "0";
+                      setTimeout(() => {
+                        document.body.style.opacity = "1";
+                        navigate("/billing?plan=family");
+                      }, 400);
+                    }}
+                    className="bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white py-2 px-3 rounded-lg font-semibold text-xs transition-all duration-200 shadow-md hover:shadow-lg"
+                  >
+                    Family Plan
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        }
+        return null;
+      })()}
+
+      {/* Enhanced Touch-Friendly Mobile Modals */}
+      <style jsx global>{`
+        @media (max-width: 768px) {
+          /* Make modals more touch-friendly on mobile */
+          .modal-content {
+            max-height: 90vh;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+          }
+
+          .modal-button {
+            min-height: 44px;
+            padding: 12px 16px;
+            font-size: 16px;
+          }
+
+          .modal-close-button {
+            min-width: 44px;
+            min-height: 44px;
+            padding: 12px;
+          }
+
+          /* Prevent zoom on input focus */
+          input,
+          select,
+          textarea {
+            font-size: 16px !important;
+          }
+
+          /* Better touch targets for mobile */
+          .touch-target {
+            min-height: 44px;
+            min-width: 44px;
+          }
+
+          /* Mobile-specific spacing */
+          .mobile-spacing {
+            padding: 1rem;
+            margin: 0.5rem 0;
+          }
+
+          /* Ensure proper scroll behavior */
+          .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+          }
+        }
+
+        /* Enhanced responsive breakpoints */
+        @media (max-width: 480px) {
+          /* Extra small phones */
+          .text-responsive {
+            font-size: 0.875rem;
+          }
+
+          .button-responsive {
+            padding: 8px 12px;
+            font-size: 0.875rem;
+          }
+
+          .grid-mobile-compact {
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+          }
+        }
+
+        @media (min-width: 481px) and (max-width: 768px) {
+          /* Standard mobile phones */
+          .text-responsive {
+            font-size: 1rem;
+          }
+
+          .button-responsive {
+            padding: 10px 16px;
+            font-size: 1rem;
+          }
+
+          .grid-mobile {
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+          }
+        }
+
+        @media (min-width: 769px) and (max-width: 1024px) {
+          /* Tablets */
+          .text-responsive {
+            font-size: 1.125rem;
+          }
+
+          .button-responsive {
+            padding: 12px 20px;
+            font-size: 1rem;
+          }
+
+          .grid-tablet {
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+          }
+        }
+
+        /* Dark mode optimizations for mobile */
+        @media (max-width: 768px) {
+          .dark .mobile-card {
+            background: rgba(31, 41, 55, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(75, 85, 99, 0.3);
+          }
+
+          .dark .mobile-button {
+            background: rgba(55, 65, 81, 0.8);
+            border: 1px solid rgba(75, 85, 99, 0.3);
+          }
+
+          .dark .mobile-text {
+            color: rgba(243, 244, 246, 0.9);
+          }
+        }
+      `}</style>
     </div>
   );
 
@@ -2512,20 +3913,20 @@ const Dashboard = () => {
             {/* Glow Effect around logo */}
             <div className="absolute inset-0 w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 bg-gradient-to-r from-indigo-600/20 to-purple-600/20 rounded-3xl blur-xl animate-pulse mx-auto"></div>
           </div>
-          
+
           {/* Brand Name */}
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 bg-clip-text text-transparent mb-8 animate-pulse leading-relaxed pb-2">
             Groupify
           </h1>
-          
+
           {/* Loading Spinner */}
           <div className="w-16 h-16 border-4 border-purple-200 dark:border-purple-700 border-t-indigo-600 dark:border-t-indigo-400 rounded-full animate-spin mx-auto mb-6"></div>
-          
+
           {/* Loading Text */}
           <p className="text-xl text-gray-800 dark:text-white font-medium mb-2">
             Loading your dashboard...
           </p>
-          
+
           {/* Subtitle */}
           <p className="text-sm text-gray-600 dark:text-gray-300">
             Preparing your personalized experience
@@ -2751,7 +4152,7 @@ const Dashboard = () => {
         {/* Logout */}
         <div className="p-4 border-t border-gray-200/50 dark:border-gray-700/50">
           <button
-            onClick={handleLogout}
+            onClick={() => setShowLogoutModal(true)}
             className="w-full flex items-center gap-3 px-4 py-3 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl font-medium transition-colors"
           >
             <ArrowRightOnRectangleIcon className="w-5 h-5" />
@@ -2949,7 +4350,7 @@ const Dashboard = () => {
                         <button
                           onClick={() => {
                             setShowMobileUserMenu(false);
-                            logout();
+                            setShowLogoutModal(true);
                           }}
                           className="w-full flex items-center gap-3 px-3 py-2 text-left text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors text-sm"
                         >
@@ -3244,6 +4645,71 @@ const Dashboard = () => {
           </div>
         </div>
       )}
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn">
+          <div className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-2xl shadow-xl w-full max-w-md p-6 border border-white/20 dark:border-gray-700/50 transform transition-all duration-500 ease-out scale-100 animate-slideIn">
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                <ArrowRightOnRectangleIcon className="w-8 h-8 text-red-600 dark:text-red-400" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                Logout Confirmation
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400">
+                Are you sure you want to logout from your account?
+              </p>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowLogoutModal(false)}
+                className="flex-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 py-3 px-4 rounded-xl font-medium transition-all duration-300 transform hover:scale-105"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleLogout}
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white py-3 px-4 rounded-xl font-medium transition-all duration-300 transform hover:scale-105"
+              >
+                Yes, Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Keep the existing CSS animations */}
+      <style jsx>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+
+        @keyframes slideIn {
+          from {
+            opacity: 0;
+            transform: scale(0.9) translateY(-20px);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+          }
+        }
+
+        .animate-fadeIn {
+          animation: fadeIn 0.3s ease-out;
+        }
+
+        .animate-slideIn {
+          animation: slideIn 0.4s ease-out;
+        }
+      `}</style>
 
       {/* Face Profile Management Modal */}
       {showFaceProfileManageModal && (

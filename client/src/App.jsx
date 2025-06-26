@@ -30,6 +30,7 @@ import Blog from "./pages/Blog";
 import Features from "./pages/Features";
 import Pricing from "./pages/Pricing";
 import Status from "./pages/Status";
+import Billing from "./pages/Billing";
 
 // Centralized Flow Controller - Handles ALL navigation logic
 const FlowController = ({ children }) => {
@@ -70,16 +71,12 @@ const FlowController = ({ children }) => {
           currentPath
         )
       ) {
-        console.log(
-          "Flow: Logged-in user accessing auth page → Redirect to dashboard"
-        );
         navigate("/dashboard", { replace: true });
         return;
       }
 
       // 2. If user is logged in and on homepage, redirect to dashboard
       if (currentUser && currentPath === "/") {
-        console.log("Flow: Logged-in user on homepage → Redirect to dashboard");
         navigate("/dashboard", { replace: true });
         return;
       }
@@ -306,6 +303,7 @@ function App() {
               <Route path="/features" element={<Features />} />
               <Route path="/pricing" element={<Pricing />} />
               <Route path="/status" element={<Status />} />
+              <Route path="/billing" element={<Billing />} />
 
               {/* Protected Routes - FlowController handles access control */}
               <Route
