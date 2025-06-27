@@ -38,6 +38,8 @@ import {
   sendTripInvite,
   updateTrip,
 } from "../../services/firebase/trips";
+import { MAX_PHOTOS_PER_TRIP } from "../../services/firebase/trips";
+
 import { getTripPhotos } from "../../services/firebase/storage";
 import {
   getFriends,
@@ -56,7 +58,7 @@ import {
   resetFaceRecognition,
   getFaceProfile,
   createFaceProfile,
-} from "../../services/faceRecognition";
+} from "../../services/faceRecognitionService";
 
 // 🔹 Components
 import PhotoUpload from "../photos/PhotoUpload";
@@ -120,11 +122,6 @@ const TripDetailView = ({ tripId: propTripId }) => {
     errors: [],
   });
 
-  // 📚 Caching states for previous scan results
-  const [cachedResults, setCachedResults] = useState(null);
-  const [lastScannedPhotos, setLastScannedPhotos] = useState(null);
-  const [lastScanTimestamp, setLastScanTimestamp] = useState(null);
-
   const isMember = trip?.members?.includes(currentUser?.uid);
   const canFilterByFace = isMember && currentUser?.uid;
   const [showAllPhotosModal, setShowAllPhotosModal] = useState(false);
@@ -138,6 +135,7 @@ const TripDetailView = ({ tripId: propTripId }) => {
   const [tripMembers, setTripMembers] = useState([]);
   const [showUserModal, setShowUserModal] = useState(false);
   const [pendingRequests, setPendingRequests] = useState([]);
+  const [mobileActiveTab, setMobileActiveTab] = useState("trip");
 
   // Auto-load face profile on component mount
   useEffect(() => {
@@ -145,77 +143,49 @@ const TripDetailView = ({ tripId: propTripId }) => {
       loadUserFaceProfile();
     }
   }, [currentUser]);
-
-  // 📚 Clear cache when photos change
+  // Handle keyboard navigation for selected photo
   useEffect(() => {
-    if (photosHaveChanged() && cachedResults) {
-      console.log("📚 Photos changed, clearing cached results");
-      setCachedResults(null);
-      setLastScannedPhotos(null);
-      setLastScanTimestamp(null);
+    const handleKeyPress = (e) => {
+      if (!selectedPhoto) return;
 
-      // If filter is currently active with old cached results, turn it off
-      if (filterActive) {
-        setFilterActive(false);
-        setFilteredPhotos([]);
-        toast.info("Photos changed - previous scan results cleared");
+      const currentIndex = photos.findIndex((p) => p.id === selectedPhoto.id);
+
+      switch (e.key) {
+        case "ArrowLeft":
+          e.preventDefault();
+          if (currentIndex > 0) {
+            setSelectedPhoto(photos[currentIndex - 1]);
+          } else {
+            setSelectedPhoto(photos[photos.length - 1]); // Loop to last
+          }
+          break;
+
+        case "ArrowRight":
+          e.preventDefault();
+          if (currentIndex < photos.length - 1) {
+            setSelectedPhoto(photos[currentIndex + 1]);
+          } else {
+            setSelectedPhoto(photos[0]); // Loop to first
+          }
+          break;
+
+        case "Escape":
+          e.preventDefault();
+          setSelectedPhoto(null);
+          break;
       }
+    };
+
+    // Only add listener when modal is open
+    if (selectedPhoto) {
+      document.addEventListener("keydown", handleKeyPress);
+
+      // Cleanup
+      return () => {
+        document.removeEventListener("keydown", handleKeyPress);
+      };
     }
-  }, [photos]);
-
-  // 📚 Check if photos have changed since last scan
-  const photosHaveChanged = () => {
-    if (!lastScannedPhotos || !photos) return true;
-
-    // Quick check: compare counts
-    if (lastScannedPhotos.length !== photos.length) return true;
-
-    // More thorough check: compare photo IDs and upload times
-    const currentPhotoSignature = photos
-      .map((p) => `${p.id}-${p.uploadedAt}`)
-      .sort()
-      .join("|");
-
-    const lastPhotoSignature = lastScannedPhotos
-      .map((p) => `${p.id}-${p.uploadedAt}`)
-      .sort()
-      .join("|");
-
-    return currentPhotoSignature !== lastPhotoSignature;
-  };
-
-  // 📚 Check if cached results are still valid
-  const hasCachedResults = () => {
-    return (
-      cachedResults &&
-      lastScannedPhotos &&
-      lastScanTimestamp &&
-      !photosHaveChanged() &&
-      hasProfile
-    );
-  };
-
-  // 📚 Show cached results without scanning
-  const showCachedResults = () => {
-    if (hasCachedResults()) {
-      setFilteredPhotos(cachedResults);
-      setFilterActive(true);
-      toast.success(`Showing ${cachedResults.length} previously found photos`);
-      console.log(
-        `📚 Loaded ${cachedResults.length} cached results from ${new Date(
-          lastScanTimestamp
-        ).toLocaleString()}`
-      );
-    }
-  };
-
-  // 📚 Save scan results to cache
-  const saveScanResults = (results) => {
-    setCachedResults(results);
-    setLastScannedPhotos([...photos]); // Deep copy current photos state
-    setLastScanTimestamp(Date.now());
-    console.log(`💾 Cached ${results.length} face recognition results`);
-  };
+  }, [selectedPhoto, photos]);
 
   // Updated loadUserFaceProfile function - simplified
   const loadUserFaceProfile = async () => {
@@ -334,7 +304,6 @@ const TripDetailView = ({ tripId: propTripId }) => {
             weakMatches: progressData.weakMatches,
             averageConfidence: progressData.averageConfidence,
             processingTime: progressData.processingTime,
-            cacheStats: progressData.cacheStats,
             profileUsed: progressData.profileUsed,
           };
 
@@ -351,7 +320,7 @@ const TripDetailView = ({ tripId: propTripId }) => {
   };
 
   // Simplified face recognition function
-  const handleFindMyPhotos = async (forceRescan = false) => {
+  const handleFindMyPhotos = async () => {
     if (!currentUser?.uid || photos.length === 0) {
       toast.error("User ID or trip photos missing");
       return;
@@ -362,12 +331,6 @@ const TripDetailView = ({ tripId: propTripId }) => {
       toast.error(
         "No face profile found. Please create one in your Dashboard first."
       );
-      return;
-    }
-
-    // 📚 If we have valid cached results and not forcing rescan, offer to use cache
-    if (!forceRescan && hasCachedResults()) {
-      showCachedResults();
       return;
     }
 
@@ -401,20 +364,12 @@ const TripDetailView = ({ tripId: propTripId }) => {
       if (matches.length > 0) {
         setFilteredPhotos(matches);
         setFilterActive(true);
-
-        // 📚 Save results to cache
-        saveScanResults(matches);
-
         toast.success(`Found ${matches.length} matching photos!`);
         console.log(`✅ Found ${matches.length} matching photos`);
       } else {
         console.log("ℹ️ No matching photos found");
         setFilteredPhotos([]);
         setFilterActive(true); // Still show the section but with "no matches" message
-
-        // 📚 Save empty results to cache
-        saveScanResults([]);
-
         toast.info("No matching photos found");
       }
     } catch (error) {
@@ -430,6 +385,21 @@ const TripDetailView = ({ tripId: propTripId }) => {
     } finally {
       setIsProcessingFaces(false);
     }
+  };
+
+  const checkPhotoLimit = () => {
+    return photos.length < MAX_PHOTOS_PER_TRIP;
+  };
+
+  const getRemainingPhotoSlots = () => {
+    return Math.max(0, MAX_PHOTOS_PER_TRIP - photos.length);
+  };
+
+  const getPhotoLimitStatus = () => {
+    const remaining = getRemainingPhotoSlots();
+    if (remaining === 0) return "full";
+    if (remaining <= 5) return "warning";
+    return "normal";
   };
 
   // Cancel face recognition
@@ -464,13 +434,8 @@ const TripDetailView = ({ tripId: propTripId }) => {
       setFilterActive(false);
       setFilteredPhotos([]);
     } else {
-      // 📚 If we have cached results and photos haven't changed, show cached first
-      if (hasCachedResults()) {
-        showCachedResults();
-      } else {
-        // Start face recognition
-        handleFindMyPhotos(false);
-      }
+      // Start face recognition
+      handleFindMyPhotos();
     }
   };
 
@@ -519,13 +484,6 @@ const TripDetailView = ({ tripId: propTripId }) => {
         setFilteredPhotos((prevFiltered) =>
           prevFiltered.filter((photo) => !selectedPhotos.includes(photo.id))
         );
-      }
-
-      // Clear cache if it exists since photos changed
-      if (cachedResults) {
-        setCachedResults(null);
-        setLastScannedPhotos(null);
-        setLastScanTimestamp(null);
       }
 
       // Update trip photo count
@@ -651,13 +609,38 @@ const TripDetailView = ({ tripId: propTripId }) => {
   }, [currentUser]);
 
   const handlePhotoUploaded = (uploadedPhotos) => {
-    setPhotos((prev) => [...uploadedPhotos, ...prev]);
+    // Check if adding these photos would exceed the limit
+    const totalAfterUpload = photos.length + uploadedPhotos.length;
 
-    if (trip) {
-      setTrip((prevTrip) => ({
-        ...prevTrip,
-        photoCount: (prevTrip.photoCount || 0) + uploadedPhotos.length,
-      }));
+    if (totalAfterUpload > MAX_PHOTOS_PER_TRIP) {
+      const allowedPhotos = uploadedPhotos.slice(
+        0,
+        MAX_PHOTOS_PER_TRIP - photos.length
+      );
+      const rejectedCount = uploadedPhotos.length - allowedPhotos.length;
+
+      toast.error(
+        `Photo limit exceeded! Only ${allowedPhotos.length} photos were uploaded. ${rejectedCount} photos were rejected.`
+      );
+
+      if (allowedPhotos.length > 0) {
+        setPhotos((prev) => [...allowedPhotos, ...prev]);
+        if (trip) {
+          setTrip((prevTrip) => ({
+            ...prevTrip,
+            photoCount: (prevTrip.photoCount || 0) + allowedPhotos.length,
+          }));
+        }
+      }
+    } else {
+      setPhotos((prev) => [...uploadedPhotos, ...prev]);
+      if (trip) {
+        setTrip((prevTrip) => ({
+          ...prevTrip,
+          photoCount: (prevTrip.photoCount || 0) + uploadedPhotos.length,
+        }));
+      }
+      toast.success(`${uploadedPhotos.length} photos uploaded successfully!`);
     }
 
     setShowUploadForm(false);
@@ -965,28 +948,28 @@ const TripDetailView = ({ tripId: propTripId }) => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50/50 via-indigo-50/50 to-purple-50/50 dark:from-gray-900 dark:via-blue-900/20 dark:to-purple-900/20">
-      <div className="space-y-8 p-4 sm:p-6 max-w-7xl mx-auto">
+      <div className="space-y-4 sm:space-y-8 p-3 sm:p-6 max-w-7xl mx-auto">
         {/* Enhanced Header Section with glassmorphism */}
         <div className="relative group">
           <div className="absolute -inset-1 bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 rounded-2xl blur opacity-20 group-hover:opacity-30 transition duration-300"></div>
-          <div className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-xl shadow-lg p-6 border border-white/20 dark:border-gray-700/50">
-            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+          <div className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-xl shadow-lg p-3 sm:p-6 border border-white/20 dark:border-gray-700/50">
+            <div className="flex flex-col gap-3 sm:gap-6">
               {/* Left side - Navigation & Trip Info */}
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 flex-1">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 flex-1">
                 <div className="hidden sm:block w-px h-8 bg-gray-300 dark:bg-gray-600"></div>
 
                 <div className="space-y-1">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-                      <MapPinIcon className="w-5 h-5 text-white" />
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg sm:rounded-xl flex items-center justify-center shadow-lg">
+                      <MapPinIcon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                     </div>
                     <div>
-                      <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+                      <h1 className="text-lg sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">
                         {trip.name}
                       </h1>
                       {trip.location && (
-                        <p className="text-gray-600 dark:text-gray-400 text-sm flex items-center gap-1">
-                          <MapPinIcon className="w-4 h-4" />
+                        <p className="text-gray-600 dark:text-gray-400 text-xs sm:text-sm flex items-center gap-1">
+                          <MapPinIcon className="w-3 h-3 sm:w-4 sm:h-4" />
                           {trip.location}
                         </p>
                       )}
@@ -996,13 +979,13 @@ const TripDetailView = ({ tripId: propTripId }) => {
               </div>
 
               {/* Right side - Stats & Actions */}
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
                 {/* Trip Stats */}
-                <div className="flex items-center gap-6">
+                <div className="flex items-center gap-3 sm:gap-6">
                   <div className="text-center">
-                    <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                      <PhotoIcon className="w-5 h-5" />
-                      <span className="font-bold text-xl text-indigo-600 dark:text-indigo-400">
+                    <div className="flex items-center gap-1 sm:gap-2 text-gray-600 dark:text-gray-400">
+                      <PhotoIcon className="w-4 h-4 sm:w-5 sm:h-5" />
+                      <span className="font-bold text-base sm:text-lg lg:text-xl text-indigo-600 dark:text-indigo-400">
                         {photos.length}
                       </span>
                     </div>
@@ -1011,12 +994,12 @@ const TripDetailView = ({ tripId: propTripId }) => {
                     </p>
                   </div>
 
-                  <div className="w-px h-8 bg-gray-300 dark:bg-gray-600"></div>
+                  <div className="w-px h-6 sm:h-8 bg-gray-300 dark:bg-gray-600"></div>
 
                   <div className="text-center">
-                    <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                      <UserGroupIcon className="w-5 h-5" />
-                      <span className="font-bold text-xl text-purple-600 dark:text-purple-400">
+                    <div className="flex items-center gap-1 sm:gap-2 text-gray-600 dark:text-gray-400">
+                      <UserGroupIcon className="w-4 h-4 sm:w-5 sm:h-5" />
+                      <span className="font-bold text-base sm:text-lg lg:text-xl text-purple-600 dark:text-purple-400">
                         {tripMembers.length}
                       </span>
                     </div>
@@ -1027,33 +1010,57 @@ const TripDetailView = ({ tripId: propTripId }) => {
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex flex-wrap gap-3">
+                <div className="flex flex-row gap-1 w-full sm:w-auto">
                   {isAdmin && (
                     <button
                       onClick={() => setShowEditModal(true)}
-                      className="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl font-medium transition-all duration-300 transform hover:scale-105 shadow-lg text-sm flex items-center gap-2 backdrop-blur-sm"
+                      className="w-full sm:w-auto px-1 xs:px-2 sm:px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg sm:rounded-xl font-medium transition-all duration-300 transform hover:scale-105 shadow-lg text-xs sm:text-sm flex items-center justify-center gap-2 backdrop-blur-sm max-[320px]:px-0.5 max-[320px]:text-[10px] max-[320px]:gap-1"
                     >
-                      <PencilIcon className="w-4 h-4" />
+                      <PencilIcon className="w-3 h-3 sm:w-4 sm:h-4" />
                       Edit Trip
                     </button>
                   )}
                   <button
                     onClick={() => setShowUploadForm(!showUploadForm)}
-                    className={`px-4 py-2 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 shadow-lg text-sm flex items-center gap-2 backdrop-blur-sm ${
-                      showUploadForm
+                    disabled={
+                      getPhotoLimitStatus() === "full" && !showUploadForm
+                    }
+                    className={`w-full sm:w-auto px-1 xs:px-2 sm:px-4 py-2 rounded-lg sm:rounded-xl font-medium transition-all duration-300 transform hover:scale-105 shadow-lg text-xs sm:text-sm flex items-center justify-center gap-2 backdrop-blur-sm max-[320px]:px-0.5 max-[320px]:text-[10px] max-[320px]:gap-1 ${
+                      getPhotoLimitStatus() === "full" && !showUploadForm
+                        ? "bg-gray-400 dark:bg-gray-600 text-gray-600 dark:text-gray-400 cursor-not-allowed"
+                        : showUploadForm
                         ? "bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white"
+                        : getPhotoLimitStatus() === "warning"
+                        ? "bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700 text-white"
                         : "bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white"
                     }`}
                   >
-                    {showUploadForm ? (
+                    {getPhotoLimitStatus() === "full" && !showUploadForm ? (
                       <>
-                        <XMarkIcon className="w-4 h-4" />
+                        <svg
+                          className="w-3 h-3 sm:w-4 sm:h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364l12.728-12.728"
+                          />
+                        </svg>
+                        Limit Reached
+                      </>
+                    ) : showUploadForm ? (
+                      <>
+                        <XMarkIcon className="w-3 h-3 sm:w-4 sm:h-4" />
                         Cancel
                       </>
                     ) : (
                       <>
-                        <PlusIcon className="w-4 h-4" />
-                        Add Photos
+                        <PlusIcon className="w-3 h-3 sm:w-4 sm:h-4" />
+                        Add Photos ({getRemainingPhotoSlots()} left)
                       </>
                     )}
                   </button>
@@ -1063,111 +1070,253 @@ const TripDetailView = ({ tripId: propTripId }) => {
 
             {/* Trip Description */}
             {trip.description && (
-              <div className="mt-6 pt-6 border-t border-gray-200/50 dark:border-gray-700/50">
-                <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+              <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-gray-200/50 dark:border-gray-700/50">
+                <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300 leading-relaxed">
                   {trip.description}
                 </p>
               </div>
             )}
           </div>
         </div>
+
+        {/* Mobile Tab Switcher */}
+        <div className="xl:hidden relative">
+          <div className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-lg shadow-lg p-1.5 border border-white/20 dark:border-gray-700/50">
+            <div className="relative flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+              {/* Background slider */}
+              <div
+                className={`absolute top-1 bottom-1 w-1/2 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-md transition-all duration-300 ease-in-out transform ${
+                  mobileActiveTab === "trip"
+                    ? "translate-x-0"
+                    : "translate-x-full"
+                }`}
+              />
+
+              {/* Tab buttons */}
+              <button
+                onClick={() => setMobileActiveTab("trip")}
+                className={`relative z-10 flex-1 py-1.5 px-1.5 text-xs font-medium rounded-md transition-all duration-300 ${
+                  mobileActiveTab === "trip"
+                    ? "text-white"
+                    : "text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+                }`}
+              >
+                <div className="flex items-center justify-center gap-2">
+                  <MapPinIcon className="w-4 h-4" />
+                  <span>Trip</span>
+                </div>
+              </button>
+
+              <button
+                onClick={() => setMobileActiveTab("members")}
+                className={`relative z-10 flex-1 py-1.5 px-1.5 text-xs font-medium rounded-md transition-all duration-300 ${
+                  mobileActiveTab === "members"
+                    ? "text-white"
+                    : "text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+                }`}
+              >
+                <div className="flex items-center justify-center gap-2">
+                  <UserGroupIcon className="w-4 h-4" />
+                  <span>Members</span>
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
+
         {/* Main Content Grid - Enhanced with glassmorphism */}
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
           {/* Main Content - Takes 3 columns on xl screens */}
-          <div className="xl:col-span-2 space-y-6">
-            {/* Upload Form - Enhanced with glassmorphism */}
+          <div
+            className={`xl:col-span-2 space-y-6 ${
+              mobileActiveTab === "trip" ? "block" : "hidden xl:block"
+            }`}
+          >
+            {/* Upload Form - Enhanced with limit checking */}
             {showUploadForm && (
-              <PhotoUpload
-                tripId={tripId}
-                onPhotoUploaded={handlePhotoUploaded}
-              />
+              <div className="space-y-4">
+                {/* Photo limit warning */}
+                {getPhotoLimitStatus() === "full" ? (
+                  <div className="relative group">
+                    <div className="absolute -inset-1 bg-gradient-to-r from-red-600 to-orange-600 rounded-2xl blur opacity-20"></div>
+                    <div className="relative bg-red-50/90 dark:bg-red-900/30 backdrop-blur-lg rounded-xl p-4 border border-red-200/50 dark:border-red-800/50">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-gradient-to-r from-red-500 to-red-600 rounded-lg flex items-center justify-center">
+                          <svg
+                            className="w-4 h-4 text-white"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                            />
+                          </svg>
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-red-800 dark:text-red-400">
+                            Photo Limit Reached
+                          </h3>
+                          <p className="text-red-700 dark:text-red-300 text-sm">
+                            This trip has reached the maximum of{" "}
+                            {MAX_PHOTOS_PER_TRIP} photos. Please delete some
+                            photos before uploading new ones.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : getPhotoLimitStatus() === "warning" ? (
+                  <div className="relative group">
+                    <div className="absolute -inset-1 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-2xl blur opacity-20"></div>
+                    <div className="relative bg-yellow-50/90 dark:bg-yellow-900/30 backdrop-blur-lg rounded-xl p-4 border border-yellow-200/50 dark:border-yellow-800/50">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-lg flex items-center justify-center">
+                          <svg
+                            className="w-4 h-4 text-white"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M12 9v2m0 4h.01M12 17h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                            />
+                          </svg>
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-yellow-800 dark:text-yellow-400">
+                            Almost Full
+                          </h3>
+                          <p className="text-yellow-700 dark:text-yellow-300 text-sm">
+                            Only {getRemainingPhotoSlots()} photo slots
+                            remaining out of {MAX_PHOTOS_PER_TRIP}.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : null}
+
+                {/* PhotoUpload Component with limits */}
+                <PhotoUpload
+                  tripId={tripId}
+                  onPhotoUploaded={handlePhotoUploaded}
+                  maxPhotos={MAX_PHOTOS_PER_TRIP}
+                  currentPhotoCount={photos.length}
+                  showLimitWarning={getPhotoLimitStatus() === "warning"}
+                  limitWarningText={`Only ${getRemainingPhotoSlots()} photo slots remaining out of ${MAX_PHOTOS_PER_TRIP}.`}
+                  disabled={getPhotoLimitStatus() === "full"}
+                />
+              </div>
             )}
 
-            {/* Photos Preview Section - Enhanced */}
+            {/* Photos Preview Section - Enhanced with glassmorphism */}
             <div className="relative group">
               <div className="absolute -inset-1 bg-gradient-to-r from-purple-500 via-pink-500 to-rose-500 rounded-2xl blur opacity-20 group-hover:opacity-30 transition duration-300"></div>
-              <div className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-xl shadow-lg p-6 border border-white/20 dark:border-gray-700/50">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg">
-                      <PhotoIcon className="w-5 h-5 text-white" />
+              <div className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-xl shadow-lg p-3 sm:p-6 border border-white/20 dark:border-gray-700/50">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg sm:rounded-xl flex items-center justify-center shadow-lg">
+                      <PhotoIcon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                     </div>
                     <div>
-                      <h2 className="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-3">
+                      <h2 className="text-lg sm:text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2 sm:gap-3">
                         All Trip Photos
-                        <span className="text-sm font-semibold text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-900/30 px-3 py-1 rounded-full border border-purple-200 dark:border-purple-800">
+                        <span className="text-xs sm:text-sm font-semibold text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-900/30 px-2 py-1 rounded-full border border-purple-200 dark:border-purple-800">
                           {photos.length}
                         </span>
                       </h2>
-                      <p className="text-gray-600 dark:text-gray-400 text-sm">
+                      <p className="text-gray-600 dark:text-gray-400 text-xs sm:text-sm">
                         Collection of shared memories
                       </p>
                     </div>
                   </div>
 
-                  <button
-                    onClick={() => setShowAllPhotosModal(true)}
-                    className="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl font-medium transition-all duration-300 transform hover:scale-105 shadow-lg text-sm flex items-center gap-2 backdrop-blur-sm"
-                  >
-                    <EyeIcon className="w-4 h-4" />
-                    View All
-                  </button>
+                  <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <button
+                      onClick={() => setShowAllPhotosModal(true)}
+                      className="flex-1 sm:flex-none px-3 py-2 sm:px-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg sm:rounded-xl font-medium transition-all duration-300 transform hover:scale-105 shadow-lg text-xs sm:text-sm flex items-center justify-center gap-2 backdrop-blur-sm"
+                    >
+                      <EyeIcon className="w-3 h-3 sm:w-4 sm:h-4" />
+                      View All
+                    </button>
+                    {photos.length > 0 && (
+                      <button
+                        onClick={() => {
+                          const randomIndex = Math.floor(
+                            Math.random() * photos.length
+                          );
+                          setSelectedPhoto(photos[randomIndex]);
+                        }}
+                        className="px-3 py-2 sm:px-4 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white rounded-lg sm:rounded-xl font-medium transition-all duration-300 transform hover:scale-105 shadow-lg text-xs sm:text-sm flex items-center justify-center gap-2 backdrop-blur-sm"
+                      >
+                        <SparklesIcon className="w-3 h-3 sm:w-4 sm:h-4" />
+                        <span className="hidden sm:inline">Random</span>
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 {photos.length === 0 ? (
-                  <div className="text-center py-16">
-                    <div className="relative mb-6">
-                      <div className="w-20 h-20 bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 rounded-2xl flex items-center justify-center mx-auto shadow-lg">
-                        <CameraIcon className="w-10 h-10 text-purple-500 dark:text-purple-400" />
+                  <div className="text-center py-12 sm:py-16">
+                    <div className="relative mb-4 sm:mb-6">
+                      <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto shadow-lg">
+                        <CameraIcon className="w-8 h-8 sm:w-10 sm:h-10 text-purple-500 dark:text-purple-400" />
                       </div>
-                      <div className="absolute inset-0 bg-gradient-to-r from-purple-400/20 to-pink-400/20 rounded-2xl blur-xl"></div>
+                      <div className="absolute inset-0 bg-gradient-to-r from-purple-400/20 to-pink-400/20 rounded-xl sm:rounded-2xl blur-xl"></div>
                     </div>
-                    <h3 className="text-xl font-bold text-gray-700 dark:text-gray-300 mb-3">
+                    <h3 className="text-lg sm:text-xl font-bold text-gray-700 dark:text-gray-300 mb-2 sm:mb-3">
                       No photos yet
                     </h3>
-                    <p className="text-gray-500 dark:text-gray-400 max-w-md mx-auto">
+                    <p className="text-gray-500 dark:text-gray-400 text-sm max-w-md mx-auto mb-4 sm:mb-6">
                       Start by uploading some amazing memories to share with
                       your group!
                     </p>
                     <button
                       onClick={() => setShowUploadForm(true)}
-                      className="mt-6 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl font-medium transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center gap-2 mx-auto"
+                      className="px-4 py-2 sm:px-6 sm:py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg sm:rounded-xl font-medium transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center gap-2 mx-auto text-sm"
                     >
-                      <PlusIcon className="w-5 h-5" />
+                      <PlusIcon className="w-4 h-4 sm:w-5 sm:h-5" />
                       Upload First Photo
                     </button>
                   </div>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="space-y-3 sm:space-y-4">
                     {/* Photo scroll container with enhanced styling */}
                     <div className="relative">
-                      <div className="flex overflow-x-auto space-x-4 pb-4 scrollbar-thin scrollbar-thumb-purple-300 dark:scrollbar-thumb-purple-700 scrollbar-track-transparent">
+                      <div className="flex overflow-x-auto space-x-2 sm:space-x-3 pb-3 sm:pb-4 px-1 scrollbar-thin scrollbar-thumb-purple-300 dark:scrollbar-thumb-purple-700 scrollbar-track-transparent">
                         {photos.slice(0, 8).map((photo, index) => (
                           <div
                             key={`preview-${photo.id}`}
-                            className="flex-shrink-0 w-40 sm:w-44 cursor-pointer group relative"
+                            className="flex-shrink-0 w-24 sm:w-32 md:w-40 lg:w-44 cursor-pointer group relative"
                             onClick={() => setSelectedPhoto(photo)}
                           >
-                            <div className="relative overflow-hidden rounded-xl shadow-lg transform group-hover:scale-105 transition-all duration-300 bg-gradient-to-br from-white to-gray-50 dark:from-gray-700 dark:to-gray-800 p-2">
+                            <div className="relative overflow-hidden rounded-lg sm:rounded-xl shadow-lg transform group-hover:scale-105 transition-all duration-300 bg-gradient-to-br from-white to-gray-50 dark:from-gray-700 dark:to-gray-800 p-1.5 sm:p-2">
                               <img
                                 src={photo.downloadURL.replace(
                                   "groupify-77202.appspot.com",
                                   "groupify-77202.firebasestorage.app"
                                 )}
                                 alt={photo.fileName}
-                                className="w-full h-28 sm:h-32 object-cover rounded-lg"
+                                className="w-full h-16 sm:h-20 md:h-24 lg:h-28 object-cover rounded-md sm:rounded-lg"
                               />
 
                               {/* Hover overlay with enhanced effects */}
-                              <div className="absolute inset-2 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 rounded-lg flex items-end">
-                                <div className="p-3 w-full">
-                                  <p className="text-white text-sm font-medium mb-1">
+                              <div className="absolute inset-1.5 sm:inset-2 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 rounded-md sm:rounded-lg flex items-end">
+                                <div className="p-1.5 sm:p-3 w-full">
+                                  <p className="text-white text-xs sm:text-sm font-medium mb-1">
                                     {new Date(
                                       photo.uploadedAt
                                     ).toLocaleDateString()}
                                   </p>
-                                  <div className="flex items-center gap-2">
-                                    <EyeIcon className="w-4 h-4 text-white/80" />
+                                  <div className="flex items-center gap-1 sm:gap-2">
+                                    <EyeIcon className="w-3 h-3 sm:w-4 sm:h-4 text-white/80" />
                                     <span className="text-white/80 text-xs">
                                       Click to view
                                     </span>
@@ -1176,7 +1325,7 @@ const TripDetailView = ({ tripId: propTripId }) => {
                               </div>
 
                               {/* Floating number badge */}
-                              <div className="absolute top-3 left-3 w-6 h-6 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-full flex items-center justify-center text-xs font-bold text-purple-600 dark:text-purple-400 shadow-lg">
+                              <div className="absolute top-2 left-2 sm:top-3 sm:left-3 w-5 h-5 sm:w-6 sm:h-6 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-full flex items-center justify-center text-xs font-bold text-purple-600 dark:text-purple-400 shadow-lg">
                                 {index + 1}
                               </div>
                             </div>
@@ -1186,19 +1335,19 @@ const TripDetailView = ({ tripId: propTripId }) => {
                         {/* Show more card if there are additional photos */}
                         {photos.length > 8 && (
                           <div
-                            className="flex-shrink-0 w-48 sm:w-56 h-40 sm:h-44 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/30 dark:to-pink-900/30 rounded-xl border-2 border-dashed border-purple-300 dark:border-purple-700 flex items-center justify-center cursor-pointer hover:from-purple-100 hover:to-pink-100 dark:hover:from-purple-900/50 dark:hover:to-pink-900/50 transition-all duration-300 group"
+                            className="flex-shrink-0 w-32 sm:w-48 md:w-56 h-20 sm:h-40 md:h-44 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/30 dark:to-pink-900/30 rounded-lg sm:rounded-xl border-2 border-dashed border-purple-300 dark:border-purple-700 flex items-center justify-center cursor-pointer hover:from-purple-100 hover:to-pink-100 dark:hover:from-purple-900/50 dark:hover:to-pink-900/50 transition-all duration-300 group"
                             onClick={() => setShowAllPhotosModal(true)}
                           >
                             <div className="text-center">
-                              <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform shadow-lg">
-                                <span className="text-white font-bold text-lg">
+                              <div className="w-8 h-8 sm:w-12 sm:h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-3 group-hover:scale-110 transition-transform shadow-lg">
+                                <span className="text-white font-bold text-sm sm:text-lg">
                                   +{photos.length - 8}
                                 </span>
                               </div>
-                              <p className="text-purple-700 dark:text-purple-400 font-medium text-sm">
+                              <p className="text-purple-700 dark:text-purple-400 font-medium text-xs sm:text-sm">
                                 View all photos
                               </p>
-                              <p className="text-purple-600 dark:text-purple-500 text-xs mt-1">
+                              <p className="text-purple-600 dark:text-purple-500 text-xs mt-1 hidden sm:block">
                                 Click to explore
                               </p>
                             </div>
@@ -1207,23 +1356,27 @@ const TripDetailView = ({ tripId: propTripId }) => {
                       </div>
 
                       {/* Gradient fade on scroll edges */}
-                      <div className="absolute top-0 right-0 w-8 h-full bg-gradient-to-l from-white/80 dark:from-gray-800/80 to-transparent pointer-events-none rounded-r-xl"></div>
+                      <div className="absolute top-0 right-0 w-6 sm:w-8 h-full bg-gradient-to-l from-white/80 dark:from-gray-800/80 to-transparent pointer-events-none rounded-r-xl"></div>
                     </div>
 
-                    {/* Quick stats */}
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 border-t border-purple-200/30 dark:border-purple-800/30">
-                      <div className="text-center p-3 bg-purple-50/50 dark:bg-purple-900/20 rounded-lg border border-purple-200/30 dark:border-purple-800/30">
-                        <PhotoIcon className="w-5 h-5 text-purple-600 dark:text-purple-400 mx-auto mb-1" />
-                        <p className="text-lg font-bold text-purple-700 dark:text-purple-400">
+                    {/* Enhanced stats */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 pt-3 sm:pt-4 border-t border-purple-200/30 dark:border-purple-800/30">
+                      <div className="text-center p-2 sm:p-3 bg-purple-50/50 dark:bg-purple-900/20 rounded-lg border border-purple-200/30 dark:border-purple-800/30 hover:scale-105 transition-transform duration-300 group">
+                        <div className="w-6 h-6 sm:w-7 sm:h-7 bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg flex items-center justify-center mx-auto mb-1 shadow-sm">
+                          <PhotoIcon className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
+                        </div>
+                        <p className="text-sm sm:text-lg font-bold text-purple-700 dark:text-purple-400">
                           {photos.length}
                         </p>
                         <p className="text-xs text-purple-600 dark:text-purple-500">
                           Total Photos
                         </p>
                       </div>
-                      <div className="text-center p-3 bg-pink-50/50 dark:bg-pink-900/20 rounded-lg border border-pink-200/30 dark:border-pink-800/30">
-                        <ClockIcon className="w-5 h-5 text-pink-600 dark:text-pink-400 mx-auto mb-1" />
-                        <p className="text-lg font-bold text-pink-700 dark:text-pink-400">
+                      <div className="text-center p-2 sm:p-3 bg-pink-50/50 dark:bg-pink-900/20 rounded-lg border border-pink-200/30 dark:border-pink-800/30 hover:scale-105 transition-transform duration-300 group">
+                        <div className="w-6 h-6 sm:w-7 sm:h-7 bg-gradient-to-r from-pink-500 to-pink-600 rounded-lg flex items-center justify-center mx-auto mb-1 shadow-sm">
+                          <ClockIcon className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
+                        </div>
+                        <p className="text-sm sm:text-lg font-bold text-pink-700 dark:text-pink-400">
                           {photos.length > 0
                             ? Math.ceil(
                                 (Date.now() -
@@ -1240,18 +1393,22 @@ const TripDetailView = ({ tripId: propTripId }) => {
                           Days Active
                         </p>
                       </div>
-                      <div className="text-center p-3 bg-blue-50/50 dark:bg-blue-900/20 rounded-lg border border-blue-200/30 dark:border-blue-800/30">
-                        <UserGroupIcon className="w-5 h-5 text-blue-600 dark:text-blue-400 mx-auto mb-1" />
-                        <p className="text-lg font-bold text-blue-700 dark:text-blue-400">
+                      <div className="text-center p-2 sm:p-3 bg-blue-50/50 dark:bg-blue-900/20 rounded-lg border border-blue-200/30 dark:border-blue-800/30 hover:scale-105 transition-transform duration-300 group">
+                        <div className="w-6 h-6 sm:w-7 sm:h-7 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg flex items-center justify-center mx-auto mb-1 shadow-sm">
+                          <UserGroupIcon className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
+                        </div>
+                        <p className="text-sm sm:text-lg font-bold text-blue-700 dark:text-blue-400">
                           {tripMembers.length}
                         </p>
                         <p className="text-xs text-blue-600 dark:text-blue-500">
                           Contributors
                         </p>
                       </div>
-                      <div className="text-center p-3 bg-emerald-50/50 dark:bg-emerald-900/20 rounded-lg border border-emerald-200/30 dark:border-emerald-800/30">
-                        <SparklesIcon className="w-5 h-5 text-emerald-600 dark:text-emerald-400 mx-auto mb-1" />
-                        <p className="text-lg font-bold text-emerald-700 dark:text-emerald-400">
+                      <div className="text-center p-2 sm:p-3 bg-emerald-50/50 dark:bg-emerald-900/20 rounded-lg border border-emerald-200/30 dark:border-emerald-800/30 hover:scale-105 transition-transform duration-300 group">
+                        <div className="w-6 h-6 sm:w-7 sm:h-7 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-lg flex items-center justify-center mx-auto mb-1 shadow-sm">
+                          <SparklesIcon className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
+                        </div>
+                        <p className="text-sm sm:text-lg font-bold text-emerald-700 dark:text-emerald-400">
                           {photos.length > 0
                             ? Math.round(
                                 (photos.length /
@@ -1269,20 +1426,21 @@ const TripDetailView = ({ tripId: propTripId }) => {
                 )}
               </div>
             </div>
+
             {/* Face Recognition Section - Enhanced with glassmorphism */}
             <div className="relative group">
               <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 via-cyan-500 to-teal-500 rounded-2xl blur opacity-20 group-hover:opacity-30 transition duration-300"></div>
-              <div className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-xl shadow-lg p-6 border border-white/20 dark:border-gray-700/50">
-                <div className="flex flex-col lg:flex-row justify-between items-start gap-6 mb-6">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center shadow-lg">
-                      <MagnifyingGlassIcon className="w-5 h-5 text-white" />
+              <div className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-xl shadow-lg p-3 sm:p-6 border border-white/20 dark:border-gray-700/50">
+                <div className="flex flex-col gap-3 sm:gap-4 mb-4 sm:mb-6">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg sm:rounded-xl flex items-center justify-center shadow-lg">
+                      <MagnifyingGlassIcon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                     </div>
                     <div>
-                      <h2 className="text-xl font-bold text-gray-800 dark:text-white">
+                      <h2 className="text-lg sm:text-xl font-bold text-gray-800 dark:text-white">
                         Photos With Me
                       </h2>
-                      <p className="text-gray-600 dark:text-gray-400 text-sm">
+                      <p className="text-gray-600 dark:text-gray-400 text-xs sm:text-sm">
                         AI-powered face recognition to find photos containing
                         you
                       </p>
@@ -1290,37 +1448,28 @@ const TripDetailView = ({ tripId: propTripId }) => {
                   </div>
 
                   {!isProcessingFaces && (
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                    <div className="flex flex-col gap-2 sm:gap-3">
                       {/* Status Indicators */}
-                      <div className="flex flex-wrap items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                         {isLoadingProfile ? (
-                          <div className="flex items-center gap-2 bg-gray-100 dark:bg-gray-700 px-3 py-2 rounded-full text-xs backdrop-blur-sm">
-                            <div className="animate-spin w-3 h-3 border-2 border-gray-400 border-t-transparent rounded-full"></div>
+                          <div className="flex items-center gap-1.5 sm:gap-2 bg-gray-100 dark:bg-gray-700 px-2 py-1.5 sm:px-3 sm:py-2 rounded-full text-xs backdrop-blur-sm">
+                            <div className="animate-spin w-2.5 h-2.5 sm:w-3 sm:h-3 border-2 border-gray-400 border-t-transparent rounded-full"></div>
                             <span className="text-gray-600 dark:text-gray-400">
                               Loading...
                             </span>
                           </div>
                         ) : hasProfile ? (
-                          <div className="flex items-center gap-2 bg-green-100 dark:bg-green-900/30 px-3 py-2 rounded-full text-xs backdrop-blur-sm border border-green-200 dark:border-green-800">
+                          <div className="flex items-center gap-1.5 sm:gap-2 bg-green-100 dark:bg-green-900/30 px-2 py-1.5 sm:px-3 sm:py-2 rounded-full text-xs backdrop-blur-sm border border-green-200 dark:border-green-800">
                             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                             <span className="text-green-700 dark:text-green-400 font-medium">
                               Profile Ready
                             </span>
                           </div>
                         ) : (
-                          <div className="flex items-center gap-2 bg-orange-100 dark:bg-orange-900/30 px-3 py-2 rounded-full text-xs backdrop-blur-sm border border-orange-200 dark:border-orange-800">
+                          <div className="flex items-center gap-1.5 sm:gap-2 bg-orange-100 dark:bg-orange-900/30 px-2 py-1.5 sm:px-3 sm:py-2 rounded-full text-xs backdrop-blur-sm border border-orange-200 dark:border-orange-800">
                             <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
                             <span className="text-orange-700 dark:text-orange-400 font-medium">
                               No Profile
-                            </span>
-                          </div>
-                        )}
-
-                        {hasCachedResults() && (
-                          <div className="flex items-center gap-2 bg-blue-100 dark:bg-blue-900/30 px-3 py-2 rounded-full text-xs backdrop-blur-sm border border-blue-200 dark:border-blue-800">
-                            <ClockIcon className="w-3 h-3 text-blue-600 dark:text-blue-400" />
-                            <span className="text-blue-700 dark:text-blue-400 font-medium">
-                              Previous scan
                             </span>
                           </div>
                         )}
@@ -1328,49 +1477,32 @@ const TripDetailView = ({ tripId: propTripId }) => {
 
                       {/* Action Buttons */}
                       <div className="flex flex-wrap gap-2">
-                        {hasCachedResults() && !filterActive && (
-                          <button
-                            onClick={showCachedResults}
-                            disabled={!canFilterByFace || isLoadingProfile}
-                            className="px-4 py-2 bg-blue-100 dark:bg-blue-900/30 hover:bg-blue-200 dark:hover:bg-blue-900/50 text-blue-700 dark:text-blue-400 rounded-xl font-medium transition-all duration-300 text-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm border border-blue-200 dark:border-blue-800"
-                          >
-                            <ClockIcon className="w-4 h-4" />
-                            Show Previous ({cachedResults.length})
-                          </button>
-                        )}
-
                         <button
                           onClick={() => {
                             if (filterActive) {
                               setFilterActive(false);
                               setFilteredPhotos([]);
-                            } else if (hasCachedResults()) {
-                              handleFindMyPhotos(true);
                             } else {
-                              handleFindMyPhotos(false);
+                              handleFindMyPhotos();
                             }
                           }}
                           disabled={!canFilterByFace || isLoadingProfile}
-                          className={`px-5 py-2 rounded-xl font-medium transition-all duration-300 text-sm flex items-center gap-2 backdrop-blur-sm shadow-lg ${
+                          className={`w-full sm:w-auto px-3 py-2 sm:px-5 rounded-lg sm:rounded-xl font-medium transition-all duration-300 text-xs sm:text-sm flex items-center justify-center gap-2 backdrop-blur-sm shadow-lg ${
                             canFilterByFace && !isLoadingProfile
                               ? filterActive
                                 ? "bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white"
                                 : hasProfile
-                                ? hasCachedResults()
-                                  ? "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white"
-                                  : "bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white"
+                                ? "bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white"
                                 : "bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white"
                               : "bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400 cursor-not-allowed"
                           }`}
                         >
-                          <MagnifyingGlassIcon className="w-4 h-4" />
+                          <MagnifyingGlassIcon className="w-3 h-3 sm:w-4 sm:h-4" />
                           {filterActive
                             ? "Hide Results"
                             : hasProfile
-                            ? hasCachedResults()
-                              ? `Scan Again`
-                              : `Find My Photos`
-                            : `Need Profile`}
+                            ? "Find My Photos"
+                            : "Need Profile"}
                         </button>
                       </div>
                     </div>
@@ -1379,18 +1511,18 @@ const TripDetailView = ({ tripId: propTripId }) => {
 
                 {/* Processing UI */}
                 {isProcessingFaces ? (
-                  <div className="space-y-6">
+                  <div className="space-y-4 sm:space-y-6">
                     {/* Progress Bar */}
-                    <div className="space-y-4">
+                    <div className="space-y-3 sm:space-y-4">
                       <div className="flex justify-between items-center">
-                        <span className="font-semibold text-gray-700 dark:text-gray-300">
+                        <span className="font-semibold text-gray-700 dark:text-gray-300 text-sm sm:text-base">
                           Processing Photos
                         </span>
-                        <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                        <span className="text-xl sm:text-2xl font-bold text-blue-600 dark:text-blue-400">
                           {getProgressPercentage()}%
                         </span>
                       </div>
-                      <div className="relative w-full h-4 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                      <div className="relative w-full h-3 sm:h-4 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                         <div
                           className="absolute top-0 left-0 h-full bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full transition-all duration-500 ease-out"
                           style={{ width: `${getProgressPercentage()}%` }}
@@ -1401,13 +1533,13 @@ const TripDetailView = ({ tripId: propTripId }) => {
                     </div>
 
                     {/* Status Cards - Responsive */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div className="bg-blue-50/80 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-xl p-4 backdrop-blur-sm">
-                        <h4 className="font-semibold text-blue-800 dark:text-blue-400 mb-2 flex items-center gap-2 text-sm">
-                          <FireIcon className="w-4 h-4" />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                      <div className="bg-blue-50/80 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg sm:rounded-xl p-3 sm:p-4 backdrop-blur-sm">
+                        <h4 className="font-semibold text-blue-800 dark:text-blue-400 mb-2 flex items-center gap-2 text-xs sm:text-sm">
+                          <FireIcon className="w-3 h-3 sm:w-4 sm:h-4" />
                           Status
                         </h4>
-                        <p className="text-blue-700 dark:text-blue-300 font-medium text-sm">
+                        <p className="text-blue-700 dark:text-blue-300 font-medium text-xs sm:text-sm">
                           {faceRecognitionProgress.phase || "Processing..."}
                         </p>
                         {faceRecognitionProgress.estimatedTimeRemaining && (
@@ -1421,12 +1553,12 @@ const TripDetailView = ({ tripId: propTripId }) => {
                       </div>
 
                       {faceRecognitionProgress.matches?.length > 0 && (
-                        <div className="bg-green-50/80 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-xl p-4 backdrop-blur-sm">
-                          <h4 className="font-semibold text-green-800 dark:text-green-400 mb-2 flex items-center gap-2 text-sm">
-                            <CheckIcon className="w-4 h-4" />
+                        <div className="bg-green-50/80 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-lg sm:rounded-xl p-3 sm:p-4 backdrop-blur-sm">
+                          <h4 className="font-semibold text-green-800 dark:text-green-400 mb-2 flex items-center gap-2 text-xs sm:text-sm">
+                            <CheckIcon className="w-3 h-3 sm:w-4 sm:h-4" />
                             Matches Found
                           </h4>
-                          <p className="text-green-700 dark:text-green-300 text-2xl font-bold">
+                          <p className="text-green-700 dark:text-green-300 text-xl sm:text-2xl font-bold">
                             {faceRecognitionProgress.matches.length}
                           </p>
                           <p className="text-green-600 dark:text-green-400 text-xs">
@@ -1439,18 +1571,18 @@ const TripDetailView = ({ tripId: propTripId }) => {
                     {/* Cancel Button */}
                     <button
                       onClick={handleCancelFaceRecognition}
-                      className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 shadow-lg backdrop-blur-sm"
+                      className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-semibold py-3 sm:py-4 px-4 sm:px-6 rounded-lg sm:rounded-xl transition-all duration-300 flex items-center justify-center gap-2 shadow-lg backdrop-blur-sm text-sm"
                     >
-                      <XMarkIcon className="w-5 h-5" />
+                      <XMarkIcon className="w-4 h-4 sm:w-5 sm:h-5" />
                       Cancel Processing
                     </button>
                   </div>
                 ) : filterActive && filteredPhotos.length === 0 ? (
-                  <div className="text-center py-16">
-                    <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-cyan-100 dark:from-blue-900/30 dark:to-cyan-900/30 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
-                      <MagnifyingGlassIcon className="w-10 h-10 text-blue-500 dark:text-blue-400" />
+                  <div className="text-center py-12 sm:py-16">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-blue-100 to-cyan-100 dark:from-blue-900/30 dark:to-cyan-900/30 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 shadow-lg">
+                      <MagnifyingGlassIcon className="w-8 h-8 sm:w-10 sm:h-10 text-blue-500 dark:text-blue-400" />
                     </div>
-                    <h3 className="text-xl font-bold text-gray-700 dark:text-gray-300 mb-3">
+                    <h3 className="text-lg sm:text-xl font-bold text-gray-700 dark:text-gray-300 mb-2 sm:mb-3">
                       No matches found
                     </h3>
                     <p className="text-gray-500 dark:text-gray-400 text-sm max-w-md mx-auto">
@@ -1459,58 +1591,30 @@ const TripDetailView = ({ tripId: propTripId }) => {
                     </p>
                   </div>
                 ) : filterActive ? (
-                  <div className="space-y-6">
-                    {/* Cache Information Banner */}
-                    {hasCachedResults() && cachedResults === filteredPhotos && (
-                      <div className="bg-blue-50/80 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-xl p-4 backdrop-blur-sm">
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                          <div className="flex items-center gap-3">
-                            <ClockIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                            <div>
-                              <p className="font-semibold text-blue-800 dark:text-blue-400 text-sm">
-                                Showing previous results
-                              </p>
-                              <p className="text-blue-600 dark:text-blue-400 text-xs">
-                                Scanned on{" "}
-                                {new Date(
-                                  lastScanTimestamp
-                                ).toLocaleDateString()}
-                              </p>
-                            </div>
-                          </div>
-                          <button
-                            onClick={() => handleFindMyPhotos(true)}
-                            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-xs font-medium transition-colors backdrop-blur-sm"
-                          >
-                            Scan Again
-                          </button>
-                        </div>
-                      </div>
-                    )}
-
+                  <div className="space-y-4 sm:space-y-6">
                     {/* Photos Grid - Responsive */}
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 sm:gap-4">
                       {filteredPhotos.map((photo) => (
                         <div
                           key={`filtered-${photo.id}`}
                           className="group cursor-pointer"
                           onClick={() => setSelectedPhoto(photo)}
                         >
-                          <div className="relative overflow-hidden rounded-xl shadow-lg transform group-hover:scale-105 transition-all duration-300 bg-gradient-to-br from-white to-gray-50 dark:from-gray-700 dark:to-gray-800 p-2">
+                          <div className="relative overflow-hidden rounded-lg sm:rounded-xl shadow-lg transform group-hover:scale-105 transition-all duration-300 bg-gradient-to-br from-white to-gray-50 dark:from-gray-700 dark:to-gray-800 p-1 sm:p-2">
                             <img
                               src={photo.downloadURL.replace(
                                 "groupify-77202.appspot.com",
                                 "groupify-77202.firebasestorage.app"
                               )}
                               alt={photo.fileName}
-                              className="w-full h-28 sm:h-32 object-cover rounded-lg"
+                              className="w-full h-16 sm:h-20 md:h-24 lg:h-28 object-cover rounded-md sm:rounded-lg"
                             />
 
                             {/* Match confidence badge */}
                             {photo.faceMatch && (
-                              <div className="absolute top-3 right-3">
+                              <div className="absolute top-1.5 right-1.5 sm:top-3 sm:right-3">
                                 <div
-                                  className={`px-2 py-1 rounded-full text-xs font-bold text-white backdrop-blur-sm ${
+                                  className={`px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-full text-xs font-bold text-white backdrop-blur-sm ${
                                     photo.faceMatch.matchType === "strong"
                                       ? "bg-green-500/90"
                                       : "bg-blue-500/90"
@@ -1525,8 +1629,8 @@ const TripDetailView = ({ tripId: propTripId }) => {
                             )}
 
                             {/* Hover overlay */}
-                            <div className="absolute inset-2 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 rounded-lg flex items-end">
-                              <div className="p-2 w-full">
+                            <div className="absolute inset-1 sm:inset-2 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 rounded-md sm:rounded-lg flex items-end">
+                              <div className="p-1.5 sm:p-2 w-full">
                                 <p className="text-white text-xs font-medium">
                                   {new Date(
                                     photo.uploadedAt
@@ -1540,16 +1644,16 @@ const TripDetailView = ({ tripId: propTripId }) => {
                     </div>
                   </div>
                 ) : (
-                  <div className="text-center py-16">
-                    <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-cyan-100 dark:from-blue-900/30 dark:to-cyan-900/30 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
-                      <MagnifyingGlassIcon className="w-10 h-10 text-blue-500 dark:text-blue-400" />
+                  <div className="text-center py-12 sm:py-16">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-blue-100 to-cyan-100 dark:from-blue-900/30 dark:to-cyan-900/30 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 shadow-lg">
+                      <MagnifyingGlassIcon className="w-8 h-8 sm:w-10 sm:h-10 text-blue-500 dark:text-blue-400" />
                     </div>
-                    <h3 className="text-xl font-bold text-gray-700 dark:text-gray-300 mb-4">
+                    <h3 className="text-lg sm:text-xl font-bold text-gray-700 dark:text-gray-300 mb-3 sm:mb-4">
                       {hasProfile
                         ? "Ready to find your photos!"
                         : "Setup your face profile"}
                     </h3>
-                    <p className="text-gray-500 dark:text-gray-400 text-sm mb-8 max-w-md mx-auto">
+                    <p className="text-gray-500 dark:text-gray-400 text-sm mb-6 sm:mb-8 max-w-md mx-auto">
                       {hasProfile
                         ? 'Click "Find My Photos" to automatically identify photos containing you using AI face recognition.'
                         : "You need to create a face profile in your Dashboard before you can find photos with yourself."}
@@ -1559,9 +1663,9 @@ const TripDetailView = ({ tripId: propTripId }) => {
                         onClick={() =>
                           navigate("/dashboard?section=faceprofile")
                         }
-                        className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white px-8 py-4 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 shadow-lg backdrop-blur-sm flex items-center gap-3 mx-auto"
+                        className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white px-6 py-3 sm:px-8 sm:py-4 rounded-lg sm:rounded-xl font-medium transition-all duration-300 transform hover:scale-105 shadow-lg backdrop-blur-sm flex items-center gap-2 sm:gap-3 mx-auto text-sm"
                       >
-                        <SparklesIcon className="w-5 h-5" />
+                        <SparklesIcon className="w-4 h-4 sm:w-5 sm:h-5" />
                         Setup Face Profile
                       </button>
                     )}
@@ -1572,7 +1676,122 @@ const TripDetailView = ({ tripId: propTripId }) => {
           </div>
 
           {/* Sidebar - Enhanced with glassmorphism */}
-          <div className="xl:col-span-1 space-y-6">
+          <div
+            className={`xl:col-span-1 space-y-6 ${
+              mobileActiveTab === "members" ? "block" : "hidden xl:block"
+            }`}
+          >
+            {/* Trip Members Card */}
+            <div className="relative group">
+              <div className="absolute -inset-1 bg-gradient-to-r from-orange-500 to-red-500 rounded-2xl blur opacity-20 group-hover:opacity-30 transition duration-300"></div>
+              <div className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-xl shadow-lg p-3 sm:p-6 border border-white/20 dark:border-gray-700/50">
+                <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                  <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg sm:rounded-xl flex items-center justify-center shadow-lg">
+                    <UserGroupIcon className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-base sm:text-lg font-bold text-gray-800 dark:text-white flex items-center gap-2">
+                      Trip Members
+                      <span className="text-xs font-semibold text-orange-600 dark:text-orange-400 bg-orange-100 dark:bg-orange-900/30 px-2 py-1 rounded-full border border-orange-200 dark:border-orange-800">
+                        {tripMembers.length}
+                      </span>
+                    </h2>
+                    <p className="text-gray-600 dark:text-gray-400 text-xs">
+                      View member profiles
+                    </p>
+                  </div>
+                </div>
+
+                {tripMembers.length === 0 ? (
+                  <div className="text-center py-6 sm:py-8">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-3">
+                      <UserGroupIcon className="w-5 h-5 sm:w-6 sm:h-6 text-gray-400 dark:text-gray-500" />
+                    </div>
+                    <p className="text-gray-500 dark:text-gray-400 text-sm">
+                      No members found
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-2 sm:space-y-3 max-h-60 sm:max-h-80 overflow-y-auto scrollbar-thin scrollbar-thumb-orange-300 dark:scrollbar-thumb-orange-700 scrollbar-track-transparent">
+                    {[...tripMembers]
+                      .sort((a, b) => {
+                        if (a.uid === currentUser.uid) return -1;
+                        if (b.uid === currentUser.uid) return 1;
+                        if (a.uid === trip.createdBy) return -1;
+                        if (b.uid === trip.createdBy) return 1;
+                        return (a.displayName || a.email || "").localeCompare(
+                          b.displayName || b.email || ""
+                        );
+                      })
+                      .map((member) => (
+                        <div
+                          key={member.uid}
+                          className="group/member flex items-center justify-between p-2 sm:p-3 rounded-lg sm:rounded-xl bg-gradient-to-r from-gray-50/50 to-orange-50/50 dark:from-gray-800/50 dark:to-orange-900/20 hover:from-orange-50 hover:to-orange-100 dark:hover:from-orange-900/30 dark:hover:to-orange-900/40 transition-all duration-300 cursor-pointer border border-gray-200/30 dark:border-gray-700/30 backdrop-blur-sm"
+                          onClick={async () => {
+                            const isFriendNow = friends.includes(member.uid);
+                            const status = await checkFriendStatus(
+                              currentUser.uid,
+                              member.uid
+                            );
+                            const isPendingNow = status === "pending";
+                            setSelectedUser({
+                              ...member,
+                              __isFriend: isFriendNow,
+                              __isPending: isPendingNow,
+                            });
+                          }}
+                        >
+                          <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+                            <div className="relative flex-shrink-0">
+                              <img
+                                src={
+                                  member.photoURL ||
+                                  "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg"
+                                }
+                                alt="Avatar"
+                                className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover border-2 border-white dark:border-gray-600 shadow-md"
+                              />
+                              {member.uid === currentUser.uid && (
+                                <div className="absolute -bottom-0.5 -right-0.5 sm:-bottom-1 sm:-right-1 w-3 h-3 sm:w-4 sm:h-4 bg-green-500 border-2 border-white dark:border-gray-800 rounded-full"></div>
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-gray-800 dark:text-white truncate text-xs sm:text-sm">
+                                {member.displayName ||
+                                  member.email ||
+                                  member.uid}
+                                {member.uid === currentUser.uid && (
+                                  <span className="text-green-600 dark:text-green-400 ml-1">
+                                    (You)
+                                  </span>
+                                )}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Role Badge */}
+                          <div className="flex-shrink-0">
+                            {member.uid === trip.createdBy ? (
+                              <span className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-semibold px-2 py-1 rounded-full shadow-sm">
+                                Creator
+                              </span>
+                            ) : trip.admins?.includes(member.uid) ? (
+                              <span className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white text-xs font-semibold px-2 py-1 rounded-full shadow-sm">
+                                Admin
+                              </span>
+                            ) : (
+                              <span className="bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 text-xs font-semibold px-2 py-1 rounded-full">
+                                Member
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
             {/* Invite People Card */}
             <div className="relative group">
               <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl blur opacity-20 group-hover:opacity-30 transition duration-300"></div>
@@ -1597,117 +1816,6 @@ const TripDetailView = ({ tripId: propTripId }) => {
                     excludedUserIds={trip.members}
                   />
                 </div>
-              </div>
-            </div>
-
-            {/* Trip Members Card */}
-            <div className="relative group">
-              <div className="absolute -inset-1 bg-gradient-to-r from-orange-500 to-red-500 rounded-2xl blur opacity-20 group-hover:opacity-30 transition duration-300"></div>
-              <div className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-xl shadow-lg p-6 border border-white/20 dark:border-gray-700/50">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl flex items-center justify-center shadow-lg">
-                    <UserGroupIcon className="w-4 h-4 text-white" />
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-bold text-gray-800 dark:text-white flex items-center gap-2">
-                      Trip Members
-                      <span className="text-xs font-semibold text-orange-600 dark:text-orange-400 bg-orange-100 dark:bg-orange-900/30 px-2 py-1 rounded-full border border-orange-200 dark:border-orange-800">
-                        {tripMembers.length}
-                      </span>
-                    </h2>
-                    <p className="text-gray-600 dark:text-gray-400 text-xs">
-                      View member profiles
-                    </p>
-                  </div>
-                </div>
-
-                {tripMembers.length === 0 ? (
-                  <div className="text-center py-8">
-                    <div className="w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-3">
-                      <UserGroupIcon className="w-6 h-6 text-gray-400 dark:text-gray-500" />
-                    </div>
-                    <p className="text-gray-500 dark:text-gray-400 text-sm">
-                      No members found
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-3 max-h-80 overflow-y-auto scrollbar-thin scrollbar-thumb-orange-300 dark:scrollbar-thumb-orange-700 scrollbar-track-transparent">
-                    {[...tripMembers]
-                      .sort((a, b) => {
-                        if (a.uid === currentUser.uid) return -1;
-                        if (b.uid === currentUser.uid) return 1;
-                        if (a.uid === trip.createdBy) return -1;
-                        if (b.uid === trip.createdBy) return 1;
-                        return (a.displayName || a.email || "").localeCompare(
-                          b.displayName || b.email || ""
-                        );
-                      })
-                      .map((member) => (
-                        <div
-                          key={member.uid}
-                          className="group/member flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-gray-50/50 to-orange-50/50 dark:from-gray-800/50 dark:to-orange-900/20 hover:from-orange-50 hover:to-orange-100 dark:hover:from-orange-900/30 dark:hover:to-orange-900/40 transition-all duration-300 cursor-pointer border border-gray-200/30 dark:border-gray-700/30 backdrop-blur-sm"
-                          onClick={async () => {
-                            const isFriendNow = friends.includes(member.uid);
-                            const status = await checkFriendStatus(
-                              currentUser.uid,
-                              member.uid
-                            );
-                            const isPendingNow = status === "pending";
-                            setSelectedUser({
-                              ...member,
-                              __isFriend: isFriendNow,
-                              __isPending: isPendingNow,
-                            });
-                          }}
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className="relative">
-                              <img
-                                src={
-                                  member.photoURL ||
-                                  "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg"
-                                }
-                                alt="Avatar"
-                                className="w-10 h-10 rounded-full object-cover border-2 border-white dark:border-gray-600 shadow-md"
-                              />
-                              {member.uid === currentUser.uid && (
-                                <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white dark:border-gray-800 rounded-full"></div>
-                              )}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="font-medium text-gray-800 dark:text-white truncate text-sm">
-                                {member.displayName ||
-                                  member.email ||
-                                  member.uid}
-                                {member.uid === currentUser.uid && (
-                                  <span className="text-green-600 dark:text-green-400 ml-1">
-                                    (You)
-                                  </span>
-                                )}
-                              </p>
-                            </div>
-                          </div>
-
-                          {/* Role Badge */}
-                          <div className="flex-shrink-0">
-                            {member.uid === trip.createdBy ? (
-                              <span className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-semibold px-3 py-1 rounded-full shadow-sm">
-                                Creator
-                              </span>
-                            ) : trip.admins?.includes(member.uid) ? (
-                              <span className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white text-xs font-semibold px-3 py-1 rounded-full shadow-sm">
-                                Admin
-                              </span>
-                            ) : (
-                              <span className="bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 text-xs font-semibold px-3 py-1 rounded-full">
-                                Member
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                  </div>
-                )}
               </div>
             </div>
           </div>
@@ -1737,39 +1845,146 @@ const TripDetailView = ({ tripId: propTripId }) => {
           />
         )}
 
-        {/* Photo Modal - Enhanced for mobile */}
+        {/* Photo Modal - Enhanced with Navigation Arrows and Fixed Sizing */}
         {selectedPhoto && (
           <div
-            className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            className="fixed bg-black/95 backdrop-blur-lg flex items-center justify-center z-[9999]"
+            style={{
+              position: "fixed",
+              top: "-10px",
+              left: "-10px",
+              right: "-10px",
+              bottom: "-10px",
+              width: "calc(100vw + 20px)",
+              height: "calc(100vh + 20px)",
+              margin: 0,
+              padding: 0,
+            }}
             onClick={() => setSelectedPhoto(null)}
           >
-            <div className="relative max-w-6xl max-h-[95vh] rounded-2xl overflow-hidden shadow-2xl">
-              <img
-                src={selectedPhoto.downloadURL.replace(
-                  "groupify-77202.appspot.com",
-                  "groupify-77202.firebasestorage.app"
-                )}
-                alt="Full view"
-                className="max-w-full max-h-full object-contain"
-              />
-              <button
-                onClick={() => setSelectedPhoto(null)}
-                className="absolute top-4 right-4 w-12 h-12 bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-black/70 transition-colors shadow-lg"
-              >
-                <XMarkIcon className="w-6 h-6" />
-              </button>
+            {/* Fixed container with consistent dimensions */}
+            <div className="relative w-full h-full max-w-7xl max-h-screen flex items-center justify-center p-4">
+              {/* Image container with fixed aspect ratio */}
+              <div className="relative w-full h-full max-w-6xl max-h-[90vh] bg-black rounded-2xl overflow-hidden shadow-2xl flex items-center justify-center">
+                <img
+                  src={selectedPhoto.downloadURL.replace(
+                    "groupify-77202.appspot.com",
+                    "groupify-77202.firebasestorage.app"
+                  )}
+                  alt="Full view"
+                  className="max-w-full max-h-full object-contain"
+                  style={{
+                    maxWidth: "100%",
+                    maxHeight: "100%",
+                    width: "auto",
+                    height: "auto",
+                  }}
+                />
 
-              {/* Photo info overlay */}
-              <div className="absolute bottom-4 left-4 right-4 bg-black/50 backdrop-blur-sm rounded-xl p-4 text-white">
-                <p className="font-medium">{selectedPhoto.fileName}</p>
-                <p className="text-sm text-white/80">
-                  {new Date(selectedPhoto.uploadedAt).toLocaleDateString()}
-                </p>
+                {/* Close button */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedPhoto(null);
+                  }}
+                  className="absolute top-6 right-6 w-12 h-12 bg-black/70 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-black/90 transition-colors shadow-xl z-20"
+                >
+                  <XMarkIcon className="w-6 h-6" />
+                </button>
+
+                {/* Left Arrow - Fixed position */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const currentIndex = photos.findIndex(
+                      (p) => p.id === selectedPhoto.id
+                    );
+                    if (currentIndex > 0) {
+                      setSelectedPhoto(photos[currentIndex - 1]);
+                    } else {
+                      setSelectedPhoto(photos[photos.length - 1]);
+                    }
+                  }}
+                  className="absolute left-6 top-1/2 transform -translate-y-1/2 w-14 h-14 bg-black/70 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-black/90 transition-all duration-300 hover:scale-110 shadow-xl z-20"
+                >
+                  <svg
+                    className="w-7 h-7"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    strokeWidth={2.5}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M15 19l-7-7 7-7"
+                    />
+                  </svg>
+                </button>
+
+                {/* Right Arrow - Fixed position */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const currentIndex = photos.findIndex(
+                      (p) => p.id === selectedPhoto.id
+                    );
+                    if (currentIndex < photos.length - 1) {
+                      setSelectedPhoto(photos[currentIndex + 1]);
+                    } else {
+                      setSelectedPhoto(photos[0]);
+                    }
+                  }}
+                  className="absolute right-6 top-1/2 transform -translate-y-1/2 w-14 h-14 bg-black/70 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-black/90 transition-all duration-300 hover:scale-110 shadow-xl z-20"
+                >
+                  <svg
+                    className="w-7 h-7"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    strokeWidth={2.5}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M9 5l7 7-7 7"
+                    />
+                  </svg>
+                </button>
+
+                {/* Photo counter - Fixed position */}
+                <div className="absolute top-6 left-6 bg-black/70 backdrop-blur-sm rounded-full px-4 py-2 text-white text-sm font-medium shadow-xl z-20">
+                  {photos.findIndex((p) => p.id === selectedPhoto.id) + 1} /{" "}
+                  {photos.length}
+                </div>
+
+                {/* Photo info overlay - Fixed position */}
+                <div className="absolute bottom-6 left-6 right-6 bg-black/70 backdrop-blur-sm rounded-xl p-4 text-white shadow-xl">
+                  <p className="font-medium text-lg">
+                    {selectedPhoto.fileName}
+                  </p>
+                  <p className="text-sm text-white/80 mt-1">
+                    {new Date(selectedPhoto.uploadedAt).toLocaleDateString()}
+                  </p>
+                  {selectedPhoto.faceMatch && (
+                    <div className="mt-3">
+                      <span
+                        className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                          selectedPhoto.faceMatch.matchType === "strong"
+                            ? "bg-green-500/20 text-green-300 border border-green-500/30"
+                            : "bg-blue-500/20 text-blue-300 border border-blue-500/30"
+                        }`}
+                      >
+                        Face Match:{" "}
+                        {(selectedPhoto.faceMatch.confidence * 100).toFixed(0)}%
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
         )}
-
         {showDeleteConfirm && (
           <div
             className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[60] p-4"
@@ -1829,124 +2044,188 @@ const TripDetailView = ({ tripId: propTripId }) => {
           </div>
         )}
 
-        {/* Edit Trip Modal */}
-        <EditTripModal
-          isOpen={showEditModal}
-          onClose={() => setShowEditModal(false)}
-          trip={trip}
-          onTripUpdated={(updatedTrip) => {
-            setTrip(updatedTrip);
-            setShowEditModal(false);
-          }}
-        />
-
-        {/* All Photos Modal - Enhanced for mobile */}
+        {/* Modal Header Section Only - Until Photos Start */}
         {showAllPhotosModal && (
           <div
-            className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-6"
             onClick={() => setShowAllPhotosModal(false)}
           >
             <div
-              className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg rounded-2xl shadow-2xl max-w-7xl max-h-[90vh] overflow-hidden w-full border border-white/20 dark:border-gray-700/50"
+              className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-2xl shadow-2xl max-w-5xl max-h-[75vh] overflow-hidden w-full border border-white/20 dark:border-gray-700/50"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="p-6">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg">
-                      <PhotoIcon className="w-4 h-4 text-white" />
+              {/* Compact Header */}
+              <div className="relative bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-rose-500/10 dark:from-purple-900/30 dark:via-pink-900/30 dark:to-rose-900/30 border-b border-purple-200/30 dark:border-purple-800/30 p-4 sm:p-5">
+                {/* Close Button - Just X, no circle */}
+                <button
+                  onClick={() => setShowAllPhotosModal(false)}
+                  className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center transition-all duration-300 hover:scale-110 z-20 text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400"
+                >
+                  <XMarkIcon className="w-6 h-6 stroke-2" />
+                </button>
+
+                <div className="pr-12">
+                  {/* Title and Info - Reduced margin when not selecting */}
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg">
+                      <PhotoIcon className="w-5 h-5 text-white" />
                     </div>
-                    <h3 className="text-2xl font-bold text-gray-800 dark:text-white flex items-center gap-3">
-                      All Trip Photos
-                      <span className="text-sm font-semibold text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-900/30 px-3 py-1 rounded-full border border-purple-200 dark:border-purple-800">
-                        {photos.length}
-                      </span>
-                    </h3>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-3">
-                    {selectMode && selectedPhotos.length > 0 && (
-                      <button
-                        onClick={handleDeleteSelectedPhotos}
-                        className="px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-xl font-medium transition-all duration-300 text-sm flex items-center gap-2 shadow-lg"
-                      >
-                        <TrashIcon className="w-4 h-4" />
-                        Delete {selectedPhotos.length}
-                      </button>
-                    )}
+                    <div className="flex-1">
+                      <h3 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-white">
+                        Trip Gallery
+                      </h3>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-sm font-semibold text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-900/30 px-2 py-1 rounded-full">
+                          {photos.length} Photos
+                        </span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                          {Math.round(
+                            (photos.length / MAX_PHOTOS_PER_TRIP) * 100
+                          )}
+                          % used
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Select/Cancel Button - Right side of header */}
                     {isAdmin && (
                       <button
                         onClick={() => {
                           setSelectMode(!selectMode);
                           setSelectedPhotos([]);
                         }}
-                        className={`px-4 py-2 rounded-xl font-medium transition-all duration-300 text-sm shadow-lg ${
+                        className={`px-3 py-2 rounded-lg font-medium transition-all duration-300 text-sm shadow-lg transform hover:scale-105 ${
                           selectMode
-                            ? "bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white"
-                            : "bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white"
+                            ? "bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white"
+                            : "bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white"
                         }`}
                       >
-                        {selectMode ? "Cancel" : "Select Photos"}
+                        {selectMode ? "Cancel" : "Select"}
                       </button>
                     )}
-                    <button
-                      onClick={() => setShowAllPhotosModal(false)}
-                      className="px-4 py-2 bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white rounded-xl font-medium transition-all duration-300 text-sm shadow-lg"
-                    >
-                      Close
-                    </button>
                   </div>
-                </div>
 
-                <div className="max-h-[60vh] overflow-y-auto scrollbar-thin scrollbar-thumb-purple-300 dark:scrollbar-thumb-purple-700 scrollbar-track-transparent">
-                  <div
-                    key={`photo-grid-${photos.length}-${selectedPhotos.length}`}
-                    className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-3"
-                  >
-                    {photos.map((photo) => {
-                      const isSelected = selectedPhotos.includes(photo.id);
-                      return (
-                        <div
-                          key={`modal-${photo.id}`}
-                          className={`relative cursor-pointer rounded-xl overflow-hidden shadow-lg transform transition-all duration-300 hover:scale-105 bg-gradient-to-br from-white to-gray-50 dark:from-gray-700 dark:to-gray-800 p-1 ${
-                            selectMode && !isSelected ? "opacity-60" : ""
-                          }`}
-                          onClick={() => {
-                            if (selectMode) {
-                              setSelectedPhotos((prev) =>
-                                prev.includes(photo.id)
-                                  ? prev.filter((id) => id !== photo.id)
-                                  : [...prev, photo.id]
-                              );
-                            } else {
-                              setSelectedPhoto(photo);
-                              setShowAllPhotosModal(false);
-                            }
-                          }}
-                        >
-                          <img
-                            src={photo.downloadURL.replace(
-                              "groupify-77202.appspot.com",
-                              "groupify-77202.firebasestorage.app"
-                            )}
-                            alt={photo.fileName}
-                            className="w-full h-24 sm:h-28 object-cover rounded-lg"
-                          />
-                          {selectMode && (
-                            <div className="absolute top-2 right-2 w-6 h-6 border-2 border-white rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-lg">
-                              {isSelected && (
-                                <CheckIcon className="w-4 h-4 text-green-600" />
-                              )}
+                  {/* Selection Tools - Only shows when selecting */}
+                  {selectMode && (
+                    <div className="flex items-center justify-center gap-4 mt-4">
+                      {/* Selection Counter - Center */}
+                      {selectedPhotos.length > 0 && (
+                        <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/30 dark:to-emerald-900/30 px-4 py-2 rounded-lg border border-green-200 dark:border-green-800 shadow-sm">
+                          <div className="flex items-center gap-2">
+                            <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
+                              <CheckIcon className="w-3 h-3 text-white" />
                             </div>
-                          )}
-                          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2 rounded-b-lg">
-                            <p className="text-white text-xs font-medium">
-                              {new Date(photo.uploadedAt).toLocaleDateString()}
-                            </p>
+                            <span className="text-sm font-bold text-green-700 dark:text-green-300">
+                              {selectedPhotos.length} selected
+                            </span>
                           </div>
                         </div>
-                      );
-                    })}
-                  </div>
+                      )}
+
+                      {/* Delete Button - Only icon */}
+                      {selectedPhotos.length > 0 && (
+                        <button
+                          onClick={handleDeleteSelectedPhotos}
+                          className="w-10 h-10 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg transition-all duration-300 flex items-center justify-center shadow-lg transform hover:scale-105 hover:shadow-xl"
+                        >
+                          <TrashIcon className="w-5 h-5" />
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+              {/* Main Photo Grid - Focused on Photos Only */}
+              <div className="p-4 sm:p-5">
+                <div className="max-h-[50vh] overflow-y-auto scrollbar-thin scrollbar-thumb-purple-300 dark:scrollbar-thumb-purple-700 scrollbar-track-transparent">
+                  {photos.length === 0 ? (
+                    /* Empty State */
+                    <div className="text-center py-12">
+                      <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                        <PhotoIcon className="w-8 h-8 text-purple-500 dark:text-purple-400" />
+                      </div>
+                      <h3 className="text-lg font-bold text-gray-700 dark:text-gray-300 mb-2">
+                        No photos yet
+                      </h3>
+                      <p className="text-gray-500 dark:text-gray-400 text-sm">
+                        Upload photos to start your gallery
+                      </p>
+                    </div>
+                  ) : (
+                    /* Compact Photo Grid */
+                    <div className="grid grid-cols-3 xs:grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-2 sm:gap-3">
+                      {photos.map((photo, index) => {
+                        const isSelected = selectedPhotos.includes(photo.id);
+                        return (
+                          <div
+                            key={`modal-${photo.id}`}
+                            className={`relative cursor-pointer rounded-lg overflow-hidden shadow-lg transform transition-all duration-300 hover:scale-105 bg-gradient-to-br from-white to-gray-50 dark:from-gray-700 dark:to-gray-800 p-1 group ${
+                              selectMode && !isSelected
+                                ? "opacity-60 hover:opacity-80"
+                                : ""
+                            } ${
+                              isSelected
+                                ? "ring-2 ring-purple-500 ring-offset-1 scale-105"
+                                : ""
+                            }`}
+                            onClick={() => {
+                              if (selectMode) {
+                                setSelectedPhotos((prev) =>
+                                  prev.includes(photo.id)
+                                    ? prev.filter((id) => id !== photo.id)
+                                    : [...prev, photo.id]
+                                );
+                              } else {
+                                setSelectedPhoto(photo);
+                                setShowAllPhotosModal(false);
+                              }
+                            }}
+                          >
+                            <img
+                              src={photo.downloadURL.replace(
+                                "groupify-77202.appspot.com",
+                                "groupify-77202.firebasestorage.app"
+                              )}
+                              alt={photo.fileName}
+                              className="w-full h-16 sm:h-20 md:h-24 object-cover rounded-md"
+                              loading="lazy"
+                            />
+
+                            {/* Selection Indicator */}
+                            {selectMode && (
+                              <div className="absolute top-1 right-1 w-5 h-5 border-2 border-white rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-lg">
+                                {isSelected && (
+                                  <CheckIcon className="w-3 h-3 text-green-600" />
+                                )}
+                              </div>
+                            )}
+
+                            {/* Photo Number Badge */}
+                            {!selectMode && (
+                              <div className="absolute top-1 left-1 w-4 h-4 sm:w-5 sm:h-5 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-full flex items-center justify-center text-xs font-bold text-purple-600 dark:text-purple-400 shadow-lg">
+                                {index + 1}
+                              </div>
+                            )}
+
+                            {/* Hover Overlay */}
+                            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-1 rounded-b-md opacity-0 group-hover:opacity-100 transition-all duration-300">
+                              <div className="flex items-center justify-between">
+                                <span className="text-white text-xs">
+                                  {new Date(
+                                    photo.uploadedAt
+                                  ).toLocaleDateString()}
+                                </span>
+                                <EyeIcon className="w-3 h-3 text-white/80" />
+                              </div>
+                            </div>
+
+                            {/* Hover Ring */}
+                            <div className="absolute inset-0 rounded-lg border-2 border-transparent group-hover:border-purple-400/50 transition-all duration-300"></div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -1974,6 +2253,35 @@ const TripDetailView = ({ tripId: propTripId }) => {
           </div>
         )}
       </div>
+      {/* Edit Trip Modal */}
+      <EditTripModal
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        trip={trip}
+        onTripUpdated={(updatedTrip) => {
+          setTrip(updatedTrip);
+          setShowEditModal(false);
+          // Modal already shows success message, no duplicate toast needed
+        }}
+        onTripDeleted={(deletedTripId) => {
+          setShowEditModal(false);
+
+          // Call parent callback if available (for dashboard integration)
+          if (onTripDeleted) {
+            onTripDeleted(deletedTripId);
+          }
+
+          // Navigate to dashboard as backup/fallback
+          setTimeout(() => {
+            navigate("/dashboard", {
+              state: {
+                refreshTrips: true,
+                deletedTripId: deletedTripId,
+              },
+            });
+          }, 100);
+        }}
+      />
     </div>
   );
 };

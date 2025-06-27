@@ -1,23 +1,109 @@
-import { collection, addDoc, doc, getDoc, updateDoc, deleteDoc, 
-  query, where, getDocs, arrayUnion, serverTimestamp } from 'firebase/firestore';
-import { db } from './config';
+import { 
+  collection, 
+  addDoc, 
+  doc, 
+  getDoc, 
+  setDoc,        
+  updateDoc, 
+  deleteDoc, 
+  query, 
+  where, 
+  getDocs, 
+  arrayUnion, 
+  serverTimestamp 
+} from 'firebase/firestore';
+import { ref, listAll, deleteObject } from 'firebase/storage';
+import { db, storage } from './config';
+import { 
+  addUserToTrip, 
+  removeUserFromTrip, 
+  removeTripFromAllUsers,
+  getUserTripsWithValidation 
+} from './users';
+
+
+// Constants
+const MAX_TRIPS_PER_USER = 5;
+const MAX_PHOTOS_PER_TRIP = 30;
+
+// Function to check user's trip count
+export const getUserTripCount = async (userId) => {
+  try {
+    const q = query(
+      collection(db, "trips"),
+      where("createdBy", "==", userId)
+    );
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.size;
+  } catch (error) {
+    console.error("Error getting user trip count:", error);
+    throw error;
+  }
+};
+
+// Function to check if user can create more trips
+export const canUserCreateTrip = async (userId) => {
+  try {
+    const tripCount = await getUserTripCount(userId);
+    return tripCount < MAX_TRIPS_PER_USER;
+  } catch (error) {
+    console.error("Error checking trip creation permission:", error);
+    return false;
+  }
+};
+
+// Function to get trip photo count
+export const getTripPhotoCount = async (tripId) => {
+  try {
+    const q = query(
+      collection(db, "tripPhotos"),
+      where("tripId", "==", tripId)
+    );
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.size;
+  } catch (error) {
+    console.error("Error getting trip photo count:", error);
+    return 0;
+  }
+};
+
+// Function to check if trip can accept more photos
+export const canTripAcceptMorePhotos = async (tripId, additionalPhotos = 1) => {
+  try {
+    const currentPhotoCount = await getTripPhotoCount(tripId);
+    return (currentPhotoCount + additionalPhotos) <= MAX_PHOTOS_PER_TRIP;
+  } catch (error) {
+    console.error("Error checking photo limit:", error);
+    return false;
+  }
+};
 
 // Create a new trip
 export const createTrip = async (tripData) => {
   try {
-    const tripRef = await addDoc(collection(db, "trips"), {
-      ...tripData,
-      admins: tripData.admins || [tripData.createdBy], 
-      createdAt: serverTimestamp(),
-    });
-
+    // Create the trip document
+    const tripRef = doc(collection(db, "trips"));
+    const tripId = tripRef.id;
     
-    return {
-      id: tripRef.id,
-      ...tripData
+    const newTrip = {
+      ...tripData,
+      id: tripId,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      photoCount: 0,
+      members: [tripData.createdBy],
+      admins: [tripData.createdBy],
     };
+    
+    await setDoc(tripRef, newTrip);
+    
+    // Add trip to user's trips array
+    await addUserToTrip(tripData.createdBy, tripId);
+    
+    console.log("✅ Trip created and added to user:", tripId);
+    return newTrip;
   } catch (error) {
-    console.error('Error creating trip:', error);
+    console.error("❌ Error creating trip:", error);
     throw error;
   }
 };
@@ -59,38 +145,94 @@ export const updateTrip = async (tripId, updates) => {
   }
 };
 
-// Delete a trip
+
+
+// Enhanced delete trip function with Storage cleanup
 export const deleteTrip = async (tripId) => {
+  console.log("🗑️ Starting deletion process for trip:", tripId);
+  
   try {
-    await deleteDoc(doc(db, 'trips', tripId));
-    return { success: true };
+    // 1. Remove trip from all users' trips arrays FIRST
+    await removeTripFromAllUsers(tripId);
+    
+    // 2. Delete trip photos from Firestore
+    const tripPhotosQuery = query(
+      collection(db, "tripPhotos"),
+      where("tripId", "==", tripId)
+    );
+    const tripPhotosSnapshot = await getDocs(tripPhotosQuery);
+    
+    console.log(`📸 Found ${tripPhotosSnapshot.size} photos to delete from Firestore`);
+    
+    const deletePhotoPromises = tripPhotosSnapshot.docs.map((photoDoc) => 
+      deleteDoc(photoDoc.ref)
+    );
+    
+    await Promise.all(deletePhotoPromises);
+    
+    // 3. Delete photos from Firebase Storage (if any exist)
+    try {
+      const tripPhotosRef = ref(storage, `trip_photos/${tripId}/`);
+      const photosList = await listAll(tripPhotosRef);
+      
+      if (photosList.items.length > 0) {
+        console.log(`🗑️ Deleting ${photosList.items.length} photos from Storage`);
+        
+        const deleteStoragePromises = photosList.items.map((photoRef) =>
+          deleteObject(photoRef)
+        );
+        
+        await Promise.all(deleteStoragePromises);
+        console.log("✅ All trip photos deleted from Storage");
+      }
+    } catch (storageError) {
+      console.warn("⚠️ Error deleting trip photos from Storage:", storageError);
+      // Don't fail the entire deletion if storage cleanup fails
+    }
+    
+    // 4. Delete trip invitations
+    const invitesQuery = query(
+      collection(db, "tripInvites"),
+      where("tripId", "==", tripId)
+    );
+    const invitesSnapshot = await getDocs(invitesQuery);
+    
+    console.log(`📬 Found ${invitesSnapshot.size} invitations to delete`);
+    
+    const deleteInvitePromises = invitesSnapshot.docs.map((inviteDoc) =>
+      deleteDoc(inviteDoc.ref)
+    );
+    
+    await Promise.all(deleteInvitePromises);
+    
+    // 5. Delete the main trip document
+    const tripRef = doc(db, "trips", tripId);
+    await deleteDoc(tripRef);
+    
+    console.log("✅ Successfully deleted trip", tripId, "and all associated data");
+    
   } catch (error) {
-    console.error('Error deleting trip:', error);
+    console.error("❌ Error deleting trip:", error);
     throw error;
   }
 };
 
 // Get all trips for a user
-export const getUserTrips = async (userId) => {
+export const getUserTrips = async (uid) => {
   try {
-    const tripsQuery = query(
-      collection(db, 'trips'),
-      where('members', 'array-contains', userId)
-    );
+    // Use the new validation function instead of the old query
+    const trips = await getUserTripsWithValidation(uid);
     
-    const querySnapshot = await getDocs(tripsQuery);
-    const trips = [];
-    
-    querySnapshot.forEach((doc) => {
-      trips.push({
-        id: doc.id,
-        ...doc.data()
-      });
+    // Sort trips by creation date (newest first)
+    trips.sort((a, b) => {
+      const dateA = new Date(a.createdAt || 0);
+      const dateB = new Date(b.createdAt || 0);
+      return dateB - dateA;
     });
     
     return trips;
   } catch (error) {
-    console.error('Error getting user trips:', error);
+    console.error("❌ Error getting user trips:", error);
     throw error;
   }
 };
@@ -126,7 +268,6 @@ export const addTripMember = async (tripId, userId) => {
   }
 };
 
-
 export const inviteUserToTripByUid = async (tripId, userId) => {
   try {
     const tripRef = doc(db, "trips", tripId);
@@ -139,7 +280,6 @@ export const inviteUserToTripByUid = async (tripId, userId) => {
     throw error;
   }
 };
-
 
 export const sendTripInvite = async (tripId, inviterUid, inviteeUid) => {
   console.log("🔥 sendTripInvite called with:", { tripId, inviterUid, inviteeUid });
@@ -156,9 +296,6 @@ export const sendTripInvite = async (tripId, inviterUid, inviteeUid) => {
 
   await addDoc(collection(db, "tripInvites"), inviteData);
 };
-
-
-
 
 export const getPendingInvites = async (uid) => {
   const q = query(
@@ -213,10 +350,6 @@ export const getPendingInvites = async (uid) => {
   return invites;
 };
 
-
-
-
-
 export const acceptTripInvite = async (inviteId, userId) => {
   console.log("🔁 Accepting invite:", { inviteId, userId });
 
@@ -235,10 +368,11 @@ export const acceptTripInvite = async (inviteId, userId) => {
   console.log("✅ Invite accepted and user added to trip");
 };
 
-
-
 export const declineTripInvite = async (inviteId) => {
   await updateDoc(doc(db, "tripInvites", inviteId), {
     status: "declined"
   });
 };
+
+// Export constants for use in components
+export { MAX_TRIPS_PER_USER, MAX_PHOTOS_PER_TRIP };

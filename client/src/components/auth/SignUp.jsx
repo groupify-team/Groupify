@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "../../contexts/AuthContext";
+import { useLocation } from "react-router-dom";
 import { useNavigate, Link } from "react-router-dom";
 import { useTheme } from "../../contexts/ThemeContext";
 import {
@@ -11,7 +12,6 @@ import {
   ArrowLeftIcon,
   CheckIcon,
   ChevronUpIcon,
-  ChevronDownIcon,
 } from "@heroicons/react/24/outline";
 import { toast } from "react-hot-toast";
 
@@ -33,6 +33,37 @@ const SignUp = () => {
   const { signup, signInWithGoogle } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
+  const location = useLocation();
+  const isFromPricingFree = location.search.includes("from=pricing-free");
+  const planFromUrl = new URLSearchParams(location.search).get("plan");
+
+  // Set initial form data based on URL params
+  useEffect(() => {
+    window.scrollTo(0, 0);
+
+    // Show plan-specific message
+    if (planFromUrl) {
+      setTimeout(() => {
+        const planName =
+          planFromUrl.charAt(0).toUpperCase() + planFromUrl.slice(1);
+        toast.success(
+          `Great choice! Let's set up your account for the ${planName} plan 🎯`,
+          {
+            duration: 4000,
+            icon: "⭐",
+          }
+        );
+      }, 500);
+    }
+
+    // Wait for navigation to complete, then fade in
+    const timer = setTimeout(() => {
+      document.body.style.transition = "opacity 0.3s ease-in";
+      document.body.style.opacity = "1";
+    }, 50);
+
+    return () => clearTimeout(timer);
+  }, [isFromPricingFree, planFromUrl]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -108,15 +139,24 @@ const SignUp = () => {
       console.log("Signup result:", result);
 
       if (result.success) {
-        toast.success(result.message);
-        // Navigate to confirm email page with email data
-        navigate("/confirm-email", {
-          state: {
-            email: formData.email,
-          },
-        });
+        toast.success(
+          "Account created! Please check your email to verify your account."
+        );
+
+        // Add smooth transition
+        document.body.style.opacity = "0";
+        document.body.style.transition = "opacity 0.3s ease-out";
+        setTimeout(() => {
+          navigate("/confirm-email", {
+            state: {
+              email: formData.email,
+              plan: planFromUrl,
+            },
+          });
+        }, 300);
       }
     } catch (error) {
+      // ... rest of error handling stays the same
       console.error("Signup error:", error);
 
       let errorMessage = "Failed to create account";
@@ -135,6 +175,14 @@ const SignUp = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleNavigateToSignIn = () => {
+    document.body.style.opacity = "0";
+    document.body.style.transition = "opacity 0.3s ease-out";
+    setTimeout(() => {
+      navigate("/signin");
+    }, 300);
   };
 
   const handleGoogleSignUp = async () => {
@@ -193,7 +241,7 @@ const SignUp = () => {
   return (
     <div className="min-h-screen flex">
       {/* Left Side - Visual */}
-      <div className="hidden lg:flex lg:flex-1 lg:flex-col lg:justify-center lg:px-20 xl:px-24 bg-gradient-to-br from-purple-600 via-indigo-600 to-blue-600 relative overflow-hidden">
+      <div className="hidden md:flex md:flex-1 md:flex-col md:justify-center md:items-center md:px-6 lg:px-8 xl:px-12 2xl:px-20 bg-gradient-to-br from-purple-600 via-indigo-600 to-blue-600 relative overflow-hidden">
         {/* Background Decoration */}
         <div className="absolute inset-0">
           <div className="absolute top-0 left-0 w-96 h-96 bg-white/10 rounded-full blur-3xl"></div>
@@ -201,11 +249,11 @@ const SignUp = () => {
         </div>
 
         {/* Content */}
-        <div className="relative z-10 text-white">
-          <h2 className="text-4xl font-bold mb-6">
+        <div className="relative z-10 text-white max-w-md lg:max-w-lg xl:max-w-xl 2xl:max-w-2xl text-center md:text-left">
+          <h2 className="text-2xl lg:text-3xl xl:text-4xl font-bold mb-3 lg:mb-4 xl:mb-6">
             Join thousands of travelers
           </h2>
-          <p className="text-xl text-purple-100 mb-8 leading-relaxed">
+          <p className="text-base lg:text-lg xl:text-xl text-purple-100 mb-4 lg:mb-6 xl:mb-8 leading-relaxed">
             Start organizing your travel photos with AI-powered face
             recognition. Create albums, share with friends, and never lose a
             memory again.
@@ -254,18 +302,18 @@ const SignUp = () => {
       </div>
 
       {/* Right Side - Form */}
-      <div className="flex-1 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-20 xl:px-24 bg-white dark:bg-gray-900">
-        <div className="mx-auto w-full max-w-sm lg:max-w-md">
+      <div className="flex-1 flex flex-col justify-center py-2 sm:py-4 md:py-6 lg:py-8 px-3 sm:px-4 md:px-6 lg:px-12 xl:px-20 2xl:px-24 bg-white dark:bg-gray-900 min-h-0">
+        <div className="mx-auto w-full max-w-[280px] sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-md">
           {/* Header */}
-          <div className="mb-8">
+          <div className="mb-4 sm:mb-6 md:mb-8">
             {/* Navigation */}
-            <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center justify-between mb-2 sm:mb-4 md:mb-6 lg:mb-8 pt-2 sm:pt-3 md:pt-4">
               <Link
                 to="/"
                 className="inline-flex items-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
               >
-                <ArrowLeftIcon className="w-5 h-5 mr-2" />
-                Back to Home
+                <ArrowLeftIcon className="w-5 h-5 sm:mr-2" />
+                <span className="hidden sm:inline">Back to Home</span>
               </Link>
 
               <button
@@ -280,31 +328,37 @@ const SignUp = () => {
               </button>
             </div>
 
-            {/* Logo and Title */}
-            <div className="flex items-center mb-6">
-              <div className="w-10 h-10 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl flex items-center justify-center">
-                <CameraIcon className="w-6 h-6 text-white" />
+            {/* Logo positioned in middle between top and title */}
+            <div className="flex items-center justify-center md:justify-start mb-4 sm:mb-6 md:mb-8">
+              <div className="w-10 h-10 [@media(min-width:375px)]:w-12 [@media(min-width:375px)]:h-12 sm:w-14 sm:h-14 md:w-12 md:h-12 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl flex items-center justify-center">
+                <CameraIcon className="w-5 h-5 [@media(min-width:375px)]:w-6 [@media(min-width:375px)]:h-6 sm:w-8 sm:h-8 md:w-6 md:h-6 text-white" />
               </div>
-              <span className="ml-3 text-2xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
+              <span className="ml-2 text-xl [@media(min-width:375px)]:text-2xl sm:text-3xl md:text-3xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
                 Groupify
               </span>
             </div>
 
-            <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
-              Create your account
-            </h2>
-            <p className="mt-2 text-gray-600 dark:text-gray-400">
-              Join Groupify and start organizing your travel memories
-            </p>
+            {/* Title section */}
+            <div className="text-center md:text-left mb-3 sm:mb-4 md:mb-6">
+              <h2 className="text-lg [@media(min-width:375px)]:text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
+                Create your account
+              </h2>
+              <p className="mt-1 sm:mt-2 text-xs [@media(min-width:375px)]:text-xs sm:text-sm md:text-base text-gray-600 dark:text-gray-400">
+                Join Groupify and start organizing your travel memories
+              </p>
+            </div>
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-3 sm:space-y-4 md:space-y-5 text-sm md:text-base"
+          >
             {/* Display Name */}
             <div>
               <label
                 htmlFor="displayName"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                className="block text-xs sm:text-sm md:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 sm:mb-2"
               >
                 Full Name *
               </label>
@@ -316,7 +370,7 @@ const SignUp = () => {
                 required
                 value={formData.displayName}
                 onChange={handleInputChange}
-                className="input-primary"
+                className="input-primary py-1.5 sm:py-2 md:py-3"
                 placeholder="John Doe"
                 disabled={loading}
               />
@@ -326,7 +380,7 @@ const SignUp = () => {
             <div>
               <label
                 htmlFor="email"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                className="block text-xs sm:text-sm md:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 sm:mb-2"
               >
                 Email Address *
               </label>
@@ -338,7 +392,7 @@ const SignUp = () => {
                 required
                 value={formData.email}
                 onChange={handleInputChange}
-                className="input-primary"
+                className="input-primary py-1.5 sm:py-2 md:py-3"
                 placeholder="you@example.com"
                 disabled={loading}
               />
@@ -348,7 +402,7 @@ const SignUp = () => {
             <div>
               <label
                 htmlFor="password"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                className="block text-xs sm:text-sm md:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 sm:mb-2"
               >
                 Password *
               </label>
@@ -361,7 +415,7 @@ const SignUp = () => {
                   required
                   value={formData.password}
                   onChange={handleInputChange}
-                  className="input-primary pr-12"
+                  className="input-primary pr-12 py-1.5 sm:py-2 md:py-3"
                   placeholder="••••••••"
                   disabled={loading}
                 />
@@ -372,9 +426,9 @@ const SignUp = () => {
                   disabled={loading}
                 >
                   {showPassword ? (
-                    <EyeSlashIcon className="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
-                  ) : (
                     <EyeIcon className="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
+                  ) : (
+                    <EyeSlashIcon className="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
                   )}
                 </button>
               </div>
@@ -529,7 +583,7 @@ const SignUp = () => {
             <div>
               <label
                 htmlFor="confirmPassword"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                className="block text-xs sm:text-sm md:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 sm:mb-2"
               >
                 Confirm Password *
               </label>
@@ -542,7 +596,7 @@ const SignUp = () => {
                   required
                   value={formData.confirmPassword}
                   onChange={handleInputChange}
-                  className="input-primary pr-12"
+                  className="input-primary pr-12 py-1.5 sm:py-2 md:py-3"
                   placeholder="••••••••"
                   disabled={loading}
                 />
@@ -553,9 +607,9 @@ const SignUp = () => {
                   disabled={loading}
                 >
                   {showConfirmPassword ? (
-                    <EyeSlashIcon className="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
-                  ) : (
                     <EyeIcon className="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
+                  ) : (
+                    <EyeSlashIcon className="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
                   )}
                 </button>
               </div>
@@ -563,10 +617,10 @@ const SignUp = () => {
 
             {/* Gender Selection */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+              <p className="block text-xs sm:text-sm md:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 sm:mb-3">
                 Gender (Optional)
-              </label>
-              <div className="flex space-x-3">
+              </p>
+              <div className="flex space-x-2 sm:space-x-3">
                 {["male", "female", "other"].map((option) => (
                   <button
                     key={option}
@@ -575,7 +629,7 @@ const SignUp = () => {
                       setFormData((prev) => ({ ...prev, gender: option }))
                     }
                     disabled={loading}
-                    className={`flex-1 py-2 px-4 rounded-lg border text-sm font-medium transition-all ${
+                    className={`flex-1 py-1.5 sm:py-2 px-2 sm:px-4 rounded-lg border text-xs sm:text-sm font-medium transition-all ${
                       formData.gender === option
                         ? "bg-indigo-600 text-white border-indigo-600"
                         : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
@@ -600,10 +654,10 @@ const SignUp = () => {
                   disabled={loading}
                 />
               </div>
-              <div className="ml-3 text-sm">
+              <div className="ml-3 text-xs sm:text-sm">
                 <label
                   htmlFor="terms"
-                  className="text-gray-700 dark:text-gray-300"
+                  className="text-gray-700 dark:text-gray-300 leading-tight"
                 >
                   I agree to the{" "}
                   <Link
@@ -627,7 +681,11 @@ const SignUp = () => {
             <button
               type="submit"
               disabled={loading || !agreedToTerms}
-              className="w-full btn-primary flex items-center justify-center py-3 relative overflow-hidden"
+              className={`w-full flex items-center justify-center py-2 sm:py-2.5 md:py-3 text-xs sm:text-sm md:text-base relative overflow-hidden rounded-lg font-medium transition-all duration-300 ease-in-out transform ${
+                loading || !agreedToTerms
+                  ? "bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed opacity-50 scale-95"
+                  : "bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl scale-100 hover:scale-[1.02]"
+              }`}
             >
               {loading ? (
                 <>
@@ -641,7 +699,7 @@ const SignUp = () => {
           </form>
 
           {/* Divider */}
-          <div className="mt-6">
+          <div className="mt-4 sm:mt-6 md:mt-8">
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-gray-300 dark:border-gray-600" />
@@ -658,7 +716,11 @@ const SignUp = () => {
               type="button"
               onClick={handleGoogleSignUp}
               disabled={loading || !agreedToTerms}
-              className="mt-4 w-full flex justify-center items-center py-3 px-4 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm bg-white dark:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className={`mt-3 sm:mt-4 md:mt-6 w-full flex justify-center items-center py-2 sm:py-2.5 md:py-3 px-3 sm:px-4 border rounded-lg shadow-sm text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-300 ease-in-out transform ${
+                loading || !agreedToTerms
+                  ? "border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed opacity-50 scale-95"
+                  : "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 scale-100 hover:scale-[1.02] hover:shadow-md"
+              }`}
             >
               {loading ? (
                 <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-600 mr-2"></div>
@@ -674,14 +736,14 @@ const SignUp = () => {
           </div>
 
           {/* Sign In Link */}
-          <p className="mt-6 text-center text-sm text-gray-600 dark:text-gray-400">
+          <p className="mt-4 sm:mt-6 md:mt-8 text-center text-xs sm:text-sm text-gray-600 dark:text-gray-400">
             Already have an account?{" "}
-            <Link
-              to="/signin"
-              className="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
+            <button
+              onClick={handleNavigateToSignIn}
+              className="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300 bg-transparent border-none cursor-pointer"
             >
               Sign in instead
-            </Link>
+            </button>
           </p>
         </div>
       </div>

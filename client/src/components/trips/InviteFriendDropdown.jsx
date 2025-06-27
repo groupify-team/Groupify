@@ -1,16 +1,20 @@
-import React, { useState, useEffect } from 'react';
-import { 
+import React, { useState, useEffect } from "react";
+import {
   MagnifyingGlassIcon,
   UserPlusIcon,
   UsersIcon,
-  XMarkIcon
-} from '@heroicons/react/24/outline';
-import { getFriends } from '../../services/firebase/users';
+  XMarkIcon,
+} from "@heroicons/react/24/outline";
+import { getFriends } from "../../services/firebase/users";
 
 // 🧩 Component for inviting friends to a trip, with exclusion support
-const InviteFriendDropdown = ({ currentUser, onSelect, excludedUserIds = [] }) => {
+const InviteFriendDropdown = ({
+  currentUser,
+  onSelect,
+  excludedUserIds = [],
+}) => {
   const [friends, setFriends] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [filteredFriends, setFilteredFriends] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -21,10 +25,12 @@ const InviteFriendDropdown = ({ currentUser, onSelect, excludedUserIds = [] }) =
         setIsLoading(true);
         try {
           const results = await getFriends(currentUser.uid);
-          const filtered = results.filter(friend => !excludedUserIds.includes(friend.uid));
+          const filtered = results.filter(
+            (friend) => !excludedUserIds.includes(friend.uid)
+          );
           setFriends(filtered);
         } catch (error) {
-          console.error('Error fetching friends:', error);
+          console.error("Error fetching friends:", error);
         } finally {
           setIsLoading(false);
         }
@@ -47,15 +53,15 @@ const InviteFriendDropdown = ({ currentUser, onSelect, excludedUserIds = [] }) =
 
   // Clear search
   const clearSearch = () => {
-    setSearchTerm('');
+    setSearchTerm("");
   };
 
   // Get initials for avatar fallback
   const getInitials = (name) => {
     return name
-      .split(' ')
-      .map(word => word[0])
-      .join('')
+      .split(" ")
+      .map((word) => word[0])
+      .join("")
       .toUpperCase()
       .slice(0, 2);
   };
@@ -73,7 +79,7 @@ const InviteFriendDropdown = ({ currentUser, onSelect, excludedUserIds = [] }) =
           placeholder="Search friends by name or email..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full pl-10 pr-10 py-3 bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm border border-emerald-200/50 dark:border-emerald-700/50 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 text-sm"
+          className="w-full pl-8 pr-8 py-2 sm:pl-10 sm:pr-10 sm:py-3 bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm border border-emerald-200/50 dark:border-emerald-700/50 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 text-xs sm:text-sm"
         />
         {searchTerm && (
           <button
@@ -91,17 +97,22 @@ const InviteFriendDropdown = ({ currentUser, onSelect, excludedUserIds = [] }) =
           {isLoading ? (
             <div className="p-4 text-center">
               <div className="w-6 h-6 border-2 border-emerald-200 dark:border-emerald-700 border-t-emerald-500 dark:border-t-emerald-400 rounded-full animate-spin mx-auto mb-2"></div>
-              <p className="text-xs text-gray-500 dark:text-gray-400">Searching...</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Searching...
+              </p>
             </div>
           ) : filteredFriends.length > 0 ? (
             <div className="max-h-64 overflow-y-auto">
               <div className="p-3 border-b border-emerald-200/30 dark:border-emerald-700/30 bg-emerald-50/50 dark:bg-emerald-900/20">
                 <div className="flex items-center gap-2 text-xs text-emerald-700 dark:text-emerald-300">
                   <UsersIcon className="w-3 h-3" />
-                  <span>{filteredFriends.length} friend{filteredFriends.length !== 1 ? 's' : ''} found</span>
+                  <span>
+                    {filteredFriends.length} friend
+                    {filteredFriends.length !== 1 ? "s" : ""} found
+                  </span>
                 </div>
               </div>
-              
+
               <div className="divide-y divide-emerald-200/20 dark:divide-emerald-700/20">
                 {filteredFriends.map((friend) => (
                   <div
@@ -177,7 +188,7 @@ const InviteFriendDropdown = ({ currentUser, onSelect, excludedUserIds = [] }) =
       {friends.length > 0 && (
         <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 pt-2 border-t border-emerald-200/30 dark:border-emerald-700/30">
           <span>
-            {friends.length} friend{friends.length !== 1 ? 's' : ''} available
+            {friends.length} friend{friends.length !== 1 ? "s" : ""} available
           </span>
           {excludedUserIds.length > 0 && (
             <span className="bg-emerald-100 dark:bg-emerald-900/30 px-2 py-1 rounded-lg">

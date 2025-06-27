@@ -1,12 +1,11 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { useTheme } from "../../contexts/ThemeContext";
 import {
   CameraIcon,
   MoonIcon,
   SunIcon,
   ArrowLeftIcon,
-  EnvelopeIcon,
   CheckCircleIcon,
 } from "@heroicons/react/24/outline";
 import { toast } from "react-hot-toast";
@@ -17,8 +16,19 @@ const ForgotPassword = () => {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
-
   const { theme, toggleTheme } = useTheme();
+  const navigate = useNavigate();
+
+  // Add this useEffect for fade-in animation
+  useEffect(() => {
+    // Wait for navigation to complete, then fade in
+    const timer = setTimeout(() => {
+      document.body.style.transition = "opacity 0.3s ease-in";
+      document.body.style.opacity = "1";
+    }, 50);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   // Email validation function
   const validateEmail = (email) => {
@@ -30,10 +40,10 @@ const ForgotPassword = () => {
   const sendPasswordResetEmail = async (email) => {
     try {
       // Call your Firebase Function
-      const sendResetEmail = httpsCallable(functions, 'sendPasswordResetEmail');
+      const sendResetEmail = httpsCallable(functions, "sendPasswordResetEmail");
       const result = await sendResetEmail({ email });
-      
-      console.log('Reset email function result:', result.data);
+
+      console.log("Reset email function result:", result.data);
       return result.data;
     } catch (error) {
       console.error("Error calling sendPasswordResetEmail function:", error);
@@ -102,19 +112,26 @@ const ForgotPassword = () => {
     return (
       <div className="min-h-screen flex">
         {/* Left Side - Success Message */}
-        <div className="flex-1 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-20 xl:px-24 bg-white dark:bg-gray-900">
+        <div className="flex-1 flex flex-col justify-center py-3 px-3 sm:py-6 sm:px-4 md:py-8 md:px-6 lg:py-12 lg:px-12 xl:px-20 2xl:px-24 bg-white dark:bg-gray-900">
           <div className="mx-auto w-full max-w-sm lg:max-w-md">
             {/* Header */}
             <div className="mb-8">
               {/* Navigation */}
-              <div className="flex items-center justify-between mb-8">
-                <Link
-                  to="/signin"
-                  className="inline-flex items-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
+              <div className="flex items-center justify-between mb-8 sm:mb-12 md:mb-16 lg:mb-20">
+                {/* NEW */}
+                <button
+                  onClick={() => {
+                    document.body.style.opacity = "0";
+                    document.body.style.transition = "opacity 0.3s ease-out";
+                    setTimeout(() => {
+                      navigate("/signin");
+                    }, 300);
+                  }}
+                  className="inline-flex items-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors bg-transparent border-none cursor-pointer"
                 >
-                  <ArrowLeftIcon className="w-5 h-5 mr-2" />
-                  Back to Sign In
-                </Link>
+                  <ArrowLeftIcon className="w-5 h-5 sm:mr-2" />
+                  <span className="hidden sm:inline">Back to Sign In</span>
+                </button>
 
                 <button
                   onClick={toggleTheme}
@@ -129,59 +146,68 @@ const ForgotPassword = () => {
               </div>
 
               {/* Logo and Title */}
-              <div className="flex items-center mb-6">
-                <div className="w-10 h-10 bg-gradient-to-r from-green-600 to-blue-600 rounded-xl flex items-center justify-center">
-                  <CheckCircleIcon className="w-6 h-6 text-white" />
+              <div className="flex items-center justify-center mb-12 sm:mb-16 md:mb-20">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-10 md:h-10 bg-gradient-to-r from-green-600 to-blue-600 rounded-xl flex items-center justify-center">
+                  <CheckCircleIcon className="w-5 h-5 sm:w-7 sm:h-7 md:w-6 md:h-6 text-white" />
                 </div>
-                <span className="ml-3 text-2xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">
+                <span className="ml-2 sm:ml-3 text-2xl sm:text-3xl md:text-2xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">
                   Email Sent!
                 </span>
               </div>
+            </div>
 
-              <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
+            {/* Main Content - Centered */}
+            <div className="flex flex-col items-center justify-center min-h-[50vh]">
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-white text-center">
                 Check your inbox
               </h2>
-              <p className="mt-2 text-gray-600 dark:text-gray-400">
+              <p className="mt-1 sm:mt-2 text-xs sm:text-sm md:text-base text-gray-600 dark:text-gray-400 text-center">
                 We've sent a password reset link to{" "}
                 <span className="font-medium text-indigo-600 dark:text-indigo-400">
                   {email}
                 </span>
               </p>
-            </div>
 
-            {/* Instructions */}
-            <div className="space-y-6">
-              <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
-                <div className="flex">
-                  <CheckCircleIcon className="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5" />
-                  <div className="ml-3">
-                    <h3 className="text-sm font-medium text-green-800 dark:text-green-200">
-                      What's next?
-                    </h3>
-                    <div className="mt-2 text-sm text-green-700 dark:text-green-300">
-                      <p>1. Check your email inbox (and spam folder)</p>
-                      <p>2. Click the reset link in the email</p>
-                      <p>3. Create a new password</p>
-                      <p>4. Sign in with your new password</p>
+              {/* Instructions */}
+              <div className="space-y-6 mt-8 w-full">
+                <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+                  <div className="flex">
+                    <CheckCircleIcon className="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5" />
+                    <div className="ml-3">
+                      <h3 className="text-sm font-medium text-green-800 dark:text-green-200">
+                        What's next?
+                      </h3>
+                      <div className="mt-2 text-sm text-green-700 dark:text-green-300">
+                        <p>1. Check your email inbox (and spam folder)</p>
+                        <p>2. Click the reset link in the email</p>
+                        <p>3. Create a new password</p>
+                        <p>4. Sign in with your new password</p>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="flex flex-col space-y-3">
-                <button
-                  onClick={() => setEmailSent(false)}
-                  className="w-full text-center text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium"
-                >
-                  Send another email
-                </button>
+                <div className="flex flex-col space-y-3">
+                  <button
+                    onClick={() => setEmailSent(false)}
+                    className="w-full text-center text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium"
+                  >
+                    Send another email
+                  </button>
 
-                <Link
-                  to="/signin"
-                  className="w-full btn-primary text-center py-3"
-                >
-                  Back to Sign In
-                </Link>
+                  <button
+                    onClick={() => {
+                      document.body.style.opacity = "0";
+                      document.body.style.transition = "opacity 0.3s ease-out";
+                      setTimeout(() => {
+                        navigate("/signin");
+                      }, 300);
+                    }}
+                    className="w-full btn-primary text-center py-3"
+                  >
+                    Back to Sign In
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -233,19 +259,25 @@ const ForgotPassword = () => {
   return (
     <div className="min-h-screen flex">
       {/* Left Side - Form */}
-      <div className="flex-1 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-20 xl:px-24 bg-white dark:bg-gray-900">
-        <div className="mx-auto w-full max-w-sm lg:max-w-md">
+      <div className="flex-1 flex flex-col justify-center py-3 px-3 sm:py-6 sm:px-4 md:py-8 md:px-6 lg:py-12 lg:px-12 xl:px-20 2xl:px-24 bg-white dark:bg-gray-900">
+        <div className="mx-auto w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-md">
           {/* Header */}
           <div className="mb-8">
             {/* Navigation */}
-            <div className="flex items-center justify-between mb-8">
-              <Link
-                to="/signin"
-                className="inline-flex items-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
+            <div className="flex items-center justify-between mb-8 sm:mb-12 md:mb-16 lg:mb-20">
+              <button
+                onClick={() => {
+                  document.body.style.opacity = "0";
+                  document.body.style.transition = "opacity 0.3s ease-out";
+                  setTimeout(() => {
+                    navigate("/signin");
+                  }, 300);
+                }}
+                className="inline-flex items-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors bg-transparent border-none cursor-pointer"
               >
-                <ArrowLeftIcon className="w-5 h-5 mr-2" />
-                Back to Sign In
-              </Link>
+                <ArrowLeftIcon className="w-5 h-5 sm:mr-2" />
+                <span className="hidden sm:inline">Back to Sign In</span>
+              </button>
 
               <button
                 onClick={toggleTheme}
@@ -260,78 +292,89 @@ const ForgotPassword = () => {
             </div>
 
             {/* Logo and Title */}
-            <div className="flex items-center mb-6">
-              <div className="w-10 h-10 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center">
-                <CameraIcon className="w-6 h-6 text-white" />
+            <div className="flex items-center justify-center mb-12 sm:mb-16 md:mb-20">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-10 md:h-10 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center">
+                <CameraIcon className="w-5 h-5 sm:w-7 sm:h-7 md:w-6 md:h-6 text-white" />
               </div>
-              <span className="ml-3 text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+              <span className="ml-2 sm:ml-3 text-2xl sm:text-3xl md:text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
                 Groupify
               </span>
             </div>
-
-            <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
-              Forgot your password?
-            </h2>
-            <p className="mt-2 text-gray-600 dark:text-gray-400">
-              No worries! Enter your email and we'll send you a reset link
-            </p>
           </div>
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Email Field */}
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-              >
-                Email address
-              </label>
-              <div className="relative">
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="input-primary pl-14"
-                  placeholder="you@example.com"
-                  disabled={loading}
-                />
-                <EnvelopeIcon className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-              </div>
-            </div>
-
-            {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full btn-primary flex items-center justify-center py-3 relative overflow-hidden"
-            >
-              {loading ? (
-                <>
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                  Sending reset email...
-                </>
-              ) : (
-                "Send reset email"
-              )}
-            </button>
-          </form>
-
-          {/* Back to Sign In */}
-          <div className="mt-6">
-            <p className="text-center text-sm text-gray-600 dark:text-gray-400">
-              Remember your password?{" "}
-              <Link
-                to="/signin"
-                className="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
-              >
-                Sign in instead
-              </Link>
+          {/* Main Content - Centered */}
+          <div className="flex flex-col items-center justify-center min-h-[50vh]">
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-white text-center">
+              Forgot your password?
+            </h2>
+            <p className="mt-1 sm:mt-2 text-xs sm:text-sm md:text-base text-gray-600 dark:text-gray-400 text-center">
+              No worries! Enter your email and we'll send you a reset link
             </p>
+
+            {/* Form */}
+            <form
+              onSubmit={handleSubmit}
+              className="space-y-3 sm:space-y-4 md:space-y-6 text-sm md:text-base mt-8 w-full"
+            >
+              {/* Email Field */}
+              <div>
+                <label
+                  htmlFor="email"
+                  className="block text-xs sm:text-sm md:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 sm:mb-2"
+                >
+                  Email address
+                </label>
+                <div className="relative">
+                  <input
+                    id="email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="input-primary"
+                    placeholder="you@example.com"
+                    disabled={loading}
+                  />
+                </div>
+              </div>
+
+              {/* Submit Button */}
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full btn-primary flex items-center justify-center py-2 sm:py-2.5 md:py-3 text-xs sm:text-sm md:text-base relative overflow-hidden disabled:opacity-50"
+              >
+                {loading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                    Sending reset email...
+                  </>
+                ) : (
+                  "Send reset email"
+                )}
+              </button>
+            </form>
+
+            {/* Back to Sign In */}
+            <div className="mt-6 w-full">
+              <p className="text-center text-sm text-gray-600 dark:text-gray-400">
+                Remember your password?{" "}
+                <button
+                  onClick={() => {
+                    document.body.style.opacity = "0";
+                    document.body.style.transition = "opacity 0.3s ease-out";
+                    setTimeout(() => {
+                      navigate("/signin");
+                    }, 300);
+                  }}
+                  className="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300 bg-transparent border-none cursor-pointer"
+                >
+                  Sign in instead
+                </button>
+              </p>
+            </div>
           </div>
         </div>
       </div>

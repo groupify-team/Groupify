@@ -260,3 +260,217 @@ export const removeFriend = async (uid, friendUid) => {
     throw error;
   }
 };
+
+// Add user to trip members
+export const addUserToTrip = async (uid, tripId) => {
+  try {
+    const userRef = doc(db, "users", uid);
+    await updateDoc(userRef, {
+      trips: arrayUnion(tripId),
+      updatedAt: new Date().toISOString(),
+    });
+    console.log(`✅ Added user ${uid} to trip ${tripId}`);
+  } catch (error) {
+    console.error("❌ Error adding user to trip:", error);
+    throw error;
+  }
+};
+
+// Remove user from trip members
+export const removeUserFromTrip = async (uid, tripId) => {
+  try {
+    const userRef = doc(db, "users", uid);
+    await updateDoc(userRef, {
+      trips: arrayRemove(tripId),
+      updatedAt: new Date().toISOString(),
+    });
+    console.log(`✅ Removed user ${uid} from trip ${tripId}`);
+  } catch (error) {
+    console.error("❌ Error removing user from trip:", error);
+    throw error;
+  }
+};
+
+// Clean up user trips array (remove non-existent trips)
+export const cleanupUserTrips = async (uid) => {
+  try {
+    const userRef = doc(db, "users", uid);
+    const userDoc = await getDoc(userRef);
+    
+    if (!userDoc.exists()) {
+      console.warn("⚠️ User document not found:", uid);
+      return;
+    }
+    
+    const userData = userDoc.data();
+    const userTripIds = userData.trips || [];
+    
+    if (userTripIds.length === 0) {
+      console.log("ℹ️ No trips to clean up for user:", uid);
+      return;
+    }
+    
+    // Check which trips actually exist
+    const validTripIds = [];
+    
+    for (const tripId of userTripIds) {
+      const tripRef = doc(db, "trips", tripId);
+      const tripDoc = await getDoc(tripRef);
+      
+      if (tripDoc.exists()) {
+        validTripIds.push(tripId);
+      } else {
+        console.log(`🗑️ Removing non-existent trip ${tripId} from user ${uid}`);
+      }
+    }
+    
+    // Update user's trips array with only valid trips
+    if (validTripIds.length !== userTripIds.length) {
+      await updateDoc(userRef, {
+        trips: validTripIds,
+        updatedAt: new Date().toISOString(),
+      });
+      
+      console.log(`✅ Cleaned up trips for user ${uid}: ${userTripIds.length} -> ${validTripIds.length}`);
+    }
+    
+    return validTripIds;
+  } catch (error) {
+    console.error("❌ Error cleaning up user trips:", error);
+    throw error;
+  }
+};
+
+// Get user's actual trips (with validation)
+export const getUserTripsWithValidation = async (uid) => {
+  try {
+    console.log(`🔍 Getting trips with validation for user: ${uid}`);
+    
+    // First clean up any stale trip references
+    const validTripIds = await cleanupUserTrips(uid);
+    
+    if (!validTripIds || validTripIds.length === 0) {
+      console.log(`ℹ️ No valid trips found for user: ${uid}`);
+      return [];
+    }
+    
+    // Fetch the actual trip documents
+    const trips = [];
+    
+    for (const tripId of validTripIds) {
+      try {
+        const tripRef = doc(db, "trips", tripId);
+        const tripDoc = await getDoc(tripRef);
+        
+        if (tripDoc.exists()) {
+          trips.push({
+            id: tripDoc.id,
+            ...tripDoc.data()
+          });
+        } else {
+          console.warn(`⚠️ Trip document ${tripId} not found, but was in user's array`);
+        }
+      } catch (error) {
+        console.error(`❌ Error fetching trip ${tripId}:`, error);
+      }
+    }
+    
+    console.log(`✅ Retrieved ${trips.length} valid trips for user ${uid}`);
+    return trips;
+  } catch (error) {
+    console.error("❌ Error getting user trips with validation:", error);
+    
+    // Fallback: try to get trips without validation
+    try {
+      console.log("🔄 Attempting fallback trip retrieval...");
+      const userRef = doc(db, "users", uid);
+      const userDoc = await getDoc(userRef);
+      
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        const tripIds = userData.trips || [];
+        
+        const trips = [];
+        for (const tripId of tripIds) {
+          try {
+            const tripRef = doc(db, "trips", tripId);
+            const tripDoc = await getDoc(tripRef);
+            
+            if (tripDoc.exists()) {
+              trips.push({
+                id: tripDoc.id,
+                ...tripDoc.data()
+              });
+            }
+          } catch (tripError) {
+            console.warn(`⚠️ Could not fetch trip ${tripId}:`, tripError);
+          }
+        }
+        
+        console.log(`✅ Fallback retrieval got ${trips.length} trips`);
+        return trips;
+      }
+    } catch (fallbackError) {
+      console.error("❌ Fallback trip retrieval also failed:", fallbackError);
+    }
+    
+    return [];
+  }
+};
+
+// Remove trip from ALL users who have it
+export const removeTripFromAllUsers = async (tripId) => {
+  try {
+    console.log(`🔍 Finding users with trip ${tripId}...`);
+    
+    // Query all users who have this trip in their trips array
+    const usersRef = collection(db, "users");
+    const q = query(usersRef, where("trips", "array-contains", tripId));
+    const querySnapshot = await getDocs(q);
+    
+    if (querySnapshot.empty) {
+      console.log(`ℹ️ No users found with trip ${tripId}`);
+      return;
+    }
+    
+    // Remove the trip from each user's trips array
+    const updatePromises = [];
+    
+    querySnapshot.forEach((userDoc) => {
+      const userRef = doc(db, "users", userDoc.id);
+      updatePromises.push(
+        updateDoc(userRef, {
+          trips: arrayRemove(tripId),
+          updatedAt: new Date().toISOString(),
+        })
+      );
+      console.log(`🗑️ Removing trip ${tripId} from user ${userDoc.id}`);
+    });
+    
+    await Promise.all(updatePromises);
+    
+    console.log(`✅ Removed trip ${tripId} from ${querySnapshot.size} users`);
+  } catch (error) {
+    console.error("❌ Error removing trip from users:", error);
+    throw error;
+  }
+};
+
+// Update photoCount for user
+export const updateUserPhotoCount = async (uid, increment = 1) => {
+  try {
+    const userRef = doc(db, "users", uid);
+    const userDoc = await getDoc(userRef);
+    
+    if (userDoc.exists()) {
+      const currentCount = userDoc.data().photoCount || 0;
+      await updateDoc(userRef, {
+        photoCount: Math.max(0, currentCount + increment),
+        updatedAt: new Date().toISOString(),
+      });
+    }
+  } catch (error) {
+    console.error("❌ Error updating user photo count:", error);
+    throw error;
+  }
+};

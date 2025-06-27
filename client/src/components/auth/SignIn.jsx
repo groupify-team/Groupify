@@ -9,10 +9,11 @@ import {
   MoonIcon,
   SunIcon,
   ArrowLeftIcon,
-  CheckCircleIcon,
   ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
 import { toast } from "react-hot-toast";
+import { httpsCallable } from "firebase/functions";
+import { functions } from "../../services/firebase/config";
 
 const SignIn = () => {
   const [email, setEmail] = useState("");
@@ -32,12 +33,12 @@ const SignIn = () => {
     if (urlParams.get("verified") === "true") {
       const message = urlParams.get("message");
       if (message) {
-        toast.success(decodeURIComponent(message), { duration: 5000 });
+        toast.success(decodeURIComponent(message), { duration: 4000 });
       }
-      // Clean up URL
-      navigate("/signin", { replace: true });
+      // Clean up URL immediately to prevent re-triggering
+      window.history.replaceState({}, document.title, "/signin");
     }
-  }, [location, navigate]);
+  }, [location.search]); // Changed from [location, navigate] to [location.search]
 
   // Load remembered email
   useEffect(() => {
@@ -48,6 +49,13 @@ const SignIn = () => {
     }
   }, []);
 
+  // Add to the top of each page component
+  useEffect(() => {
+    document.body.style.opacity = "1";
+    document.body.style.transition = "opacity 0.5s ease-in-out";
+  }, []);
+
+  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -58,9 +66,8 @@ const SignIn = () => {
 
     try {
       setLoading(true);
-      setShowVerificationAlert(false); // Hide alert when attempting login
+      setShowVerificationAlert(false);
 
-      // Remember email if checkbox is checked
       if (rememberMe) {
         localStorage.setItem("rememberedEmail", email);
       } else {
@@ -69,27 +76,28 @@ const SignIn = () => {
 
       await signin(email, password);
       toast.success("Welcome back!");
-      navigate("/dashboard");
     } catch (error) {
+      // ... rest of error handling stays the same
       console.error("Sign in error:", error);
 
-      // Provide user-friendly error messages
       let errorMessage = "Failed to sign in";
 
-if (error.message && error.message.includes("verify your email")) {
-  toast(error.message, {
-    icon: <ExclamationTriangleIcon className="h-6 w-6 text-black flex-shrink-0" />,
-    style: {
-      background: '#fbbf24', // yellow-400
-      color: '#000000', // black
-      border: '1px solid #f59e0b', // yellow-500
-      padding: '16px', // Add more padding to expand the message
-      textAlign: 'center', // Center the text
-      minWidth: '300px', // Make it wider
-    }
-  });
-  setShowVerificationAlert(true);
-  return;
+      if (error.message?.includes("verify your email")) {
+        toast(error.message, {
+          icon: (
+            <ExclamationTriangleIcon className="h-6 w-6 text-black flex-shrink-0" />
+          ),
+          style: {
+            background: "#fbbf24",
+            color: "#000000",
+            border: "1px solid #f59e0b",
+            padding: "16px",
+            textAlign: "center",
+            minWidth: "300px",
+          },
+        });
+        setShowVerificationAlert(true);
+        return;
       } else if (error.code === "auth/user-not-found") {
         errorMessage = "No account found with this email";
       } else if (error.code === "auth/wrong-password") {
@@ -110,12 +118,27 @@ if (error.message && error.message.includes("verify your email")) {
     }
   };
 
+  const handleNavigateToSignUp = () => {
+    document.body.style.opacity = "0";
+    document.body.style.transition = "opacity 0.3s ease-out";
+    setTimeout(() => {
+      navigate("/signup");
+    }, 300);
+  };
+
+  // Handle Google Sign In
   const handleGoogleSignIn = async () => {
     try {
       setLoading(true);
       await signInWithGoogle();
       toast.success("Welcome to Groupify!");
-      navigate("/dashboard");
+
+      // Add smooth transition
+      document.body.style.opacity = "0";
+      document.body.style.transition = "opacity 0.3s ease-out";
+      setTimeout(() => {
+        navigate("/dashboard");
+      }, 300);
     } catch (error) {
       console.error("Google sign in error:", error);
 
@@ -136,229 +159,271 @@ if (error.message && error.message.includes("verify your email")) {
   return (
     <div className="min-h-screen flex">
       {/* Left Side - Form */}
-      <div className="flex-1 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-20 xl:px-24 bg-white dark:bg-gray-900">
-        <div className="mx-auto w-full max-w-sm lg:max-w-md">
-          {/* Header */}
-          <div className="mb-8">
-            {/* Navigation */}
-            <div className="flex items-center justify-between mb-8">
-              <Link
-                to="/"
-                className="inline-flex items-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
-              >
-                <ArrowLeftIcon className="w-5 h-5 mr-2" />
-                Back to Home
-              </Link>
+      <div className="flex-1 flex flex-col bg-white dark:bg-gray-900">
+        {/* Top Navigation - Fixed at top for mobile */}
+        <div className="flex items-center justify-between p-4 sm:p-6 md:px-6 lg:px-12 xl:px-20 2xl:px-24 md:py-8 lg:py-12">
+          <Link
+            to="/"
+            className="inline-flex items-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
+          >
+            <ArrowLeftIcon className="w-5 h-5 sm:mr-2" />
+            <span className="hidden sm:inline">Back to Home</span>
+          </Link>
 
+          <button
+            onClick={toggleTheme}
+            className="p-2 rounded-lg text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          >
+            {theme === "dark" ? (
+              <SunIcon className="w-5 h-5" />
+            ) : (
+              <MoonIcon className="w-5 h-5" />
+            )}
+          </button>
+        </div>
+
+        {/* Main Content - Centered */}
+        <div className="flex-1 flex flex-col justify-center px-4 sm:px-6 md:px-6 lg:px-12 xl:px-20 2xl:px-24 py-4 sm:py-6 md:py-8">
+          <div className="mx-auto w-full max-w-[280px] sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-md">
+            {/* Logo and Title */}
+            <div className="text-center mb-4 sm:mb-6 md:mb-8">
+              <div className="flex items-center justify-center mb-3 sm:mb-4 md:mb-6">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center">
+                  <CameraIcon className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-white" />
+                </div>
+                <span className="ml-2 text-xl sm:text-2xl md:text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                  Groupify
+                </span>
+              </div>
+
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                Welcome back
+              </h2>
+              <p className="text-xs sm:text-sm md:text-base text-gray-600 dark:text-gray-400">
+                Sign in to your account to continue organizing your memories
+              </p>
+            </div>
+
+            {/* Form */}
+            <form
+              onSubmit={handleSubmit}
+              className="space-y-3 sm:space-y-4 md:space-y-6 text-sm md:text-base"
+            >
+              {/* Email Field */}
+              <div>
+                <label
+                  htmlFor="email"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                >
+                  Email address
+                </label>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="input-primary"
+                  placeholder="you@example.com"
+                  disabled={loading}
+                />
+              </div>
+
+              {/* Password Field */}
+              <div>
+                <label
+                  htmlFor="password"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                >
+                  Password
+                </label>
+                <div className="relative">
+                  <input
+                    id="password"
+                    name="password"
+                    type={showPassword ? "text" : "password"}
+                    autoComplete="current-password"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="input-primary pr-12"
+                    placeholder="••••••••"
+                    disabled={loading}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                    disabled={loading}
+                  >
+                    {showPassword ? (
+                      <EyeIcon className="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
+                    ) : (
+                      <EyeSlashIcon className="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Remember Me & Forgot Password */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <input
+                    id="remember-me"
+                    name="remember-me"
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:border-gray-600 rounded"
+                    disabled={loading}
+                  />
+                  <label
+                    htmlFor="remember-me"
+                    className="ml-2 block text-sm text-gray-700 dark:text-gray-300"
+                  >
+                    Remember me
+                  </label>
+                </div>
+
+                <div className="text-sm">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      document.body.style.opacity = "0";
+                      document.body.style.transition = "opacity 0.3s ease-out";
+                      setTimeout(() => {
+                        navigate("/forgot-password");
+                      }, 300);
+                    }}
+                    className="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300 bg-transparent border-none cursor-pointer"
+                  >
+                    Forgot your password?
+                  </button>
+                </div>
+              </div>
+
+              {/* Submit Button */}
               <button
-                onClick={toggleTheme}
-                className="p-2 rounded-lg text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                type="submit"
+                disabled={loading}
+                className="w-full btn-primary flex items-center justify-center py-2.5 sm:py-3 md:py-3.5 text-sm sm:text-base relative overflow-hidden disabled:opacity-50"
               >
-                {theme === "dark" ? (
-                  <SunIcon className="w-5 h-5" />
+                {loading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                    Signing in...
+                  </>
                 ) : (
-                  <MoonIcon className="w-5 h-5" />
+                  "Sign in"
                 )}
+              </button>
+            </form>
+
+            {/* Conditional Verification Alert */}
+            {showVerificationAlert && (
+              <div className="mt-4 sm:mt-5 md:mt-6 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3 sm:p-4">
+                <div className="flex">
+                  <ExclamationTriangleIcon className="h-5 w-5 text-yellow-400 mr-3 mt-0.5 flex-shrink-0" />
+                  <div className="text-sm">
+                    <p className="text-yellow-700 dark:text-yellow-300 font-medium">
+                      Email verification required
+                    </p>
+                    <p className="text-yellow-600 dark:text-yellow-400 mt-1">
+                      Please verify your email before signing in. Check your
+                      inbox or{" "}
+                      <button
+                        onClick={async () => {
+                          try {
+                            console.log(
+                              "Resending verification email from SignIn to:",
+                              email
+                            );
+
+                            const resendFunction = httpsCallable(
+                              functions,
+                              "resendVerificationCode"
+                            );
+                            await resendFunction({ email });
+
+                            toast.success(
+                              "Verification email sent! Check your inbox."
+                            );
+
+                            setTimeout(() => {
+                              navigate(
+                                `/confirm-email?email=${encodeURIComponent(
+                                  email
+                                )}`
+                              );
+                            }, 1500);
+                          } catch (error) {
+                            console.error("Resend error:", error);
+                            toast.error(
+                              "Failed to resend email. Please try again."
+                            );
+                          }
+                        }}
+                        className="underline font-medium hover:text-yellow-500 bg-transparent border-none cursor-pointer"
+                      >
+                        resend verification email
+                      </button>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Divider */}
+            <div className="mt-4 sm:mt-6 md:mt-8">
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-300 dark:border-gray-600" />
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-2 bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400">
+                    Or continue with
+                  </span>
+                </div>
+              </div>
+
+              {/* Google Sign In */}
+              <button
+                type="button"
+                onClick={handleGoogleSignIn}
+                disabled={loading}
+                className="mt-3 sm:mt-4 md:mt-6 w-full flex justify-center items-center py-2.5 sm:py-3 md:py-3.5 px-4 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm bg-white dark:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {loading ? (
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-600 mr-2"></div>
+                ) : (
+                  <img
+                    className="h-5 w-5 mr-2"
+                    src="https://www.svgrepo.com/show/475656/google-color.svg"
+                    alt="Google logo"
+                  />
+                )}
+                Sign in with Google
               </button>
             </div>
 
-            {/* Logo and Title */}
-            <div className="flex items-center mb-6">
-              <div className="w-10 h-10 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center">
-                <CameraIcon className="w-6 h-6 text-white" />
-              </div>
-              <span className="ml-3 text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                Groupify
-              </span>
-            </div>
-
-            <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
-              Welcome back
-            </h2>
-            <p className="mt-2 text-gray-600 dark:text-gray-400">
-              Sign in to your account to continue organizing your memories
+            {/* Sign Up Link */}
+            <p className="mt-4 sm:mt-6 md:mt-8 text-center text-sm text-gray-600 dark:text-gray-400">
+              Don't have an account? {/* NEW */}
+              <button
+                onClick={handleNavigateToSignUp}
+                className="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300 bg-transparent border-none cursor-pointer"
+              >
+                Create one now
+              </button>
             </p>
           </div>
-
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Email Field */}
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-              >
-                Email address
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="input-primary"
-                placeholder="you@example.com"
-                disabled={loading}
-              />
-            </div>
-
-            {/* Password Field */}
-            <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-              >
-                Password
-              </label>
-              <div className="relative">
-                <input
-                  id="password"
-                  name="password"
-                  type={showPassword ? "text" : "password"}
-                  autoComplete="current-password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="input-primary pr-12"
-                  placeholder="••••••••"
-                  disabled={loading}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                  disabled={loading}
-                >
-                  {showPassword ? (
-                    <EyeSlashIcon className="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
-                  ) : (
-                    <EyeIcon className="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
-                  )}
-                </button>
-              </div>
-            </div>
-
-            {/* Remember Me & Forgot Password */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <input
-                  id="remember-me"
-                  name="remember-me"
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:border-gray-600 rounded"
-                  disabled={loading}
-                />
-                <label
-                  htmlFor="remember-me"
-                  className="ml-2 block text-sm text-gray-700 dark:text-gray-300"
-                >
-                  Remember me
-                </label>
-              </div>
-
-              <div className="text-sm">
-                <Link
-                  to="/forgot-password"
-                  className="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
-                >
-                  Forgot your password?
-                </Link>
-              </div>
-            </div>
-
-            {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full btn-primary flex items-center justify-center py-3 relative overflow-hidden disabled:opacity-50"
-            >
-              {loading ? (
-                <>
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                  Signing in...
-                </>
-              ) : (
-                "Sign in"
-              )}
-            </button>
-          </form>
-
-          {/* Conditional Verification Alert - Only show after failed verification */}
-          {showVerificationAlert && (
-            <div className="mt-6 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
-              <div className="flex">
-                <ExclamationTriangleIcon className="h-5 w-5 text-yellow-400 mr-3 mt-0.5 flex-shrink-0" />
-                <div className="text-sm">
-                  <p className="text-yellow-700 dark:text-yellow-300 font-medium">
-                    Email verification required
-                  </p>
-                  <p className="text-yellow-600 dark:text-yellow-400 mt-1">
-                    Please verify your email before signing in. Check your inbox
-                    or{" "}
-                    <Link
-                      to={`/confirm-email?email=${encodeURIComponent(email)}`}
-                      className="underline font-medium hover:text-yellow-500"
-                    >
-                      resend verification email
-                    </Link>
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Divider */}
-          <div className="mt-8">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300 dark:border-gray-600" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400">
-                  Or continue with
-                </span>
-              </div>
-            </div>
-
-            {/* Google Sign In */}
-            <button
-              type="button"
-              onClick={handleGoogleSignIn}
-              disabled={loading}
-              className="mt-6 w-full flex justify-center items-center py-3 px-4 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm bg-white dark:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              {loading ? (
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-600 mr-2"></div>
-              ) : (
-                <img
-                  className="h-5 w-5 mr-2"
-                  src="https://www.svgrepo.com/show/475656/google-color.svg"
-                  alt="Google logo"
-                />
-              )}
-              Sign in with Google
-            </button>
-          </div>
-
-          {/* Sign Up Link */}
-          <p className="mt-8 text-center text-sm text-gray-600 dark:text-gray-400">
-            Don't have an account?{" "}
-            <Link
-              to="/signup"
-              className="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
-            >
-              Create one now
-            </Link>
-          </p>
         </div>
       </div>
 
-      {/* Right Side - Visual */}
-      <div className="hidden lg:flex lg:flex-1 lg:flex-col lg:justify-center lg:px-20 xl:px-24 bg-gradient-to-br from-indigo-500 via-purple-600 to-blue-600 relative overflow-hidden">
+      {/* Right Side - Visual (Hidden on mobile/tablet) */}
+      <div className="hidden lg:flex lg:flex-1 lg:flex-col lg:justify-center lg:items-center lg:px-8 xl:px-12 2xl:px-20 bg-gradient-to-br from-indigo-500 via-purple-600 to-blue-600 relative overflow-hidden">
         {/* Background Decoration */}
         <div className="absolute inset-0">
           <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl"></div>
@@ -366,11 +431,11 @@ if (error.message && error.message.includes("verify your email")) {
         </div>
 
         {/* Content */}
-        <div className="relative z-10 text-white">
-          <h2 className="text-4xl font-bold mb-6">
+        <div className="relative z-10 text-white max-w-lg xl:max-w-xl 2xl:max-w-2xl text-left">
+          <h2 className="text-3xl xl:text-4xl font-bold mb-4 xl:mb-6">
             Organize your travel memories with AI
           </h2>
-          <p className="text-xl text-indigo-100 mb-8 leading-relaxed">
+          <p className="text-lg xl:text-xl text-indigo-100 mb-6 xl:mb-8 leading-relaxed">
             Upload photos from your trips and let our AI automatically find the
             ones with you in them. Share albums with friends and never lose
             track of your memories again.

@@ -18,7 +18,7 @@ import {
   ClockIcon,
 } from "@heroicons/react/24/outline";
 import { toast } from "react-hot-toast";
-import { getFunctions, httpsCallable } from "firebase/functions";
+import { httpsCallable } from "firebase/functions";
 import { functions } from "../../services/firebase/config";
 
 const ConfirmEmail = () => {
@@ -47,16 +47,36 @@ const ConfirmEmail = () => {
   const codeFromUrl = searchParams.get("code");
 
   const handleResendCode = async () => {
+    if (!email) {
+      toast.error("Email address is required");
+      return;
+    }
+
     try {
       setResendLoading(true);
-      await resendVerificationEmail(email);
+      console.log("Attempting to resend verification email to:", email);
+
+      const resendFunction = httpsCallable(functions, "resendVerificationCode");
+      const result = await resendFunction({ email });
+
+      console.log("Resend function result:", result.data);
       toast.success("Verification code sent! Check your email.");
       setTimeLeft(120);
       setCanResend(false);
       setVerificationCode(["", "", "", "", "", ""]);
     } catch (error) {
       console.error("Resend error:", error);
-      toast.error(error.message || "Failed to resend code. Please try again.");
+      let errorMessage = "Failed to resend code. Please try again.";
+
+      if (error.code === "functions/not-found") {
+        errorMessage = "No account found with this email address";
+      } else if (error.code === "functions/deadline-exceeded") {
+        errorMessage = "Request timed out. Please try again.";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      toast.error(errorMessage);
     } finally {
       setResendLoading(false);
     }
@@ -86,14 +106,6 @@ const ConfirmEmail = () => {
     }
   }, [timeLeft]);
 
-  // Auto-send verification email when landing on page with email but no code
-  useEffect(() => {
-    if (email && !codeFromUrl && !hasAutoSent) {
-      handleResendCode();
-      setHasAutoSent(true);
-    }
-  }, [email, codeFromUrl, hasAutoSent]);
-
   const handleInputChange = (index, value) => {
     if (value.length > 1) return;
     const newCode = [...verificationCode];
@@ -113,34 +125,58 @@ const ConfirmEmail = () => {
   };
 
   const handleVerifyWithCode = async (code) => {
+    if (!email || !code) {
+      toast.error("Email and verification code are required");
+      return;
+    }
+
     try {
       setLoading(true);
-      const verifyCode = httpsCallable(functions, "verifyEmailCode");
-      await verifyCode({ email, verificationCode: code });
+      console.log("Attempting to verify code:", code, "for email:", email);
 
-      // Navigate to sign-in page with success message (FIXED)
-      navigate(
-        "/signin?verified=true&message=" +
-          encodeURIComponent(
-            "Email verified successfully! You can now sign in."
-          )
-      );
+      const verifyCode = httpsCallable(functions, "verifyEmailCode");
+      const result = await verifyCode({
+        email: email,
+        verificationCode: code,
+      });
+
+      console.log("Verification result:", result.data);
+
+      // Success - navigate to signin with success message
+      setTimeout(() => {
+        navigate(
+          "/signin?verified=true&message=" +
+            encodeURIComponent(
+              "Email verified successfully! You can now sign in."
+            )
+        );
+      }, 1000);
     } catch (error) {
       console.error("Verification error:", error);
+
       let errorMessage = "Invalid verification code";
 
-      if (error.message.includes("expired")) {
+      if (error.code === "functions/not-found") {
+        errorMessage = "Verification code not found or expired";
+      } else if (error.code === "functions/deadline-exceeded") {
+        errorMessage = "Verification request timed out";
+      } else if (error.message?.includes("expired")) {
         errorMessage =
           "Verification code has expired. Please request a new one.";
         setCanResend(true);
         setTimeLeft(0);
-      } else if (error.message.includes("already verified")) {
-        errorMessage = "Email is already verified. You can now sign in.";
+      } else if (error.message?.includes("already verified")) {
+        toast.success("Email is already verified. You can now sign in.");
         navigate("/signin");
         return;
+      } else if (error.message) {
+        errorMessage = error.message;
       }
 
       toast.error(errorMessage);
+
+      // Clear the form for retry
+      setVerificationCode(["", "", "", "", "", ""]);
     } finally {
       setLoading(false);
     }
@@ -170,7 +206,7 @@ const ConfirmEmail = () => {
   return (
     <div className="min-h-screen flex">
       {/* Left Side - Visual */}
-      <div className="hidden lg:flex lg:flex-1 lg:flex-col lg:justify-center lg:px-20 xl:px-24 bg-gradient-to-br from-purple-600 via-indigo-600 to-blue-600 relative overflow-hidden">
+      <div className="hidden md:flex md:flex-1 md:flex-col md:justify-center md:items-center md:px-6 lg:px-8 xl:px-12 2xl:px-20 bg-gradient-to-br from-purple-600 via-indigo-600 to-blue-600 relative overflow-hidden">
         {/* Background Decoration */}
         <div className="absolute inset-0">
           <div className="absolute top-0 left-0 w-96 h-96 bg-white/10 rounded-full blur-3xl"></div>
@@ -178,63 +214,75 @@ const ConfirmEmail = () => {
         </div>
 
         {/* Content */}
-        <div className="relative z-10 text-white">
-          <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mb-8 backdrop-blur-sm">
-            <EnvelopeIcon className="w-8 h-8" />
+        <div className="relative z-10 text-white max-w-md lg:max-w-lg xl:max-w-xl 2xl:max-w-2xl text-center md:text-left">
+          <div className="w-12 h-12 md:w-14 md:h-14 lg:w-16 lg:h-16 bg-white/20 rounded-2xl flex items-center justify-center mb-6 lg:mb-8 backdrop-blur-sm mx-auto md:mx-0">
+            <EnvelopeIcon className="w-6 h-6 md:w-7 md:h-7 lg:w-8 lg:h-8" />
           </div>
 
-          <h2 className="text-4xl font-bold mb-6">Check your email</h2>
-          <p className="text-xl text-purple-100 mb-8 leading-relaxed">
+          <h2 className="text-2xl lg:text-3xl xl:text-4xl font-bold mb-4 lg:mb-6">
+            Check your email
+          </h2>
+          <p className="text-base lg:text-lg xl:text-xl text-purple-100 mb-6 lg:mb-8 leading-relaxed">
             We've sent a 6-digit verification code to your email address. Enter
             the code below to verify your account and get started.
           </p>
 
           {/* Email Info */}
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 mb-8">
-            <div className="flex items-center">
-              <EnvelopeIcon className="w-5 h-5 mr-3 text-purple-200" />
-              <span className="text-purple-100">Sent to:</span>
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 lg:p-6 mb-6 lg:mb-8">
+            <div className="flex items-center justify-center md:justify-start">
+              <EnvelopeIcon className="w-4 h-4 lg:w-5 lg:h-5 mr-2 lg:mr-3 text-purple-200" />
+              <span className="text-sm lg:text-base text-purple-100">
+                Sent to:
+              </span>
             </div>
-            <div className="text-white font-medium mt-1 truncate">{email}</div>
+            <div className="text-sm lg:text-base text-white font-medium mt-1 truncate text-center md:text-left">
+              {email}
+            </div>
           </div>
 
           {/* Features */}
-          <div className="space-y-4">
-            <div className="flex items-center">
-              <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center mr-3">
-                <CheckCircleIcon className="w-4 h-4" />
+          <div className="space-y-3 lg:space-y-4">
+            <div className="flex items-center justify-center md:justify-start">
+              <div className="w-5 h-5 lg:w-6 lg:h-6 bg-white/20 rounded-full flex items-center justify-center mr-2 lg:mr-3">
+                <CheckCircleIcon className="w-3 h-3 lg:w-4 lg:h-4" />
               </div>
-              <span>Secure email verification</span>
+              <span className="text-sm lg:text-base">
+                Secure email verification
+              </span>
             </div>
-            <div className="flex items-center">
-              <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center mr-3">
-                <CheckCircleIcon className="w-4 h-4" />
+            <div className="flex items-center justify-center md:justify-start">
+              <div className="w-5 h-5 lg:w-6 lg:h-6 bg-white/20 rounded-full flex items-center justify-center mr-2 lg:mr-3">
+                <CheckCircleIcon className="w-3 h-3 lg:w-4 lg:h-4" />
               </div>
-              <span>Account protection enabled</span>
+              <span className="text-sm lg:text-base">
+                Account protection enabled
+              </span>
             </div>
-            <div className="flex items-center">
-              <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center mr-3">
-                <CheckCircleIcon className="w-4 h-4" />
+            <div className="flex items-center justify-center md:justify-start">
+              <div className="w-5 h-5 lg:w-6 lg:h-6 bg-white/20 rounded-full flex items-center justify-center mr-2 lg:mr-3">
+                <CheckCircleIcon className="w-3 h-3 lg:w-4 lg:h-4" />
               </div>
-              <span>Privacy and security guaranteed</span>
+              <span className="text-sm lg:text-base">
+                Privacy and security guaranteed
+              </span>
             </div>
           </div>
         </div>
       </div>
 
       {/* Right Side - Form */}
-      <div className="flex-1 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-20 xl:px-24 bg-white dark:bg-gray-900">
-        <div className="mx-auto w-full max-w-sm lg:max-w-md">
+      <div className="flex-1 flex flex-col justify-center py-3 px-3 sm:py-6 sm:px-4 md:py-8 md:px-6 lg:py-12 lg:px-12 xl:px-20 2xl:px-24 bg-white dark:bg-gray-900">
+        <div className="mx-auto w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-md">
           {/* Header */}
-          <div className="mb-8">
+          <div className="mb-6 sm:mb-8">
             {/* Navigation */}
-            <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center justify-between mb-4 sm:mb-6 md:mb-8 lg:mb-12 -mt-2 sm:-mt-0 md:-mt-0">
               <Link
                 to="/signup"
                 className="inline-flex items-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
               >
-                <ArrowLeftIcon className="w-5 h-5 mr-2" />
-                Back to Sign Up
+                <ArrowLeftIcon className="w-5 h-5 sm:mr-2" />
+                <span className="hidden sm:inline">Back to Sign Up</span>
               </Link>
 
               <button
@@ -250,41 +298,47 @@ const ConfirmEmail = () => {
             </div>
 
             {/* Logo and Title */}
-            <div className="flex items-center mb-6">
-              <div className="w-10 h-10 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl flex items-center justify-center">
-                <CameraIcon className="w-6 h-6 text-white" />
+            <div className="flex items-center justify-center md:justify-start mb-6 sm:mb-8 md:mb-10 -mt-4 sm:-mt-0 md:-mt-0">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-10 md:h-10 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl flex items-center justify-center">
+                <CameraIcon className="w-5 h-5 sm:w-7 sm:h-7 md:w-6 md:h-6 text-white" />
               </div>
-              <span className="ml-3 text-2xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
+              <span className="ml-2 sm:ml-3 text-2xl sm:text-3xl md:text-2xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
                 Groupify
               </span>
             </div>
 
-            <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-white text-center md:text-left">
               Verify your email
             </h2>
-            <p className="mt-2 text-gray-600 dark:text-gray-400">
+            <p className="mt-1 sm:mt-2 text-xs sm:text-sm md:text-base text-gray-600 dark:text-gray-400 text-center md:text-left">
               Enter the 6-digit code we sent to your email address
             </p>
           </div>
 
           {/* Verification Form */}
-          <form onSubmit={handleVerify} className="space-y-6">
+          <form
+            onSubmit={handleVerify}
+            className="space-y-4 sm:space-y-5 md:space-y-6"
+          >
             {/* Code Input */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">
+              <label
+                htmlFor="code-0"
+                className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 sm:mb-4 text-center md:text-left"
+              >
                 Verification Code
               </label>
-              <div className="flex justify-between space-x-2">
+              <div className="flex justify-center md:justify-between space-x-1 sm:space-x-2">
                 {verificationCode.map((digit, index) => (
                   <input
-                    key={index}
+                    key={`digit-${index}-${digit}`}
                     id={`code-${index}`}
                     type="text"
                     maxLength="1"
                     value={digit}
                     onChange={(e) => handleInputChange(index, e.target.value)}
                     onKeyDown={(e) => handleKeyDown(index, e)}
-                    className="w-12 h-12 text-center text-lg font-semibold border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors"
+                    className="w-10 h-10 sm:w-11 sm:h-11 md:w-12 md:h-12 text-center text-base sm:text-lg font-semibold border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors"
                     disabled={loading}
                   />
                 ))}
@@ -294,8 +348,8 @@ const ConfirmEmail = () => {
             {/* Timer and Resend */}
             <div className="text-center">
               {!canResend ? (
-                <div className="flex items-center justify-center text-sm text-gray-600 dark:text-gray-400">
-                  <ClockIcon className="w-4 h-4 mr-2" />
+                <div className="flex items-center justify-center text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                  <ClockIcon className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                   Resend code in {formatTime(timeLeft)}
                 </div>
               ) : (
@@ -303,7 +357,7 @@ const ConfirmEmail = () => {
                   type="button"
                   onClick={handleResendCode}
                   disabled={resendLoading}
-                  className="text-sm text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium disabled:opacity-50"
+                  className="text-xs sm:text-sm text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium disabled:opacity-50"
                 >
                   {resendLoading ? "Sending..." : "Resend verification code"}
                 </button>
@@ -314,11 +368,11 @@ const ConfirmEmail = () => {
             <button
               type="submit"
               disabled={loading || verificationCode.join("").length !== 6}
-              className="w-full btn-primary flex items-center justify-center py-3 relative overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full btn-primary flex items-center justify-center py-2 sm:py-2.5 md:py-3 text-xs sm:text-sm md:text-base relative overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <>
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                  <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-b-2 border-white mr-2"></div>
                   Verifying...
                 </>
               ) : (
@@ -328,15 +382,15 @@ const ConfirmEmail = () => {
           </form>
 
           {/* Help Text */}
-          <div className="mt-6">
-            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+          <div className="mt-4 sm:mt-5 md:mt-6">
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 sm:p-4">
               <div className="flex">
-                <ExclamationCircleIcon className="h-5 w-5 text-blue-400 mr-3 mt-0.5 flex-shrink-0" />
-                <div className="text-sm">
+                <ExclamationCircleIcon className="h-4 w-4 sm:h-5 sm:w-5 text-blue-400 mr-2 sm:mr-3 mt-0.5 flex-shrink-0" />
+                <div className="text-xs sm:text-sm">
                   <p className="text-blue-700 dark:text-blue-300 font-medium mb-1">
                     Didn't receive the email?
                   </p>
-                  <ul className="text-blue-600 dark:text-blue-400 space-y-1">
+                  <ul className="text-blue-600 dark:text-blue-400 space-y-0.5 sm:space-y-1">
                     <li>• Check your spam/junk folder</li>
                     <li>• Make sure {email} is correct</li>
                     <li>• Wait a few minutes for delivery</li>
@@ -348,7 +402,7 @@ const ConfirmEmail = () => {
           </div>
 
           {/* Footer */}
-          <p className="mt-6 text-center text-sm text-gray-600 dark:text-gray-400">
+          <p className="mt-4 sm:mt-5 md:mt-6 text-center text-xs sm:text-sm text-gray-600 dark:text-gray-400">
             Need help?{" "}
             <a
               href="mailto:support@groupify.com"

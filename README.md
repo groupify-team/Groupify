@@ -1,109 +1,125 @@
-# Groupify - Collaborative Photo Management for Trips
+# 📸 Groupify - Smart Photo Sharing for Group Trips
 
-Groupify is a web application that allows groups of friends to automatically upload, organize, and share trip photos - with a focus on **face recognition** and **personalized access**.  
-Each user gets only the photos they appear in, without manually sorting through thousands of group shots.
-
----
-
-## Project Status
-
-This project is currently **under active development**.  
-Some features are already implemented, and more are being added weekly.
+![React](https://img.shields.io/badge/React-19.1.0-blue?logo=react)
+![Firebase](https://img.shields.io/badge/Firebase-11.7.3-ffca28?logo=firebase)
+![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.4.1-38bdf8?logo=tailwindcss)
+![License](https://img.shields.io/github/license/groupify-team/groupify)
+![Last Commit](https://img.shields.io/github/last-commit/groupify-team/groupify)
 
 ---
 
-## Tech Stack
+## 📚 Table of Contents
 
-The application is built using the following technologies:
-
-- **Frontend**: React (Vite), Tailwind CSS
-- **Backend & Auth**: Firebase (Firestore, Storage, Authentication)
-- **Image Recognition**: (Planned) Face recognition via external API
-- **Hosting**: Firebase Hosting / Vercel *(to be decided)*
-
----
-
-## What’s Working So Far
-
-- User registration, login, and logout
-- Creating and managing trips
-- Uploading photos per trip
-- Viewing photo galleries
-- Adding friends and managing friend requests
-- A functional dashboard with modular UI
+- [Features](#-features)
+- [Tech Stack](#-tech-stack)
+- [Packages Used](#-packages-used)
+- [Installation](#-installation)
+- [Folder Structure](#-folder-structure-client)
+- [Known Issues](#-known-issues)
+- [Contributors](#-contributors)
 
 ---
 
-## Upcoming Features
+Groupify is a modern web app that helps groups of friends upload, manage, and share photos from trips — using **face recognition** to automatically deliver personalized galleries.
 
-We’re currently working on:
-
-1. Face recognition and automatic filtering by user
-2. Notifications for friend requests and trip invites
-3. Personal profile pages with editable user info
-4. Smart photo cropping inside profile settings
-5. Enhanced trip management tools for admins
+Built with **React**, **Vite**, and **Firebase**, the app supports trip creation, friend management, photo uploads, and more.
 
 ---
 
-## Folder Structure (High-Level)
+## ✨ Features
 
-```
-client/
-├── src/
-│   ├── components/       # Reusable components (PhotoUpload, TripCard, etc.)
-│   ├── pages/            # Route-level views like Home, Dashboard, Profile
-│   ├── services/         # Firebase setup and API logic
-│   ├── hooks/            # Custom React hooks
-│   └── App.jsx           # Root component with routing logic
-├── public/               # Static files and assets
-└── .env                  # Environment variables (not committed)
-```
+- User authentication (sign up / log in / reset password)
+- Create and join trips
+- Upload and browse trip-specific photos
+- Add and manage friends
+- Dashboard with real-time updates
+- Personalized gallery (coming soon)
+- Face recognition & tagging (coming soon)
 
 ---
 
-## Running the Project Locally (For Developers)
+## 🎨 Tech Stack
+
+- **Frontend**: React + Vite + Tailwind CSS
+- **Backend & Auth**: Firebase (Auth, Firestore, Storage)
+- **Recognition**: External Face Recognition API (planned)
+- **Hosting**: Firebase Hosting or Vercel
+
+---
+
+## 📦 Packages Used
+
+| Category       | Package                                                                 | Purpose                          |
+| -------------- | ----------------------------------------------------------------------- | -------------------------------- |
+| UI Components  | `@mui/material`, `@heroicons/react`, `lucide-react`                     | Modals, icons, styled components |
+| Styling        | `tailwindcss`, `tailwind-variants`, `clsx`                              | Utility-first CSS + variants     |
+| Auth & Backend | `firebase`, `uuid`                                                      | Auth, Firestore, Storage         |
+| File Upload    | `react-dropzone`, `react-easy-crop`                                     | Upload + crop UI                 |
+| Face Detection | `@aws-sdk/client-rekognition`, `face-api.js`, `@mediapipe/tasks-vision` | AI-based recognition             |
+| UX Enhancers   | `react-toastify`, `react-hot-toast`, `react-lazy-load-image-component`  | Toasts, lazy loading             |
+| Routing        | `react-router-dom`                                                      | SPA navigation                   |
+| Dev Tools      | `vite`, `eslint`, `postcss`, `@vitejs/plugin-react`                     | Build and linting                |
+
+---
+
+## 🔧 Installation
 
 ```bash
-# 1. Clone the repository
-git clone https://github.com/your-username/groupify.git
+# 1. Clone the repo
+https://github.com/groupify-team/groupify.git
 
-# 2. Navigate to the frontend folder
+# 2. Enter the client directory
 cd client
 
 # 3. Install dependencies
 npm install
 
-# 4. Start the development server
+# 4. Start dev server
 npm run dev
 ```
 
-Create a `.env` file in the `client/` directory with your Firebase credentials:
+Create a `.env` file in `client/` with:
 
 ```env
-VITE_FIREBASE_API_KEY=your_api_key
+VITE_FIREBASE_API_KEY=your_key
 VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=your_project_id
+VITE_FIREBASE_PROJECT_ID=your_id
 VITE_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
-VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
-VITE_FIREBASE_APP_ID=your_app_id
-```
-
-## Known Issues
-
-```text
-- Face recognition integration is pending.
-- Some mobile layouts are incomplete.
-- Dashboard components may change as design evolves.
+VITE_FIREBASE_MESSAGING_SENDER_ID=your_id
+VITE_FIREBASE_APP_ID=your_id
 ```
 
 ---
 
-## Contributors
+## 🔍 Folder Structure (client/)
 
-| Name        | Role                         | GitHub Profile                        |
-|-------------|------------------------------|----------------------------------------|
-| Adir Edri   | Fullstack & Deep Learning    | [@adiredri](https://github.com/adiredri) |
-| Ofir Almog  | Fullstack & Deep Learning    | [@Ofigu](https://github.com/Ofigu)       |
+```
+client/
+├── src/
+│   ├── components/
+│   ├── pages/
+│   ├── services/
+│   ├── hooks/
+│   └── App.jsx
+├── public/
+└── .env
+```
+
+---
+
+## 🚫 Known Issues
+
+- Face recognition integration in progress
+- Responsive layout on some mobile views
+- Dashboard may evolve with design changes
+
+---
+
+## 👨‍💼 Contributors
+
+| Name       | Role                      | GitHub                                   |
+| ---------- | ------------------------- | ---------------------------------------- |
+| Adir Edri  | Fullstack & Deep Learning | [@adiredri](https://github.com/adiredri) |
+| Ofir Almog | Fullstack & Deep Learning | [@Ofigu](https://github.com/Ofigu)       |
 
 ---
