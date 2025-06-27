@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
-import SettingsModal from "../components/settings/SettingsModal";
+import SettingsModal from "../features/settings/components/SettingsModal";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext";
-import { useTheme } from "../contexts/ThemeContext";
+import { useAuth } from "./features/auth/contexts/AuthContext";
+import { useTheme } from "../shared/contexts/ThemeContext";
 import { toast } from "react-hot-toast";
 
 import {

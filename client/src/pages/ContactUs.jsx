@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { useTheme } from "../contexts/ThemeContext";
+import { useTheme } from "../shared/contexts/ThemeContext";
 import {
   CameraIcon,
   MoonIcon,
@@ -16,7 +16,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { toast } from "react-hot-toast";
 import { httpsCallable } from "firebase/functions";
-import { functions } from "../services/firebase/config";
+import { functions } from "../shared/services/firebase/config";
 
 const ContactUs = () => {
   const [formData, setFormData] = useState({

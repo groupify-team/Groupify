@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useAuth } from "../../contexts/AuthContext";
+import { useAuth } from "../../auth/contexts/AuthContext";
 import { createFaceProfile } from "../../services/faceRecognitionService";
 import { saveFaceProfileToStorage } from "../../services/firebase/faceProfiles";
 import { uploadBytes, getDownloadURL, ref } from "firebase/storage";
@@ -64,7 +64,7 @@ const FaceProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
 
   const removeUploadedPhoto = (index) => {
     setUploadedPhotos((prev) => prev.filter((_, i) => i !== index));
-    
+
     // If no photos left, go back to upload screen
     if (uploadedPhotos.length === 1) {
       setShowReview(false);
@@ -89,8 +89,10 @@ const FaceProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
       });
 
       // Create profile using face-api.js service with uploaded photo URLs
-      const imageData = uploadedPhotos.map(photo => ({ url: photo.downloadURL }));
-      
+      const imageData = uploadedPhotos.map((photo) => ({
+        url: photo.downloadURL,
+      }));
+
       const profile = await createFaceProfile(
         currentUser.uid,
         imageData,
@@ -104,7 +106,10 @@ const FaceProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
         images: uploadedPhotos.map((photo, index) => ({
           url: photo.downloadURL || photo.url || "",
           uploadedAt: photo.uploadedAt || new Date().toISOString(),
-          filename: photo.metadata?.originalName || photo.originalName || `upload_${index}.jpg`,
+          filename:
+            photo.metadata?.originalName ||
+            photo.originalName ||
+            `upload_${index}.jpg`,
           captureMethod: "upload",
           metadata: photo.metadata || {},
         })),
@@ -434,7 +439,8 @@ const FaceProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
                   Review Your Photos
                 </h3>
                 <p className="text-gray-600 dark:text-gray-400 mb-4">
-                  {uploadedPhotos.length} photos uploaded • Review before creating profile
+                  {uploadedPhotos.length} photos uploaded • Review before
+                  creating profile
                 </p>
               </div>
 
@@ -470,7 +476,9 @@ const FaceProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
                   </div>
                 </div>
                 <ul className="text-sm text-green-700 dark:text-green-300 space-y-1">
-                  <li>✓ {uploadedPhotos.length} photos uploaded (2-5 required)</li>
+                  <li>
+                    ✓ {uploadedPhotos.length} photos uploaded (2-5 required)
+                  </li>
                   <li>✓ All photos are high quality</li>
                   <li>✓ Face detection will be performed during setup</li>
                 </ul>

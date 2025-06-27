@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useAuth } from "../../contexts/AuthContext";
+import { useAuth } from "../../auth/contexts/AuthContext";
 import { createFaceProfile } from "../../services/faceRecognitionService";
 import { saveFaceProfileToStorage } from "../../services/firebase/faceProfiles";
 import { uploadBytes, getDownloadURL, ref } from "firebase/storage";
@@ -139,7 +139,7 @@ const SmartFaceScan = ({ isOpen, onClose, onProfileCreated, onBack }) => {
       stream.getTracks().forEach((track) => track.stop());
       setStream(null);
     }
-    
+
     // Also clear video ref
     if (videoRef.current) {
       videoRef.current.srcObject = null;

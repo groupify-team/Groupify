@@ -1,14 +1,19 @@
 import React, { useState } from "react";
-import { 
+import {
   XMarkIcon,
   MapPinIcon,
   CalendarIcon,
   SparklesIcon,
   ExclamationTriangleIcon,
-  CheckCircleIcon
-} from '@heroicons/react/24/outline';
-import { useAuth } from "../../contexts/AuthContext";
-import { createTrip, canUserCreateTrip, getUserTripCount, MAX_TRIPS_PER_USER  } from "../../services/firebase/trips";
+  CheckCircleIcon,
+} from "@heroicons/react/24/outline";
+import { useAuth } from "../../auth/contexts/AuthContext";
+import {
+  createTrip,
+  canUserCreateTrip,
+  getUserTripCount,
+  MAX_TRIPS_PER_USER,
+} from "../../services/firebase/trips";
 
 const CreateTripModal = ({ isOpen, onClose, onTripCreated }) => {
   const [name, setName] = useState("");
@@ -22,68 +27,70 @@ const CreateTripModal = ({ isOpen, onClose, onTripCreated }) => {
   const { currentUser } = useAuth();
 
   const handleSubmit = async (e) => {
-  if (e) e.preventDefault();
+    if (e) e.preventDefault();
 
-  if (!name.trim()) {
-    setError("Trip name is required");
-    return;
-  }
-
-  if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
-    setError("End date must be after start date");
-    return;
-  }
-
-  try {
-    setLoading(true);
-    setError(null);
-
-    // Check trip limit before creating
-    const canCreate = await canUserCreateTrip(currentUser.uid);
-    if (!canCreate) {
-      const currentCount = await getUserTripCount(currentUser.uid);
-      setError(`Trip limit reached! You can only create ${MAX_TRIPS_PER_USER} trips. You currently have ${currentCount} trips.`);
-      setLoading(false);
+    if (!name.trim()) {
+      setError("Trip name is required");
       return;
     }
 
-    const newTrip = await createTrip({
-      name,
-      description,
-      location,
-      startDate: startDate || null,
-      endDate: endDate || null,
-      createdBy: currentUser.uid,
-      members: [currentUser.uid],
-      admins: [currentUser.uid], 
-      photoCount: 0,
-    });
-
-    // Reset form
-    setName("");
-    setDescription("");
-    setLocation("");
-    setStartDate("");
-    setEndDate("");
-
-    // Notify parent component
-    if (onTripCreated) {
-      onTripCreated(newTrip);
+    if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
+      setError("End date must be after start date");
+      return;
     }
 
-    // Close modal
-    onClose();
-  } catch (error) {
-    console.error("Error creating trip:", error);
-    if (error.message.includes("Trip limit reached")) {
-      setError(error.message);
-    } else {
-      setError("Failed to create trip. Please try again.");
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Check trip limit before creating
+      const canCreate = await canUserCreateTrip(currentUser.uid);
+      if (!canCreate) {
+        const currentCount = await getUserTripCount(currentUser.uid);
+        setError(
+          `Trip limit reached! You can only create ${MAX_TRIPS_PER_USER} trips. You currently have ${currentCount} trips.`
+        );
+        setLoading(false);
+        return;
+      }
+
+      const newTrip = await createTrip({
+        name,
+        description,
+        location,
+        startDate: startDate || null,
+        endDate: endDate || null,
+        createdBy: currentUser.uid,
+        members: [currentUser.uid],
+        admins: [currentUser.uid],
+        photoCount: 0,
+      });
+
+      // Reset form
+      setName("");
+      setDescription("");
+      setLocation("");
+      setStartDate("");
+      setEndDate("");
+
+      // Notify parent component
+      if (onTripCreated) {
+        onTripCreated(newTrip);
+      }
+
+      // Close modal
+      onClose();
+    } catch (error) {
+      console.error("Error creating trip:", error);
+      if (error.message.includes("Trip limit reached")) {
+        setError(error.message);
+      } else {
+        setError("Failed to create trip. Please try again.");
+      }
+    } finally {
+      setLoading(false);
     }
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   const handleClose = () => {
     if (!loading) {
@@ -104,10 +111,9 @@ const CreateTripModal = ({ isOpen, onClose, onTripCreated }) => {
       <div className="relative w-full max-w-md">
         {/* Background blur effect */}
         <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-2xl blur opacity-20"></div>
-        
+
         {/* Modal content */}
         <div className="relative bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20 dark:border-gray-700/50 overflow-hidden">
-          
           {/* Compact Header */}
           <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-4">
             <div className="flex items-center justify-between">
@@ -120,7 +126,7 @@ const CreateTripModal = ({ isOpen, onClose, onTripCreated }) => {
                   <p className="text-white/70 text-xs">Plan your adventure</p>
                 </div>
               </div>
-              
+
               <button
                 onClick={handleClose}
                 disabled={loading}
@@ -242,7 +248,7 @@ const CreateTripModal = ({ isOpen, onClose, onTripCreated }) => {
               >
                 Cancel
               </button>
-              
+
               <button
                 type="button"
                 onClick={handleSubmit}
