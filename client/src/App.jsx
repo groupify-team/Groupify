@@ -21,7 +21,7 @@ import ForgotPassword from "./features/auth/components/ForgotPassword";
 import TermsOfService from "./pages/TermsOfService";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import ContactUs from "./pages/ContactUs";
-import About from "./pages/About";
+import AboutUs from "./pages/AboutUs";
 import { Toaster } from "react-hot-toast";
 import HelpCenter from "./pages/HelpCenter";
 import Careers from "./pages/Careers";
@@ -296,7 +296,7 @@ function App() {
               <Route path="/terms" element={<TermsOfService />} />
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="/contact" element={<ContactUs />} />
-              <Route path="/about" element={<About />} />
+              <Route path="/about" element={<AboutUs />} />
               <Route path="/careers" element={<Careers />} />
               <Route path="/help" element={<HelpCenter />} />
               <Route path="/blog" element={<Blog />} />
