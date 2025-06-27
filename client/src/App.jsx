@@ -7,17 +7,17 @@ import {
   useLocation,
   useNavigate,
 } from "react-router-dom";
-import { AuthProvider, useAuth } from "./contexts/AuthContext";
-import { ThemeProvider } from "./contexts/ThemeContext";
-import ProtectedRoute from "./components/auth/ProtectedRoute";
-import CloudflareTurnstileGate from "./components/captcha/CloudflareTurnstileGate";
-import SignIn from "./components/auth/SignIn";
-import SignUp from "./components/auth/SignUp";
-import ConfirmEmail from "./components/auth/ConfirmEmail";
-import Dashboard from "./pages/Dashboard";
+import { AuthProvider, useAuth } from "./features/auth/contexts/AuthContext";
+import { ThemeProvider } from "./shared/contexts/ThemeContext";
+import ProtectedRoute from "./features/auth/components/ProtectedRoute";
+import CloudflareTurnstileGate from "./shared/components/ui/CloudFlareTurnstileGate";
+import SignIn from "./features/auth/components/SignIn";
+import SignUp from "./features/auth/components/SignUp";
+import ConfirmEmail from "./features/auth/components/ConfirmEmail";
 import HomePage from "./pages/HomePage";
-import LaunchAnimation from "./components/auth/LaunchAnimation";
-import ForgotPassword from "./components/auth/ForgotPassword";
+import LaunchAnimation from "./features/auth/components/LaunchAnimation";
+import Dashboard from "./features/dashboard/pages/DashboardPage/DashboardPage";
+import ForgotPassword from "./features/auth/components/ForgotPassword";
 import TermsOfService from "./pages/TermsOfService";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import ContactUs from "./pages/ContactUs";
@@ -25,7 +25,7 @@ import About from "./pages/About";
 import { Toaster } from "react-hot-toast";
 import HelpCenter from "./pages/HelpCenter";
 import Careers from "./pages/Careers";
-import ResetPassword from "./components/auth/ResetPassword";
+import ResetPassword from "./features/auth/components/ResetPassword";
 import Blog from "./pages/Blog";
 import Features from "./pages/Features";
 import Pricing from "./pages/Pricing";
