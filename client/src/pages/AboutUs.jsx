@@ -18,7 +18,7 @@ import {
 import ofirprofile from "../assets/ofirprofile.jpg";
 import adirprofile from "../assets/adirprofile.jpg";
 
-const About = () => {
+const AboutUs = () => {
   // Scroll to top on component mount
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -498,4 +498,4 @@ const About = () => {
   );
 };
 
-export default About;
+export default AboutUs;

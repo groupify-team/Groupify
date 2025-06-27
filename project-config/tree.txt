@@ -81,7 +81,7 @@ Groupify/
 │       │   └── useSidebar.js
 │       │
 │       ├── pages/
-│       │   ├── About.jsx
+│       │   ├── AboutUs.jsx
 │       │   ├── Careers.jsx
 │       │   ├── ContactUs.jsx
 │       │   ├── Dashboard.jsx
