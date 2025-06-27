@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { useTheme } from "../contexts/ThemeContext";
-import { useAuth } from "../contexts/AuthContext";
+import { useTheme } from "../shared/contexts/ThemeContext";
+import { useAuth } from "../features/auth/contexts/AuthContext";
 import {
   CameraIcon,
   SunIcon,

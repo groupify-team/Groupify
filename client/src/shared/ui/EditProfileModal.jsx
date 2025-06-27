@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { updateDoc, doc, getDoc } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { auth, db, storage } from "../../services/firebase/config";
+import { auth, db, storage } from "../services/firebase/config";
 import { updateEmail, updatePassword } from "firebase/auth";
 import ProfileImageCropper from "./ProfileImageCropper";
 import { useAuth } from "../../contexts/AuthContext";

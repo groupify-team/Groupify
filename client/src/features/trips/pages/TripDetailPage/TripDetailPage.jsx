@@ -8,8 +8,8 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { toast } from "react-hot-toast";
 
 // 🔹 Context
-import { useAuth } from "../../contexts/AuthContext";
-import { useTheme } from "../../contexts/ThemeContext";
+import { useAuth } from "../../auth/contexts/AuthContext";
+import { useTheme } from "../../../shared/contexts/ThemeContext";
 
 // 🔹 Firebase Config
 import { db, storage } from "../../services/firebase/config";

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { useAuth } from "../../contexts/AuthContext";
-import { findUsersByEmail } from "../../services/firebase/users";
+import { useAuth } from "../../auth/contexts/AuthContext";
+import { findUsersByEmail } from "../../../shared/services/firebase/users";
 import {
   MagnifyingGlassIcon,
   UserPlusIcon,
