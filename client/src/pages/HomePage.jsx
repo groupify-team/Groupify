@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from "react";
+import SettingsModal from "../components/settings/SettingsModal";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useTheme } from "../contexts/ThemeContext";
 import { toast } from "react-hot-toast";
+
 import {
   CameraIcon,
   UserGroupIcon,
   ShareIcon,
   SparklesIcon,
-  MoonIcon,
-  SunIcon,
+  CogIcon,
   ArrowRightIcon,
   CheckIcon,
   UserIcon,
@@ -211,6 +212,7 @@ const HomePage = () => {
   const location = useLocation();
   const [isLoaded, setIsLoaded] = useState(false);
   const [activeBenefit, setActiveBenefit] = useState(0);
+  const [showSettings, setShowSettings] = useState(false);
 
   // MOVE THESE ARRAYS TO THE TOP - BEFORE useEFFECTS
   const features = [
@@ -326,16 +328,12 @@ const HomePage = () => {
 
             {/* Navigation Links */}
             <div className="flex items-center space-x-0">
-              {/* Theme Toggle */}
+              {/* Settings Toggle */}
               <button
-                onClick={toggleTheme}
+                onClick={() => setShowSettings(true)}
                 className="p-2 rounded-lg text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
               >
-                {theme === "dark" ? (
-                  <SunIcon className="w-5 h-5" />
-                ) : (
-                  <MoonIcon className="w-5 h-5" />
-                )}
+                <CogIcon className="w-5 h-5" />
               </button>
 
               {/* Auth Links */}
@@ -1019,6 +1017,14 @@ const HomePage = () => {
           </div>
         </div>
       </footer>
+
+      {/* Settings Modal */}
+      <SettingsModal
+        isOpen={showSettings}
+        onClose={() => setShowSettings(false)}
+        theme={theme}
+        toggleTheme={toggleTheme}
+      />
     </div>
   );
 };

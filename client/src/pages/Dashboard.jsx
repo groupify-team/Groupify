@@ -10,7 +10,6 @@ import TripCard from "../components/trips/TripCard";
 import TripDetailView from "../components/trips/TripDetailView";
 import { useAuth } from "../contexts/AuthContext";
 import { useTheme } from "../contexts/ThemeContext";
-import { UserIcon } from "@heroicons/react/24/outline";
 import { toast } from "react-hot-toast";
 
 // Icons
@@ -31,12 +30,14 @@ import {
   PlusIcon,
   SparklesIcon,
   SunIcon,
+  CogIcon,
   TrashIcon,
   UserCircleIcon,
   UserGroupIcon,
   UserPlusIcon,
   XCircleIcon,
   XMarkIcon,
+  UserIcon,
 } from "@heroicons/react/24/outline";
 
 // functions
@@ -4260,16 +4261,12 @@ const Dashboard = () => {
 
               {/* Right section - Theme toggle, Notifications and user menu */}
               <div className="flex items-center gap-4">
-                {/* Theme Toggle */}
+                {/* Settings Toggle */}
                 <button
-                  onClick={toggleTheme}
-                  className="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                  onClick={() => setShowSettingsModal(true)}
+                  className="p-2 rounded-lg text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                 >
-                  {theme === "dark" ? (
-                    <SunIcon className="w-5 h-5" />
-                  ) : (
-                    <MoonIcon className="w-5 h-5" />
-                  )}
+                  <CogIcon className="w-5 h-5" />
                 </button>
 
                 {/* Notifications with dropdown */}
@@ -4521,6 +4518,8 @@ const Dashboard = () => {
       <SettingsModal
         isOpen={showSettingsModal}
         onClose={() => setShowSettingsModal(false)}
+        theme={theme}
+        toggleTheme={toggleTheme}
       />
 
       {selectedUserProfile && (
