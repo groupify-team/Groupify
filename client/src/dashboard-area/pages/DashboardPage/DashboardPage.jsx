@@ -1,11 +1,11 @@
-// features/dashboard/pages/DashboardPage/DashboardPage.jsx
+﻿// features/dashboard/pages/DashboardPage/DashboardPage.jsx
 import React from "react";
 import DashboardLayout from "@dashboard/components/layout/DashboardLayout";
 import TripsSection from "@dashboard/components/sections/TripsSection";
 import FriendsSection from "@dashboard/components/sections/FriendsSection";
 import SettingsSection from "@dashboard/components/sections/SettingsSection";
 import { useDashboardLayout } from "@dashboard/hooks/useDashboardLayout";
-import TripDetailView from "@/features/trip-details/components/TripDetailPage";
+import TripDetailView from "@dashboard/features/trips/pages/TripDetailPage/TripDetailPage";
 
 const DashboardPage = () => {
   const {
@@ -34,3 +34,4 @@ const DashboardPage = () => {
 };
 
 export default DashboardPage;
+

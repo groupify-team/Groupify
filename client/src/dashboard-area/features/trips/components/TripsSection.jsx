@@ -1,4 +1,4 @@
-// TripsSection.jsx - Trips management section
+﻿// TripsSection.jsx - Trips management section
 import React from "react";
 import {
   BellIcon,
@@ -376,3 +376,4 @@ const TripsSection = () => {
 };
 
 export default TripsSection;
+
