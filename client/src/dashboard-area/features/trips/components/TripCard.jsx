@@ -1,3 +1,4 @@
+// components/TripCard.jsx
 import React from "react";
 import {
   MapPinIcon,
@@ -6,35 +7,10 @@ import {
   EyeIcon,
   ChevronRightIcon,
 } from "@heroicons/react/24/outline";
+import { formatTripDate, getTripStatus } from "../utils/tripHelpers";
 
 const TripCard = ({ trip, onViewTrip }) => {
-  const formatDate = (dateString) => {
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      });
-    } catch (error) {
-      return dateString;
-    }
-  };
-
-  // Determine trip status
-  const getTripStatus = () => {
-    if (!trip.startDate) return { status: "draft", color: "gray" };
-
-    const now = new Date();
-    const startDate = new Date(trip.startDate);
-    const endDate = trip.endDate ? new Date(trip.endDate) : startDate;
-
-    if (endDate < now) return { status: "completed", color: "green" };
-    if (startDate > now) return { status: "upcoming", color: "blue" };
-    return { status: "ongoing", color: "purple" };
-  };
-
-  const tripStatus = getTripStatus();
+  const tripStatus = getTripStatus(trip);
 
   return (
     <div className="group relative">
@@ -113,10 +89,11 @@ const TripCard = ({ trip, onViewTrip }) => {
             <span className="flex-1">
               {trip.startDate && trip.endDate ? (
                 <span>
-                  {formatDate(trip.startDate)} - {formatDate(trip.endDate)}
+                  {formatTripDate(trip.startDate)} -{" "}
+                  {formatTripDate(trip.endDate)}
                 </span>
               ) : trip.startDate ? (
-                <span>{formatDate(trip.startDate)}</span>
+                <span>{formatTripDate(trip.startDate)}</span>
               ) : (
                 <span className="italic text-gray-400 dark:text-gray-500">
                   Dates not set

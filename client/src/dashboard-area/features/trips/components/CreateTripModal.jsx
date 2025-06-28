@@ -1,3 +1,4 @@
+// components/CreateTripModal.jsx
 import React, { useState } from "react";
 import {
   XMarkIcon,
@@ -7,13 +8,8 @@ import {
   ExclamationTriangleIcon,
   CheckCircleIcon,
 } from "@heroicons/react/24/outline";
-import { useAuth } from "../../auth/contexts/AuthContext";
-import {
-  createTrip,
-  canUserCreateTrip,
-  getUserTripCount,
-  MAX_TRIPS_PER_USER,
-} from "../../../shared/services/firebase/trips";
+import { useAuth } from "../../../contexts/AuthContext";
+import { tripsService } from "../services/tripsService";
 
 const CreateTripModal = ({ isOpen, onClose, onTripCreated }) => {
   const [name, setName] = useState("");
@@ -44,17 +40,19 @@ const CreateTripModal = ({ isOpen, onClose, onTripCreated }) => {
       setError(null);
 
       // Check trip limit before creating
-      const canCreate = await canUserCreateTrip(currentUser.uid);
+      const canCreate = await tripsService.canUserCreateTrip(currentUser.uid);
       if (!canCreate) {
-        const currentCount = await getUserTripCount(currentUser.uid);
+        const currentCount = await tripsService.getUserTripCount(
+          currentUser.uid
+        );
         setError(
-          `Trip limit reached! You can only create ${MAX_TRIPS_PER_USER} trips. You currently have ${currentCount} trips.`
+          `Trip limit reached! You can only create ${tripsService.MAX_TRIPS_PER_USER} trips. You currently have ${currentCount} trips.`
         );
         setLoading(false);
         return;
       }
 
-      const newTrip = await createTrip({
+      const newTrip = await tripsService.createTrip({
         name,
         description,
         location,
