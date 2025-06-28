@@ -15,18 +15,33 @@ export default defineConfig({
       "@shared": path.resolve(__dirname, "./src/shared"),
       "@tests": path.resolve(__dirname, "./src/tests"),
 
-      // Feature-specific aliases for cleaner imports
-      "@auth": path.resolve(__dirname, "./src/features/auth"),
-      "@dashboard": path.resolve(__dirname, "./src/features/dashboard"),
+      // Updated aliases for new folder structure
+      "@auth": path.resolve(__dirname, "./src/auth-area"),
+      "@dashboard": path.resolve(__dirname, "./src/dashboard-area"), // Fixed this line
+      "@public": path.resolve(__dirname, "./src/public-area"),
+
+      // Keep feature-specific aliases for dashboard features
       "@face-recognition": path.resolve(
         __dirname,
-        "./src/features/face-recognition"
+        "./src/dashboard-area/features/face-recognition"
       ),
-      "@friends": path.resolve(__dirname, "./src/features/friends"),
-      "@photos": path.resolve(__dirname, "./src/features/photos"),
-      "@trips": path.resolve(__dirname, "./src/features/trips"),
-      "@settings": path.resolve(__dirname, "./src/features/settings"),
-      "@notifications": path.resolve(__dirname, "./src/features/notifications"),
+      "@friends": path.resolve(
+        __dirname,
+        "./src/dashboard-area/features/friends"
+      ),
+      "@photos": path.resolve(
+        __dirname,
+        "./src/dashboard-area/features/photos"
+      ),
+      "@trips": path.resolve(__dirname, "./src/dashboard-area/features/trips"),
+      "@settings": path.resolve(
+        __dirname,
+        "./src/dashboard-area/features/settings"
+      ),
+      "@notifications": path.resolve(
+        __dirname,
+        "./src/dashboard-area/features/notifications"
+      ),
     },
   },
 });

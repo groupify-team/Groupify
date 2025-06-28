@@ -7,30 +7,40 @@ import {
   useLocation,
   useNavigate,
 } from "react-router-dom";
-import { AuthProvider, useAuth } from "@/features/auth/contexts/AuthContext";
+
+// Updated imports based on CURRENT folder structure
+import { AuthProvider, useAuth } from "@/auth-area/contexts/AuthContext";
 import { ThemeProvider } from "@/shared/contexts/ThemeContext";
-import ProtectedRoute from "@/features/auth/components/ProtectedRoute";
+import ProtectedRoute from "@/auth-area/components/ProtectedRoute";
 import CloudflareTurnstileGate from "@/shared/components/ui/CloudFlareTurnstileGate";
-import SignIn from "@/features/auth/components/SignIn";
-import SignUp from "@/features/auth/components/SignUp";
-import ConfirmEmail from "@/features/auth/components/ConfirmEmail";
-import HomePage from "@/pages/HomePage";
-import LaunchAnimation from "@/features/auth/components/LaunchAnimation";
-import Dashboard from "@/features/dashboard/pages/DashboardPage/DashboardPage";
-import ForgotPassword from "@/features/auth/components/ForgotPassword";
-import TermsOfService from "@/pages/TermsOfService";
-import PrivacyPolicy from "@/pages/PrivacyPolicy";
-import ContactUs from "@/pages/ContactUs";
-import AboutUs from "@/pages/AboutUs";
+
+// Auth Area Components
+import SignIn from "@/auth-area/pages/SignInPage";
+import SignUp from "@/auth-area/pages/SignUpPage";
+import ConfirmEmail from "@/auth-area/pages/ConfirmEmailPage";
+import ForgotPassword from "@/auth-area/pages/ForgotPasswordPage";
+import ResetPassword from "@/auth-area/pages/ResetPasswordPage";
+import LaunchAnimation from "@/auth-area/components/ui/LaunchAnimation";
+
+// Dashboard Area Components
+import Dashboard from "@/dashboard-area/pages/DashboardPage/DashboardPage";
+
+// Public Area Pages
+import HomePage from "@/public-area/pages/HomePage";
+import TermsOfService from "@/public-area/pages/TermsOfServicePage";
+import PrivacyPolicy from "@/public-area/pages/PrivacyPolicyPage";
+import ContactUs from "@/public-area/pages/ContactPage";
+import AboutUs from "@/public-area/pages/AboutPage";
+import HelpCenter from "@/public-area/pages/HelpCenterPage";
+import Careers from "@/public-area/pages/CareersPage";
+import Blog from "@/public-area/pages/BlogPage";
+import Features from "@/public-area/pages/FeaturesPage";
+import Pricing from "@/public-area/pages/PricingPage";
+import Status from "@/public-area/pages/StatusPage";
+import Billing from "@/public-area/pages/BillingPage";
+
+// Toast notifications
 import { Toaster } from "react-hot-toast";
-import HelpCenter from "@/pages/HelpCenter";
-import Careers from "@/pages/Careers";
-import ResetPassword from "@/features/auth/components/ResetPassword";
-import Blog from "@/pages/Blog";
-import Features from "@/pages/Features";
-import Pricing from "@/pages/Pricing";
-import Status from "@/pages/Status";
-import Billing from "@/pages/Billing";
 
 // Centralized Flow Controller - Handles ALL navigation logic
 const FlowController = ({ children }) => {
