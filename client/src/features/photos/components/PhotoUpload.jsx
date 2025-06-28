@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import { useAuth } from "../../contexts/AuthContext";
-import { uploadPhoto } from "../../services/firebase/storage";
-import { storage } from "../../services/firebase/config";
+import { useAuth } from "../../auth/contexts/AuthContext";
+import { uploadPhoto } from "../../../shared/services/firebase/storage";
+import { storage } from "../../../shared/services/firebase/config";
 import {
   PhotoIcon,
   CloudArrowUpIcon,

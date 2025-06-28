@@ -1,11 +1,11 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useAuth } from "../../auth/contexts/AuthContext";
-import { createFaceProfile } from "../../services/faceRecognitionService";
-import { saveFaceProfileToStorage } from "../../services/firebase/faceProfiles";
+import { createFaceProfile } from "../services/faceRecognitionService";
+import { saveFaceProfileToStorage } from "../../../shared/services/firebase/faceProfiles";
 import { uploadBytes, getDownloadURL, ref } from "firebase/storage";
-import { storage } from "../../services/firebase/config";
+import { storage } from "../../../shared/services/firebase/config";
 import SmartFaceScan from "./SmartFaceScan";
-import PhotoUpload from "../photos/PhotoUpload";
+import PhotoUpload from "../../photos/components/PhotoUpload";
 import {
   XMarkIcon,
   CameraIcon,

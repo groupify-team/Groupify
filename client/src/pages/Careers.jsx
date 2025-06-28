@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useTheme } from "../shared/contexts/ThemeContext";
+
 import {
   CameraIcon,
   MoonIcon,
@@ -298,7 +299,9 @@ const Careers = () => {
 
         // Call Firebase function
         const { httpsCallable } = await import("firebase/functions");
-        const { functions } = await import("../services/firebase/config");
+        const { functions } = await import(
+          "../shared/services/firebase/config"
+        );
         const sendJobApplication = httpsCallable(
           functions,
           "sendJobApplicationEmail"

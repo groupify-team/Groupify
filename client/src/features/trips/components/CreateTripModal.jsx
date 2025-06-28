@@ -13,7 +13,7 @@ import {
   canUserCreateTrip,
   getUserTripCount,
   MAX_TRIPS_PER_USER,
-} from "../../services/firebase/trips";
+} from "../../../shared/services/firebase/trips";
 
 const CreateTripModal = ({ isOpen, onClose, onTripCreated }) => {
   const [name, setName] = useState("");
