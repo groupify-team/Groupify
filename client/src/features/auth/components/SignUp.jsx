@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
-import { useLocation } from "react-router-dom";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useTheme } from "../../../shared/contexts/ThemeContext";
 import {
   EyeIcon,
@@ -752,5 +751,3 @@ const SignUp = () => {
 };
 
 export default SignUp;
-
-

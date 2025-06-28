@@ -69,12 +69,12 @@ import {
   hasFaceProfile,
   optimizeProfile,
   removePhotosFromProfile,
-} from "../services/faceRecognitionService";
-import { db, storage } from "../services/firebase/config";
+} from "../../../face-recognition/services/faceRecognitionService";
+import { db, storage } from "../../../../shared/services/firebase/config";
 import {
   deleteFaceProfileFromStorage,
   getFaceProfileFromStorage,
-} from "../services/firebase/faceProfiles";
+} from "../../../../shared/services/firebase/faceProfiles";
 import {
   createTrip,
   canUserCreateTrip,
@@ -84,7 +84,7 @@ import {
   declineTripInvite,
   getPendingInvites,
   getUserTrips,
-} from "../services/firebase/trips";
+} from "../../../../shared/services/firebase/trips";
 import {
   acceptFriendRequest,
   cancelFriendRequest,
@@ -94,7 +94,7 @@ import {
   rejectFriendRequest,
   removeFriend,
   sendFriendRequest,
-} from "../services/firebase/users";
+} from "../../../../shared/services/firebase/users";
 
 const Dashboard = () => {
   // Authentication context
@@ -782,7 +782,9 @@ const Dashboard = () => {
             const { collection, query, where, getDocs } = await import(
               "firebase/firestore"
             );
-            const { db } = await import("../services/firebase/config");
+            const { db } = await import(
+              "../../../../shared/services/firebase/config"
+            );
 
             console.log("🔍 Querying trips where user is creator...");
             const createdTripsQuery = query(
@@ -5013,4 +5015,3 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
-

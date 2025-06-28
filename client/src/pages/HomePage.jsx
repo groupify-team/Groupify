@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import SettingsModal from "../features/settings/components/SettingsModal";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { useAuth } from "./features/auth/contexts/AuthContext";
+import { useAuth } from "../features/auth/contexts/AuthContext";
 import { useTheme } from "../shared/contexts/ThemeContext";
 import { toast } from "react-hot-toast";
 
@@ -15,7 +15,7 @@ import {
   CheckIcon,
   UserIcon,
 } from "@heroicons/react/24/outline";
-import PhotoStack3D from "../components/auth/3DInteractivePhotoStack";
+import PhotoStack3D from "../features/auth/components/3DInteractivePhotoStack";
 
 // Launch Animation Component (add this at the top of your file)
 const LaunchAnimation = ({ onAnimationComplete }) => {

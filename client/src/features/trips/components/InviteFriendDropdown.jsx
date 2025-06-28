@@ -5,7 +5,7 @@ import {
   UsersIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
-import { getFriends } from "../../services/firebase/users";
+import { getFriends } from "../../../shared/services/firebase/users";
 
 // 🧩 Component for inviting friends to a trip, with exclusion support
 const InviteFriendDropdown = ({
