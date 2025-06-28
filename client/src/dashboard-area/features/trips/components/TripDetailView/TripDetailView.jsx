@@ -1,15 +1,18 @@
+// client/src/components/dashboard/TripDetailView.jsx
+
+// **************** 🔹 Imports  ****************
+
 // 🔹 React & Router
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { toast } from "react-hot-toast";
-import TripHeader from "./components/TripHeader";
 
 // 🔹 Context
-import { useAuth } from "../../../auth/contexts/AuthContext";
-import { useTheme } from "../../../../shared/contexts/ThemeContext";
+import { useAuth } from "../../contexts/AuthContext";
+import { useTheme } from "../../contexts/ThemeContext";
 
 // 🔹 Firebase Config
-import { db, storage } from "../../../../shared/services/firebase/config";
+import { db, storage } from "../../services/firebase/config";
 
 // 🔹 Firestore & Storage Functions
 import {
@@ -34,19 +37,20 @@ import {
   addTripMember,
   sendTripInvite,
   updateTrip,
-  MAX_PHOTOS_PER_TRIP,
-} from "../../../../shared/services/firebase/trips";
-import { getTripPhotos } from "../../../../shared/services/firebase/storage";
+} from "../../services/firebase/trips";
+import { MAX_PHOTOS_PER_TRIP } from "../../services/firebase/trips";
+
+import { getTripPhotos } from "../../services/firebase/storage";
 import {
   getFriends,
   getUserProfile,
   sendFriendRequest,
   removeFriend,
   getPendingFriendRequests,
-} from "../../../../shared/services/firebase/users";
-import { getFaceProfileFromStorage } from "../../../../shared/services/firebase/faceProfiles";
+} from "../../services/firebase/users";
+import { getFaceProfileFromStorage } from "../../services/firebase/faceProfiles";
 
-// 🔹 Face Recognition
+// 🔹 Face Recognition (Simplified)
 import {
   filterPhotosByFaceProfile,
   hasFaceProfile,
@@ -54,13 +58,13 @@ import {
   resetFaceRecognition,
   getFaceProfile,
   createFaceProfile,
-} from "../../../face-recognition/services/faceRecognitionService";
+} from "../../services/faceRecognitionService";
 
 // 🔹 Components
-import PhotoUpload from "../../../photos/components/PhotoUpload";
-import InviteFriendDropdown from "../../components/InviteFriendDropdown";
-import UserProfileModal from "../../../../shared/ui/UserProfileModal";
-import EditTripModal from "../../components/EditTripModal";
+import PhotoUpload from "../photos/PhotoUpload";
+import InviteFriendDropdown from "../trips/InviteFriendDropdown";
+import UserProfileModal from "../profile/UserProfileModal";
+import EditTripModal from "../trips/EditTripModal";
 
 // 🔹 Icons
 import {

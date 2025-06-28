@@ -1,3 +1,4 @@
+// components/InviteFriendDropdown.jsx
 import React, { useState, useEffect } from "react";
 import {
   MagnifyingGlassIcon,
@@ -5,7 +6,7 @@ import {
   UsersIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
-import { getFriends } from "../../../shared/services/firebase/users";
+import { getFriends } from "../../../services/firebase/users";
 
 // 🧩 Component for inviting friends to a trip, with exclusion support
 const InviteFriendDropdown = ({
