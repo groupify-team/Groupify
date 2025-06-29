@@ -6,21 +6,19 @@ import {
   SparklesIcon,
   PlusIcon,
   CameraIcon,
+  ClockIcon,
+  UserGroupIcon,
 } from "@heroicons/react/24/outline";
-import { getTripStats } from "../../utils/tripHelpers";
 
 const PhotosSection = ({
   photos = [],
-  trip,
   onPhotoClick,
-  onUploadClick,
   onViewAllClick,
   onRandomPhotoClick,
-  showUploadForm,
-  maxPhotos = 100,
+  onUploadClick,
+  tripMembers = [],
+  MAX_PHOTOS_PER_TRIP,
 }) => {
-  const stats = getTripStats(trip, photos, trip?.members || []);
-
   if (photos.length === 0) {
     return (
       <div className="relative group">
@@ -97,13 +95,15 @@ const PhotosSection = ({
               <EyeIcon className="w-3 h-3 sm:w-4 sm:h-4" />
               View All
             </button>
-            <button
-              onClick={onRandomPhotoClick}
-              className="px-3 py-2 sm:px-4 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white rounded-lg sm:rounded-xl font-medium transition-all duration-300 transform hover:scale-105 shadow-lg text-xs sm:text-sm flex items-center justify-center gap-2 backdrop-blur-sm"
-            >
-              <SparklesIcon className="w-3 h-3 sm:w-4 sm:h-4" />
-              <span className="hidden sm:inline">Random</span>
-            </button>
+            {photos.length > 0 && (
+              <button
+                onClick={onRandomPhotoClick}
+                className="px-3 py-2 sm:px-4 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white rounded-lg sm:rounded-xl font-medium transition-all duration-300 transform hover:scale-105 shadow-lg text-xs sm:text-sm flex items-center justify-center gap-2 backdrop-blur-sm"
+              >
+                <SparklesIcon className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">Random</span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -192,7 +192,15 @@ const PhotosSection = ({
 
             <div className="text-center p-2 sm:p-3 bg-pink-50/50 dark:bg-pink-900/20 rounded-lg border border-pink-200/30 dark:border-pink-800/30 hover:scale-105 transition-transform duration-300">
               <p className="text-sm sm:text-lg font-bold text-pink-700 dark:text-pink-400">
-                {stats.daysActive}
+                {photos.length > 0
+                  ? Math.ceil(
+                      (Date.now() -
+                        Math.min(
+                          ...photos.map((p) => new Date(p.uploadedAt).getTime())
+                        )) /
+                        (1000 * 60 * 60 * 24)
+                    )
+                  : 0}
               </p>
               <p className="text-xs text-pink-600 dark:text-pink-500">
                 Days Active
@@ -201,7 +209,7 @@ const PhotosSection = ({
 
             <div className="text-center p-2 sm:p-3 bg-blue-50/50 dark:bg-blue-900/20 rounded-lg border border-blue-200/30 dark:border-blue-800/30 hover:scale-105 transition-transform duration-300">
               <p className="text-sm sm:text-lg font-bold text-blue-700 dark:text-blue-400">
-                {stats.totalMembers}
+                {tripMembers.length}
               </p>
               <p className="text-xs text-blue-600 dark:text-blue-500">
                 Contributors
@@ -210,7 +218,11 @@ const PhotosSection = ({
 
             <div className="text-center p-2 sm:p-3 bg-emerald-50/50 dark:bg-emerald-900/20 rounded-lg border border-emerald-200/30 dark:border-emerald-800/30 hover:scale-105 transition-transform duration-300">
               <p className="text-sm sm:text-lg font-bold text-emerald-700 dark:text-emerald-400">
-                {stats.avgPhotosPerMember}
+                {photos.length > 0
+                  ? Math.round(
+                      (photos.length / Math.max(tripMembers.length, 1)) * 10
+                    ) / 10
+                  : 0}
               </p>
               <p className="text-xs text-emerald-600 dark:text-emerald-500">
                 Avg per Member
