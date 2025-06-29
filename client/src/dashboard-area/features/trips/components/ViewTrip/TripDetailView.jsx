@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 
 // Context
-import { useAuth } from "../../contexts/AuthContext";
+import { useAuth } from "../../../contexts/AuthContext";
 
 // Components
 import TripHeader from "./components/TripHeader";
@@ -327,10 +327,8 @@ const TripDetailView = ({ tripId: propTripId }) => {
             {/* Invite People */}
             <InvitePeopleCard
               currentUser={currentUser}
+              tripId={tripId}
               tripMembers={trip.members}
-              onInviteFriend={(friend) =>
-                handleInviteFriend(friend, tripId, currentUser?.uid)
-              }
             />
           </div>
         </div>
