@@ -1,4 +1,4 @@
-// trips/index.js (Main barrel export for trips feature)
+// index.js - Main barrel export for trips feature
 
 // Components
 export { default as CreateTripModal } from "./components/CreateTripModal";
@@ -18,21 +18,17 @@ export { useTripMembers } from "./hooks/useTripMembers";
 export { usePhotoSelection } from "./hooks/usePhotoSelection";
 export { useFriendship } from "./hooks/useFriendship";
 export { useTripInvitations } from "./hooks/useTripInvitations";
+export { usePerformanceMonitoring } from "./hooks/usePerformanceMonitoring";
 
 // Services
 export { tripsService } from "./services/tripsService";
 
 // Utils
 export * from "./utils/tripHelpers";
+export * from "./utils/tripConstants";
+export * from "./utils/tripValidation";
 
-// ================================================================
-// components/TripDetailView/index.js (TripDetailView barrel export)
-
-export { default } from "./TripDetailView";
-export { default as FaceRecognitionSection } from "./FaceRecognitionSection";
-export { default as MembersSection } from "./MembersSection";
-export { default as PhotosSection } from "./PhotosSection";
-export { default as TripHeader } from "./TripHeader";
-export { default as TripSidebar } from "./TripSidebar";
-export { default as PhotoModal } from "./PhotoModal";
-export { default as PhotoGalleryModal } from "./PhotoGalleryModal";
+// Types
+export * from "./types/trip.types";
+export * from "./types/member.types";
+export * from "./types/photo.types";

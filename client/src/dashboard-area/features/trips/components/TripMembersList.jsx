@@ -1,5 +1,6 @@
-// components/TripMembersList.jsx
+// components/TripMembersList.jsx - With PropTypes
 import React from "react";
+import PropTypes from "prop-types";
 import {
   UserIcon,
   CrownIcon,
@@ -147,6 +148,35 @@ const TripMembersList = ({
       </div>
     </div>
   );
+};
+
+// 🔥 ADD: PropTypes for better development experience
+TripMembersList.propTypes = {
+  members: PropTypes.arrayOf(
+    PropTypes.shape({
+      uid: PropTypes.string.isRequired,
+      displayName: PropTypes.string,
+      email: PropTypes.string.isRequired,
+      photoURL: PropTypes.string,
+    })
+  ),
+  trip: PropTypes.shape({
+    id: PropTypes.string.isRequired,
+    createdBy: PropTypes.string.isRequired,
+    admins: PropTypes.arrayOf(PropTypes.string),
+    members: PropTypes.arrayOf(PropTypes.string),
+  }),
+  currentUser: PropTypes.shape({
+    uid: PropTypes.string.isRequired,
+  }),
+  onMemberClick: PropTypes.func,
+  showHeader: PropTypes.bool,
+};
+
+TripMembersList.defaultProps = {
+  members: [],
+  showHeader: true,
+  onMemberClick: null,
 };
 
 export default TripMembersList;
