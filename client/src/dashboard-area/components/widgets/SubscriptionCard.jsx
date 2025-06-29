@@ -1,6 +1,6 @@
-// SubscriptionCard.jsx - Subscription and billing management widget
+﻿// SubscriptionCard.jsx - Subscription and billing management widget
 import React from "react";
-import { useDashboardData } from "@dashboard/hooks/useDashboardData";
+import { useDashboardData } from "../../hooks/useDashboardData";
 import {
   getCurrentPlanConfig,
   isPaidPlan,

@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
-import { getTrip, updateTrip } from "../../../services/firebase/trips";
-import { getTripPhotos } from "../../../services/firebase/storage";
-import { getUserProfile } from "../../../services/firebase/users";
+﻿import { useState, useEffect } from "react";
+import { getTrip, updateTrip } from "@shared/services/firebase/trips";
+import { getTripPhotos } from "@shared/services/firebase/storage";
+import { getUserProfile } from "@shared/services/firebase/users";
 
 export const useTripData = (tripId, currentUserId) => {
   const [trip, setTrip] = useState(null);

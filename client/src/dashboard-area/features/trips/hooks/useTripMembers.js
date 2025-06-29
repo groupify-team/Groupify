@@ -1,10 +1,10 @@
-// hooks/useTripMembers.js (Complete implementation)
+﻿// hooks/useTripMembers.js (Complete implementation)
 import { useState, useEffect } from "react";
 import { toast } from "react-hot-toast";
-import { updateTrip } from "../../../services/firebase/trips";
-import { getUserProfile } from "../../../services/firebase/users";
+import { updateTrip } from "@shared/services/firebase/trips";
+import { getUserProfile } from "@shared/services/firebase/users";
 import { doc, getDoc, deleteDoc } from "firebase/firestore";
-import { db } from "../../../services/firebase/config";
+import { db } from "@shared/services/firebase/config";
 
 export const useTripMembers = (trip, setTrip) => {
   const [members, setMembers] = useState([]);

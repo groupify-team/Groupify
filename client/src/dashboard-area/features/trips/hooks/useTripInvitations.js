@@ -1,9 +1,9 @@
-// hooks/useTripInvitations.js
+﻿// hooks/useTripInvitations.js
 import { useState } from "react";
 import { toast } from "react-hot-toast";
 import { collection, getDocs, query, where } from "firebase/firestore";
-import { db } from "../../../services/firebase/config";
-import { sendTripInvite } from "../../../services/firebase/trips";
+import { db } from "@shared/services/firebase/config";
+import { sendTripInvite } from "@shared/services/firebase/trips";
 
 export const useTripInvitations = (tripId, currentUser) => {
   const [isLoading, setIsLoading] = useState(false);

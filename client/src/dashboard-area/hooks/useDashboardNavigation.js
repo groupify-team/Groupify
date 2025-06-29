@@ -1,4 +1,4 @@
-// useDashboardNavigation.js - Navigation and routing management
+﻿// useDashboardNavigation.js - Navigation and routing management
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {

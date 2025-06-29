@@ -1,4 +1,4 @@
-// components/CreateTripModal.jsx
+﻿// components/CreateTripModal.jsx
 import React, { useState } from "react";
 import {
   XMarkIcon,
@@ -8,7 +8,7 @@ import {
   ExclamationTriangleIcon,
   CheckCircleIcon,
 } from "@heroicons/react/24/outline";
-import { useAuth } from "../../../contexts/AuthContext";
+import { useAuth } from "@auth/contexts/AuthContext";
 import { tripsService } from "../services/tripsService";
 
 const CreateTripModal = ({ isOpen, onClose, onTripCreated }) => {

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { toast } from "react-hot-toast";
 import {
   doc,
@@ -8,14 +8,14 @@ import {
   where,
   getDocs,
 } from "firebase/firestore";
-import { db } from "../../../services/firebase/config";
-import { updateTrip, sendTripInvite } from "../../../services/firebase/trips";
+import { db } from "@shared/services/firebase/config";
+import { updateTrip, sendTripInvite } from "@shared/services/firebase/trips";
 import {
   getFriends,
   getUserProfile,
   sendFriendRequest,
   removeFriend,
-} from "../../../services/firebase/users";
+} from "@shared/services/firebase/users";
 
 export const useTripMembers = (currentUserId) => {
   const [friends, setFriends] = useState([]);

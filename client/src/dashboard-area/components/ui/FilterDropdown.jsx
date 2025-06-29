@@ -1,7 +1,7 @@
-// FilterDropdown.jsx - Filter dropdown component
+﻿// FilterDropdown.jsx - Filter dropdown component
 import React from "react";
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
-import { FILTER_OPTIONS } from "@dashboard/utils/dashboardConstants";
+import { FILTER_OPTIONS } from "@dashboard/utils/dashboardConstants.jsx";
 
 const FilterDropdown = ({
   isOpen,

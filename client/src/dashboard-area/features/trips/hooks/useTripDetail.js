@@ -1,7 +1,7 @@
-// hooks/useTripDetail.js
+﻿// hooks/useTripDetail.js
 import { useState, useEffect } from "react";
 import { tripsService } from "../services/tripsService";
-import { isUserTripAdmin, isUserTripMember } from "../utils/tripHelpers";
+import { isUserTripAdmin, isUserTripMember } from "@dashboard/utils/tripHelpers";
 
 export const useTripDetail = (tripId, currentUser) => {
   const [trip, setTrip] = useState(null);

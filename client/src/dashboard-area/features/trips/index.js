@@ -1,4 +1,4 @@
-// index.js - Main barrel export for trips feature
+﻿// index.js - Main barrel export for trips feature
 
 // Components
 export { default as CreateTripModal } from "./components/CreateTripModal";
@@ -16,4 +16,4 @@ export { useFaceRecognition } from "./hooks/useFaceRecognition";
 export { tripsService } from "./services/tripsService";
 
 // Utils
-export * from "./utils/tripHelpers";
+export * from "@dashboard/utils/tripHelpers";

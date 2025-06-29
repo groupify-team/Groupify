@@ -1,9 +1,9 @@
-import React from "react";
+﻿import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 
 // Context
-import { useAuth } from "../../../contexts/AuthContext";
+import { useAuth } from "@auth/contexts/AuthContext";
 
 // Components
 import TripHeader from "./components/TripHeader";
@@ -17,14 +17,14 @@ import InvitePeopleCard from "./components/InvitePeopleCard";
 import PhotoModal from "./components/modals/PhotoModal";
 import AllPhotosModal from "./components/modals/AllPhotosModal";
 import EditTripModal from "./components/modals/EditTripModal";
-import UserProfileModal from "../profile/UserProfileModal";
+import UserProfileModal from "@friends/components/UserProfileModal";
 
 // Hooks
-import useTripData from "./hooks/useTripData";
-import useFaceRecognition from "./hooks/useFaceRecognition";
-import usePhotoOperations from "./hooks/usePhotoOperations";
-import useTripMembers from "./hooks/useTripMembers";
-import usePhotoModal from "./hooks/usePhotoModal";
+import { useTripData } from "./hooks/useTripData";
+import { useFaceRecognition } from "./hooks/useFaceRecognition";
+import { usePhotoOperations } from "./hooks/usePhotoOperations";
+import { useTripMembers } from "./hooks/useTripMembers";
+import { usePhotoModal } from "./hooks/usePhotoModal";
 
 // Utils
 import {

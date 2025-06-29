@@ -1,4 +1,4 @@
-// components/TripCard.jsx
+﻿// components/TripCard.jsx
 import React from "react";
 import {
   MapPinIcon,
@@ -7,7 +7,7 @@ import {
   EyeIcon,
   ChevronRightIcon,
 } from "@heroicons/react/24/outline";
-import { formatTripDate, getTripStatus } from "../utils/tripHelpers";
+import { formatTripDate, getTripStatus } from "@trips/utils/tripHelpers";
 
 const TripCard = ({ trip, onViewTrip }) => {
   const tripStatus = getTripStatus(trip);

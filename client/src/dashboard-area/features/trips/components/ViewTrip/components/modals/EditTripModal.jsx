@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+﻿import React, { useState, useEffect } from "react";
 import {
   XMarkIcon,
   MapPinIcon,
@@ -9,8 +9,8 @@ import {
   TrashIcon,
 } from "@heroicons/react/24/outline";
 import { toast } from "react-hot-toast";
-import { useAuth } from "../../contexts/AuthContext";
-import { updateTrip, deleteTrip } from "../../services/firebase/trips";
+import { useAuth } from "@auth/contexts/AuthContext";
+import { updateTrip, deleteTrip } from "@shared/services/firebase/trips";
 
 const EditTripModal = ({
   isOpen,

@@ -1,4 +1,4 @@
-// TripsSection.jsx - Trips management section
+﻿// TripsSection.jsx - Trips management section
 import React from "react";
 import {
   BellIcon,
@@ -11,13 +11,13 @@ import {
   XCircleIcon,
 } from "@heroicons/react/24/outline";
 import { useAuth } from "@auth/contexts/AuthContext";
-import { useDashboardLayout } from "@dashboard/hooks/useDashboardLayout";
-import { useDashboardData } from "@dashboard/hooks/useDashboardData";
-import { useDashboardModals } from "@dashboard/hooks/useDashboardModals";
+import { useDashboardLayout } from "../../hooks/useDashboardLayout";
+import { useDashboardData } from "../../hooks/useDashboardData";
+import { useDashboardModals } from "../../hooks/useDashboardModals";
 import TripCard from "@trips/components/TripCard";
-import TabSwitcher from "@dashboard/components/ui/TabSwitcher";
-import FilterDropdown from "@dashboard/components/ui/FilterDropdown";
-import { filterTrips, getFilterLabel } from "../utils/dashboardHelpers";
+import TabSwitcher from "../ui/TabSwitcher";
+import FilterDropdown from "../ui/FilterDropdown";
+import { filterTrips, getFilterLabel } from "@dashboard/utils/dashboardHelpers";
 import {
   canUserCreateTrip,
   getUserTripCount,

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { toast } from "react-hot-toast";
 import {
   filterPhotosByFaceProfile,
@@ -6,8 +6,8 @@ import {
   cancelFaceRecognition,
   resetFaceRecognition,
   createFaceProfile,
-} from "../../../services/faceRecognitionService";
-import { getFaceProfileFromStorage } from "../../../services/firebase/faceProfiles";
+} from "@shared/services/faceRecognitionService";
+import { getFaceProfileFromStorage } from "@shared/services/firebase/faceProfiles";
 
 export const useFaceRecognition = (photos, currentUserId, isMember) => {
   const [hasProfile, setHasProfile] = useState(false);

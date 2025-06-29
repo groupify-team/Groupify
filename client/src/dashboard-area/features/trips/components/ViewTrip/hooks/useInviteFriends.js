@@ -1,10 +1,10 @@
-// hooks/useInviteFriends.js
+﻿// hooks/useInviteFriends.js
 import { useState, useEffect } from "react";
 import { toast } from "react-hot-toast";
 import { collection, getDocs, query, where } from "firebase/firestore";
-import { db } from "../../../services/firebase/config";
-import { getFriends } from "../../../services/firebase/users";
-import { sendTripInvite } from "../../../services/firebase/trips";
+import { db } from "@shared/services/firebase/config";
+import { getFriends } from "@shared/services/firebase/users";
+import { sendTripInvite } from "@shared/services/firebase/trips";
 
 export const useInviteFriends = (currentUser, tripId, excludedUserIds = []) => {
   const [friends, setFriends] = useState([]);

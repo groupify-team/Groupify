@@ -1,7 +1,7 @@
-// hooks/useTripPhotos.js - Optimization suggestions
+﻿// hooks/useTripPhotos.js - Optimization suggestions
 import { useState, useCallback, useMemo } from "react";
 import { toast } from "react-hot-toast";
-import { MAX_PHOTOS_PER_TRIP } from "../../../services/firebase/trips";
+import { MAX_PHOTOS_PER_TRIP } from "@shared/services/firebase/trips";
 
 export const useTripPhotos = (tripId, trip, setTrip) => {
   const [photos, setPhotos] = useState([]);

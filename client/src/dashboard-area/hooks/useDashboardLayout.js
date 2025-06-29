@@ -1,4 +1,4 @@
-// useDashboardLayout.js - Layout and navigation state management
+﻿// useDashboardLayout.js - Layout and navigation state management
 import { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
