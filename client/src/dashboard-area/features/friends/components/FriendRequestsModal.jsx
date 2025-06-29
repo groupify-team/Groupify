@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from "react";
+﻿import React, { useEffect, useState } from "react";
 import {
   acceptFriendRequest,
   rejectFriendRequest,
   getPendingFriendRequests,
-} from "../../../shared/services/firebase/users";
+} from "@shared/services/firebase/users";
 
 const FriendRequestsModal = ({ currentUserId, onClose }) => {
   const [requests, setRequests] = useState([]);

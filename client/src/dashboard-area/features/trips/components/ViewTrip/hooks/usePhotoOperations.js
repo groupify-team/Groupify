@@ -1,9 +1,9 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { toast } from "react-hot-toast";
 import { doc, deleteDoc } from "firebase/firestore";
 import { ref, deleteObject } from "firebase/storage";
-import { db, storage } from "../../../services/firebase/config";
-import { MAX_PHOTOS_PER_TRIP } from "../../../services/firebase/trips";
+import { db, storage } from "@shared/services/firebase/config";
+import { MAX_PHOTOS_PER_TRIP } from "@shared/services/firebase/trips";
 
 export const usePhotoOperations = (
   tripId,

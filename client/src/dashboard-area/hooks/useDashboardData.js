@@ -1,4 +1,4 @@
-// useDashboardData.js - Main data management hook for dashboard
+﻿// useDashboardData.js - Main data management hook for dashboard
 import { useState, useEffect } from "react";
 import { useAuth } from "@auth/contexts/AuthContext";
 import {
@@ -23,7 +23,7 @@ import {
 import {
   hasFaceProfile,
   getProfilePhotos,
-} from "@/features/trip-details/services/faceRecognitionService";
+} from "@shared/services/faceRecognitionService";
 import { ERROR_MESSAGES } from "@dashboard/utils/dashboardConstants";
 
 export const useDashboardData = () => {

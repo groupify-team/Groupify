@@ -1,4 +1,4 @@
-// hooks/useFriendship.js
+﻿// hooks/useFriendship.js
 import { useState, useEffect } from "react";
 import { toast } from "react-hot-toast";
 import {
@@ -6,7 +6,7 @@ import {
   sendFriendRequest,
   removeFriend,
   getPendingFriendRequests,
-} from "../../../services/firebase/users";
+} from "@shared/services/firebase/users";
 
 export const useFriendship = (currentUser) => {
   const [friends, setFriends] = useState([]);

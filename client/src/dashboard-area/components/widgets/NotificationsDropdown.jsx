@@ -1,4 +1,4 @@
-// NotificationsDropdown.jsx - Notifications dropdown widget
+﻿// NotificationsDropdown.jsx - Notifications dropdown widget
 import React from "react";
 import {
   BellIcon,
@@ -6,7 +6,7 @@ import {
   XCircleIcon,
 } from "@heroicons/react/24/outline";
 import { useAuth } from "@auth/contexts/AuthContext";
-import { useDashboardData } from "@dashboard/hooks/useDashboardData";
+import { useDashboardData } from "../../hooks/useDashboardData";
 import {
   acceptFriendRequest,
   rejectFriendRequest,

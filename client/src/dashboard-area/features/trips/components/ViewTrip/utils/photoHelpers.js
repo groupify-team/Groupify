@@ -1,4 +1,4 @@
-import { MAX_PHOTOS_PER_TRIP } from "../../../services/firebase/trips";
+﻿import { MAX_PHOTOS_PER_TRIP } from "@shared/services/firebase/trips";
 
 /**
  * Fix photo URL by replacing old domain with new Firebase storage domain

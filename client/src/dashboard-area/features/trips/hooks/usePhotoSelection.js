@@ -1,9 +1,9 @@
-// hooks/usePhotoSelection.js
+﻿// hooks/usePhotoSelection.js
 import { useState } from "react";
 import { toast } from "react-hot-toast";
 import { deleteDoc, doc } from "firebase/firestore";
 import { ref, deleteObject } from "firebase/storage";
-import { db, storage } from "../../../services/firebase/config";
+import { db, storage } from "@shared/services/firebase/config";
 
 export const usePhotoSelection = (tripId, photos, removePhotos) => {
   const [selectMode, setSelectMode] = useState(false);

@@ -1,4 +1,4 @@
-// SettingsSection.jsx - Settings management section
+﻿// SettingsSection.jsx - Settings management section
 import React from "react";
 import {
   BellIcon,
@@ -8,17 +8,17 @@ import {
   UserCircleIcon,
 } from "@heroicons/react/24/outline";
 import { useAuth } from "@auth/contexts/AuthContext";
-import { useDashboardLayout } from "@dashboard/hooks/useDashboardLayout";
-import { useDashboardData } from "@dashboard/hooks/useDashboardData";
-import { useDashboardModals } from "@dashboard/hooks/useDashboardModals";
-import { useDashboardNavigation } from "@dashboard/hooks/useDashboardNavigation";
-import SubscriptionCard from "@dashboard/components/widgets/SubscriptionCard";
-import FaceProfileCard from "@dashboard/components/widgets/FaceProfileCard";
-import QuickStatsCard from "@dashboard/components/widgets/QuickStatsCard";
+import { useDashboardLayout } from "../../hooks/useDashboardLayout";
+import { useDashboardData } from "../../hooks/useDashboardData";
+import { useDashboardModals } from "../../hooks/useDashboardModals";
+import { useDashboardNavigation } from "../../hooks/useDashboardNavigation";
+import SubscriptionCard from "../widgets/SubscriptionCard";
+import FaceProfileCard from "../widgets/FaceProfileCard";
+import QuickStatsCard from "../widgets/QuickStatsCard";
 import {
   NOTIFICATION_SETTINGS,
   PRIVACY_SETTINGS,
-} from "@dashboard/utils/dashboardConstants";
+} from "@dashboard/utils/dashboardConstants.jsx";
 
 const SettingsSection = () => {
   const { currentUser } = useAuth();

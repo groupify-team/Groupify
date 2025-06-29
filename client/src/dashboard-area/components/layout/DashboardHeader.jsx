@@ -1,4 +1,4 @@
-// DashboardHeader.jsx - Dashboard header with navigation and notifications
+﻿// DashboardHeader.jsx - Dashboard header with navigation and notifications
 import React from "react";
 import {
   ArrowRightOnRectangleIcon,
@@ -8,11 +8,11 @@ import {
   CogIcon,
   UserIcon,
 } from "@heroicons/react/24/outline";
-import { useDashboardLayout } from "@dashboard/hooks/useDashboardLayout";
-import { useDashboardData } from "@dashboard/hooks/useDashboardData";
-import { useDashboardModals } from "@dashboard/hooks/useDashboardModals";
-import { useDashboardNavigation } from "@dashboard/hooks/useDashboardNavigation";
-import NotificationsDropdown from "@dashboard/components/widgets/NotificationsDropdown";
+import { useDashboardLayout } from "../../hooks/useDashboardLayout";
+import { useDashboardData } from "../../hooks/useDashboardData";
+import { useDashboardModals } from "../../hooks/useDashboardModals";
+import { useDashboardNavigation } from "../../hooks/useDashboardNavigation";
+import NotificationsDropdown from "../widgets/NotificationsDropdown";
 import { getTotalNotificationCount } from "@dashboard/utils/dashboardHelpers";
 
 const DashboardHeader = () => {

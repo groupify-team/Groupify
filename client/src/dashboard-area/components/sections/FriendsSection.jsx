@@ -1,4 +1,4 @@
-// FriendsSection.jsx - Friends management section
+﻿// FriendsSection.jsx - Friends management section
 import React from "react";
 import {
   BellIcon,
@@ -10,10 +10,10 @@ import {
   ChevronRightIcon,
 } from "@heroicons/react/24/outline";
 import { useAuth } from "@auth/contexts/AuthContext";
-import { useDashboardLayout } from "@dashboard/hooks/useDashboardLayout";
-import { useDashboardData } from "@dashboard/hooks/useDashboardData";
-import { useDashboardModals } from "@dashboard/hooks/useDashboardModals";
-import TabSwitcher from "@dashboard/components/ui/TabSwitcher";
+import { useDashboardLayout } from "../../hooks/useDashboardLayout";
+import { useDashboardData } from "../../hooks/useDashboardData";
+import { useDashboardModals } from "../../hooks/useDashboardModals";
+import TabSwitcher from "../ui/TabSwitcher";
 import {
   acceptFriendRequest,
   rejectFriendRequest,

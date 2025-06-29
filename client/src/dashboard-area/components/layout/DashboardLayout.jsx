@@ -1,10 +1,10 @@
-// DashboardLayout.jsx - Main dashboard layout wrapper
+﻿// DashboardLayout.jsx - Main dashboard layout wrapper
 import React from "react";
-import { useDashboardLayout } from "@dashboard/hooks/useDashboardLayout";
-import { useDashboardData } from "@dashboard/hooks/useDashboardData";
-import DashboardSidebar from "@dashboard/components/layout/DashboardSidebar";
-import DashboardHeader from "@dashboard/components/layout/DashboardHeader";
-import MobileBottomNav from "@dashboard/components/layout/MobileBottomNav";
+import { useDashboardLayout } from "../../hooks/useDashboardLayout";
+import { useDashboardData } from "../../hooks/useDashboardData";
+import DashboardSidebar from "./DashboardSidebar";
+import DashboardHeader from "./DashboardHeader";
+import MobileBottomNav from "./MobileBottomNav";
 
 const DashboardLayout = ({ children }) => {
   const {

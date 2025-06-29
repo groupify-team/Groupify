@@ -1,4 +1,4 @@
-// services/tripsService.js
+﻿// services/tripsService.js
 import {
   getTrip,
   createTrip,
@@ -10,10 +10,10 @@ import {
   getUserTripCount,
   MAX_TRIPS_PER_USER,
   MAX_PHOTOS_PER_TRIP,
-} from "../../../services/firebase/trips";
+} from "@shared/services/firebase/trips";
 
-import { getTripPhotos } from "../../../services/firebase/storage";
-import { getUserProfile } from "../../../services/firebase/users";
+import { getTripPhotos } from "@shared/services/firebase/storage";
+import { getUserProfile } from "@shared/services/firebase/users";
 
 export const tripsService = {
   // Trip CRUD operations

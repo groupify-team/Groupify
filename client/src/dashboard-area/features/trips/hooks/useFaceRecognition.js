@@ -1,4 +1,4 @@
-// hooks/useFaceRecognition.js
+﻿// hooks/useFaceRecognition.js
 import { useState, useCallback } from "react";
 import {
   filterPhotosByFaceProfile,
@@ -7,8 +7,8 @@ import {
   resetFaceRecognition,
   getFaceProfile,
   createFaceProfile,
-} from "../../../services/faceRecognitionService";
-import { getFaceProfileFromStorage } from "../../../services/firebase/faceProfiles";
+} from "@shared/services/faceRecognitionService";
+import { getFaceProfileFromStorage } from "@shared/services/firebase/faceProfiles";
 
 export const useFaceRecognition = (userId) => {
   const [isProcessing, setIsProcessing] = useState(false);
