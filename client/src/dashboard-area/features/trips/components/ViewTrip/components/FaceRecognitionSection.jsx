@@ -1,4 +1,3 @@
-// components/TripDetailView/FaceRecognitionSection.jsx
 import React from "react";
 import {
   MagnifyingGlassIcon,
@@ -7,31 +6,30 @@ import {
   FireIcon,
   SparklesIcon,
 } from "@heroicons/react/24/outline";
-import { useNavigate } from "react-router-dom";
 
 const FaceRecognitionSection = ({
-  photos = [],
-  currentUser,
-  filteredPhotos = [],
-  filterActive = false,
-  isProcessing = false,
-  hasProfile = false,
-  isLoadingProfile = false,
-  progress = {},
-  canFilterByFace = true,
-  onFindPhotos,
+  canFilterByFace,
+  hasProfile,
+  isLoadingProfile,
+  isProcessingFaces,
+  filterActive,
+  filteredPhotos,
+  faceRecognitionProgress,
+  onFindMyPhotos,
   onCancelProcessing,
-  onClearFilter,
+  onNavigateToProfile,
+  onPhotoSelect,
 }) => {
-  const navigate = useNavigate();
-
-  const getProgressPercentage = () => {
-    if (progress.total === 0) return 0;
-    return Math.round((progress.current / progress.total) * 100);
+  const fixPhotoUrl = (url) => {
+    return url.replace(
+      "groupify-77202.appspot.com",
+      "groupify-77202.firebasestorage.app"
+    );
   };
 
   const formatTimeRemaining = (seconds) => {
     if (!seconds || seconds < 0) return "";
+
     if (seconds < 60) {
       return `~${seconds}s remaining`;
     } else {
@@ -41,11 +39,27 @@ const FaceRecognitionSection = ({
     }
   };
 
+  const getProgressPercentage = () => {
+    if (faceRecognitionProgress.total === 0) return 0;
+    return Math.round(
+      (faceRecognitionProgress.current / faceRecognitionProgress.total) * 100
+    );
+  };
+
+  const handleToggleFilter = () => {
+    if (filterActive) {
+      // Turn off filter - this would need to be handled by parent
+      // setFilterActive(false);
+      // setFilteredPhotos([]);
+    } else {
+      onFindMyPhotos();
+    }
+  };
+
   return (
     <div className="relative group">
       <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 via-cyan-500 to-teal-500 rounded-2xl blur opacity-20 group-hover:opacity-30 transition duration-300"></div>
       <div className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-xl shadow-lg p-3 sm:p-6 border border-white/20 dark:border-gray-700/50">
-        {/* Header */}
         <div className="flex flex-col gap-3 sm:gap-4 mb-4 sm:mb-6">
           <div className="flex items-center gap-2 sm:gap-3">
             <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg sm:rounded-xl flex items-center justify-center shadow-lg">
@@ -61,7 +75,7 @@ const FaceRecognitionSection = ({
             </div>
           </div>
 
-          {!isProcessing && (
+          {!isProcessingFaces && (
             <div className="flex flex-col gap-2 sm:gap-3">
               {/* Status Indicators */}
               <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
@@ -92,13 +106,7 @@ const FaceRecognitionSection = ({
               {/* Action Buttons */}
               <div className="flex flex-wrap gap-2">
                 <button
-                  onClick={() => {
-                    if (filterActive) {
-                      onClearFilter && onClearFilter();
-                    } else {
-                      onFindPhotos && onFindPhotos();
-                    }
-                  }}
+                  onClick={handleToggleFilter}
                   disabled={!canFilterByFace || isLoadingProfile}
                   className={`w-full sm:w-auto px-3 py-2 sm:px-5 rounded-lg sm:rounded-xl font-medium transition-all duration-300 text-xs sm:text-sm flex items-center justify-center gap-2 backdrop-blur-sm shadow-lg ${
                     canFilterByFace && !isLoadingProfile
@@ -123,7 +131,7 @@ const FaceRecognitionSection = ({
         </div>
 
         {/* Processing UI */}
-        {isProcessing ? (
+        {isProcessingFaces ? (
           <div className="space-y-4 sm:space-y-6">
             {/* Progress Bar */}
             <div className="space-y-3 sm:space-y-4">
@@ -145,7 +153,7 @@ const FaceRecognitionSection = ({
               </div>
             </div>
 
-            {/* Status Cards */}
+            {/* Status Cards - Responsive */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div className="bg-blue-50/80 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg sm:rounded-xl p-3 sm:p-4 backdrop-blur-sm">
                 <h4 className="font-semibold text-blue-800 dark:text-blue-400 mb-2 flex items-center gap-2 text-xs sm:text-sm">
@@ -153,23 +161,26 @@ const FaceRecognitionSection = ({
                   Status
                 </h4>
                 <p className="text-blue-700 dark:text-blue-300 font-medium text-xs sm:text-sm">
-                  {progress.phase || "Processing..."}
+                  {faceRecognitionProgress.phase || "Processing..."}
                 </p>
-                {progress.estimatedTimeRemaining && (
+                {faceRecognitionProgress.estimatedTimeRemaining && (
                   <p className="text-blue-600 dark:text-blue-400 text-xs mt-1">
-                    ⏱️ {formatTimeRemaining(progress.estimatedTimeRemaining)}
+                    ⏱️{" "}
+                    {formatTimeRemaining(
+                      faceRecognitionProgress.estimatedTimeRemaining
+                    )}
                   </p>
                 )}
               </div>
 
-              {progress.matches?.length > 0 && (
+              {faceRecognitionProgress.matches?.length > 0 && (
                 <div className="bg-green-50/80 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-lg sm:rounded-xl p-3 sm:p-4 backdrop-blur-sm">
                   <h4 className="font-semibold text-green-800 dark:text-green-400 mb-2 flex items-center gap-2 text-xs sm:text-sm">
                     <CheckIcon className="w-3 h-3 sm:w-4 sm:h-4" />
                     Matches Found
                   </h4>
                   <p className="text-green-700 dark:text-green-300 text-xl sm:text-2xl font-bold">
-                    {progress.matches.length}
+                    {faceRecognitionProgress.matches.length}
                   </p>
                   <p className="text-green-600 dark:text-green-400 text-xs">
                     Found so far...
@@ -188,7 +199,6 @@ const FaceRecognitionSection = ({
             </button>
           </div>
         ) : filterActive && filteredPhotos.length === 0 ? (
-          /* No Results */
           <div className="text-center py-12 sm:py-16">
             <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-blue-100 to-cyan-100 dark:from-blue-900/30 dark:to-cyan-900/30 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 shadow-lg">
               <MagnifyingGlassIcon className="w-8 h-8 sm:w-10 sm:h-10 text-blue-500 dark:text-blue-400" />
@@ -201,22 +211,18 @@ const FaceRecognitionSection = ({
             </p>
           </div>
         ) : filterActive ? (
-          /* Results Grid */
           <div className="space-y-4 sm:space-y-6">
+            {/* Photos Grid - Responsive */}
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 sm:gap-4">
               {filteredPhotos.map((photo) => (
                 <div
                   key={`filtered-${photo.id}`}
                   className="group cursor-pointer"
+                  onClick={() => onPhotoSelect(photo)}
                 >
                   <div className="relative overflow-hidden rounded-lg sm:rounded-xl shadow-lg transform group-hover:scale-105 transition-all duration-300 bg-gradient-to-br from-white to-gray-50 dark:from-gray-700 dark:to-gray-800 p-1 sm:p-2">
                     <img
-                      src={
-                        photo.downloadURL?.replace?.(
-                          "groupify-77202.appspot.com",
-                          "groupify-77202.firebasestorage.app"
-                        ) || photo.downloadURL
-                      }
+                      src={fixPhotoUrl(photo.downloadURL)}
                       alt={photo.fileName}
                       className="w-full h-16 sm:h-20 md:h-24 lg:h-28 object-cover rounded-md sm:rounded-lg"
                     />
@@ -250,7 +256,6 @@ const FaceRecognitionSection = ({
             </div>
           </div>
         ) : (
-          /* Default State */
           <div className="text-center py-12 sm:py-16">
             <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-blue-100 to-cyan-100 dark:from-blue-900/30 dark:to-cyan-900/30 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 shadow-lg">
               <MagnifyingGlassIcon className="w-8 h-8 sm:w-10 sm:h-10 text-blue-500 dark:text-blue-400" />
@@ -267,7 +272,7 @@ const FaceRecognitionSection = ({
             </p>
             {!hasProfile && (
               <button
-                onClick={() => navigate("/dashboard?section=faceprofile")}
+                onClick={onNavigateToProfile}
                 className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white px-6 py-3 sm:px-8 sm:py-4 rounded-lg sm:rounded-xl font-medium transition-all duration-300 transform hover:scale-105 shadow-lg backdrop-blur-sm flex items-center gap-2 sm:gap-3 mx-auto text-sm"
               >
                 <SparklesIcon className="w-4 h-4 sm:w-5 sm:h-5" />

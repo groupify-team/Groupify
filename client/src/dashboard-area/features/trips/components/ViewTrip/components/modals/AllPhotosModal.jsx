@@ -1,4 +1,3 @@
-// components/TripDetailView/PhotoGalleryModal.jsx
 import React from "react";
 import {
   XMarkIcon,
@@ -8,19 +7,26 @@ import {
   EyeIcon,
 } from "@heroicons/react/24/outline";
 
-const PhotoGalleryModal = ({
+const AllPhotosModal = ({
   isOpen,
-  onClose,
-  photos = [],
-  onPhotoClick,
+  photos,
+  maxPhotos,
   isAdmin,
   selectMode,
-  onToggleSelectMode,
-  selectedPhotos = [],
+  selectedPhotos,
+  onClose,
   onPhotoSelect,
+  onToggleSelectMode,
+  onSelectPhoto,
   onDeleteSelected,
-  MAX_PHOTOS_PER_TRIP,
 }) => {
+  const fixPhotoUrl = (url) => {
+    return url.replace(
+      "groupify-77202.appspot.com",
+      "groupify-77202.firebasestorage.app"
+    );
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -57,8 +63,7 @@ const PhotoGalleryModal = ({
                     {photos.length} Photos
                   </span>
                   <span className="text-xs text-gray-500 dark:text-gray-400">
-                    {Math.round((photos.length / MAX_PHOTOS_PER_TRIP) * 100)}%
-                    used
+                    {Math.round((photos.length / maxPhotos) * 100)}% used
                   </span>
                 </div>
               </div>
@@ -78,7 +83,7 @@ const PhotoGalleryModal = ({
               )}
             </div>
 
-            {/* Selection Tools */}
+            {/* Selection Tools - Only shows when selecting */}
             {selectMode && (
               <div className="flex items-center justify-center gap-4 mt-4">
                 {/* Selection Counter */}
@@ -144,19 +149,15 @@ const PhotoGalleryModal = ({
                       }`}
                       onClick={() => {
                         if (selectMode) {
-                          onPhotoSelect(photo.id);
+                          onSelectPhoto(photo.id);
                         } else {
-                          onPhotoClick(photo);
+                          onPhotoSelect(photo);
+                          onClose();
                         }
                       }}
                     >
                       <img
-                        src={
-                          photo.downloadURL?.replace?.(
-                            "groupify-77202.appspot.com",
-                            "groupify-77202.firebasestorage.app"
-                          ) || photo.downloadURL
-                        }
+                        src={fixPhotoUrl(photo.downloadURL)}
                         alt={photo.fileName}
                         className="w-full h-16 sm:h-20 md:h-24 object-cover rounded-md"
                         loading="lazy"
@@ -202,4 +203,4 @@ const PhotoGalleryModal = ({
   );
 };
 
-export default PhotoGalleryModal;
+export default AllPhotosModal;

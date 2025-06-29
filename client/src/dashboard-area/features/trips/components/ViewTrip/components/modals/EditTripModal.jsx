@@ -1,4 +1,3 @@
-// components/EditTripModal.jsx
 import React, { useState, useEffect } from "react";
 import {
   XMarkIcon,
@@ -10,8 +9,8 @@ import {
   TrashIcon,
 } from "@heroicons/react/24/outline";
 import { toast } from "react-hot-toast";
-import { useAuth } from "../../../contexts/AuthContext";
-import { tripsService } from "../../../services/tripsService";
+import { useAuth } from "../../contexts/AuthContext";
+import { updateTrip, deleteTrip } from "../../services/firebase/trips";
 
 const EditTripModal = ({
   isOpen,
@@ -78,7 +77,7 @@ const EditTripModal = ({
         updatedAt: new Date().toISOString(),
       };
 
-      await tripsService.updateTrip(trip.id, updatedTripData);
+      await updateTrip(trip.id, updatedTripData);
 
       // Notify parent component with updated trip data
       if (onTripUpdated) {
@@ -115,8 +114,8 @@ const EditTripModal = ({
         id: "deleting-trip",
       });
 
-      // Delete the trip using service
-      await tripsService.deleteTrip(trip.id);
+      // Delete the trip
+      await deleteTrip(trip.id);
 
       // Show success message
       toast.dismiss("deleting-trip");
@@ -125,12 +124,7 @@ const EditTripModal = ({
       // Close modal
       onClose();
 
-      // Notify parent component
-      if (onTripDeleted) {
-        onTripDeleted(trip.id);
-      }
-
-      // SIMPLE: Just go to dashboard and refresh as fallback
+      // SIMPLE: Just go to dashboard and refresh
       setTimeout(() => {
         window.location.href = "/dashboard";
       }, 500);
