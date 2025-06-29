@@ -8,39 +8,84 @@ import {
   useNavigate,
 } from "react-router-dom";
 
-// Updated imports based on CURRENT folder structure
+// Updated imports for refactored auth structure
 import { AuthProvider, useAuth } from "@/auth-area/contexts/AuthContext";
 import { ThemeProvider } from "@/shared/contexts/ThemeContext";
 import ProtectedRoute from "@/auth-area/components/ProtectedRoute";
 import CloudflareTurnstileGate from "@/shared/components/ui/CloudFlareTurnstileGate";
 
-// Auth Area Components
-import SignIn from "@/auth-area/pages/SignInPage";
-import SignUp from "@/auth-area/pages/SignUpPage";
-import ConfirmEmail from "@/auth-area/pages/ConfirmEmailPage";
-import ForgotPassword from "@/auth-area/pages/ForgotPasswordPage";
-import ResetPassword from "@/auth-area/pages/ResetPasswordPage";
+// Auth Area Components - Updated paths for refactored structure
+import SignInPage from "@/auth-area/pages/SignInPage/SignInPage";
+import SignUpPage from "@/auth-area/pages/SignUpPage/SignUpPage";
+import ConfirmEmailPage from "@/auth-area/pages/ConfirmEmailPage/ConfirmEmailPage";
+import ForgotPasswordPage from "@/auth-area/pages/ForgotPasswordPage/ForgotPasswordPage";
+import ResetPasswordPage from "@/auth-area/pages/ResetPasswordPage/ResetPasswordPage";
 import LaunchAnimation from "@/auth-area/components/ui/LaunchAnimation";
 
-// Dashboard Area Components
-import Dashboard from "@/dashboard-area/pages/DashboardPage/DashboardPage";
+// Dashboard Area Components - Temporarily disabled
+// import Dashboard from "@/dashboard-area/pages/DashboardPage/DashboardPage";
 
 // Public Area Pages
-import HomePage from "@/public-area/pages/HomePage";
-import TermsOfService from "@/public-area/pages/TermsOfServicePage";
-import PrivacyPolicy from "@/public-area/pages/PrivacyPolicyPage";
-import ContactUs from "@/public-area/pages/ContactPage";
-import AboutUs from "@/public-area/pages/AboutPage";
-import HelpCenter from "@/public-area/pages/HelpCenterPage";
-import Careers from "@/public-area/pages/CareersPage";
-import Blog from "@/public-area/pages/BlogPage";
-import Features from "@/public-area/pages/FeaturesPage";
-import Pricing from "@/public-area/pages/PricingPage";
-import Status from "@/public-area/pages/StatusPage";
-import Billing from "@/public-area/pages/BillingPage";
+import HomePage from "./public-area/pages/HomePage/HomePage";
+import TermsOfService from "./public-area/pages/TermsOfServicePage/TermsOfServicePage";
+import PrivacyPolicy from "./public-area/pages/PrivacyPolicyPage/PrivacyPolicyPage";
+import ContactUs from "./public-area/pages/ContactPage/ContactPage";
+import AboutUs from "./public-area/pages/AboutPage/AboutPage";
+import HelpCenter from "./public-area/pages/HelpCenterPage/HelpCenterPage";
+import Careers from "./public-area/pages/CareersPage/CareersPage";
+import Blog from "./public-area/pages/BlogPage/BlogPage";
+import Features from "./public-area/pages/FeaturesPage/FeaturesPage";
+import Pricing from "./public-area/pages/PricingPage/PricingPage";
+import Status from "./public-area/pages/StatusPage/StatusPage";
+import Billing from "./public-area/pages/BillingPage/BillingPage";
 
 // Toast notifications
 import { Toaster } from "react-hot-toast";
+
+// Dashboard Placeholder Component
+const DashboardPlaceholder = () => {
+  const navigate = useNavigate();
+  const { logout } = useAuth();
+
+  const handleSignOut = async () => {
+    try {
+      await logout();
+      navigate("/");
+    } catch (error) {
+      console.error("Sign out error:", error);
+    }
+  };
+
+  return (
+    <div className="flex h-screen bg-gray-50 dark:bg-gray-900 items-center justify-center">
+      <div className="text-center max-w-md mx-auto p-6">
+        <h1 className="text-4xl font-bold text-gray-800 dark:text-white mb-4">
+          🚧 Dashboard Coming Soon
+        </h1>
+        <p className="text-gray-600 dark:text-gray-400 mb-8">
+          Dashboard components are being developed. You're successfully logged in!
+        </p>
+        <div className="space-y-4">
+          <button
+            onClick={() => navigate("/")}
+            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+          >
+            Visit Homepage (Logged In)
+          </button>
+          <button
+            onClick={handleSignOut}
+            className="w-full bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+          >
+            Sign Out & Test Auth Flow
+          </button>
+        </div>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-4">
+          Auth area refactoring is complete! 🎉
+        </p>
+      </div>
+    </div>
+  );
+};
 
 // Centralized Flow Controller - Handles ALL navigation logic
 const FlowController = ({ children }) => {
@@ -85,7 +130,7 @@ const FlowController = ({ children }) => {
         return;
       }
 
-      // 2. If user is logged in and on homepage, redirect to dashboard
+      // 2. If user is logged in and on homepage, show placeholder dashboard
       if (currentUser && currentPath === "/") {
         navigate("/dashboard", { replace: true });
         return;
@@ -274,33 +319,12 @@ function App() {
               {/* Public Routes */}
               <Route path="/" element={<HomePage />} />
 
-              {/* Authentication Routes - FlowController handles redirects for logged-in users */}
-              <Route
-                path="/signin"
-                element={
-                  <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-300 dark:from-gray-800 dark:to-gray-900">
-                    <SignIn />
-                  </div>
-                }
-              />
-              <Route
-                path="/signup"
-                element={
-                  <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-300 dark:from-gray-800 dark:to-gray-900">
-                    <SignUp />
-                  </div>
-                }
-              />
-              <Route
-                path="/confirm-email"
-                element={
-                  <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-300 dark:from-gray-800 dark:to-gray-900">
-                    <ConfirmEmail />
-                  </div>
-                }
-              />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
+              {/* Authentication Routes - Updated to use refactored components */}
+              <Route path="/signin" element={<SignInPage />} />
+              <Route path="/signup" element={<SignUpPage />} />
+              <Route path="/confirm-email" element={<ConfirmEmailPage />} />
+              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
 
               {/* Legal & Info Pages */}
               <Route path="/terms" element={<TermsOfService />} />
@@ -315,14 +339,12 @@ function App() {
               <Route path="/status" element={<Status />} />
               <Route path="/billing" element={<Billing />} />
 
-              {/* Protected Routes - FlowController handles access control */}
+              {/* Protected Routes - Temporarily disabled for testing */}
               <Route
                 path="/dashboard"
                 element={
                   <ProtectedRoute>
-                    <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
-                      <Dashboard />
-                    </div>
+                    <DashboardPlaceholder />
                   </ProtectedRoute>
                 }
               />
