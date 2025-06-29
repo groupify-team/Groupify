@@ -1,7 +1,7 @@
 // components/TripDetailView/MembersSection.jsx
 import React from "react";
 import { UserGroupIcon } from "@heroicons/react/24/outline";
-import TripMembersList from "../TripMembersList"; // 🆕 ADD THIS IMPORT
+import TripMembersList from "../../TripMembersList"; // 🆕 ADD THIS IMPORT
 
 const MembersSection = ({
   members = [],

@@ -2,10 +2,10 @@
 
 // Components
 export { default as CreateTripModal } from "./components/CreateTripModal";
-export { default as EditTripModal } from "./components/EditTripModal";
+export { default as EditTripModal } from "./components/TripDetailView/components/EditTripModal";
 export { default as TripCard } from "./components/TripCard";
 export { default as TripDetailView } from "./components/TripDetailView";
-export { default as InviteFriendDropdown } from "./components/InviteFriendDropdown";
+export { default as InviteFriendDropdown } from "./components/TripDetailView/components/InviteFriendDropdown";
 
 // Hooks
 export { useTrips } from "./hooks/useTrips";

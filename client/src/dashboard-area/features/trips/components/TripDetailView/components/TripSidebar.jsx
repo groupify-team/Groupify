@@ -2,7 +2,7 @@
 import React from "react";
 import { PlusIcon } from "@heroicons/react/24/outline";
 import MembersSection from "./MembersSection";
-import InviteFriendDropdown from "../InviteFriendDropdown";
+import InviteFriendDropdown from "./InviteFriendDropdown";
 
 const TripSidebar = ({
   tripMembers,

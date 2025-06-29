@@ -23,6 +23,19 @@ export const useTripPhotos = (tripId, trip, setTrip) => {
     [photos.length]
   );
 
+  // Add the missing updateTripPhotoCount function
+  const updateTripPhotoCount = useCallback(
+    (additionalCount) => {
+      if (trip && setTrip) {
+        setTrip((prev) => ({
+          ...prev,
+          photoCount: (prev.photoCount || 0) + additionalCount,
+        }));
+      }
+    },
+    [trip, setTrip]
+  );
+
   // 🔥 OPTIMIZATION: Use useCallback for functions passed as props
   const handlePhotoUploaded = useCallback(
     (uploadedPhotos) => {
@@ -49,7 +62,7 @@ export const useTripPhotos = (tripId, trip, setTrip) => {
         toast.success(`${uploadedPhotos.length} photos uploaded successfully!`);
       }
     },
-    [photos.length, trip, setTrip]
+    [photos.length, updateTripPhotoCount]
   );
 
   const removePhotos = useCallback(
@@ -79,6 +92,7 @@ export const useTripPhotos = (tripId, trip, setTrip) => {
       getPhotoLimitStatus: () => photoStats.status,
       handlePhotoUploaded,
       removePhotos,
+      updateTripPhotoCount,
       MAX_PHOTOS_PER_TRIP,
     }),
     [
@@ -88,6 +102,7 @@ export const useTripPhotos = (tripId, trip, setTrip) => {
       photoStats,
       handlePhotoUploaded,
       removePhotos,
+      updateTripPhotoCount,
     ]
   );
 };

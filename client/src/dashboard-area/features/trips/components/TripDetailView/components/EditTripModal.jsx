@@ -11,7 +11,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { toast } from "react-hot-toast";
 import { useAuth } from "../../../contexts/AuthContext";
-import { tripsService } from "../services/tripsService";
+import { tripsService } from "../../../services/tripsService";
 
 const EditTripModal = ({
   isOpen,
