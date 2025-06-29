@@ -19,9 +19,7 @@ export const tripsService = {
   // Trip CRUD operations
   async getTrips(userId) {
     try {
-      // Note: You might need to implement getAllUserTrips in your Firebase service
-      // For now, this is a placeholder
-      throw new Error("getAllUserTrips not implemented yet");
+      return await getAllUserTrips(userId);
     } catch (error) {
       console.error("Error fetching trips:", error);
       throw error;

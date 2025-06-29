@@ -1,5 +1,5 @@
 // components/TripDetailView/TripDetailView.jsx (Refactored with all hooks)
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, memo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 
@@ -7,12 +7,12 @@ import { toast } from "react-hot-toast";
 import { useAuth } from "../../../../contexts/AuthContext";
 
 // Hooks
-import { useTripDetail } from "../../hooks/useTripDetail";
-import { useTripPhotos } from "../../hooks/useTripPhotos";
-import { useFaceRecognition } from "../../hooks/useFaceRecognition";
-import { usePhotoSelection } from "../../hooks/usePhotoSelection";
-import { useFriendship } from "../../hooks/useFriendship";
-import { useTripInvitations } from "../../hooks/useTripInvitations";
+import { useTripDetail } from "../../../hooks/useTripDetail";
+import { useTripPhotos } from "../../../hooks/useTripPhotos";
+import { useFaceRecognition } from "../../../hooks/useFaceRecognition";
+import { usePhotoSelection } from "../../../hooks/usePhotoSelection";
+import { useFriendship } from "../../../hooks/useFriendship";
+import { useTripInvitations } from "../../../hooks/useTripInvitations";
 
 // Components
 import TripHeader from "./TripHeader";
@@ -35,6 +35,91 @@ import {
   XMarkIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
+
+// Loading Component - Moved outside for performance
+const LoadingComponent = () => (
+  <div className="flex items-center justify-center min-h-[60vh]">
+    <div className="text-center">
+      <div className="relative mb-8">
+        <div className="w-20 h-20 relative mx-auto">
+          <div className="absolute inset-0 border-4 border-indigo-200/30 dark:border-indigo-800/30 border-t-indigo-600 dark:border-t-indigo-400 rounded-full animate-spin"></div>
+          <div
+            className="absolute inset-2 border-4 border-transparent border-t-purple-500 dark:border-t-purple-400 rounded-full animate-spin"
+            style={{
+              animationDirection: "reverse",
+              animationDuration: "1.5s",
+            }}
+          ></div>
+        </div>
+      </div>
+      <div className="space-y-4">
+        <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
+          Loading Trip Details
+        </h2>
+        <p className="text-gray-600 dark:text-gray-400 max-w-md mx-auto">
+          Getting everything ready for your amazing memories...
+        </p>
+      </div>
+    </div>
+  </div>
+);
+
+// Error Component - Moved outside for performance
+const ErrorComponent = ({ error }) => (
+  <div className="flex items-center justify-center min-h-[60vh] p-4">
+    <div className="text-center max-w-md mx-auto">
+      <div className="relative group">
+        <div className="absolute -inset-1 bg-gradient-to-r from-red-600 to-orange-600 rounded-2xl blur opacity-20 group-hover:opacity-30 transition duration-300"></div>
+        <div className="relative bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg rounded-2xl p-8 border border-red-200/50 dark:border-red-800/50 shadow-2xl">
+          <div className="w-20 h-20 bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-900/30 dark:to-orange-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
+            <ExclamationTriangleIcon className="w-10 h-10 text-red-500 dark:text-red-400" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+            Access Denied
+          </h2>
+          <p className="text-red-700 dark:text-red-400 mb-8 leading-relaxed">
+            {error}
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+// Mobile Tab Navigation - Moved outside for performance
+const MobileTabNavigation = ({ mobileActiveTab, setMobileActiveTab }) => (
+  <div className="xl:hidden relative">
+    <div className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-lg shadow-lg p-1.5 border border-white/20 dark:border-gray-700/50">
+      <div className="relative flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+        <div
+          className={`absolute top-1 bottom-1 w-1/2 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-md transition-all duration-300 ease-in-out transform ${
+            mobileActiveTab === "trip" ? "translate-x-0" : "translate-x-full"
+          }`}
+        />
+        <button
+          onClick={() => setMobileActiveTab("trip")}
+          className={`relative z-10 flex-1 py-1.5 px-1.5 text-xs font-medium rounded-md transition-all duration-300 ${
+            mobileActiveTab === "trip"
+              ? "text-white"
+              : "text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+          }`}
+        >
+          Trip
+        </button>
+        <button
+          onClick={() => setMobileActiveTab("members")}
+          className={`relative z-10 flex-1 py-1.5 px-1.5 text-xs font-medium rounded-md transition-all duration-300 ${
+            mobileActiveTab === "members"
+              ? "text-white"
+              : "text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+          }`}
+        >
+          Members
+        </button>
+      </div>
+    </div>
+  </div>
+);
 
 const TripDetailView = ({ tripId: propTripId }) => {
   const { tripId: paramTripId } = useParams();
@@ -160,91 +245,6 @@ const TripDetailView = ({ tripId: propTripId }) => {
     }
   };
 
-  // Loading Component
-  const LoadingComponent = () => (
-    <div className="flex items-center justify-center min-h-[60vh]">
-      <div className="text-center">
-        <div className="relative mb-8">
-          <div className="w-20 h-20 relative mx-auto">
-            <div className="absolute inset-0 border-4 border-indigo-200/30 dark:border-indigo-800/30 border-t-indigo-600 dark:border-t-indigo-400 rounded-full animate-spin"></div>
-            <div
-              className="absolute inset-2 border-4 border-transparent border-t-purple-500 dark:border-t-purple-400 rounded-full animate-spin"
-              style={{
-                animationDirection: "reverse",
-                animationDuration: "1.5s",
-              }}
-            ></div>
-          </div>
-        </div>
-        <div className="space-y-4">
-          <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
-            Loading Trip Details
-          </h2>
-          <p className="text-gray-600 dark:text-gray-400 max-w-md mx-auto">
-            Getting everything ready for your amazing memories...
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-
-  // Error Component
-  const ErrorComponent = ({ error }) => (
-    <div className="flex items-center justify-center min-h-[60vh] p-4">
-      <div className="text-center max-w-md mx-auto">
-        <div className="relative group">
-          <div className="absolute -inset-1 bg-gradient-to-r from-red-600 to-orange-600 rounded-2xl blur opacity-20 group-hover:opacity-30 transition duration-300"></div>
-          <div className="relative bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg rounded-2xl p-8 border border-red-200/50 dark:border-red-800/50 shadow-2xl">
-            <div className="w-20 h-20 bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-900/30 dark:to-orange-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
-              <ExclamationTriangleIcon className="w-10 h-10 text-red-500 dark:text-red-400" />
-            </div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-              Access Denied
-            </h2>
-            <p className="text-red-700 dark:text-red-400 mb-8 leading-relaxed">
-              {error}
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  // Mobile Tab Navigation
-  const MobileTabNavigation = () => (
-    <div className="xl:hidden relative">
-      <div className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-lg shadow-lg p-1.5 border border-white/20 dark:border-gray-700/50">
-        <div className="relative flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
-          <div
-            className={`absolute top-1 bottom-1 w-1/2 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-md transition-all duration-300 ease-in-out transform ${
-              mobileActiveTab === "trip" ? "translate-x-0" : "translate-x-full"
-            }`}
-          />
-          <button
-            onClick={() => setMobileActiveTab("trip")}
-            className={`relative z-10 flex-1 py-1.5 px-1.5 text-xs font-medium rounded-md transition-all duration-300 ${
-              mobileActiveTab === "trip"
-                ? "text-white"
-                : "text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
-            }`}
-          >
-            Trip
-          </button>
-          <button
-            onClick={() => setMobileActiveTab("members")}
-            className={`relative z-10 flex-1 py-1.5 px-1.5 text-xs font-medium rounded-md transition-all duration-300 ${
-              mobileActiveTab === "members"
-                ? "text-white"
-                : "text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
-            }`}
-          >
-            Members
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-
   // Render guards
   if (loading) return <LoadingComponent />;
   if (error) return <ErrorComponent error={error} />;
@@ -270,7 +270,10 @@ const TripDetailView = ({ tripId: propTripId }) => {
         />
 
         {/* Mobile Tab Navigation */}
-        <MobileTabNavigation />
+        <MobileTabNavigation
+          mobileActiveTab={mobileActiveTab}
+          setMobileActiveTab={setMobileActiveTab}
+        />
 
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
@@ -465,4 +468,4 @@ const TripDetailView = ({ tripId: propTripId }) => {
   );
 };
 
-export default TripDetailView;
+export default memo(TripDetailView);
