@@ -11,7 +11,7 @@ import {
 } from "firebase/auth";
 import { doc, setDoc, getDoc } from "firebase/firestore";
 import { httpsCallable } from "firebase/functions";
-import { auth, db, functions } from "../../../shared/services/firebase/config";
+import { auth, db, functions } from "../../shared/services/firebase/config";
 import { toast } from "react-hot-toast";
 
 const AuthContext = createContext();
