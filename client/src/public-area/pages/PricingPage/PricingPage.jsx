@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useTheme } from "../shared/contexts/ThemeContext";
-import { useAuth } from "../features/auth/contexts/AuthContext";
+import { useAuth } from "../../../auth-area/contexts/AuthContext";
+import { toast } from "react-hot-toast";
+import PublicLayout from "../../components/layout/PublicLayout";
+import HeroSection from "../../components/ui/HeroSection";
+import { usePublicNavigation } from "../../hooks/usePublicNavigation";
 import {
-  CameraIcon,
-  SunIcon,
-  MoonIcon,
-  ArrowLeftIcon,
   CheckIcon,
   XMarkIcon,
   StarIcon,
@@ -14,21 +13,17 @@ import {
   UserGroupIcon,
   CloudIcon,
   ShieldCheckIcon,
-  CogIcon,
   HeartIcon,
   BoltIcon,
-  GlobeAltIcon,
-  QuestionMarkCircleIcon,
   ChevronDownIcon,
   ChevronUpIcon,
   ArrowRightIcon,
 } from "@heroicons/react/24/outline";
-import { toast } from "react-hot-toast";
 
-const Pricing = () => {
-  const { theme, toggleTheme } = useTheme();
+const PricingPage = () => {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
+  const { handleGetStarted } = usePublicNavigation();
   const [isLoaded, setIsLoaded] = useState(false);
   const [billingCycle, setBillingCycle] = useState("monthly"); // 'monthly' or 'yearly'
   const [openFaq, setOpenFaq] = useState(null);
@@ -208,28 +203,6 @@ const Pricing = () => {
     },
   ];
 
-  const savings =
-    billingCycle === "yearly"
-      ? pricingPlans.map((plan) => {
-          if (
-            typeof plan.price.monthly === "number" &&
-            plan.price.monthly > 0
-          ) {
-            const monthlyTotal = plan.price.monthly * 12;
-            const yearlySavings = monthlyTotal - plan.price.yearly;
-            const savingsPercentage = Math.round(
-              (yearlySavings / monthlyTotal) * 100
-            );
-            return {
-              name: plan.name,
-              savings: yearlySavings,
-              percentage: savingsPercentage,
-            };
-          }
-          return { name: plan.name, savings: 0, percentage: 0 };
-        })
-      : [];
-
   const handlePlanSelect = (plan) => {
     if (plan.name === "Free") {
       if (currentUser) {
@@ -291,92 +264,55 @@ const Pricing = () => {
     return colors[color] || colors.gray;
   };
 
+  // Create billing toggle component for hero
+  const billingToggle = (
+    <div className="inline-flex items-center bg-white/20 backdrop-blur-sm rounded-xl p-1 mb-6 sm:mb-8">
+      <button
+        onClick={() => setBillingCycle("monthly")}
+        className={`px-6 py-3 sm:px-6 sm:py-3 rounded-lg text-base sm:text-base font-medium transition-all ${
+          billingCycle === "monthly"
+            ? "bg-white text-indigo-600 shadow-md"
+            : "text-white hover:text-indigo-200"
+        }`}
+      >
+        Monthly
+      </button>
+      <button
+        onClick={() => setBillingCycle("yearly")}
+        className={`px-6 py-3 sm:px-6 sm:py-3 rounded-lg text-base sm:text-base font-medium transition-all relative ${
+          billingCycle === "yearly"
+            ? "bg-white text-indigo-600 shadow-md"
+            : "text-white hover:text-indigo-200"
+        }`}
+      >
+        Yearly
+        <span className="absolute -top-2 -right-5 bg-yellow-400 text-yellow-900 text-xs px-2 py-0.5 rounded-full font-bold cursor-pointer hover:bg-yellow-300 hover:scale-110 hover:shadow-lg hover:rotate-12 transition-all duration-300 ease-out hover:animate-pulse">
+          Save 20%
+        </span>
+      </button>
+    </div>
+  );
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 transition-colors duration-500">
-      {/* Navigation Header */}
-      <nav className="relative z-10 bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm border-b border-white/20 dark:border-gray-700/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-14 sm:h-16">
-            <div className="flex items-center">
-              <Link to="/" className="flex items-center">
-                <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
-                  <CameraIcon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-                </div>
-                <span className="ml-2 text-xl sm:text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                  Groupify
-                </span>
-              </Link>
-            </div>
-
-            <div className="flex items-center space-x-2 sm:space-x-4">
-              <Link
-                to="/"
-                className="inline-flex items-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
-              >
-                <ArrowLeftIcon className="w-5 h-5 sm:mr-2" />
-                <span className="hidden sm:inline">Back to Home</span>
-              </Link>
-
-              <button
-                onClick={toggleTheme}
-                className="p-2 rounded-lg text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-              >
-                {theme === "dark" ? (
-                  <SunIcon className="w-5 h-5" />
-                ) : (
-                  <MoonIcon className="w-5 h-5" />
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
-
+    <PublicLayout 
+      headerType="public"
+      footerType="default"
+      footerProps={{ 
+        customText: "© 2025 Groupify. Simple pricing, powerful features."
+      }}
+    >
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-indigo-600 to-purple-600 py-12 sm:py-16 md:py-20">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="inline-flex items-center px-3 py-1.5 sm:px-4 sm:py-2 bg-white/20 backdrop-blur-sm rounded-full border border-white/30 mb-4 sm:mb-6">
-            <StarIcon className="w-4 h-4 sm:w-5 sm:h-5 text-white mr-2" />
-            <span className="text-white font-medium text-sm sm:text-base">
-              Simple, Transparent Pricing
-            </span>
-          </div>
-
-          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4 sm:mb-6">
-            Choose Your Perfect Plan
-          </h1>
-          <p className="text-base sm:text-lg md:text-xl text-indigo-100 mb-6 sm:mb-8 leading-relaxed max-w-2xl mx-auto">
-            From free photo organization to enterprise solutions, find the plan
-            that fits your needs. Start free and upgrade anytime.
-          </p>
-
-          <div className="inline-flex items-center bg-white/20 backdrop-blur-sm rounded-xl p-1 mb-6 sm:mb-8">
-            <button
-              onClick={() => setBillingCycle("monthly")}
-              className={`px-6 py-3 sm:px-6 sm:py-3 rounded-lg text-base sm:text-base font-medium transition-all ${
-                billingCycle === "monthly"
-                  ? "bg-white text-indigo-600 shadow-md"
-                  : "text-white hover:text-indigo-200"
-              }`}
-            >
-              Monthly
-            </button>
-            <button
-              onClick={() => setBillingCycle("yearly")}
-              className={`px-6 py-3 sm:px-6 sm:py-3 rounded-lg text-base sm:text-base font-medium transition-all relative ${
-                billingCycle === "yearly"
-                  ? "bg-white text-indigo-600 shadow-md"
-                  : "text-white hover:text-indigo-200"
-              }`}
-            >
-              Yearly
-              <span className="absolute -top-2 -right-5 bg-yellow-400 text-yellow-900 text-xs px-2 py-0.5 rounded-full font-bold cursor-pointer hover:bg-yellow-300 hover:scale-110 hover:shadow-lg hover:rotate-12 transition-all duration-300 ease-out hover:animate-pulse">
-                Save 20%
-              </span>
-            </button>
-          </div>
-        </div>
-      </div>
+      <HeroSection
+        variant="pricing"
+        badge={{ 
+          icon: StarIcon, 
+          text: "Simple, Transparent Pricing" 
+        }}
+        title="Choose Your Perfect Plan"
+        description="From free photo organization to enterprise solutions, find the plan that fits your needs. Start free and upgrade anytime."
+        additionalContent={billingToggle}
+        className="bg-gradient-to-r from-indigo-600 to-purple-600"
+      />
 
       {/* Pricing Plans */}
       <div className="py-12 sm:py-16 md:py-20">
@@ -623,13 +559,13 @@ const Pricing = () => {
             memories organized and accessible. Start free today!
           </p>
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
-            <Link
-              to="/signup"
+            <button
+              onClick={handleGetStarted}
               className="inline-flex items-center justify-center bg-white text-indigo-600 px-6 py-3 sm:px-8 sm:py-4 rounded-xl text-base sm:text-lg font-semibold hover:bg-gray-50 transition-all duration-200 shadow-xl hover:shadow-2xl hover:scale-105"
             >
               Start Free Trial
               <ArrowRightIcon className="ml-2 w-5 h-5" />
-            </Link>
+            </button>
             <Link
               to="/contact"
               className="inline-flex items-center justify-center bg-white/20 backdrop-blur-sm text-white px-6 py-3 sm:px-8 sm:py-4 rounded-xl text-base sm:text-lg font-semibold border border-white/30 hover:bg-white/30 transition-all duration-200"
@@ -639,25 +575,6 @@ const Pricing = () => {
           </div>
         </div>
       </div>
-
-      {/* Footer */}
-      <footer className="py-8 sm:py-12 bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm border-t border-white/20 dark:border-gray-700/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="flex items-center mb-4 md:mb-0">
-              <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
-                <CameraIcon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-              </div>
-              <span className="ml-2 text-lg sm:text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                Groupify
-              </span>
-            </div>
-            <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-              © 2025 Groupify. Simple pricing, powerful features.
-            </div>
-          </div>
-        </div>
-      </footer>
 
       {/* Free Plan Confirmation Modal */}
       {showFreeModal && (
@@ -909,8 +826,8 @@ const Pricing = () => {
           </div>
         </div>
       )}
-    </div>
+    </PublicLayout>
   );
 };
 
-export default Pricing;
+export default PricingPage;

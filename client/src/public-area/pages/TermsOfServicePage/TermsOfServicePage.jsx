@@ -1,19 +1,17 @@
-import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { useTheme } from "../shared/contexts/ThemeContext";
+import React, { useEffect } from "react";
+import { Link } from "react-router-dom";
+import PublicLayout from "../../components/layout/PublicLayout";
+import HeroSection from "../../components/ui/HeroSection";
+import { usePublicNavigation } from "../../hooks/usePublicNavigation";
 import {
-  CameraIcon,
-  MoonIcon,
-  SunIcon,
-  ArrowLeftIcon,
   DocumentTextIcon,
   ShieldCheckIcon,
   ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
 
-const TermsOfService = () => {
-  const { theme, toggleTheme } = useTheme();
-  const navigate = useNavigate();
+const TermsOfServicePage = () => {
+  const { handleGetStarted, handleSignIn } = usePublicNavigation();
+
   // Scroll to top on component mount
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -73,70 +71,26 @@ const TermsOfService = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 transition-colors duration-500">
-      {/* Navigation Header */}
-      <nav className="relative z-10 bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm border-b border-white/20 dark:border-gray-700/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-14 sm:h-16">
-            {/* Logo */}
-            <div className="flex items-center">
-              <Link to="/" className="flex items-center">
-                <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
-                  <CameraIcon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-                </div>
-                <span className="ml-2 text-xl sm:text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                  Groupify
-                </span>
-              </Link>
-            </div>
-
-            {/* Navigation */}
-            <div className="flex items-center space-x-2 sm:space-x-4">
-              <Link
-                to="/"
-                className="inline-flex items-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
-              >
-                <ArrowLeftIcon className="w-5 h-5 sm:mr-2" />
-                <span className="hidden sm:inline">Back to Home</span>
-              </Link>
-
-              <button
-                onClick={toggleTheme}
-                className="p-2 rounded-lg text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-              >
-                {theme === "dark" ? (
-                  <SunIcon className="w-5 h-5" />
-                ) : (
-                  <MoonIcon className="w-5 h-5" />
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
-
+    <PublicLayout 
+      headerType="public"
+      footerType="simple"
+    >
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-indigo-600 to-purple-600 py-12 sm:py-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="inline-flex items-center px-3 py-1.5 sm:px-4 sm:py-2 bg-white/20 backdrop-blur-sm rounded-full border border-white/30 mb-4 sm:mb-6">
-            <DocumentTextIcon className="w-4 h-4 sm:w-5 sm:h-5 text-white mr-2" />
-            <span className="text-white font-medium text-sm sm:text-base">
-              Legal Document
-            </span>
-          </div>
-
-          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4 sm:mb-6">
-            Terms of Service
-          </h1>
-          <p className="text-base sm:text-lg md:text-xl text-indigo-100 mb-6 sm:mb-8 leading-relaxed max-w-2xl mx-auto">
-            Please read these terms carefully before using Groupify. By using
-            our service, you agree to these terms and conditions.
-          </p>
+      <HeroSection
+        variant="legal"
+        badge={{ 
+          icon: DocumentTextIcon, 
+          text: "Legal Document" 
+        }}
+        title="Terms of Service"
+        description="Please read these terms carefully before using Groupify. By using our service, you agree to these terms and conditions."
+        additionalContent={
           <div className="text-xs sm:text-sm text-indigo-200">
             Last updated: January 2025
           </div>
-        </div>
-      </div>
+        }
+        className="bg-gradient-to-r from-indigo-600 to-purple-600"
+      />
 
       {/* Content */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
@@ -217,25 +171,13 @@ const TermsOfService = () => {
             </p>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
               <button
-                onClick={() => {
-                  document.body.style.opacity = "0";
-                  document.body.style.transition = "opacity 0.3s ease-out";
-                  setTimeout(() => {
-                    navigate("/signup");
-                  }, 300);
-                }}
+                onClick={handleGetStarted}
                 className="inline-flex items-center justify-center bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-6 py-2.5 sm:px-8 sm:py-3 rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl text-sm sm:text-base"
               >
                 Create Account
               </button>
               <button
-                onClick={() => {
-                  document.body.style.opacity = "0";
-                  document.body.style.transition = "opacity 0.3s ease-out";
-                  setTimeout(() => {
-                    navigate("/signin");
-                  }, 300);
-                }}
+                onClick={handleSignIn}
                 className="inline-flex items-center justify-center bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 px-6 py-2.5 sm:px-8 sm:py-3 rounded-lg font-medium border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm sm:text-base"
               >
                 Sign In
@@ -244,27 +186,8 @@ const TermsOfService = () => {
           </div>
         </div>
       </div>
-
-      {/* Footer */}
-      <footer className="py-8 sm:py-12 bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm border-t border-white/20 dark:border-gray-700/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="flex items-center mb-4 md:mb-0">
-              <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
-                <CameraIcon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-              </div>
-              <span className="ml-2 text-lg sm:text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                Groupify
-              </span>
-            </div>
-            <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-              © 2025 Groupify. All rights reserved.
-            </div>
-          </div>
-        </div>
-      </footer>
-    </div>
+    </PublicLayout>
   );
 };
 
-export default TermsOfService;
+export default TermsOfServicePage;

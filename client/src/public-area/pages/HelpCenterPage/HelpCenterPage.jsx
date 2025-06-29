@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { useTheme } from "../shared/contexts/ThemeContext";
+import PublicLayout from "../../components/layout/PublicLayout";
+import HeroSection from "../../components/ui/HeroSection";
+
 import {
-  CameraIcon,
-  SunIcon,
-  MoonIcon,
-  ArrowLeftIcon,
   MagnifyingGlassIcon,
   QuestionMarkCircleIcon,
   BookOpenIcon,
@@ -19,8 +17,337 @@ import {
   ChevronUpIcon,
 } from "@heroicons/react/24/outline";
 
+// Extract components for better organization
+const SearchBar = ({ searchQuery, setSearchQuery }) => (
+  <div className="max-w-2xl mx-auto">
+    <div className="relative">
+      <MagnifyingGlassIcon className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+      <input
+        type="text"
+        placeholder="Search for help articles, FAQs, or features..."
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        className="w-full pl-10 sm:pl-12 pr-4 py-3 sm:py-4 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 rounded-xl border-0 shadow-lg focus:ring-2 focus:ring-white focus:ring-opacity-50 text-xs sm:text-base md:text-lg"
+      />
+    </div>
+  </div>
+);
+
+const HelpCategoryCard = ({ category, expandedCategories, setExpandedCategories, setSelectedArticle, getArticleContent }) => (
+  <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-md hover:shadow-lg transition-shadow border border-gray-200 dark:border-gray-700">
+    <div className="flex items-center mb-4 justify-center md:justify-start">
+      <div className="w-12 h-12 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
+        <category.icon className="w-6 h-6 text-white" />
+      </div>
+      <h3 className="ml-4 text-xl font-semibold text-gray-900 dark:text-white">
+        {category.title}
+      </h3>
+    </div>
+    <p className="text-gray-600 dark:text-gray-400 mb-4 text-center md:text-left">
+      {category.description}
+    </p>
+
+    <ul className="space-y-2 text-center md:text-left">
+      {category.articles
+        .slice(0, 3)
+        .map((article, articleIndex) => (
+          <li key={articleIndex}>
+            <button
+              onClick={() =>
+                setSelectedArticle({
+                  category: category.title,
+                  article,
+                  content: getArticleContent(category.title, article),
+                })
+              }
+              className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 text-sm transition-colors text-left hover:underline"
+            >
+              {article}
+            </button>
+          </li>
+        ))}
+
+      {!expandedCategories[category.title] && category.articles.length > 3 && (
+        <li>
+          <button
+            onClick={() =>
+              setExpandedCategories((prev) => ({
+                ...prev,
+                [category.title]: true,
+              }))
+            }
+            className="text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 text-sm transition-all duration-500 ease-out hover:underline italic border-t border-gray-200 dark:border-gray-600 pt-2 mt-2 w-full text-center transform hover:scale-105"
+          >
+            ▼ More articles ({category.articles.length - 3} more)
+          </button>
+        </li>
+      )}
+
+      <div
+        className={`overflow-hidden transition-all duration-1000 ease-out ${
+          expandedCategories[category.title]
+            ? "max-h-[500px] opacity-100"
+            : "max-h-0 opacity-0"
+        }`}
+      >
+        {category.articles.length > 3 && (
+          <div className="space-y-2">
+            {category.articles.slice(3).map((article, articleIndex) => (
+              <li
+                key={articleIndex + 3}
+                className="transform transition-all duration-500 ease-out"
+              >
+                <button
+                  onClick={() =>
+                    setSelectedArticle({
+                      category: category.title,
+                      article,
+                      content: getArticleContent(category.title, article),
+                    })
+                  }
+                  className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 text-sm transition-all duration-300 text-left hover:underline hover:translate-x-1"
+                >
+                  {article}
+                </button>
+              </li>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {expandedCategories[category.title] && category.articles.length > 3 && (
+        <li className="transition-opacity duration-300 ease-out">
+          <button
+            onClick={() =>
+              setExpandedCategories((prev) => ({
+                ...prev,
+                [category.title]: false,
+              }))
+            }
+            className="text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 text-sm transition-all duration-500 ease-out hover:underline italic border-t border-gray-200 dark:border-gray-600 pt-2 mt-2 w-full text-center transform hover:scale-105"
+          >
+            ▲ Show less
+          </button>
+        </li>
+      )}
+
+      {expandedCategories[category.title] && category.articles.length <= 3 && (
+        <li className="text-sm text-gray-500 dark:text-gray-400 italic text-center border-t border-gray-200 dark:border-gray-600 pt-2 mt-2">
+          No additional articles available
+        </li>
+      )}
+    </ul>
+  </div>
+);
+
+const HelpCategoriesSection = ({ filteredCategories, expandedCategories, setExpandedCategories, setSelectedArticle, getArticleContent }) => (
+  <div className="mb-16">
+    <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-6 sm:mb-8 text-center">
+      Browse by Category
+    </h2>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {filteredCategories.map((category, index) => (
+        <HelpCategoryCard
+          key={category.title}
+          category={category}
+          expandedCategories={expandedCategories}
+          setExpandedCategories={setExpandedCategories}
+          setSelectedArticle={setSelectedArticle}
+          getArticleContent={getArticleContent}
+        />
+      ))}
+    </div>
+  </div>
+);
+
+const FAQItem = ({ faq, index, openFaq, toggleFaq }) => (
+  <div className="bg-white dark:bg-gray-800 rounded-lg mb-4 shadow-sm border border-gray-200 dark:border-gray-700">
+    <button
+      onClick={() => toggleFaq(index)}
+      className="w-full text-left p-4 sm:p-6 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 rounded-lg"
+    >
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm sm:text-lg font-semibold text-gray-900 dark:text-white pr-4 sm:pr-8">
+          {faq.question}
+        </h3>
+        <ChevronDownIcon
+          className={`w-5 h-5 text-gray-500 dark:text-gray-400 flex-shrink-0 transition-transform duration-300 ${
+            openFaq === index ? "-rotate-90" : "rotate-0"
+          }`}
+        />
+      </div>
+    </button>
+    <div
+      className={`overflow-hidden transition-all duration-300 ease-in-out ${
+        openFaq === index ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+      }`}
+    >
+      <div className="px-4 sm:px-6 pb-4 sm:pb-6 pt-2">
+        <p className="text-gray-600 dark:text-gray-400 leading-relaxed text-sm sm:text-base">
+          {faq.answer}
+        </p>
+      </div>
+    </div>
+  </div>
+);
+
+const FAQSection = ({ filteredFaqs, openFaq, toggleFaq }) => (
+  <div className="mb-16">
+    <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-6 sm:mb-8 text-center">
+      Frequently Asked Questions
+    </h2>
+    <div className="max-w-4xl mx-auto">
+      {filteredFaqs.map((faq, index) => (
+        <FAQItem
+          key={index}
+          faq={faq}
+          index={index}
+          openFaq={openFaq}
+          toggleFaq={toggleFaq}
+        />
+      ))}
+    </div>
+  </div>
+);
+
+const ContactSupportSection = () => (
+  <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-8 text-center">
+    <ChatBubbleLeftRightIcon className="w-16 h-16 text-indigo-600 dark:text-indigo-400 mx-auto mb-6" />
+    <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+      Still need help?
+    </h2>
+    <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-2xl mx-auto">
+      Can't find what you're looking for? Our support team is here to help
+      you with any questions or issues you might have.
+    </p>
+    <div className="flex flex-row items-center justify-center gap-4">
+      <Link
+        to="/contact"
+        className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors shadow-md hover:shadow-lg"
+      >
+        Contact Support
+      </Link>
+      <a
+        href="mailto:groupify.ltd@gmail.com"
+        className="bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 px-6 py-3 rounded-lg font-semibold border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+      >
+        Email Us
+      </a>
+    </div>
+  </div>
+);
+
+const ArticleModal = ({ selectedArticle, setSelectedArticle }) => {
+  if (!selectedArticle) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-4xl w-full max-h-[90vh] flex flex-col">
+        {/* Modal Header */}
+        <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+          <div>
+            <span className="text-sm text-indigo-600 dark:text-indigo-400 font-medium">
+              {selectedArticle.category}
+            </span>
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
+              {selectedArticle.article}
+            </h2>
+          </div>
+          <button
+            onClick={() => setSelectedArticle(null)}
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+          >
+            <svg
+              className="w-6 h-6 text-gray-500"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
+
+        {/* Modal Content */}
+        <div className="flex-1 overflow-y-auto p-3 sm:p-6">
+          <div className="prose prose-sm sm:prose-lg dark:prose-invert max-w-none">
+            {selectedArticle.content.split("\n\n").map((paragraph, index) => {
+              if (paragraph.startsWith("**") && paragraph.endsWith("**")) {
+                return (
+                  <h3
+                    key={index}
+                    className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mt-4 sm:mt-6 mb-2 sm:mb-3"
+                  >
+                    {paragraph.replace(/\*\*/g, "")}
+                  </h3>
+                );
+              } else if (paragraph.includes("**")) {
+                return (
+                  <p
+                    key={index}
+                    className="text-sm sm:text-base text-gray-700 dark:text-gray-300 mb-3 sm:mb-4 leading-relaxed"
+                  >
+                    {paragraph.split("**").map((part, partIndex) =>
+                      partIndex % 2 === 1 ? (
+                        <strong
+                          key={partIndex}
+                          className="font-semibold text-gray-900 dark:text-white"
+                        >
+                          {part}
+                        </strong>
+                      ) : (
+                        part
+                      )
+                    )}
+                  </p>
+                );
+              } else {
+                return (
+                  <p
+                    key={index}
+                    className="text-sm sm:text-base text-gray-700 dark:text-gray-300 mb-3 sm:mb-4 leading-relaxed"
+                  >
+                    {paragraph}
+                  </p>
+                );
+              }
+            })}
+          </div>
+        </div>
+
+        {/* Modal Footer */}
+        <div className="p-4 sm:p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50 rounded-b-2xl">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center sm:justify-end">
+            <button
+              onClick={() => {
+                setSelectedArticle(null);
+                setTimeout(() => {
+                  const contactSection = document.querySelector("footer");
+                  if (contactSection) {
+                    contactSection.scrollIntoView({
+                      behavior: "smooth",
+                      block: "start",
+                    });
+                  }
+                }, 100);
+              }}
+              className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-center"
+            >
+              Still Need Help?
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const HelpCenter = () => {
-  const { theme, toggleTheme } = useTheme();
   const [searchQuery, setSearchQuery] = useState("");
   const [openFaq, setOpenFaq] = useState(null);
   const [selectedArticle, setSelectedArticle] = useState(null);
@@ -240,406 +567,50 @@ const HelpCenter = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
-      {/* Navigation Header */}
-      <nav className="relative z-10 bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm border-b border-white/20 dark:border-gray-700/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-14 sm:h-16">
-            {/* Logo */}
-            <div className="flex items-center">
-              <Link to="/" className="flex items-center">
-                <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
-                  <CameraIcon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-                </div>
-                <span className="ml-2 text-xl sm:text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                  Groupify
-                </span>
-              </Link>
-            </div>
+    <PublicLayout
+      headerType="public"
+      footerType="extended"
+      footerProps={{ customText: "© 2025 Groupify. Here to help you organize your memories." }}
+    >
+      {/* Hero Section with Search */}
+      <HeroSection
+        badge={{ icon: QuestionMarkCircleIcon, text: "Help Center" }}
+        title="How can we help you?"
+        description="Find answers to your questions, learn how to use Groupify, and get the most out of your photo organization experience."
+        variant="help"
+        customContent={
+          <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
+        }
+      />
 
-            {/* Navigation */}
-            <div className="flex items-center space-x-2 sm:space-x-4">
-              <Link
-                to="/"
-                className="inline-flex items-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
-              >
-                <ArrowLeftIcon className="w-5 h-5 sm:mr-2" />
-                <span className="hidden sm:inline">Back to Home</span>
-              </Link>
-
-              <button
-                onClick={toggleTheme}
-                className="p-2 rounded-lg text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-              >
-                {theme === "dark" ? (
-                  <SunIcon className="w-5 h-5" />
-                ) : (
-                  <MoonIcon className="w-5 h-5" />
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      {/* Hero Section */}
-      <div className="bg-gradient-to-r from-indigo-600 to-purple-600 py-12 sm:py-16 md:py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <QuestionMarkCircleIcon className="w-12 h-12 sm:w-16 sm:h-16 text-white mx-auto mb-4 sm:mb-6" />
-          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4 sm:mb-6">
-            How can we help you?
-          </h1>
-          <p className="text-base sm:text-lg md:text-xl text-indigo-100 mb-6 sm:mb-8 max-w-2xl mx-auto">
-            Find answers to your questions, learn how to use Groupify, and get
-            the most out of your photo organization experience.
-          </p>
-
-          {/* Search Bar */}
-          <div className="max-w-2xl mx-auto">
-            <div className="relative">
-              <MagnifyingGlassIcon className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search for help articles, FAQs, or features..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 sm:pl-12 pr-4 py-3 sm:py-4 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 rounded-xl border-0 shadow-lg focus:ring-2 focus:ring-white focus:ring-opacity-50 text-xs sm:text-base md:text-lg"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-
+      {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         {/* Help Categories */}
-        <div className="mb-16">
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-6 sm:mb-8 text-center">
-            Browse by Category
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredCategories.map((category, index) => (
-              <div
-                key={category.title}
-                className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-md hover:shadow-lg transition-shadow border border-gray-200 dark:border-gray-700"
-              >
-                <div className="flex items-center mb-4 justify-center md:justify-start">
-                  <div className="w-12 h-12 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
-                    <category.icon className="w-6 h-6 text-white" />
-                  </div>
-                  <h3 className="ml-4 text-xl font-semibold text-gray-900 dark:text-white">
-                    {category.title}
-                  </h3>
-                </div>
-                <p className="text-gray-600 dark:text-gray-400 mb-4 text-center md:text-left">
-                  {category.description}
-                </p>
+        <HelpCategoriesSection
+          filteredCategories={filteredCategories}
+          expandedCategories={expandedCategories}
+          setExpandedCategories={setExpandedCategories}
+          setSelectedArticle={setSelectedArticle}
+          getArticleContent={getArticleContent}
+        />
 
-                <ul className="space-y-2 text-center md:text-left">
-                  {category.articles
-                    .slice(0, 3)
-                    .map((article, articleIndex) => (
-                      <li key={articleIndex}>
-                        <button
-                          onClick={() =>
-                            setSelectedArticle({
-                              category: category.title,
-                              article,
-                              content: getArticleContent(
-                                category.title,
-                                article
-                              ),
-                            })
-                          }
-                          className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 text-sm transition-colors text-left hover:underline"
-                        >
-                          {article}
-                        </button>
-                      </li>
-                    ))}
-
-                  {!expandedCategories[category.title] &&
-                    category.articles.length > 3 && (
-                      <li>
-                        <button
-                          onClick={() =>
-                            setExpandedCategories((prev) => ({
-                              ...prev,
-                              [category.title]: true,
-                            }))
-                          }
-                          className="text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 text-sm transition-all duration-500 ease-out hover:underline italic border-t border-gray-200 dark:border-gray-600 pt-2 mt-2 w-full text-center transform hover:scale-105"
-                        >
-                          ▼ More articles ({category.articles.length - 3} more)
-                        </button>
-                      </li>
-                    )}
-
-                  <div
-                    className={`overflow-hidden transition-all duration-1000 ease-out ${
-                      expandedCategories[category.title]
-                        ? "max-h-[500px] opacity-100"
-                        : "max-h-0 opacity-0"
-                    }`}
-                  >
-                    {category.articles.length > 3 && (
-                      <div className="space-y-2">
-                        {category.articles
-                          .slice(3)
-                          .map((article, articleIndex) => (
-                            <li
-                              key={articleIndex + 3}
-                              className="transform transition-all duration-500 ease-out"
-                            >
-                              <button
-                                onClick={() =>
-                                  setSelectedArticle({
-                                    category: category.title,
-                                    article,
-                                    content: getArticleContent(
-                                      category.title,
-                                      article
-                                    ),
-                                  })
-                                }
-                                className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 text-sm transition-all duration-300 text-left hover:underline hover:translate-x-1"
-                              >
-                                {article}
-                              </button>
-                            </li>
-                          ))}
-                      </div>
-                    )}
-                  </div>
-
-                  {expandedCategories[category.title] &&
-                    category.articles.length > 3 && (
-                      <li className="transition-opacity duration-300 ease-out">
-                        <button
-                          onClick={() =>
-                            setExpandedCategories((prev) => ({
-                              ...prev,
-                              [category.title]: false,
-                            }))
-                          }
-                          className="text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 text-sm transition-all duration-500 ease-out hover:underline italic border-t border-gray-200 dark:border-gray-600 pt-2 mt-2 w-full text-center transform hover:scale-105"
-                        >
-                          ▲ Show less
-                        </button>
-                      </li>
-                    )}
-
-                  {expandedCategories[category.title] &&
-                    category.articles.length <= 3 && (
-                      <li className="text-sm text-gray-500 dark:text-gray-400 italic text-center border-t border-gray-200 dark:border-gray-600 pt-2 mt-2">
-                        No additional articles available
-                      </li>
-                    )}
-                </ul>
-              </div>
-            ))}
-          </div>
-        </div>
         {/* FAQ Section */}
-        <div className="mb-16">
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-6 sm:mb-8 text-center">
-            Frequently Asked Questions
-          </h2>
-          <div className="max-w-4xl mx-auto">
-            {filteredFaqs.map((faq, index) => (
-              <div
-                key={index}
-                className="bg-white dark:bg-gray-800 rounded-lg mb-4 shadow-sm border border-gray-200 dark:border-gray-700"
-              >
-                <button
-                  onClick={() => toggleFaq(index)}
-                  className="w-full text-left p-4 sm:p-6 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 rounded-lg"
-                >
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-sm sm:text-lg font-semibold text-gray-900 dark:text-white pr-4 sm:pr-8">
-                      {faq.question}
-                    </h3>
-                    <ChevronDownIcon
-                      className={`w-5 h-5 text-gray-500 dark:text-gray-400 flex-shrink-0 transition-transform duration-300 ${
-                        openFaq === index ? "-rotate-90" : "rotate-0"
-                      }`}
-                    />
-                  </div>
-                </button>
-                <div
-                  className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                    openFaq === index
-                      ? "max-h-96 opacity-100"
-                      : "max-h-0 opacity-0"
-                  }`}
-                >
-                  <div className="px-4 sm:px-6 pb-4 sm:pb-6 pt-2">
-                    <p className="text-gray-600 dark:text-gray-400 leading-relaxed text-sm sm:text-base">
-                      {faq.answer}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        <FAQSection
+          filteredFaqs={filteredFaqs}
+          openFaq={openFaq}
+          toggleFaq={toggleFaq}
+        />
 
         {/* Contact Support */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-8 text-center">
-          <ChatBubbleLeftRightIcon className="w-16 h-16 text-indigo-600 dark:text-indigo-400 mx-auto mb-6" />
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-            Still need help?
-          </h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-2xl mx-auto">
-            Can't find what you're looking for? Our support team is here to help
-            you with any questions or issues you might have.
-          </p>
-          <div className="flex flex-row items-center justify-center gap-4">
-            <Link
-              to="/contact"
-              className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors shadow-md hover:shadow-lg"
-            >
-              Contact Support
-            </Link>
-            <a
-              href="mailto:groupify.ltd@gmail.com"
-              className="bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 px-6 py-3 rounded-lg font-semibold border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-            >
-              Email Us
-            </a>
-          </div>
-        </div>
+        <ContactSupportSection />
       </div>
+
       {/* Article Modal */}
-      {selectedArticle && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-4xl w-full max-h-[90vh] flex flex-col">
-            {/* Modal Header */}
-            <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-              <div>
-                <span className="text-sm text-indigo-600 dark:text-indigo-400 font-medium">
-                  {selectedArticle.category}
-                </span>
-                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
-                  {selectedArticle.article}
-                </h2>
-              </div>
-              <button
-                onClick={() => setSelectedArticle(null)}
-                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-              >
-                <svg
-                  className="w-6 h-6 text-gray-500"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </div>
-
-            {/* Modal Content */}
-            <div className="flex-1 overflow-y-auto p-3 sm:p-6">
-              <div className="prose prose-sm sm:prose-lg dark:prose-invert max-w-none">
-                {selectedArticle.content
-                  .split("\n\n")
-                  .map((paragraph, index) => {
-                    if (
-                      paragraph.startsWith("**") &&
-                      paragraph.endsWith("**")
-                    ) {
-                      return (
-                        <h3
-                          key={index}
-                          className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mt-4 sm:mt-6 mb-2 sm:mb-3"
-                        >
-                          {paragraph.replace(/\*\*/g, "")}
-                        </h3>
-                      );
-                    } else if (paragraph.includes("**")) {
-                      return (
-                        <p
-                          key={index}
-                          className="text-sm sm:text-base text-gray-700 dark:text-gray-300 mb-3 sm:mb-4 leading-relaxed"
-                        >
-                          {paragraph.split("**").map((part, partIndex) =>
-                            partIndex % 2 === 1 ? (
-                              <strong
-                                key={partIndex}
-                                className="font-semibold text-gray-900 dark:text-white"
-                              >
-                                {part}
-                              </strong>
-                            ) : (
-                              part
-                            )
-                          )}
-                        </p>
-                      );
-                    } else {
-                      return (
-                        <p
-                          key={index}
-                          className="text-sm sm:text-base text-gray-700 dark:text-gray-300 mb-3 sm:mb-4 leading-relaxed"
-                        >
-                          {paragraph}
-                        </p>
-                      );
-                    }
-                  })}
-              </div>
-            </div>
-
-            {/* Modal Footer */}
-            <div className="p-4 sm:p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50 rounded-b-2xl">
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center sm:justify-end">
-                <button
-                  onClick={() => {
-                    setSelectedArticle(null);
-                    setTimeout(() => {
-                      const contactSection = document.querySelector("footer");
-                      if (contactSection) {
-                        contactSection.scrollIntoView({
-                          behavior: "smooth",
-                          block: "start",
-                        });
-                      }
-                    }, 100);
-                  }}
-                  className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-center"
-                >
-                  Still Need Help?
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Footer */}
-      <footer className="py-8 sm:py-12 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-t border-white/30 dark:border-gray-600/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="flex items-center mb-4 md:mb-0">
-              <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
-                <CameraIcon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-              </div>
-              <span className="ml-2 text-lg sm:text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                Groupify
-              </span>
-            </div>
-            <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-              © 2025 Groupify. Here to help you organize your memories.
-            </div>
-          </div>
-        </div>
-      </footer>
-    </div>
+      <ArticleModal
+        selectedArticle={selectedArticle}
+        setSelectedArticle={setSelectedArticle}
+      />
+    </PublicLayout>
   );
 };
 

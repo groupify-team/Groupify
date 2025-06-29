@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { useTheme } from "../shared/contexts/ThemeContext";
 import { toast } from "react-hot-toast";
+import PublicLayout from "../../components/layout/PublicLayout";
+import HeroSection from "../../components/ui/HeroSection";
+import { usePublicNavigation } from "../../hooks/usePublicNavigation";
 import {
-  CameraIcon,
-  SunIcon,
-  MoonIcon,
-  ArrowLeftIcon,
   CheckCircleIcon,
   ExclamationTriangleIcon,
   XCircleIcon,
@@ -18,7 +16,6 @@ import {
   ShieldCheckIcon,
   GlobeAltIcon,
   ChartBarIcon,
-  CalendarDaysIcon,
   InformationCircleIcon,
   WrenchScrewdriverIcon,
   BoltIcon,
@@ -33,8 +30,8 @@ const toastOptions = {
   position: "top-center",
 };
 
-const Status = () => {
-  const { theme, toggleTheme } = useTheme();
+const StatusPage = () => {
+  const { handleGetStarted } = usePublicNavigation();
   const [isLoaded, setIsLoaded] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [email, setEmail] = useState("");
@@ -309,24 +306,8 @@ const Status = () => {
     setIsSubscribing(true);
 
     try {
-      // Get existing subscribers from localStorage
-      const existingSubscribers = JSON.parse(
-        localStorage.getItem("groupify_status_subscribers") || "[]"
-      );
-
-      // Check if email already exists
-      if (existingSubscribers.includes(email.toLowerCase())) {
-        toast.error("This email is already subscribed!", toastOptions);
-        setIsSubscribing(false);
-        return;
-      }
-
-      // Add new subscriber
-      const updatedSubscribers = [...existingSubscribers, email.toLowerCase()];
-      localStorage.setItem(
-        "groupify_status_subscribers",
-        JSON.stringify(updatedSubscribers)
-      );
+      // Simulate API call - in real app would be actual subscription
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
       toast.success(
         "Successfully subscribed! Thank you for joining us.",
@@ -340,87 +321,57 @@ const Status = () => {
     }
   };
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 transition-colors duration-500">
-      {/* Navigation Header */}
-      <nav className="relative z-10 bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm border-b border-white/20 dark:border-gray-700/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-14 sm:h-16">
-            <div className="flex items-center">
-              <Link to="/" className="flex items-center">
-                <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
-                  <CameraIcon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-                </div>
-                <span className="ml-2 text-xl sm:text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                  Groupify
-                </span>
-              </Link>
-            </div>
+  // Create status badge content for hero
+  const statusBadgeContent = (
+    <div className="inline-flex items-center">
+      {React.createElement(getStatusIcon(overallStatus), {
+        className: "w-4 h-4 sm:w-5 sm:h-5 text-white mr-2",
+      })}
+      <span className="text-white font-medium text-sm sm:text-base">
+        {overallStatus === "operational" && "All Systems Operational"}
+        {overallStatus === "degraded" && "Some Systems Degraded"}
+        {overallStatus === "outage" && "Service Disruption"}
+      </span>
+    </div>
+  );
 
-            <div className="flex items-center space-x-2 sm:space-x-4">
-              <Link
-                to="/"
-                className="inline-flex items-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
-              >
-                <ArrowLeftIcon className="w-5 h-5 sm:mr-2" />
-                <span className="hidden sm:inline">Back to Home</span>
-              </Link>
-
-              <button
-                onClick={toggleTheme}
-                className="p-2 rounded-lg text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-              >
-                {theme === "dark" ? (
-                  <SunIcon className="w-5 h-5" />
-                ) : (
-                  <MoonIcon className="w-5 h-5" />
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      {/* Hero Section */}
-      <div className="bg-gradient-to-r from-indigo-600 to-purple-600 py-12 sm:py-16 md:py-20">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div
-            className={`inline-flex items-center px-3 py-1.5 sm:px-4 sm:py-2 bg-white/20 backdrop-blur-sm rounded-full border border-white/30 mb-4 sm:mb-6`}
-          >
-            {React.createElement(getStatusIcon(overallStatus), {
-              className: "w-4 h-4 sm:w-5 sm:h-5 text-white mr-2",
-            })}
-            <span className="text-white font-medium text-sm sm:text-base">
-              {overallStatus === "operational" && "All Systems Operational"}
-              {overallStatus === "degraded" && "Some Systems Degraded"}
-              {overallStatus === "outage" && "Service Disruption"}
-            </span>
-          </div>
-
-          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4 sm:mb-6">
-            Groupify System Status
-          </h1>
-          <p className="text-base sm:text-lg md:text-xl text-indigo-100 mb-6 sm:mb-8 leading-relaxed max-w-2xl mx-auto">
-            Real-time status and performance monitoring for all Groupify
-            services. We're committed to transparency and keeping you informed.
-          </p>
-
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8 text-indigo-100">
-            <div className="flex items-center">
-              <ClockIcon className="w-5 h-5 mr-2" />
-              <span className="text-sm sm:text-base">
-                Last updated: {formatTime(currentTime)}
-              </span>
-            </div>
-            <div className="flex items-center">
-              <ArrowTrendingUpIcon className="w-5 h-5 mr-2" />
-              <span className="text-sm sm:text-base">
-                Overall uptime: {overallUptime}%
-              </span>
-            </div>
-          </div>
-        </div>
+  // Create additional content for hero with time and uptime
+  const heroAdditionalContent = (
+    <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8 text-indigo-100">
+      <div className="flex items-center">
+        <ClockIcon className="w-5 h-5 mr-2" />
+        <span className="text-sm sm:text-base">
+          Last updated: {formatTime(currentTime)}
+        </span>
       </div>
+      <div className="flex items-center">
+        <ArrowTrendingUpIcon className="w-5 h-5 mr-2" />
+        <span className="text-sm sm:text-base">
+          Overall uptime: {overallUptime}%
+        </span>
+      </div>
+    </div>
+  );
+
+  return (
+    <PublicLayout 
+      headerType="public"
+      footerType="default"
+      footerProps={{ 
+        customText: "© 2025 Groupify. Transparent and reliable service monitoring."
+      }}
+    >
+      {/* Hero Section */}
+      <HeroSection
+        variant="status"
+        badge={{ 
+          content: statusBadgeContent
+        }}
+        title="Groupify System Status"
+        description="Real-time status and performance monitoring for all Groupify services. We're committed to transparency and keeping you informed."
+        additionalContent={heroAdditionalContent}
+        className="bg-gradient-to-r from-indigo-600 to-purple-600"
+      />
 
       {/* Current Incidents */}
       {incidents.length > 0 && (
@@ -694,27 +645,8 @@ const Status = () => {
           </form>
         </div>
       </div>
-
-      {/* Footer */}
-      <footer className="py-8 sm:py-12 bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm border-t border-white/20 dark:border-gray-700/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="flex items-center mb-4 md:mb-0">
-              <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
-                <CameraIcon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-              </div>
-              <span className="ml-2 text-lg sm:text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                Groupify
-              </span>
-            </div>
-            <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-              © 2025 Groupify. Transparent and reliable service monitoring.
-            </div>
-          </div>
-        </div>
-      </footer>
-    </div>
+    </PublicLayout>
   );
 };
 
-export default Status;
+export default StatusPage;

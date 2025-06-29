@@ -1,34 +1,40 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { useTheme } from "../shared/contexts/ThemeContext";
+
+// New Architecture Components
+import PublicLayout from "../../components/layout/PublicLayout";
+import HeroSection from "../../components/ui/HeroSection";
+import { FeatureGrid } from "../../components/ui/FeatureCard";
+import { usePublicNavigation } from "../../hooks/usePublicNavigation";
+
+// Icons
 import {
-  CameraIcon,
-  MoonIcon,
-  SunIcon,
-  ArrowLeftIcon,
-  SparklesIcon,
-  HeartIcon,
-  LightBulbIcon,
   RocketLaunchIcon,
+  HeartIcon,
+  SparklesIcon,
   UsersIcon,
-  GlobeAltIcon,
+  LightBulbIcon,
   StarIcon,
+  GlobeAltIcon,
+  UserGroupIcon,
+  ChartBarIcon,
+  HomeIcon,
 } from "@heroicons/react/24/outline";
 
-import ofirprofile from "../assets/ofirprofile.jpg";
-import adirprofile from "../assets/adirprofile.jpg";
+// Profile images
+import ofirprofile from "../../../assets/ofirprofile.jpg";
+import adirprofile from "../../../assets/adirprofile.jpg";
 
-const AboutUs = () => {
-  // Scroll to top on component mount
+const AboutPage = () => {
+  const { handleGetStarted } = usePublicNavigation();
+  const [isLoaded, setIsLoaded] = useState(false);
+
   useEffect(() => {
     window.scrollTo(0, 0);
-    // Restore opacity when page loads
-    document.body.style.opacity = "1";
-    document.body.style.transition = "opacity 0.3s ease-in";
+    setIsLoaded(true);
   }, []);
 
-  const { theme, toggleTheme } = useTheme();
-
+  // Founders data
   const founders = [
     {
       name: "Ofir Almog",
@@ -60,125 +66,91 @@ const AboutUs = () => {
     },
   ];
 
+  // Values as feature cards
   const values = [
     {
+      id: 1,
       icon: HeartIcon,
       title: "Privacy First",
-      description:
-        "Your memories are personal. We build with privacy and security at the core of everything we do.",
+      description: "Your memories are personal. We build with privacy and security at the core of everything we do.",
+      variant: "simple",
     },
     {
+      id: 2,
       icon: SparklesIcon,
       title: "Innovation",
-      description:
-        "We leverage cutting-edge AI technology to create magical experiences that make organizing photos effortless.",
+      description: "We leverage cutting-edge AI technology to create magical experiences that make organizing photos effortless.",
+      variant: "simple",
     },
     {
+      id: 3,
       icon: UsersIcon,
       title: "Community",
-      description:
-        "Photos are meant to be shared. We build tools that bring people together through shared memories.",
+      description: "Photos are meant to be shared. We build tools that bring people together through shared memories.",
+      variant: "simple",
     },
     {
+      id: 4,
       icon: LightBulbIcon,
       title: "Simplicity",
-      description:
-        "Complex technology should feel simple. We design intuitive experiences that anyone can use.",
+      description: "Complex technology should feel simple. We design intuitive experiences that anyone can use.",
+      variant: "simple",
     },
   ];
 
+  // Milestones data
   const milestones = [
     {
       year: "2023",
       title: "The Idea",
-      description:
-        "Frustrated by disorganized travel photos, Ofir and Adir decide to solve this problem for everyone.",
+      description: "Frustrated by disorganized travel photos, Ofir and Adir decide to solve this problem for everyone.",
     },
     {
       year: "2024",
       title: "First Product",
-      description:
-        "Launch of Groupify with basic AI face recognition and photo organization features.",
+      description: "Launch of Groupify with basic AI face recognition and photo organization features.",
     },
     {
       year: "2024",
       title: "Growing Community",
-      description:
-        "Reached 10,000+ active users organizing millions of photos and sharing countless memories.",
+      description: "Reached 10,000+ active users organizing millions of photos and sharing countless memories.",
     },
     {
       year: "2025",
       title: "The Future",
-      description:
-        "Expanding globally with advanced AI features and enhanced collaboration tools.",
+      description: "Expanding globally with advanced AI features and enhanced collaboration tools.",
     },
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 transition-colors duration-500">
-      {/* Navigation Header */}
-      <nav className="relative z-10 bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm border-b border-white/20 dark:border-gray-700/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-14 sm:h-16">
-            {/* Logo */}
-            <div className="flex items-center">
-              <Link to="/" className="flex items-center">
-                <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
-                  <CameraIcon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-                </div>
-                <span className="ml-2 text-xl sm:text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                  Groupify
-                </span>
-              </Link>
-            </div>
-
-            {/* Navigation */}
-            <div className="flex items-center space-x-2 sm:space-x-4">
-              <Link
-                to="/"
-                className="inline-flex items-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
-              >
-                <ArrowLeftIcon className="w-5 h-5 sm:mr-2" />
-                <span className="hidden sm:inline">Back to Home</span>
-              </Link>
-
-              <button
-                onClick={toggleTheme}
-                className="p-2 rounded-lg text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-              >
-                {theme === "dark" ? (
-                  <SunIcon className="w-5 h-5" />
-                ) : (
-                  <MoonIcon className="w-5 h-5" />
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
-
+    <PublicLayout
+      headerType="public"
+      footerType="default"
+      footerProps={{ 
+        customText: "© 2025 Groupify. Built with ❤️ by Ofir & Adir." 
+      }}
+    >
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-indigo-600 to-purple-600 py-12 sm:py-16 md:py-20">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="inline-flex items-center px-3 py-1.5 sm:px-4 sm:py-2 bg-white/20 backdrop-blur-sm rounded-full border border-white/30 mb-4 sm:mb-6">
-            <RocketLaunchIcon className="w-4 h-4 sm:w-5 sm:h-5 text-white mr-2" />
-            <span className="text-white font-medium text-sm sm:text-base">
-              Our Story
-            </span>
-          </div>
-
-          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4 sm:mb-6">
-            About Groupify
-          </h1>
-          <p className="text-base sm:text-lg md:text-xl text-indigo-100 mb-6 sm:mb-8 leading-relaxed max-w-2xl mx-auto">
-            We're on a mission to help people organize and share their most
-            precious memories through the power of AI and beautiful design.
-          </p>
-        </div>
-      </div>
+      <HeroSection
+        badge={{ 
+          icon: RocketLaunchIcon, 
+          text: "Our Story" 
+        }}
+        title="About Groupify"
+        description="We're on a mission to help people organize and share their most precious memories through the power of AI and beautiful design."
+        primaryCTA={{
+          text: "Start Organizing",
+          href: "/signup",
+          onClick: handleGetStarted,
+        }}
+        secondaryCTA={{
+          text: "Contact Us",
+          href: "/contact",
+        }}
+      />
 
       {/* Mission Section */}
-      <div className="py-12 sm:py-16 md:py-20 bg-white/40 dark:bg-gray-800/40 backdrop-blur-sm">
+      <div className="py-12 sm:py-16 bg-white/40 dark:bg-gray-800/40 backdrop-blur-sm">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 md:gap-16 items-center">
             <div className="text-center lg:text-left">
@@ -217,6 +189,7 @@ const AboutUs = () => {
               </div>
             </div>
 
+            {/* Right Side - Photo Grid Mockup */}
             <div className="relative">
               <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 <div className="space-y-3 sm:space-y-4">
@@ -262,7 +235,11 @@ const AboutUs = () => {
             {founders.map((founder, index) => (
               <div
                 key={index}
-                className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-2xl border border-white/20 dark:border-gray-700/50 p-4 sm:p-6 md:p-8 hover:shadow-2xl transition-all duration-300"
+                className={`bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-2xl border border-white/20 dark:border-gray-700/50 p-4 sm:p-6 md:p-8 hover:shadow-2xl transition-all duration-300 ${
+                  isLoaded
+                    ? `opacity-100 translate-y-0 delay-${index * 200}`
+                    : "opacity-0 translate-y-8"
+                }`}
               >
                 {/* Profile Image */}
                 <div className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full overflow-hidden mx-auto mb-4 sm:mb-6 shadow-lg border-4 border-white dark:border-gray-700">
@@ -374,24 +351,12 @@ const AboutUs = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 md:gap-8">
-            {values.map((value, index) => (
-              <div
-                key={index}
-                className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-xl border border-white/20 dark:border-gray-700/50 p-4 sm:p-6 text-center hover:shadow-lg transition-all duration-300 hover:-translate-y-2"
-              >
-                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-3 sm:mb-4">
-                  <value.icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                </div>
-                <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-2 sm:mb-3">
-                  {value.title}
-                </h3>
-                <p className="text-gray-600 dark:text-gray-300 text-xs sm:text-sm leading-relaxed">
-                  {value.description}
-                </p>
-              </div>
-            ))}
-          </div>
+          <FeatureGrid 
+            features={values}
+            columns={4}
+            variant="simple"
+            isLoaded={isLoaded}
+          />
         </div>
       </div>
 
@@ -417,8 +382,12 @@ const AboutUs = () => {
               >
                 <div className="flex-1 w-full">
                   <div
-                    className={`bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-xl border border-white/20 dark:border-gray-700/50 p-4 sm:p-6 text-center md:text-left ${
+                    className={`bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-xl border border-white/20 dark:border-gray-700/50 p-4 sm:p-6 text-center md:text-left transition-all duration-300 hover:shadow-lg ${
                       index % 2 === 0 ? "md:mr-8" : "md:ml-8"
+                    } ${
+                      isLoaded
+                        ? `opacity-100 translate-y-0 delay-${index * 150}`
+                        : "opacity-0 translate-y-8"
                     }`}
                   >
                     <div className="flex items-center justify-center md:justify-start mb-2 sm:mb-3">
@@ -456,16 +425,12 @@ const AboutUs = () => {
             moments.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
-            <Link
-              to="/signup"
-              onClick={() => {
-                document.body.style.opacity = "0";
-                document.body.style.transition = "opacity 0.3s ease-out";
-              }}
+            <button
+              onClick={handleGetStarted}
               className="inline-flex items-center justify-center bg-white text-indigo-600 px-6 py-3 sm:px-8 sm:py-4 rounded-xl text-base sm:text-lg font-semibold hover:bg-gray-50 transition-all duration-200 shadow-xl hover:shadow-2xl hover:scale-105"
             >
               Start Organizing
-            </Link>
+            </button>
             <Link
               to="/contact"
               className="inline-flex items-center justify-center bg-white/20 backdrop-blur-sm text-white px-6 py-3 sm:px-8 sm:py-4 rounded-xl text-base sm:text-lg font-semibold border border-white/30 hover:bg-white/30 transition-all duration-200"
@@ -475,27 +440,8 @@ const AboutUs = () => {
           </div>
         </div>
       </div>
-
-      {/* Footer */}
-      <footer className="py-8 sm:py-12 bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm border-t border-white/20 dark:border-gray-700/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="flex items-center mb-4 md:mb-0">
-              <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
-                <CameraIcon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-              </div>
-              <span className="ml-2 text-lg sm:text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                Groupify
-              </span>
-            </div>
-            <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-              © 2025 Groupify. Built with ❤️ by Ofir & Adir.
-            </div>
-          </div>
-        </div>
-      </footer>
-    </div>
+    </PublicLayout>
   );
 };
 
-export default AboutUs;
+export default AboutPage;
