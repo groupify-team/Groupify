@@ -17,7 +17,7 @@ import { useDashboardModals } from "@dashboard/hooks/useDashboardModals";
 import TripCard from "@trips/components/TripCard";
 import TabSwitcher from "@dashboard/components/ui/TabSwitcher";
 import FilterDropdown from "@dashboard/components/ui/FilterDropdown";
-import { filterTrips, getFilterLabel } from "@dashboard/utils/dashboardHelpers";
+import { filterTrips, getFilterLabel } from "../utils/dashboardHelpers";
 import {
   canUserCreateTrip,
   getUserTripCount,

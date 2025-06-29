@@ -23,7 +23,7 @@ import ResetPasswordPage from "@/auth-area/pages/ResetPasswordPage/ResetPassword
 import LaunchAnimation from "@/auth-area/components/ui/LaunchAnimation";
 
 // Dashboard Area Components - Temporarily disabled
-// import Dashboard from "@/dashboard-area/pages/DashboardPage/DashboardPage";
+import Dashboard from "@/dashboard-area/pages/DashboardPage/DashboardPage";
 
 // Public Area Pages
 import HomePage from "./public-area/pages/HomePage/HomePage";
@@ -63,7 +63,8 @@ const DashboardPlaceholder = () => {
           🚧 Dashboard Coming Soon
         </h1>
         <p className="text-gray-600 dark:text-gray-400 mb-8">
-          Dashboard components are being developed. You're successfully logged in!
+          Dashboard components are being developed. You're successfully logged
+          in!
         </p>
         <div className="space-y-4">
           <button
@@ -344,7 +345,7 @@ function App() {
                 path="/dashboard"
                 element={
                   <ProtectedRoute>
-                    <DashboardPlaceholder />
+                    <Dashboard />
                   </ProtectedRoute>
                 }
               />
