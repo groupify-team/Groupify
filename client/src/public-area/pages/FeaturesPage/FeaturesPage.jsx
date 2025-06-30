@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 import PublicLayout from "../../components/layout/PublicLayout";
 import HeroSection from "../../components/ui/HeroSection";
 import { usePublicNavigation } from "../../hooks/usePublicNavigation";
+import SettingsModal from "../../../dashboard-area/features/settings/components/SettingsModal";
+
 
 import {
   SparklesIcon,
@@ -261,13 +263,16 @@ const CallToActionSection = ({ handleGetStarted }) => (
 );
 
 const Features = () => {
-  const { handleGetStarted } = usePublicNavigation();
+  const { 
+    handleGetStarted,
+    headerProps,      // NEW: Contains onSettingsClick
+    settingsProps     // NEW: Contains all settings modal props
+  } = usePublicNavigation();
   const [isLoaded, setIsLoaded] = useState(false);
   const [activeCategory, setActiveCategory] = useState("all");
 
   // Scroll to top on component mount
   useEffect(() => {
-    window.scrollTo(0, 0);
     setIsLoaded(true);
   }, []);
 
@@ -600,6 +605,7 @@ const Features = () => {
   return (
     <PublicLayout
       headerType="public"
+      headerProps={headerProps}
       footerType="extended"
       footerProps={{ customText: "© 2025 Groupify. Powerful features, simple experience." }}
     >
@@ -633,6 +639,11 @@ const Features = () => {
 
       {/* CTA Section */}
       <CallToActionSection handleGetStarted={handleGetStarted} />
+        
+      {/* Settings Modal*/}
+      <SettingsModal {...settingsProps} />
+
+    
     </PublicLayout>
   );
 };

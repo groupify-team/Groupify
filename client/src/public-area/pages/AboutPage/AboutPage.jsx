@@ -6,6 +6,7 @@ import PublicLayout from "../../components/layout/PublicLayout";
 import HeroSection from "../../components/ui/HeroSection";
 import { FeatureGrid } from "../../components/ui/FeatureCard";
 import { usePublicNavigation } from "../../hooks/usePublicNavigation";
+import SettingsModal from "../../../dashboard-area/features/settings/components/SettingsModal";
 
 // Icons
 import {
@@ -26,7 +27,7 @@ import ofirprofile from "../../../assets/ofirprofile.jpg";
 import adirprofile from "../../../assets/adirprofile.jpg";
 
 const AboutPage = () => {
-  const { handleGetStarted } = usePublicNavigation();
+  const { handleGetStarted, headerProps, settingsProps } = usePublicNavigation();
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
@@ -125,6 +126,7 @@ const AboutPage = () => {
   return (
     <PublicLayout
       headerType="public"
+      headerProps={headerProps}
       footerType="default"
       footerProps={{ 
         customText: "© 2025 Groupify. Built with ❤️ by Ofir & Adir." 
@@ -440,6 +442,7 @@ const AboutPage = () => {
           </div>
         </div>
       </div>
+      <SettingsModal {...settingsProps} />
     </PublicLayout>
   );
 };
