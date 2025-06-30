@@ -220,10 +220,8 @@ const SignInPage = () => {
     }
   };
 
-  // Form configuration
+  // Form configuration - REMOVED title and subtitle to avoid duplication
   const formConfig = {
-    title: "Welcome back",
-    subtitle: "Sign in to your account to continue organizing your memories",
     submitText: loading ? "Signing in..." : "Sign in",
     fields: [
       {
@@ -447,7 +445,7 @@ const SignInPage = () => {
             <p className="mt-4 sm:mt-6 md:mt-8 text-center text-xs sm:text-sm text-gray-600 dark:text-gray-400">
               Don't have an account?{" "}
               <button
-                onClick={() => navigateWithTransition("/signup")}
+                onClick={() => navigate("/signup")}
                 className="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300 bg-transparent border-none cursor-pointer"
               >
                 Create one now
