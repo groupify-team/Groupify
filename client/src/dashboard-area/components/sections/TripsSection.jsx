@@ -1,5 +1,7 @@
 ﻿// TripsSection.jsx - Trips management section
 import React from "react";
+import { useNavigate } from "react-router-dom";
+
 import {
   BellIcon,
   CheckCircleIcon,
@@ -28,6 +30,7 @@ import {
 
 const TripsSection = () => {
   const { currentUser } = useAuth();
+  const navigate = useNavigate();
 
   const {
     layout: { isMobile },
@@ -66,6 +69,7 @@ const TripsSection = () => {
           `Trip limit reached! You can only create ${MAX_TRIPS_PER_USER} trips. You currently have ${currentCount} trips.`,
           6000
         );
+
         return;
       }
       openCreateTripModal();
@@ -99,9 +103,8 @@ const TripsSection = () => {
   };
 
   const handleViewTrip = (tripId) => {
-    // This will be handled by the parent dashboard component
-    // through the navigation hook
     console.log("View trip:", tripId);
+    navigate(`/dashboard/trip/${tripId}`);
   };
 
   return (

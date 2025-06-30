@@ -279,6 +279,18 @@ export const useDashboardLayout = () => {
 
   const getLayoutClasses = () => {
     if (isMobile) {
+      // Navigation actions
+      const viewTrip = (tripId) => {
+        console.log("🚀 Navigating to trip:", tripId);
+        setCurrentView("trip-detail");
+        setSelectedTripId(tripId);
+      };
+
+      const backToHome = () => {
+        setCurrentView("home");
+        setSelectedTripId(null);
+      };
+
       return {
         main: "h-[calc(100vh-4rem)] w-full",
         content: "pb-4 h-full",
@@ -286,11 +298,33 @@ export const useDashboardLayout = () => {
     }
 
     if (sidebarOpen) {
+      // Navigation actions
+      const viewTrip = (tripId) => {
+        console.log("🚀 Navigating to trip:", tripId);
+        setCurrentView("trip-detail");
+        setSelectedTripId(tripId);
+      };
+
+      const backToHome = () => {
+        setCurrentView("home");
+        setSelectedTripId(null);
+      };
+
       return {
         main: "ml-64 w-[calc(100%-16rem)] min-h-screen",
         content: "py-2 sm:py-4",
       };
-    }
+    } // Navigation actions
+    const viewTrip = (tripId) => {
+      console.log("🚀 Navigating to trip:", tripId);
+      setCurrentView("trip-detail");
+      setSelectedTripId(tripId);
+    };
+
+    const backToHome = () => {
+      setCurrentView("home");
+      setSelectedTripId(null);
+    };
 
     return {
       main: "w-full min-h-screen",
@@ -315,6 +349,16 @@ export const useDashboardLayout = () => {
     setFilterDropdownOpen(false);
     setNotificationsDropdownOpen(false);
     setShowMobileUserMenu(false);
+  }; // Navigation actions
+  const viewTrip = (tripId) => {
+    console.log("🚀 Navigating to trip:", tripId);
+    setCurrentView("trip-detail");
+    setSelectedTripId(tripId);
+  };
+
+  const backToHome = () => {
+    setCurrentView("home");
+    setSelectedTripId(null);
   };
 
   return {
@@ -415,6 +459,11 @@ export const useDashboardLayout = () => {
       updateDateFilter,
       resetFilters,
       focusSearchInput,
+    },
+    // Navigation actions
+    navigation: {
+      viewTrip,
+      backToHome,
     },
 
     // Utility functions
