@@ -1,4 +1,5 @@
-const functions = require("firebase-functions");
+const {onRequest} = require('firebase-functions/v2/https');
+const {setGlobalOptions} = require('firebase-functions/v2');
 const admin = require("firebase-admin");
 const nodemailer = require("nodemailer");
 const fs = require("fs");
@@ -9,228 +10,940 @@ const cors = require("cors")({
     "https://groupify-77202.web.app",
     "https://groupify-77202.firebaseapp.com",
   ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 });
 const axios = require("axios");
 
 admin.initializeApp();
 
-// Configure your email transporter
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587,
-  secure: false,
-  auth: {
-    user: functions.config().email.user,
-    pass: functions.config().email.pass,
-  },
-  tls: {
-    rejectUnauthorized: false,
-  },
-  debug: true, // Enable debug logs
-  logger: true, // Enable logger
+// Set global options for all functions in this file
+setGlobalOptions({
+  region: 'us-central1',
+  memory: '512MiB',
+  timeoutSeconds: 300
 });
 
-// Send Contact Email Function
-exports.sendContactEmail = functions.https.onCall(async (data, context) => {
-  console.log("sendContactEmail called with data:", data);
+// Send Verification Email Function (Gen 2 HTTP)
+exports.sendVerificationEmail = onRequest({
+  memory: "256MiB",
+  timeoutSeconds: 60,
+  secrets: ["EMAIL_USER", "EMAIL_PASSWORD", "APP_URL"]
+}, async (req, res) => {
+  return cors(req, res, async () => {  
+    console.log("sendVerificationEmail function called");
 
-  // Validate input data
-  if (!data || typeof data !== "object") {
-    throw new functions.https.HttpsError(
-      "invalid-argument",
-      "Request data must be an object"
-    );
-  }
+    if (req.method !== 'POST') {
+      res.status(405).send('Method Not Allowed');
+      return;
+    }
 
-  const { name, email, subject, message, category } = data;
+    const { email, name } = req.body.data || req.body;
 
-  // Validate required fields
-  if (!name || !email || !subject || !message) {
-    throw new functions.https.HttpsError(
-      "invalid-argument",
-      "Missing required fields: name, email, subject, message"
-    );
-  }
+    if (!email || !name) {
+      res.status(400).json({
+        success: false,
+        message: "Email and name are required"
+      });
+      return;
+    }
 
-  // Validate email format
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) {
-    throw new functions.https.HttpsError(
-      "invalid-argument",
-      "Invalid email format"
-    );
-  }
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      res.status(400).json({
+        success: false,
+        message: "Invalid email format"
+      });
+      return;
+    }
 
-  let htmlTemplate;
-  try {
-    const templatePath = path.join(
-      __dirname,
-      "email-templates",
-      "contactus.html"
-    );
+    try {
+      // Check if user exists
+      let user;
+      try {
+        user = await admin.auth().getUserByEmail(email);
+      } catch (error) {
+        if (error.code === 'auth/user-not-found') {
+          res.status(404).json({
+            success: false,
+            message: "User not found"
+          });
+          return;
+        }
+        throw error;
+      }
 
-    if (fs.existsSync(templatePath)) {
-      htmlTemplate = fs.readFileSync(templatePath, "utf8");
-    } else {
-      // Fallback template
-      htmlTemplate = `
+      // Check if email is already verified
+      if (user.emailVerified) {
+        res.status(200).json({
+          success: true,
+          message: "Email is already verified"
+        });
+        return;
+      }
+
+      // Generate new verification code
+      const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+      
+      // Store verification code in Firestore
+      await admin.firestore().collection('verificationCodes').doc(email).set({
+        code: verificationCode,
+        email: email,
+        name: name,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        expiresAt: new Date(Date.now() + 10 * 60 * 1000), // 10 minutes
+        used: false,
+        verified: false
+      });
+
+      // Create email transporter
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        host: "smtp.gmail.com",
+        port: 587,
+        secure: false,
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASSWORD,
+        },
+        tls: {
+          rejectUnauthorized: false,
+        },
+        authMethod: 'PLAIN'
+      });
+
+      // Email template
+      const htmlTemplate = `
         <!DOCTYPE html>
         <html>
         <head>
           <style>
-            body { font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; background: #f8fafc; }
+            body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f8fafc; }
             .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
             .header { background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); padding: 30px; text-align: center; }
             .header h1 { color: white; margin: 0; font-size: 28px; }
-            .content { padding: 30px; }
-            .field { margin-bottom: 20px; padding: 15px; background: #f8fafc; border-radius: 8px; border-left: 4px solid #4f46e5; }
-            .field-label { font-weight: bold; color: #4a5568; font-size: 14px; margin-bottom: 5px; text-transform: uppercase; }
-            .field-value { color: #2d3748; font-size: 16px; line-height: 1.5; }
-            .message-box { background: #edf2f7; padding: 20px; border-radius: 8px; margin: 20px 0; white-space: pre-wrap; }
-            .footer { background: #f9fafb; color: #6b7280; padding: 20px; text-align: center; font-size: 14px; border-top: 1px solid #e5e7eb; }
-            .alert { background: #ef4444; color: white; padding: 16px; border-radius: 8px; margin-bottom: 24px; font-weight: 600; text-align: center; }
-            .category-badge { background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); color: white; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; text-transform: uppercase; display: inline-block; }
-            .action-buttons { text-align: center; margin-top: 20px; }
-            .btn { background: #4f46e5; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; margin: 0 5px; display: inline-block; }
-            .btn-whatsapp { background: #25d366; }
+            .content { padding: 30px; text-align: center; }
+            .code { background: #f1f5f9; padding: 20px; border-radius: 8px; font-size: 32px; font-weight: bold; color: #1e293b; margin: 20px 0; letter-spacing: 4px; }
+            .button { display: inline-block; background: #4f46e5; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; margin: 20px 0; }
+            .footer { background: #f9fafb; color: #6b7280; padding: 20px; text-align: center; font-size: 14px; }
           </style>
         </head>
         <body>
           <div class="container">
             <div class="header">
-              <h1>📸 New Contact Message - Groupify</h1>
-              <p style="color: rgba(255,255,255,0.8); margin: 10px 0 0 0;">You have received a new message from your website</p>
+              <h1>🎉 Welcome to Groupify!</h1>
+              <p style="color: rgba(255,255,255,0.8); margin: 10px 0 0 0;">Verify your email to get started</p>
             </div>
-            
             <div class="content">
-              <div class="alert">
-                🚨 URGENT: New customer inquiry requires your attention
-              </div>
-              
-              <div class="field">
-                <div class="field-label">From</div>
-                <div class="field-value">{{name}} &lt;{{email}}&gt;</div>
-              </div>
-              
-              <div class="field">
-                <div class="field-label">Category</div>
-                <div class="field-value">
-                  <span class="category-badge">{{category}}</span>
-                </div>
-              </div>
-              
-              <div class="field">
-                <div class="field-label">Subject</div>
-                <div class="field-value">{{subject}}</div>
-              </div>
-              
-              <div class="field">
-                <div class="field-label">Message</div>
-                <div class="field-value message-box">{{message}}</div>
-              </div>
-              
-              <div style="background: #e6fffa; padding: 15px; border-radius: 8px; border: 1px solid #81e6d9; margin-top: 20px;">
-                <strong>⏰ Received:</strong> {{timestamp}}
-              </div>
-              
-              <div class="action-buttons">
-                <a href="mailto:{{email}}?subject=Re: {{subject}}" class="btn">📧 Reply via Email</a>
-                <a href="https://wa.me/972532448624?text=Hi {{name}}, thanks for contacting Groupify!" class="btn btn-whatsapp">💬 WhatsApp Reply</a>
-              </div>
+              <h2>Hi ${name}!</h2>
+              <p>Thanks for joining Groupify! Please verify your email address using the code below:</p>
+              <div class="code">${verificationCode}</div>
+              <p>Or click the button below to verify automatically:</p>
+              <a href="${process.env.APP_URL}/confirm-email?code=${verificationCode}&email=${encodeURIComponent(email)}" class="button">Verify Email</a>
+              <p style="color: #6b7280;">This code will expire in 10 minutes.</p>
             </div>
-            
             <div class="footer">
-              <strong>Groupify Support System</strong><br>
-              This message was automatically generated from the contact form.<br>
-              © 2025 Groupify. Made with ❤️ for photo lovers.
+              <strong>Groupify Team</strong><br>
+              If you didn't create this account, please ignore this email.
             </div>
           </div>
         </body>
         </html>
       `;
+
+      // Send email
+      const mailOptions = {
+        from: `"Groupify Team" <${process.env.EMAIL_USER}>`,
+        to: email,
+        subject: "🎉 Welcome to Groupify! Verify your email",
+        html: htmlTemplate,
+      };
+
+      await transporter.sendMail(mailOptions);
+      console.log(`Verification email sent to: ${email}`);
+
+      res.status(200).json({
+        success: true,
+        message: "Verification email sent successfully"
+      });
+
+    } catch (error) {
+      console.error("Send verification email error:", error);
+      res.status(500).json({
+        success: false,
+        message: `Failed to send verification email: ${error.message}`
+      });
     }
-  } catch (error) {
-    console.error("Error reading template:", error);
-    throw new functions.https.HttpsError(
-      "internal",
-      "Template processing error"
-    );
-  }
-
-  // Replace template variables
-  const finalHtml = htmlTemplate
-    .replace(/{{name}}/g, name || "Unknown")
-    .replace(/{{email}}/g, email || "")
-    .replace(/{{subject}}/g, subject || "No Subject")
-    .replace(/{{message}}/g, (message || "").replace(/\n/g, "<br>"))
-    .replace(
-      /{{category}}/g,
-      (category || "general").charAt(0).toUpperCase() +
-        (category || "general").slice(1)
-    )
-    .replace(/{{timestamp}}/g, new Date().toLocaleString())
-    .replace(/{{whatsapp_number}}/g, "972532448624");
-
-  try {
-    // Test the transporter first
-    console.log("Testing email transporter...");
-    await transporter.verify();
-    console.log("Email transporter verified successfully");
-
-    const mailOptions = {
-      from: `"Groupify Contact Form" <${functions.config().email.user}>`,
-      to: "groupify.ltd@gmail.com",
-      subject: `🎫 New Contact Form: ${subject}`,
-      html: finalHtml,
-      replyTo: email,
-    };
-
-    console.log("Sending email with options:", {
-      from: mailOptions.from,
-      to: mailOptions.to,
-      subject: mailOptions.subject,
-    });
-
-    const result = await transporter.sendMail(mailOptions);
-    console.log("Email sent successfully:", result.messageId);
-
-    return {
-      success: true,
-      message: "Email sent successfully",
-      messageId: result.messageId,
-    };
-  } catch (error) {
-    console.error("Email sending error details:", {
-      message: error.message,
-      code: error.code,
-      response: error.response,
-      responseCode: error.responseCode,
-    });
-
-    // Provide specific error messages
-    if (error.code === "EAUTH" || error.responseCode === 535) {
-      throw new functions.https.HttpsError(
-        "internal",
-        "Email authentication failed. Please check email credentials."
-      );
-    } else if (error.code === "ECONNECTION") {
-      throw new functions.https.HttpsError(
-        "internal",
-        "Could not connect to email server. Please try again later."
-      );
-    } else {
-      throw new functions.https.HttpsError(
-        "internal",
-        `Failed to send email: ${error.message}`
-      );
-    }
-  }
+  });
 });
 
-// Send Job Application Email Function
-exports.sendJobApplicationEmail = functions.https.onCall(
-  async (data, context) => {
-    console.log("sendJobApplicationEmail called with data:", data);
+// Resend Verification Code (Gen 2 HTTP)
+exports.resendVerificationCode = onRequest({
+  memory: "256MiB",
+  timeoutSeconds: 60,
+  secrets: ["EMAIL_USER", "EMAIL_PASSWORD"]
+}, async (req, res) => {
+  return cors(req, res, async () => {
+    console.log("resendVerificationCode function called");
+
+    if (req.method !== 'POST') {
+      res.status(405).send('Method Not Allowed');
+      return;
+    }
+
+    const { email } = req.body.data || req.body;
+
+    if (!email) {
+      res.status(400).json({
+        success: false,
+        message: "Email is required"
+      });
+      return;
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      res.status(400).json({
+        success: false,
+        message: "Invalid email format"
+      });
+      return;
+    }
+
+    try {
+      // Check if user exists
+      let user;
+      try {
+        user = await admin.auth().getUserByEmail(email);
+      } catch (error) {
+        if (error.code === 'auth/user-not-found') {
+          res.status(404).json({
+            success: false,
+            message: "User not found"
+          });
+          return;
+        }
+        throw error;
+      }
+
+      // Check if email is already verified
+      if (user.emailVerified) {
+        res.status(200).json({
+          success: true,
+          message: "Email is already verified"
+        });
+        return;
+      }
+
+      // Generate new verification code
+      const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+      
+      // Store verification code in Firestore (overwrite existing)
+      await admin.firestore().collection('verificationCodes').doc(email).set({
+        code: verificationCode,
+        email: email,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        expiresAt: new Date(Date.now() + 10 * 60 * 1000), // 10 minutes
+        used: false
+      });
+
+      // Create email transporter with better Gmail configuration
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        host: "smtp.gmail.com",
+        port: 587,
+        secure: false,
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASSWORD,
+        },
+        tls: {
+          rejectUnauthorized: false,
+        },
+        authMethod: 'PLAIN'
+      });
+
+      // Email template
+      const htmlTemplate = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f8fafc; }
+            .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+            .header { background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); padding: 30px; text-align: center; }
+            .header h1 { color: white; margin: 0; font-size: 28px; }
+            .content { padding: 30px; text-align: center; }
+            .code { background: #f1f5f9; padding: 20px; border-radius: 8px; font-size: 32px; font-weight: bold; color: #1e293b; margin: 20px 0; letter-spacing: 4px; }
+            .footer { background: #f9fafb; color: #6b7280; padding: 20px; text-align: center; font-size: 14px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>📧 Email Verification - Groupify</h1>
+              <p style="color: rgba(255,255,255,0.8); margin: 10px 0 0 0;">Verify your email to continue</p>
+            </div>
+            <div class="content">
+              <h2>Your Verification Code</h2>
+              <p>Enter this code to verify your email address:</p>
+              <div class="code">${verificationCode}</div>
+              <p style="color: #6b7280;">This code will expire in 10 minutes.</p>
+            </div>
+            <div class="footer">
+              <strong>Groupify Team</strong><br>
+              If you didn't request this verification, please ignore this email.
+            </div>
+          </div>
+        </body>
+        </html>
+      `;
+
+      // Send email
+      const mailOptions = {
+        from: `"Groupify Verification" <${process.env.EMAIL_USER}>`,
+        to: email,
+        subject: "🔐 Email Verification Code - Groupify",
+        html: htmlTemplate,
+      };
+
+      await transporter.sendMail(mailOptions);
+      console.log(`Verification code resent to: ${email}`);
+
+      res.status(200).json({
+        success: true,
+        message: "Verification code sent successfully"
+      });
+
+    } catch (error) {
+      console.error("Resend verification error:", error);
+      res.status(500).json({
+        success: false,
+        message: `Failed to resend verification code: ${error.message}`
+      });
+    }
+  });
+});
+
+// Send Password Reset Email Function (Gen 2 HTTP)
+exports.sendPasswordResetEmail = onRequest({
+  memory: "256MiB",
+  timeoutSeconds: 60,
+  secrets: ["EMAIL_USER", "EMAIL_PASSWORD", "APP_URL"]
+}, async (req, res) => {
+  return cors(req, res, async () => {
+    console.log("sendPasswordResetEmail function called");
+
+    if (req.method !== 'POST') {
+      res.status(405).send('Method Not Allowed');
+      return;
+    }
+
+    const { email } = req.body.data || req.body;
+
+    if (!email) {
+      res.status(400).json({
+        success: false,
+        message: "Email is required"
+      });
+      return;
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      res.status(400).json({
+        success: false,
+        message: "Invalid email format"
+      });
+      return;
+    }
+
+    try {
+      // Check if user exists first
+      let user;
+      try {
+        user = await admin.auth().getUserByEmail(email);
+      } catch (error) {
+        if (error.code === 'auth/user-not-found') {
+          res.status(404).json({
+            success: false,
+            message: "No user found with this email address"
+          });
+          return;
+        }
+        throw error;
+      }
+
+      // Generate reset token (similar to verification code)
+      const resetToken = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+
+      // Store reset token in Firestore
+      await admin.firestore().collection('passwordResets').doc(email).set({
+        token: resetToken,
+        email: email,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        expiresAt: new Date(Date.now() + 60 * 60 * 1000), // 1 hour
+        used: false
+      });
+
+      // Create email transporter (same as verification email)
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        host: "smtp.gmail.com",
+        port: 587,
+        secure: false,
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASSWORD,
+        },
+        tls: {
+          rejectUnauthorized: false,
+        },
+        authMethod: 'PLAIN'
+      });
+
+      // Email template (similar to verification email style)
+      const htmlTemplate = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f8fafc; }
+            .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+            .header { background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); padding: 30px; text-align: center; }
+            .header h1 { color: white; margin: 0; font-size: 28px; }
+            .content { padding: 30px; text-align: center; }
+            .button { display: inline-block; background: #4f46e5; color: #ffffff !important; padding: 15px 30px; text-decoration: none; border-radius: 8px; margin: 20px 0; font-weight: bold; border: 2px solid #4f46e5; }
+            .footer { background: #f9fafb; color: #6b7280; padding: 20px; text-align: center; font-size: 14px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>🔐 Reset Your Password - Groupify</h1>
+              <p style="color: rgba(255,255,255,0.8); margin: 10px 0 0 0;">Reset your password to regain access</p>
+            </div>
+            <div class="content">
+              <h2>Password Reset Request</h2>
+              <p>We received a request to reset your password. Click the button below to create a new password:</p>
+              <a href="${process.env.APP_URL}/reset-password?email=${encodeURIComponent(email)}&token=${resetToken}" class="button" style="color: #ffffff !important; text-decoration: none; font-weight: bold;">Reset Password</a>
+              <p style="color: #6b7280;">This link will expire in 1 hour.</p>
+              <p style="color: #6b7280; font-size: 14px;">If you didn't request this password reset, please ignore this email. Your password will remain unchanged.</p>
+            </div>
+            <div class="footer">
+              <strong>Groupify Team</strong><br>
+              If you didn't request this password reset, please ignore this email.
+            </div>
+          </div>
+        </body>
+        </html>
+      `;
+
+      // Send email
+      const mailOptions = {
+        from: `"Groupify Security" <${process.env.EMAIL_USER}>`,
+        to: email,
+        subject: "🔐 Reset Your Password - Groupify",
+        html: htmlTemplate,
+      };
+
+      await transporter.sendMail(mailOptions);
+      console.log(`Password reset email sent to: ${email}`);
+
+      res.status(200).json({
+        success: true,
+        message: "Password reset email sent successfully"
+      });
+
+    } catch (error) {
+      console.error("Password reset error:", error);
+      res.status(500).json({
+        success: false,
+        message: `Failed to send password reset email: ${error.message}`
+      });
+    }
+  });
+});
+
+// Verify Reset Token Function (Gen 2 HTTP)
+exports.verifyResetToken = onRequest({
+  memory: "256MiB",
+  timeoutSeconds: 60
+}, async (req, res) => {
+  return cors(req, res, async () => {
+    console.log("verifyResetToken function called");
+
+    if (req.method !== 'POST') {
+      res.status(405).send('Method Not Allowed');
+      return;
+    }
+
+    const { email, token } = req.body.data || req.body;
+
+    if (!email || !token) {
+      res.status(400).json({
+        success: false,
+        message: "Email and token are required"
+      });
+      return;
+    }
+
+    try {
+      const doc = await admin.firestore().collection('passwordResets').doc(email).get();
+
+      if (!doc.exists) {
+        res.status(404).json({
+          success: false,
+          message: "Reset token not found"
+        });
+        return;
+      }
+
+      const { token: storedToken, expiresAt, used } = doc.data();
+
+      if (used) {
+        res.status(412).json({
+          success: false,
+          message: "Reset token already used"
+        });
+        return;
+      }
+
+      if (new Date() > expiresAt.toDate()) {
+        res.status(410).json({
+          success: false,
+          message: "Reset token expired"
+        });
+        return;
+      }
+
+      if (token !== storedToken) {
+        res.status(400).json({
+          success: false,
+          message: "Invalid reset token"
+        });
+        return;
+      }
+
+      res.status(200).json({
+        success: true,
+        message: "Reset token is valid"
+      });
+
+    } catch (error) {
+      console.error("Token verification error:", error);
+      res.status(500).json({
+        success: false,
+        message: `Token verification failed: ${error.message}`
+      });
+    }
+  });
+});
+
+// Reset Password Function (Gen 2 HTTP)
+exports.resetPassword = onRequest({
+  memory: "256MiB",
+  timeoutSeconds: 60
+}, async (req, res) => {
+  return cors(req, res, async () => {
+    console.log("resetPassword function called");
+
+    if (req.method !== 'POST') {
+      res.status(405).send('Method Not Allowed');
+      return;
+    }
+
+    const { email, token, newPassword } = req.body.data || req.body;
+
+    if (!email || !token || !newPassword) {
+      res.status(400).json({
+        success: false,
+        message: "Email, token, and new password are required"
+      });
+      return;
+    }
+
+    // Validate password strength
+    if (newPassword.length < 6) {
+      res.status(400).json({
+        success: false,
+        message: "Password must be at least 6 characters long"
+      });
+      return;
+    }
+
+    try {
+      // Verify token first
+      const doc = await admin.firestore().collection('passwordResets').doc(email).get();
+      if (!doc.exists) {
+        res.status(404).json({ success: false, message: "Reset token not found" });
+        return;
+      }
+      const { token: storedToken, expiresAt, used } = doc.data();
+      if (used) {
+        res.status(412).json({ success: false, message: "Reset token already used" });
+        return;
+      }
+      if (new Date() > expiresAt.toDate()) {
+        res.status(410).json({ success: false, message: "Reset token expired" });
+        return;
+      }
+      if (token !== storedToken) {
+        res.status(400).json({ success: false, message: "Invalid reset token" });
+        return;
+      }
+
+      // Update user password
+      const user = await admin.auth().getUserByEmail(email);
+      await admin.auth().updateUser(user.uid, {
+        password: newPassword
+      });
+
+      // Mark token as used
+      await admin.firestore().collection('passwordResets').doc(email).update({
+        used: true
+      });
+
+      res.status(200).json({
+        success: true,
+        message: "Password reset successfully"
+      });
+
+    } catch (error) {
+      console.error("Password reset error:", error);
+      res.status(500).json({
+        success: false,
+        message: `Password reset failed: ${error.message}`
+      });
+    }
+  });
+});
+
+// Verify Email Code Function (Gen 2 HTTP)
+exports.verifyEmailCode = onRequest({
+  memory: "256MiB",
+  timeoutSeconds: 60
+}, async (req, res) => {
+  return cors(req, res, async () => {
+    console.log("verifyEmailCode function called");
+
+    if (req.method !== 'POST') {
+      res.status(405).send('Method Not Allowed');
+      return;
+    }
+
+    const { email, verificationCode } = req.body.data || req.body;
+
+    if (!email || !verificationCode) {
+      res.status(400).json({
+        success: false,
+        message: "Email and verification code are required"
+      });
+      return;
+    }
+
+    try {
+      // Get verification code from Firestore
+      const doc = await admin.firestore()
+        .collection('verificationCodes')
+        .doc(email)
+        .get();
+
+      if (!doc.exists) {
+        res.status(404).json({
+          success: false,
+          message: "Verification code not found or expired"
+        });
+        return;
+      }
+
+      const docData = doc.data();
+      const { code, expiresAt, used } = docData;
+
+      // Check if code is already used
+      if (used) {
+        res.status(412).json({
+          success: false,
+          message: "Verification code has already been used"
+        });
+        return;
+      }
+
+      // Check if code is expired
+      if (new Date() > expiresAt.toDate()) {
+        res.status(410).json({
+          success: false,
+          message: "Verification code has expired. Please request a new one."
+        });
+        return;
+      }
+
+      // Check if code matches
+      if (code !== verificationCode) {
+        res.status(400).json({
+          success: false,
+          message: "Invalid verification code"
+        });
+        return;
+      }
+
+      // Mark user as verified in Firebase Auth
+      const user = await admin.auth().getUserByEmail(email);
+      await admin.auth().updateUser(user.uid, {
+        emailVerified: true
+      });
+
+      // Mark verification code as used
+      await admin.firestore()
+        .collection('verificationCodes')
+        .doc(email)
+        .update({ used: true });
+
+      console.log(`Email verified successfully for: ${email}`);
+
+      res.status(200).json({
+        success: true,
+        message: "Email verified successfully"
+      });
+
+    } catch (error) {
+      console.error("Error verifying email code:", error);
+      res.status(500).json({
+        success: false,
+        message: `Verification failed: ${error.message}`
+      });
+    }
+  });
+});
+
+// Enable Google Auth Function (Gen 2 HTTP)
+exports.enableGoogleAuth = onRequest({
+  memory: "256MiB",
+  timeoutSeconds: 60
+}, async (req, res) => {
+  return cors(req, res, async () => {
+    console.log("enableGoogleAuth function called");
+
+    if (req.method !== 'POST') {
+      res.status(405).send('Method Not Allowed');
+      return;
+    }
+
+    const { uid, email, displayName, photoURL } = req.body.data || req.body;
+
+    if (!uid || !email) {
+      res.status(400).json({
+        success: false,
+        message: "UID and email are required"
+      });
+      return;
+    }
+
+    try {
+      // Update user in Firebase Auth to mark email as verified
+      await admin.auth().updateUser(uid, {
+        emailVerified: true,
+        displayName: displayName,
+        photoURL: photoURL
+      });
+
+      console.log(`Google auth enabled for user: ${email}`);
+
+      res.status(200).json({
+        success: true,
+        message: "Google authentication enabled"
+      });
+
+    } catch (error) {
+      console.error("Error enabling Google auth:", error);
+      res.status(500).json({
+        success: false,
+        message: `Failed to enable Google auth: ${error.message}`
+      });
+    }
+  });
+});
+
+// Send Contact Email Function (Gen 2 HTTP) - FIXED
+exports.sendContactEmail = onRequest({
+  memory: "512MiB",
+  timeoutSeconds: 60,
+  secrets: ["EMAIL_USER", "EMAIL_PASSWORD"]
+}, async (req, res) => {
+  return cors(req, res, async () => {
+    console.log("sendContactEmail called with data:", req.body.data);
+
+    if (req.method !== 'POST') {
+      res.status(405).send('Method Not Allowed');
+      return;
+    }
+
+    // Validate input data
+    if (!req.body || typeof req.body.data !== "object") {
+      res.status(400).json({
+        success: false,
+        message: "Request data must be an object"
+      });
+      return;
+    }
+
+    const { name, email, subject, message, category } = req.body.data;
+
+    // Validate required fields
+    if (!name || !email || !subject || !message) {
+      res.status(400).json({
+        success: false,
+        message: "Missing required fields: name, email, subject, message"
+      });
+      return;
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      res.status(400).json({
+        success: false,
+        message: "Invalid email format"
+      });
+      return;
+    }
+
+    // Simple HTML template
+    const htmlTemplate = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <style>
+          body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f8fafc; }
+          .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+          .header { background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); padding: 30px; text-align: center; }
+          .header h1 { color: white; margin: 0; font-size: 28px; }
+          .content { padding: 30px; }
+          .field { margin-bottom: 20px; padding: 15px; background: #f8fafc; border-radius: 8px; border-left: 4px solid #4f46e5; }
+          .field-label { font-weight: bold; color: #4a5568; font-size: 14px; margin-bottom: 5px; text-transform: uppercase; }
+          .field-value { color: #2d3748; font-size: 16px; line-height: 1.5; }
+          .message-box { background: #edf2f7; padding: 20px; border-radius: 8px; margin: 20px 0; white-space: pre-wrap; }
+          .footer { background: #f9fafb; color: #6b7280; padding: 20px; text-align: center; font-size: 14px; border-top: 1px solid #e5e7eb; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>📸 New Contact Message - Groupify</h1>
+            <p style="color: rgba(255,255,255,0.8); margin: 10px 0 0 0;">You have received a new message from your website</p>
+          </div>
+
+          <div class="content">
+            <div class="field">
+              <div class="field-label">From</div>
+              <div class="field-value">${name} &lt;${email}&gt;</div>
+            </div>
+
+            <div class="field">
+              <div class="field-label">Category</div>
+              <div class="field-value">${(category || "general").charAt(0).toUpperCase() + (category || "general").slice(1)}</div>
+            </div>
+
+            <div class="field">
+              <div class="field-label">Subject</div>
+              <div class="field-value">${subject}</div>
+            </div>
+
+            <div class="field">
+              <div class="field-label">Message</div>
+              <div class="field-value message-box">${message.replace(/\n/g, "<br>")}</div>
+            </div>
+
+            <div style="background: #e6fffa; padding: 15px; border-radius: 8px; border: 1px solid #81e6d9; margin-top: 20px;">
+              <strong>⏰ Received:</strong> ${new Date().toLocaleString()}
+            </div>
+          </div>
+
+          <div class="footer">
+            <strong>Groupify Support System</strong><br>
+            This message was automatically generated from the contact form.<br>
+            © 2025 Groupify. Made with ❤️ for photo lovers.
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    try {
+      // Create transporter with better Gmail configuration
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        host: "smtp.gmail.com",
+        port: 587,
+        secure: false,
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASSWORD,
+        },
+        tls: {
+          rejectUnauthorized: false,
+        },
+        authMethod: 'PLAIN'
+      });
+
+      // Test the transporter first
+      console.log("Testing email transporter...");
+      await transporter.verify();
+      console.log("Email transporter verified successfully");
+
+      const mailOptions = {
+        from: `"Groupify Contact Form" <${process.env.EMAIL_USER}>`,
+        to: "groupify.ltd@gmail.com",
+        subject: `🎫 New Contact Form: ${subject}`,
+        html: htmlTemplate,
+        replyTo: email,
+      };
+
+      console.log("Sending email...");
+      const result = await transporter.sendMail(mailOptions);
+      console.log("Email sent successfully:", result.messageId);
+
+      res.status(200).json({
+        success: true,
+        message: "Email sent successfully",
+        messageId: result.messageId,
+      });
+    } catch (error) {
+      console.error("Email sending error:", error);
+
+      // Provide specific error messages
+      let errorMessage = `Failed to send email: ${error.message}`;
+      if (error.code === "EAUTH" || error.responseCode === 535) {
+        errorMessage = "Email authentication failed. Please check email credentials.";
+      } else if (error.code === "ECONNECTION") {
+        errorMessage = "Could not connect to email server. Please try again later.";
+      }
+
+      res.status(500).json({
+        success: false,
+        message: errorMessage
+      });
+    }
+  });
+});
+
+// Send Job Application Email Function (Gen 2 HTTP) - FIXED
+exports.sendJobApplicationEmail = onRequest({
+  memory: "512MiB",
+  timeoutSeconds: 60,
+  secrets: ["EMAIL_USER", "EMAIL_PASSWORD"]
+}, async (req, res) => {
+  return cors(req, res, async () => {
+    console.log("sendJobApplicationEmail called with data:", req.body.data);
+
+    if (req.method !== 'POST') {
+      res.status(405).send('Method Not Allowed');
+      return;
+    }
 
     const {
       firstName,
@@ -244,144 +957,110 @@ exports.sendJobApplicationEmail = functions.https.onCall(
       position,
       department,
       cvFile,
-    } = data;
+    } = req.body.data || req.body;
 
     if (!firstName || !lastName || !email || !position) {
-      throw new functions.https.HttpsError(
-        "invalid-argument",
-        "Missing required fields: firstName, lastName, email, position"
-      );
+      res.status(400).json({
+        success: false,
+        message: "Missing required fields: firstName, lastName, email, position"
+      });
+      return;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      throw new functions.https.HttpsError(
-        "invalid-argument",
-        "Invalid email format"
-      );
+      res.status(400).json({
+        success: false,
+        message: "Invalid email format"
+      });
+      return;
     }
 
     const htmlTemplate = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <style>
-        body { font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; background: #f8fafc; }
-        .container { max-width: 700px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .header { background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); padding: 30px; text-align: center; }
-        .header h1 { color: white; margin: 0; font-size: 28px; }
-        .content { padding: 30px; }
-        .applicant-info { background: #f0f9ff; padding: 20px; border-radius: 12px; margin-bottom: 25px; border-left: 4px solid #3b82f6; }
-        .field { margin-bottom: 15px; display: flex; }
-        .field-label { font-weight: bold; color: #374151; min-width: 140px; font-size: 14px; }
-        .field-value { color: #4b5563; flex: 1; }
-        .position-banner { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 15px; border-radius: 10px; text-align: center; margin-bottom: 25px; }
-        .cover-letter { background: #f9fafb; padding: 20px; border-radius: 8px; margin: 15px 0; white-space: pre-wrap; border-left: 4px solid #6366f1; }
-        .actions { background: #fef3c7; padding: 20px; border-radius: 10px; text-align: center; margin-top: 25px; }
-        .btn { background: #4f46e5; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; margin: 0 10px; display: inline-block; font-weight: 600; }
-        .btn-secondary { background: #10b981; }
-        .alert { background: #ef4444; color: white; padding: 16px; border-radius: 8px; margin-bottom: 24px; font-weight: 600; text-align: center; }
-        .footer { background: #f9fafb; color: #6b7280; padding: 20px; text-align: center; font-size: 14px; border-top: 1px solid #e5e7eb; }
-        .skills-badge { background: #e0e7ff; color: #3730a3; padding: 4px 8px; border-radius: 12px; font-size: 12px; margin-right: 8px; display: inline-block; }
-      </style>
-    </head>
-    <body>
-      <div class="container">
-        <div class="header">
-          <h1>💼 New Job Application - Groupify</h1>
-          <p style="color: rgba(255,255,255,0.8); margin: 10px 0 0 0;">Someone applied for a position at your company!</p>
-        </div>
-        
-        <div class="content">
-          <div class="alert">
-            🎯 NEW APPLICATION: Review candidate details below
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <style>
+          body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f8fafc; }
+          .container { max-width: 700px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+          .header { background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); padding: 30px; text-align: center; }
+          .header h1 { color: white; margin: 0; font-size: 28px; }
+          .content { padding: 30px; }
+          .field { margin-bottom: 15px; display: flex; }
+          .field-label { font-weight: bold; color: #374151; min-width: 140px; font-size: 14px; }
+          .field-value { color: #4b5563; flex: 1; }
+          .cover-letter { background: #f9fafb; padding: 20px; border-radius: 8px; margin: 15px 0; white-space: pre-wrap; border-left: 4px solid #6366f1; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>💼 New Job Application - Groupify</h1>
+            <p style="color: rgba(255,255,255,0.8);">Someone applied for a position at your company!</p>
           </div>
-          
-          <div class="position-banner">
-            <h2 style="margin: 0;">Applied for: {{position}}</h2>
-            <p style="margin: 5px 0 0 0; opacity: 0.9;">{{department}} Department</p>
-          </div>
-          
-          <div class="applicant-info">
-            <h3 style="margin-top: 0; color: #1e40af;">👤 Applicant Information</h3>
+          <div class="content">
+            <h2>Applied for: ${position}</h2>
             <div class="field">
               <div class="field-label">Full Name:</div>
-              <div class="field-value"><strong>{{firstName}} {{lastName}}</strong></div>
+              <div class="field-value"><strong>${firstName} ${lastName}</strong></div>
             </div>
             <div class="field">
               <div class="field-label">Email:</div>
-              <div class="field-value">{{email}}</div>
+              <div class="field-value">${email}</div>
             </div>
             <div class="field">
               <div class="field-label">Phone:</div>
-              <div class="field-value">{{phone}}</div>
+              <div class="field-value">${phone || "Not provided"}</div>
             </div>
             <div class="field">
               <div class="field-label">Experience:</div>
-              <div class="field-value"><span class="skills-badge">{{experience}}</span></div>
+              <div class="field-value">${experience || "Not specified"}</div>
             </div>
             <div class="field">
               <div class="field-label">Portfolio:</div>
-              <div class="field-value">{{portfolio}}</div>
+              <div class="field-value">${portfolio || "Not provided"}</div>
             </div>
             <div class="field">
               <div class="field-label">Available From:</div>
-              <div class="field-value">{{availableDate}}</div>
+              <div class="field-value">${availableDate || "Not specified"}</div>
+            </div>
+            ${coverLetter ? `
+            <div>
+              <h3>📝 Cover Letter</h3>
+              <div class="cover-letter">${coverLetter}</div>
+            </div>
+            ` : ''}
+            <div style="background: #eff6ff; padding: 15px; border-radius: 8px; border: 1px solid #3b82f6; margin-top: 20px;">
+              <strong>⏰ Applied on:</strong> ${new Date().toLocaleString()}
             </div>
           </div>
-          
-          {{#if coverLetter}}
-          <div>
-            <h3 style="color: #374151;">📝 Cover Letter</h3>
-            <div class="cover-letter">{{coverLetter}}</div>
-          </div>
-          {{/if}}
-          
-          <div style="background: #ecfdf5; padding: 15px; border-radius: 8px; border: 1px solid #10b981; margin-top: 20px;">
-            <strong>📎 CV/Resume:</strong> {{#if cvFile}}Attached to this email{{else}}Not provided{{/if}}
-          </div>
-          
-          <div style="background: #eff6ff; padding: 15px; border-radius: 8px; border: 1px solid #3b82f6; margin-top: 20px;">
-            <strong>⏰ Applied on:</strong> {{timestamp}}
-          </div>
-          
-          <div class="actions">
-            <h3 style="margin-top: 0;">🚀 Quick Actions</h3>
-            <a href="mailto:{{email}}?subject=Re: Application for {{position}}" class="btn">📧 Email Candidate</a>
-            <a href="https://wa.me/{{whatsappNumber}}?text=Hi {{firstName}}, thanks for applying to {{position}} at Groupify!" class="btn btn-secondary">💬 WhatsApp</a>
-          </div>
         </div>
-        
-        <div class="footer">
-          <strong>Groupify HR System</strong><br>
-          Application received via careers page<br>
-          © 2025 Groupify. Building the future of photo sharing.
-        </div>
-      </div>
-    </body>
-    </html>
-  `;
-
-    const finalHtml = htmlTemplate
-      .replace(/{{firstName}}/g, firstName || "")
-      .replace(/{{lastName}}/g, lastName || "")
-      .replace(/{{email}}/g, email || "")
-      .replace(/{{phone}}/g, phone || "Not provided")
-      .replace(/{{experience}}/g, experience || "Not specified")
-      .replace(/{{coverLetter}}/g, coverLetter || "")
-      .replace(/{{portfolio}}/g, portfolio || "Not provided")
-      .replace(/{{availableDate}}/g, availableDate || "Not specified")
-      .replace(/{{position}}/g, position || "")
-      .replace(/{{department}}/g, department || "")
-      .replace(/{{timestamp}}/g, new Date().toLocaleString())
-      .replace(/{{whatsappNumber}}/g, "972532448624");
+      </body>
+      </html>
+    `;
 
     try {
+      // Create transporter with better Gmail configuration
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        host: "smtp.gmail.com",
+        port: 587,
+        secure: false,
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASSWORD,
+        },
+        tls: {
+          rejectUnauthorized: false,
+        },
+        authMethod: 'PLAIN'
+      });
+
       const mailOptions = {
-        from: `"Groupify Careers" <${functions.config().email.user}>`,
+        from: `"Groupify Careers" <${process.env.EMAIL_USER}>`,
         to: "groupify.ltd@gmail.com",
         subject: `🎯 New Application: ${position} - ${firstName} ${lastName}`,
-        html: finalHtml,
+        html: htmlTemplate,
         replyTo: email,
       };
 
@@ -398,17 +1077,110 @@ exports.sendJobApplicationEmail = functions.https.onCall(
       const result = await transporter.sendMail(mailOptions);
       console.log("Job application email sent successfully:", result.messageId);
 
-      return {
+      res.status(200).json({
         success: true,
         message: "Application submitted successfully",
         messageId: result.messageId,
-      };
+      });
     } catch (error) {
       console.error("Job application email error:", error);
-      throw new functions.https.HttpsError(
-        "internal",
-        `Failed to submit application: ${error.message}`
-      );
+      res.status(500).json({
+        success: false,
+        message: `Failed to submit application: ${error.message}`
+      });
     }
-  }
-);
+  });
+});
+
+// Check Email Verification Function (Gen 2 HTTP)
+exports.checkEmailVerification = onRequest({
+  memory: "128MiB",
+  timeoutSeconds: 30
+}, async (req, res) => {
+  return cors(req, res, async () => {
+    console.log("checkEmailVerification function called");
+
+    if (req.method !== 'POST') {
+      res.status(405).send('Method Not Allowed');
+      return;
+    }
+
+    const { email } = req.body.data || req.body;
+
+    if (!email) {
+      res.status(400).json({
+        success: false,
+        message: "Email is required"
+      });
+      return;
+    }
+
+    try {
+      const user = await admin.auth().getUserByEmail(email);
+
+      res.status(200).json({
+        success: true,
+        emailVerified: user.emailVerified,
+        message: user.emailVerified ? "Email is verified" : "Email is not verified"
+      });
+
+    } catch (error) {
+      console.error("Error checking email verification:", error);
+      res.status(500).json({
+        success: false,
+        message: `Failed to check email verification: ${error.message}`
+      });
+    }
+  });
+});
+
+// Check User Exists Function (Gen 2 HTTP)
+exports.checkUserExists = onRequest({
+  memory: "128MiB",
+  timeoutSeconds: 30
+}, async (req, res) => {
+  return cors(req, res, async () => {
+    console.log("checkUserExists function called");
+
+    if (req.method !== 'POST') {
+      res.status(405).send('Method Not Allowed');
+      return;
+    }
+
+    const { email } = req.body.data || req.body;
+
+    if (!email) {
+      res.status(400).json({
+        success: false,
+        message: "Email is required"
+      });
+      return;
+    }
+
+    try {
+      await admin.auth().getUserByEmail(email);
+
+      res.status(200).json({
+        success: true,
+        exists: true,
+        message: "User exists"
+      });
+
+    } catch (error) {
+      if (error.code === 'auth/user-not-found') {
+        res.status(200).json({
+          success: true,
+          exists: false,
+          message: "User does not exist"
+        });
+        return;
+      }
+
+      console.error("Error checking user exists:", error);
+      res.status(500).json({
+        success: false,
+        message: `Failed to check user existence: ${error.message}`
+      });
+    }
+  });
+});

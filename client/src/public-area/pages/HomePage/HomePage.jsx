@@ -1,29 +1,24 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../../auth-area/contexts/AuthContext";
+import { useTheme } from "../../../shared/contexts/ThemeContext";
 import { toast } from "react-hot-toast";
-
-// New Architecture Components
-import PublicLayout from "../../components/layout/PublicLayout";
-import HeroSection from "../../components/ui/HeroSection";
-import { FeatureGrid } from "../../components/ui/FeatureCard";
-import { usePublicNavigation } from "../../hooks/usePublicNavigation";
-
-// Other Components
-import SettingsModal from "../../../dashboard-area/features/settings/components/SettingsModal";
-import PhotoStack3D from "../../../auth-area/components/ui/3DInteractivePhotoStack";
-
-// Icons
 import {
   CameraIcon,
   UserGroupIcon,
   ShareIcon,
   SparklesIcon,
+  MoonIcon,
+  SunIcon,
   ArrowRightIcon,
   CheckIcon,
+  CogIcon,
 } from "@heroicons/react/24/outline";
 
-// Launch Animation Component (extracted from original)
+// Import components that provide functionality
+import SettingsModal from "../../../dashboard-area/features/settings/components/SettingsModal";
+
+// Launch Animation Component (keep exactly as before)
 const LaunchAnimation = ({ onAnimationComplete }) => {
   const [progress, setProgress] = useState(0);
   const [currentText, setCurrentText] = useState(0);
@@ -213,57 +208,17 @@ const LaunchAnimation = ({ onAnimationComplete }) => {
 
 const HomePage = () => {
   const { currentUser } = useAuth();
-  const location = useLocation();
+  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
-  const { handleGetStarted, handleSignIn } = usePublicNavigation();
-  
+  const location = useLocation();
   const [isLoaded, setIsLoaded] = useState(false);
-  const [activeBenefit, setActiveBenefit] = useState(0);
+
+  // ADD ALL THE MISSING STATE FROM ORIGINAL
   const [showSettings, setShowSettings] = useState(false);
   const [showLaunch, setShowLaunch] = useState(() => {
+    // Only show launch animation if user hasn't seen it before
     return !localStorage.getItem("hasSeenLaunchAnimation");
   });
-
-  // Features data for FeatureGrid
-  const features = [
-    {
-      id: 1,
-      icon: CameraIcon,
-      title: "Smart Photo Organization",
-      description: "Upload and automatically organize trip photos with intelligent categorization and tagging.",
-      variant: "default",
-    },
-    {
-      id: 2,
-      icon: SparklesIcon,
-      title: "AI Face Recognition",
-      description: "Find yourself in group photos instantly with our advanced face recognition technology.",
-      variant: "default",
-    },
-    {
-      id: 3,
-      icon: UserGroupIcon,
-      title: "Collaborative Sharing",
-      description: "Share trips with friends and family. Everyone can contribute photos and memories.",
-      variant: "default",
-    },
-    {
-      id: 4,
-      icon: ShareIcon,
-      title: "Seamless Access",
-      description: "Access your memories anywhere, anytime. Cloud-synchronized across all your devices.",
-      variant: "default",
-    },
-  ];
-
-  const benefits = [
-    "Never lose track of your photos again",
-    "Find yourself in group shots effortlessly",
-    "Share memories with loved ones instantly",
-    "Organize trips automatically",
-    "Access from any device",
-    "Privacy-focused and secure",
-  ];
 
   useEffect(() => {
     setIsLoaded(true);
@@ -276,154 +231,304 @@ const HomePage = () => {
     }
   }, [currentUser, navigate]);
 
-  // Benefits carousel animation
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setActiveBenefit((prev) => (prev + 1) % benefits.length);
-    }, 3000);
-
-    return () => clearInterval(interval);
-  }, [benefits.length]);
-
   // Success message handling from email verification
   useEffect(() => {
+    // Check if there's a success message from email verification
     if (location.state?.message && location.state?.verified) {
       toast.success(location.state.message, {
         duration: 5000,
       });
+
+      // Clear the state to prevent showing the message again
       navigate(location.pathname, { replace: true });
     }
   }, [location, navigate]);
 
+  // ADD THIS FUNCTION TO HANDLE ANIMATION COMPLETION
   const handleAnimationComplete = () => {
     localStorage.setItem("hasSeenLaunchAnimation", "true");
     setShowLaunch(false);
   };
 
-  // Show launch animation first
+  // ADD SMOOTH NAVIGATION FUNCTIONALITY
+  const handleLinkClick = (to) => {
+    document.body.style.opacity = "0";
+    setTimeout(() => {
+      window.location.href = to;
+    }, 200);
+  };
+
+  // ADD THIS CHECK TO SHOW LAUNCH ANIMATION FIRST
   if (showLaunch) {
     return <LaunchAnimation onAnimationComplete={handleAnimationComplete} />;
   }
 
+  const features = [
+    {
+      icon: CameraIcon,
+      title: "Smart Photo Organization",
+      description:
+        "Upload and automatically organize trip photos with intelligent categorization and tagging.",
+    },
+    {
+      icon: SparklesIcon,
+      title: "AI Face Recognition",
+      description:
+        "Find yourself in group photos instantly with our advanced face recognition technology.",
+    },
+    {
+      icon: UserGroupIcon,
+      title: "Collaborative Sharing",
+      description:
+        "Share trips with friends and family. Everyone can contribute photos and memories.",
+    },
+    {
+      icon: ShareIcon,
+      title: "Seamless Access",
+      description:
+        "Access your memories anywhere, anytime. Cloud-synchronized across all your devices.",
+    },
+  ];
+
+  const benefits = [
+    "Never lose track of your photos again",
+    "Find yourself in group shots effortlessly",
+    "Share memories with loved ones instantly",
+    "Organize trips automatically",
+    "Access from any device",
+    "Privacy-focused and secure",
+  ];
+
   return (
-    <PublicLayout
-      headerType="home"
-      footerType="extended"
-      headerProps={{ 
-        onSettingsClick: () => setShowSettings(true)
-      }}
-      className={`transition-all duration-1000 ${
-        isLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-      }`}
-    >
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 transition-colors duration-500">
+      {/* Navigation Header - EXACTLY AS ORIGINAL WITH ACCESSIBILITY MENU */}
+      <nav className="relative z-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            {/* Logo */}
+            <div className="flex items-center">
+              <div className="flex-shrink-0 flex items-center">
+                <div className="w-8 h-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
+                  <CameraIcon className="w-5 h-5 text-white" />
+                </div>
+                <span className="ml-2 text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                  Groupify
+                </span>
+              </div>
+            </div>
+
+            {/* Navigation Links */}
+            <div className="flex items-center space-x-4">
+              {/* Settings Toggle - THIS WAS MISSING */}
+              <button
+                onClick={() => setShowSettings(true)}
+                className="p-2 rounded-lg text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              >
+                <CogIcon className="w-5 h-5" />
+              </button>
+
+              {/* Theme Toggle */}
+              <button
+                onClick={toggleTheme}
+                className="p-2 rounded-lg text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              >
+                {theme === "dark" ? (
+                  <SunIcon className="w-5 h-5" />
+                ) : (
+                  <MoonIcon className="w-5 h-5" />
+                )}
+              </button>
+
+              {/* Auth Links - WITH PROPER NAVIGATION */}
+              {!currentUser && (
+                <div className="flex items-center space-x-3">
+                  <Link
+                    to="/signin"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleLinkClick("/signin");
+                    }}
+                    className="text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                  >
+                    Sign In
+                  </Link>
+                  <Link
+                    to="/signup"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleLinkClick("/signup");
+                    }}
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-md hover:shadow-lg"
+                  >
+                    Get Started
+                  </Link>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </nav>
+
       {/* Hero Section */}
-      <HeroSection
-        badge={{ 
-          icon: SparklesIcon, 
-          text: "AI-Powered Photo Management" 
-        }}
-        title={
-          <>
-            <span className="block">Share Your</span>
-            <span className="block bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 bg-clip-text text-transparent">
-              Trip Memories
-            </span>
-          </>
-        }
-        description="Upload photos, find yourself with AI face recognition, and relive the moments together. The smartest way to organize and share your travel memories."
-        primaryCTA={{
-          text: "Start Organizing Photos",
-          href: "/signup",
-          onClick: handleGetStarted,
-          icon: ArrowRightIcon,
-        }}
-        secondaryCTA={{
-          text: "Sign In",
-          href: "/signin",
-          onClick: handleSignIn,
-        }}
-        additionalContent={
-          // Success message banner
-          location.state?.verified && (
-            <div className="mb-6 sm:mb-8 max-w-2xl mx-auto px-3 sm:px-0">
-              <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-4 sm:p-6">
-                <div className="flex items-center justify-center">
-                  <div className="w-8 h-8 bg-green-100 dark:bg-green-800 rounded-full flex items-center justify-center mr-3">
-                    <CheckIcon className="w-5 h-5 text-green-600 dark:text-green-400" />
-                  </div>
-                  <div className="text-center">
-                    <h3 className="text-base sm:text-lg font-semibold text-green-800 dark:text-green-200">
-                      Email Verified Successfully! 🎉
-                    </h3>
-                    <p className="text-sm sm:text-base text-green-700 dark:text-green-300 mt-1">
-                      You can now sign in and start organizing your travel photos.
-                    </p>
+      <div
+        className={`relative overflow-hidden transition-all duration-1000 ${
+          isLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+        }`}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16">
+          <div className="text-center">
+            {/* Hero Badge */}
+            <div className="inline-flex items-center px-4 py-2 bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-full border border-white/20 dark:border-gray-700/50 mb-8">
+              <SparklesIcon className="w-4 h-4 text-indigo-600 dark:text-indigo-400 mr-2" />
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                AI-Powered Photo Management
+              </span>
+            </div>
+
+            {/* Hero Title */}
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-gray-900 dark:text-white mb-6">
+              <span className="block">Share Your</span>
+              <span className="block bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 bg-clip-text text-transparent">
+                Trip Memories
+              </span>
+            </h1>
+
+            {/* Hero Subtitle */}
+            <p className="max-w-3xl mx-auto text-xl md:text-2xl text-gray-600 dark:text-gray-300 mb-12 leading-relaxed">
+              Upload photos, find yourself with AI face recognition, and relive
+              the moments together. The smartest way to organize and share your
+              travel memories.
+            </p>
+
+            {/* Success Message Banner */}
+            {location.state?.verified && (
+              <div className="mb-8 max-w-2xl mx-auto">
+                <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-6">
+                  <div className="flex items-center justify-center">
+                    <div className="w-8 h-8 bg-green-100 dark:bg-green-800 rounded-full flex items-center justify-center mr-3">
+                      <CheckIcon className="w-5 h-5 text-green-600 dark:text-green-400" />
+                    </div>
+                    <div className="text-center">
+                      <h3 className="text-lg font-semibold text-green-800 dark:text-green-200">
+                        Email Verified Successfully! 🎉
+                      </h3>
+                      <p className="text-green-700 dark:text-green-300 mt-1">
+                        You can now sign in and start organizing your travel
+                        photos.
+                      </p>
+                      <Link
+                        to="/signin"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleLinkClick("/signin");
+                        }}
+                        className="inline-block mt-3 bg-green-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors"
+                      >
+                        Sign In Now
+                      </Link>
+                    </div>
                   </div>
                 </div>
               </div>
+            )}
+
+            {/* CTA Buttons - WITH PROPER NAVIGATION */}
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
+              <Link
+                to="/signup"
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleLinkClick("/signup");
+                }}
+                className="group inline-flex items-center bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 rounded-xl text-lg font-semibold transition-all duration-200 shadow-xl hover:shadow-2xl hover:scale-105"
+              >
+                Start Organizing Photos
+                <ArrowRightIcon className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </Link>
+              <Link
+                to="/signin"
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleLinkClick("/signin");
+                }}
+                className="inline-flex items-center bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm hover:bg-white dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 px-8 py-4 rounded-xl text-lg font-semibold border border-white/20 dark:border-gray-700/50 transition-all duration-200 hover:shadow-lg"
+              >
+                Sign In
+              </Link>
             </div>
-          )
-        }
-      />
+          </div>
+        </div>
+
+        {/* Background Decoration */}
+        <div className="absolute inset-0 -z-10">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-purple-400/20 to-blue-400/20 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-indigo-400/20 to-purple-400/20 rounded-full blur-3xl"></div>
+        </div>
+      </div>
 
       {/* Features Section */}
-      <div className="py-12 sm:py-16 md:py-20 lg:py-24 bg-white/40 dark:bg-gray-800/40 backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
-          <div className="text-center mb-8 sm:mb-12 md:mb-16">
-            <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-3 sm:mb-4 px-2 sm:px-0">
+      <div className="py-24 bg-white/40 dark:bg-gray-800/40 backdrop-blur-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Section Header */}
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
               Everything you need to organize your memories
             </h2>
-            <p className="max-w-2xl mx-auto text-sm sm:text-base md:text-lg text-gray-600 dark:text-gray-300 px-2 sm:px-0">
-              Powerful features designed to make photo sharing and organization effortless
+            <p className="max-w-2xl mx-auto text-lg text-gray-600 dark:text-gray-300">
+              Powerful features designed to make photo sharing and organization
+              effortless
             </p>
           </div>
 
-          <FeatureGrid 
-            features={features}
-            columns={4}
-            variant="default"
-            isLoaded={isLoaded}
-          />
+          {/* Features Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {features.map((feature, index) => (
+              <div
+                key={feature.title}
+                className={`group p-6 bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-2xl border border-white/20 dark:border-gray-700/50 hover:shadow-xl transition-all duration-300 hover:-translate-y-2 ${
+                  isLoaded
+                    ? `opacity-100 translate-y-0 delay-${index * 100}`
+                    : "opacity-0 translate-y-8"
+                }`}
+              >
+                <div className="w-12 h-12 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                  <feature.icon className="w-6 h-6 text-white" />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
+                  {feature.title}
+                </h3>
+                <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
+                  {feature.description}
+                </p>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
       {/* Benefits Section */}
-      <div className="py-12 sm:py-16 md:py-20 lg:py-24">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 lg:gap-16 items-center">
-            {/* Benefits List - Left Side */}
+      <div className="py-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+            {/* Benefits List */}
             <div>
-              <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-6 sm:mb-8">
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-8">
                 Why choose Groupify?
               </h2>
-              <div className="space-y-3 sm:space-y-4">
+              <div className="space-y-4">
                 {benefits.map((benefit, index) => (
                   <div
                     key={benefit}
-                    className={`flex items-center p-3 sm:p-4 bg-white/40 dark:bg-gray-800/40 backdrop-blur-sm rounded-lg border border-white/20 dark:border-gray-700/50 transition-all duration-500 ${
+                    className={`flex items-center p-4 bg-white/40 dark:bg-gray-800/40 backdrop-blur-sm rounded-lg border border-white/20 dark:border-gray-700/50 transition-all duration-300 ${
                       isLoaded
                         ? `opacity-100 translate-x-0 delay-${index * 100}`
                         : "opacity-0 -translate-x-8"
-                    } ${
-                      activeBenefit === index
-                        ? "scale-105 bg-indigo-50/60 dark:bg-indigo-900/20 border-indigo-200 dark:border-indigo-700 shadow-lg"
-                        : "scale-100"
                     }`}
                   >
-                    <div
-                      className={`w-5 h-5 sm:w-6 sm:h-6 bg-green-500 rounded-full flex items-center justify-center mr-3 sm:mr-4 flex-shrink-0 transition-all duration-500 ${
-                        activeBenefit === index ? "scale-110 bg-indigo-500" : ""
-                      }`}
-                    >
-                      <CheckIcon className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
+                    <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
+                      <CheckIcon className="w-4 h-4 text-white" />
                     </div>
-                    <span
-                      className={`text-sm sm:text-base text-gray-700 dark:text-gray-300 font-medium transition-all duration-500 ${
-                        activeBenefit === index
-                          ? "text-lg sm:text-xl font-semibold text-indigo-700 dark:text-indigo-300"
-                          : ""
-                      }`}
-                    >
+                    <span className="text-gray-700 dark:text-gray-300 font-medium">
                       {benefit}
                     </span>
                   </div>
@@ -431,39 +536,311 @@ const HomePage = () => {
               </div>
             </div>
 
-            {/* Right Side - 3D Interactive Photo Stack */}
+            {/* Visual Element */}
             <div className="relative">
-              <PhotoStack3D />
+              <div className="aspect-square bg-gradient-to-br from-indigo-500/20 to-purple-500/20 rounded-3xl flex items-center justify-center backdrop-blur-sm border border-white/20 dark:border-gray-700/50">
+                <div className="grid grid-cols-3 gap-4 p-8">
+                  {[...Array(9)].map((_, i) => (
+                    <div
+                      key={i}
+                      className={`aspect-square bg-gradient-to-br from-indigo-400 to-purple-500 rounded-lg shadow-lg transition-all duration-500 hover:scale-110 ${
+                        isLoaded
+                          ? `opacity-100 scale-100 delay-${i * 50}`
+                          : "opacity-0 scale-95"
+                      }`}
+                    />
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
       {/* CTA Section */}
-      <div className="py-12 sm:py-16 md:py-20 lg:py-24 bg-gradient-to-r from-indigo-600 to-purple-600">
-        <div className="max-w-4xl mx-auto text-center px-3 sm:px-4 md:px-6 lg:px-8">
-          <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-4 sm:mb-6">
+      <div className="py-24 bg-gradient-to-r from-indigo-600 to-purple-600">
+        <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
             Ready to organize your memories?
           </h2>
-          <p className="text-sm sm:text-base md:text-lg lg:text-xl text-indigo-100 mb-6 sm:mb-8 leading-relaxed px-2 sm:px-0">
-            Join thousands of users who are already using Groupify to organize and share their travel photos.
+          <p className="text-xl text-indigo-100 mb-8 leading-relaxed">
+            Join thousands of users who are already using Groupify to organize
+            and share their travel photos.
           </p>
-          <button
-            onClick={handleGetStarted}
-            className="inline-flex items-center bg-white text-indigo-600 px-6 sm:px-8 py-3 sm:py-4 rounded-xl text-base sm:text-lg font-semibold hover:bg-gray-50 transition-all duration-200 shadow-xl hover:shadow-2xl hover:scale-105"
+          <Link
+            to="/signup"
+            onClick={(e) => {
+              e.preventDefault();
+              handleLinkClick("/signup");
+            }}
+            className="inline-flex items-center bg-white text-indigo-600 px-8 py-4 rounded-xl text-lg font-semibold hover:bg-gray-50 transition-all duration-200 shadow-xl hover:shadow-2xl hover:scale-105"
           >
             Get Started Free
             <ArrowRightIcon className="ml-2 w-5 h-5" />
-          </button>
+          </Link>
         </div>
       </div>
 
-      {/* Settings Modal */}
+      {/* Footer - WITH PROPER NAVIGATION FOR ALL LINKS */}
+      <footer className="py-16 bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm border-t border-white/20 dark:border-gray-700/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
+            {/* Brand Section */}
+            <div className="col-span-1 md:col-span-2">
+              <div className="flex items-center mb-4">
+                <div className="w-8 h-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
+                  <CameraIcon className="w-5 h-5 text-white" />
+                </div>
+                <span className="ml-2 text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                  Groupify
+                </span>
+              </div>
+              <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-md">
+                The smartest way to organize and share your travel memories
+                using AI-powered face recognition and seamless photo management.
+              </p>
+              <div className="flex space-x-4">
+                <a
+                  href="#"
+                  className="text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                >
+                  <span className="sr-only">Facebook</span>
+                  <svg
+                    className="h-6 w-6"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </a>
+                <a
+                  href="#"
+                  className="text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                >
+                  <span className="sr-only">Instagram</span>
+                  <svg
+                    className="h-6 w-6"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M12.017 0C5.396 0 .029 5.367.029 11.987c0 6.62 5.367 11.987 11.988 11.987s11.987-5.367 11.987-11.987C24.014 5.367 18.647.001 12.017.001zM8.449 16.988c-1.297 0-2.348-1.051-2.348-2.348s1.051-2.348 2.348-2.348 2.348 1.051 2.348 2.348-1.051 2.348-2.348 2.348zm7.718 0c-1.297 0-2.348-1.051-2.348-2.348s1.051-2.348 2.348-2.348 2.348 1.051 2.348 2.348-1.051 2.348-2.348 2.348z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </a>
+                <a
+                  href="#"
+                  className="text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                >
+                  <span className="sr-only">Twitter</span>
+                  <svg
+                    className="h-6 w-6"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84" />
+                  </svg>
+                </a>
+                <a
+                  href="#"
+                  className="text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                >
+                  <span className="sr-only">LinkedIn</span>
+                  <svg
+                    className="h-6 w-6"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M19 0H5a5 5 0 00-5 5v14a5 5 0 005 5h14a5 5 0 005-5V5a5 5 0 00-5-5zM8 19H5V8h3v11zM6.5 6.732c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zM20 19h-3v-5.604c0-3.368-4-3.113-4 0V19h-3V8h3v1.765c1.396-2.586 7-2.777 7 2.476V19z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </a>
+              </div>
+            </div>
+
+            {/* Product Links */}
+            <div>
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-white tracking-wider uppercase mb-4">
+                Product
+              </h3>
+              <ul className="space-y-3">
+                <li>
+                  <Link
+                    to="/signup"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleLinkClick("/signup");
+                    }}
+                    className="text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                  >
+                    Get Started
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to="/signin"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleLinkClick("/signin");
+                    }}
+                    className="text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                  >
+                    Sign In
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to="/features"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleLinkClick("/features");
+                    }}
+                    className="text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                  >
+                    Features
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to="/pricing"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleLinkClick("/pricing");
+                    }}
+                    className="text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                  >
+                    Pricing
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            {/* Company Links */}
+            <div>
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-white tracking-wider uppercase mb-4">
+                Company
+              </h3>
+              <ul className="space-y-3">
+                <li>
+                  <Link
+                    to="/about"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleLinkClick("/about");
+                    }}
+                    className="text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                  >
+                    About Us
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to="/contact"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleLinkClick("/contact");
+                    }}
+                    className="text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                  >
+                    Contact Us
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to="/blog"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleLinkClick("/blog");
+                    }}
+                    className="text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                  >
+                    Blog
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to="/careers"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleLinkClick("/careers");
+                    }}
+                    className="text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                  >
+                    Careers
+                  </Link>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Bottom Section */}
+          <div className="pt-8 border-t border-gray-200 dark:border-gray-700">
+            <div className="flex flex-col md:flex-row justify-between items-center">
+              <div className="flex flex-wrap justify-center md:justify-start space-x-6 mb-4 md:mb-0">
+                <Link
+                  to="/privacy-policy"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleLinkClick("/privacy-policy");
+                  }}
+                  className="text-sm text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                >
+                  Privacy Policy
+                </Link>
+                <Link
+                  to="/terms"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleLinkClick("/terms");
+                  }}
+                  className="text-sm text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                >
+                  Terms of Service
+                </Link>
+                <Link
+                  to="/help"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleLinkClick("/help");
+                  }}
+                  className="text-sm text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                >
+                  Help Center
+                </Link>
+                <Link
+                  to="/status"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleLinkClick("/status");
+                  }}
+                  className="text-sm text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                >
+                  Status
+                </Link>
+              </div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">
+                © 2025 Groupify. Made with ❤️ for photo lovers.
+              </div>
+            </div>
+          </div>
+        </div>
+      </footer>
+
+      {/* Settings Modal - THIS WAS MISSING! */}
       <SettingsModal
         isOpen={showSettings}
         onClose={() => setShowSettings(false)}
       />
-    </PublicLayout>
+    </div>
   );
 };
 

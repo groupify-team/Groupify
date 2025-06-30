@@ -60,39 +60,67 @@ const ConfirmEmailPage = () => {
     }
   }, [timeLeft]);
 
-  // Handle resend verification code
+  // Handle resend verification code - FIXED
   const handleResendCode = async () => {
-    if (!email) {
-      toast.error("Email address is required");
-      return;
+  if (!email) {
+    toast.error("Email address is required");
+    return;
+  }
+
+  try {
+    setResendLoading(true);
+    console.log("Attempting to resend verification email to:", email);
+
+    // Use fetch to call HTTP function
+    const response = await fetch(
+      "https://us-central1-groupify-77202.cloudfunctions.net/resendVerificationCode",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          data: { email }
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    try {
-      setResendLoading(true);
-      console.log("Attempting to resend verification email to:", email);
-
-      const resendFunction = httpsCallable(functions, "resendVerificationCode");
-      const result = await resendFunction({ email });
-
-      console.log("Resend function result:", result.data);
+    const result = await response.json();
+    
+    if (result.success) {
+      console.log("Resend function result:", result);
       toast.success("Verification code sent! Check your email.");
       setTimeLeft(120);
       setCanResend(false);
       setVerificationCode(["", "", "", "", "", ""]);
-    } catch (error) {
-      console.error("Resend error:", error);
-      
-      const errorMessages = {
-        "functions/not-found": "No account found with this email address",
-        "functions/deadline-exceeded": "Request timed out. Please try again.",
-      };
-
-      const errorMessage = errorMessages[error.code] || error.message || "Failed to resend code. Please try again.";
-      toast.error(errorMessage);
-    } finally {
-      setResendLoading(false);
+    } else {
+      throw new Error(result.message || "Failed to resend code");
     }
-  };
+  } catch (error) {
+    console.error("Resend error:", error);
+    
+    let errorMessage = "Failed to resend code. Please try again.";
+    
+    if (error.message?.includes('already verified')) {
+      errorMessage = "Email is already verified! You can now sign in.";
+      toast.success(errorMessage);
+      setTimeout(() => navigate("/signin"), 1500);
+      return;
+    } else if (error.message?.includes('User not found')) {
+      errorMessage = "User not found. Please sign up first.";
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+    
+    toast.error(errorMessage);
+  } finally {
+    setResendLoading(false);
+  }
+};
 
   // Handle input changes for verification code
   const handleInputChange = (index, value) => {
@@ -116,24 +144,54 @@ const ConfirmEmailPage = () => {
     }
   };
 
-  // Handle verification with code
+  // Handle verification with code - FIXED
   const handleVerifyWithCode = async (code) => {
-    if (!email || !code) {
-      toast.error("Email and verification code are required");
-      return;
+  if (!email || !code) {
+    toast.error("Email and verification code are required");
+    return;
+  }
+
+  try {
+    setLoading(true);
+    console.log("Attempting to verify code:", code, "for email:", email);
+
+    // Use fetch to call HTTP function
+    const response = await fetch(
+      "https://us-central1-groupify-77202.cloudfunctions.net/verifyEmailCode",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          data: {
+            email: email,
+            verificationCode: code,
+          }
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      // Handle different HTTP status codes
+      if (response.status === 404) {
+        throw new Error("Verification code not found or expired");
+      } else if (response.status === 410) {
+        throw new Error("Verification code has expired. Please request a new one.");
+      } else if (response.status === 412) {
+        throw new Error("Verification code has already been used");
+      } else if (response.status === 400) {
+        throw new Error("Invalid verification code");
+      } else {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
     }
 
-    try {
-      setLoading(true);
-      console.log("Attempting to verify code:", code, "for email:", email);
-
-      const verifyCode = httpsCallable(functions, "verifyEmailCode");
-      const result = await verifyCode({
-        email: email,
-        verificationCode: code,
-      });
-
-      console.log("Verification result:", result.data);
+    const result = await response.json();
+    
+    if (result.success) {
+      console.log("Verification result:", result);
+      toast.success("Email verified successfully!");
 
       // Success - navigate to signin with success message
       setTimeout(() => {
@@ -142,35 +200,34 @@ const ConfirmEmailPage = () => {
             encodeURIComponent("Email verified successfully! You can now sign in.")
         );
       }, 1000);
-    } catch (error) {
-      console.error("Verification error:", error);
-
-      let errorMessage = "Invalid verification code";
-
-      if (error.code === "functions/not-found") {
-        errorMessage = "Verification code not found or expired";
-      } else if (error.code === "functions/deadline-exceeded") {
-        errorMessage = "Verification request timed out";
-      } else if (error.message?.includes("expired")) {
-        errorMessage = "Verification code has expired. Please request a new one.";
-        setCanResend(true);
-        setTimeLeft(0);
-      } else if (error.message?.includes("already verified")) {
-        toast.success("Email is already verified. You can now sign in.");
-        navigate("/signin");
-        return;
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-
-      toast.error(errorMessage);
-
-      // Clear the form for retry
-      setVerificationCode(["", "", "", "", "", ""]);
-    } finally {
-      setLoading(false);
+    } else {
+      throw new Error(result.message || "Invalid verification code");
     }
-  };
+  } catch (error) {
+    console.error("Verification error:", error);
+
+    let errorMessage = "Invalid verification code";
+
+    if (error.message?.includes("expired")) {
+      errorMessage = "Verification code has expired. Please request a new one.";
+      setCanResend(true);
+      setTimeLeft(0);
+    } else if (error.message?.includes("already verified") || error.message?.includes("already been used")) {
+      toast.success("Email is already verified! You can now sign in.");
+      setTimeout(() => navigate("/signin"), 1500);
+      return;
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+
+    toast.error(errorMessage);
+
+    // Clear the form for retry
+    setVerificationCode(["", "", "", "", "", ""]);
+  } finally {
+    setLoading(false);
+  }
+};
 
   // Handle form submission
   const handleVerify = async (e) => {

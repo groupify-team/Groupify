@@ -68,33 +68,44 @@ const ResetPasswordPage = () => {
 
   // Verify reset token
   const verifyResetToken = async (email, token) => {
-    try {
-      setVerifyingToken(true);
-      const verifyToken = httpsCallable(functions, "verifyResetToken");
-      const result = await verifyToken({ email, token });
-
-      if (result.data.success) {
-        setTokenValid(true);
-      } else {
-        toast.error("Invalid or expired reset link");
-        navigate("/forgot-password");
+  try {
+    setVerifyingToken(true);
+    
+    const response = await fetch(
+      "https://us-central1-groupify-77202.cloudfunctions.net/verifyResetToken",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          data: { email, token }
+        }),
       }
-    } catch (error) {
-      console.error("Token verification error:", error);
-      
-      const errorMessages = {
-        "functions/deadline-exceeded": "Reset link has expired",
-        "functions/permission-denied": "Invalid reset link",
-      };
+    );
 
-      const errorMessage = errorMessages[error.code] || error.message || "Invalid or expired reset link";
-      toast.error(errorMessage);
-      navigate("/forgot-password");
-    } finally {
-      setVerifyingToken(false);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-  };
 
+    const result = await response.json();
+
+    if (result.success) {
+      setTokenValid(true);
+    } else {
+      toast.error("Invalid or expired reset link");
+      navigate("/forgot-password");
+    }
+  } catch (error) {
+    console.error("Token verification error:", error);
+    
+    const errorMessage = error.message || "Invalid or expired reset link";
+    toast.error(errorMessage);
+    navigate("/forgot-password");
+  } finally {
+    setVerifyingToken(false);
+  }
+};
   // Handle input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -103,56 +114,65 @@ const ResetPasswordPage = () => {
 
   // Handle form submission
   const handleSubmit = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    // Validation
-    if (!formData.newPassword || !formData.confirmPassword) {
-      toast.error("Please fill in both password fields");
-      return;
-    }
+  // Validation
+  if (!formData.newPassword || !formData.confirmPassword) {
+    toast.error("Please fill in both password fields");
+    return;
+  }
 
-    if (!isPasswordValid) {
-      toast.error("Please ensure your password meets all requirements");
-      return;
-    }
+  if (!isPasswordValid) {
+    toast.error("Please ensure your password meets all requirements");
+    return;
+  }
 
-    if (!passwordsMatch) {
-      toast.error("Passwords do not match");
-      return;
-    }
+  if (!passwordsMatch) {
+    toast.error("Passwords do not match");
+    return;
+  }
 
-    try {
-      setLoading(true);
+  try {
+    setLoading(true);
 
-      const resetPassword = httpsCallable(functions, "resetPassword");
-      const result = await resetPassword({
-        email,
-        token,
-        newPassword: formData.newPassword,
-      });
-
-      if (result.data.success) {
-        toast.success("Password reset successfully! Please sign in with your new password.");
-        navigate("/signin");
-      } else {
-        toast.error("Failed to reset password. Please try again.");
+    const response = await fetch(
+      "https://us-central1-groupify-77202.cloudfunctions.net/resetPassword",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          data: {
+            email,
+            token,
+            newPassword: formData.newPassword,
+          }
+        }),
       }
-    } catch (error) {
-      console.error("Password reset error:", error);
+    );
 
-      const errorMessages = {
-        "functions/deadline-exceeded": "Reset link has expired. Please request a new one.",
-        "functions/permission-denied": "Invalid reset link. Please request a new one.",
-        "functions/invalid-argument": "Password must be at least 6 characters long",
-      };
-
-      const errorMessage = errorMessages[error.code] || error.message || "Failed to reset password. Please try again.";
-      toast.error(errorMessage);
-    } finally {
-      setLoading(false);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-  };
 
+    const result = await response.json();
+
+    if (result.success) {
+      toast.success("Password reset successfully! Please sign in with your new password.");
+      navigate("/signin");
+    } else {
+      toast.error("Failed to reset password. Please try again.");
+    }
+  } catch (error) {
+    console.error("Password reset error:", error);
+
+    const errorMessage = error.message || "Failed to reset password. Please try again.";
+    toast.error(errorMessage);
+  } finally {
+    setLoading(false);
+  }
+};
   // Loading state while verifying token
   if (verifyingToken) {
     return (
