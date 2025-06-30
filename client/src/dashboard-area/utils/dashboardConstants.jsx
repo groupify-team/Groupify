@@ -279,4 +279,3 @@ export const BOTTOM_NAV_ITEMS = [
   { id: "friends", name: "Friends", icon: UserGroupIcon },
   { id: "settings", name: "Settings", icon: Cog6ToothIcon },
 ];
-

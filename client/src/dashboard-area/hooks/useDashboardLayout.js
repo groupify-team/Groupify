@@ -161,14 +161,21 @@ export const useDashboardLayout = () => {
    * Sidebar actions
    */
   const toggleSidebar = () => {
-    setSidebarOpen((prev) => !prev);
+    setSidebarOpen((prev) => {
+      const next = !prev;
+      console.log(`TOGGLE SIDEBAR — was: ${prev} now: ${next}`);
+      console.trace(); // 🔍 חשוב – יציג StackTrace
+      return next;
+    });
   };
 
   const closeSidebar = () => {
+    console.log("CLOSING SIDEBAR");
     setSidebarOpen(false);
   };
 
   const openSidebar = () => {
+    console.log("OPENING SIDEBAR");
     setSidebarOpen(true);
   };
 
@@ -279,6 +286,18 @@ export const useDashboardLayout = () => {
 
   const getLayoutClasses = () => {
     if (isMobile) {
+      // Navigation actions
+      const viewTrip = (tripId) => {
+        console.log("🚀 Navigating to trip:", tripId);
+        setCurrentView("trip-detail");
+        setSelectedTripId(tripId);
+      };
+
+      const backToHome = () => {
+        setCurrentView("home");
+        setSelectedTripId(null);
+      };
+
       return {
         main: "h-[calc(100vh-4rem)] w-full",
         content: "pb-4 h-full",
@@ -286,11 +305,33 @@ export const useDashboardLayout = () => {
     }
 
     if (sidebarOpen) {
+      // Navigation actions
+      const viewTrip = (tripId) => {
+        console.log("🚀 Navigating to trip:", tripId);
+        setCurrentView("trip-detail");
+        setSelectedTripId(tripId);
+      };
+
+      const backToHome = () => {
+        setCurrentView("home");
+        setSelectedTripId(null);
+      };
+
       return {
         main: "ml-64 w-[calc(100%-16rem)] min-h-screen",
         content: "py-2 sm:py-4",
       };
-    }
+    } // Navigation actions
+    const viewTrip = (tripId) => {
+      console.log("🚀 Navigating to trip:", tripId);
+      setCurrentView("trip-detail");
+      setSelectedTripId(tripId);
+    };
+
+    const backToHome = () => {
+      setCurrentView("home");
+      setSelectedTripId(null);
+    };
 
     return {
       main: "w-full min-h-screen",
@@ -315,6 +356,16 @@ export const useDashboardLayout = () => {
     setFilterDropdownOpen(false);
     setNotificationsDropdownOpen(false);
     setShowMobileUserMenu(false);
+  }; // Navigation actions
+  const viewTrip = (tripId) => {
+    console.log("🚀 Navigating to trip:", tripId);
+    setCurrentView("trip-detail");
+    setSelectedTripId(tripId);
+  };
+
+  const backToHome = () => {
+    setCurrentView("home");
+    setSelectedTripId(null);
   };
 
   return {
@@ -368,6 +419,8 @@ export const useDashboardLayout = () => {
       navigateToSection,
       navigateToTrip,
       navigateBackToDashboard,
+      viewTrip,
+      backToHome,
     },
 
     // Sidebar actions

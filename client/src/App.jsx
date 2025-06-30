@@ -22,9 +22,6 @@ import ForgotPasswordPage from "@/auth-area/pages/ForgotPasswordPage/ForgotPassw
 import ResetPasswordPage from "@/auth-area/pages/ResetPasswordPage/ResetPasswordPage";
 import LaunchAnimation from "@/auth-area/components/ui/LaunchAnimation";
 
-// Dashboard Area Components - Temporarily disabled
-import Dashboard from "@/dashboard-area/pages/DashboardPage/DashboardPage";
-
 // Public Area Pages
 import HomePage from "./public-area/pages/HomePage/HomePage";
 import TermsOfService from "./public-area/pages/TermsOfServicePage/TermsOfServicePage";
@@ -38,6 +35,14 @@ import Features from "./public-area/pages/FeaturesPage/FeaturesPage";
 import Pricing from "./public-area/pages/PricingPage/PricingPage";
 import Status from "./public-area/pages/StatusPage/StatusPage";
 import Billing from "./public-area/pages/BillingPage/BillingPage";
+
+// Dashboard Area Components - Temporarily disabled
+import Dashboard from "@/dashboard-area/pages/DashboardPage/DashboardPage";
+import DashboardLayout from "@/dashboard-area/components/layout/DashboardLayout";
+import TripsSection from "@/dashboard-area/components/sections/TripsSection";
+import TripDetailView from "@/dashboard-area/features/trips/components/ViewTrip/TripDetailView";
+import SettingsSection from "@/dashboard-area/components/sections/SettingsSection";
+import FriendsSection from "@/dashboard-area/components/sections/FriendsSection";
 
 // Toast notifications
 import { Toaster } from "react-hot-toast";
@@ -388,7 +393,13 @@ function App() {
                     <Dashboard />
                   </ProtectedRoute>
                 }
-              />
+              >
+                <Route index element={<TripsSection />} />
+                <Route path="trips" element={<TripsSection />} />
+                <Route path="trip/:tripId" element={<TripDetailView />} />
+                <Route path="friends" element={<FriendsSection />} />
+                <Route path="settings" element={<SettingsSection />} />
+              </Route>
 
               {/* 404 Fallback */}
               <Route

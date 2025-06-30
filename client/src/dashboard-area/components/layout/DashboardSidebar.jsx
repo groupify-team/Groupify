@@ -7,11 +7,13 @@ import {
   ChevronRightIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
-import { useDashboardLayout } from "../../hooks/useDashboardLayout";
-import { useDashboardData } from "../../hooks/useDashboardData";
-import { useDashboardModals } from "../../hooks/useDashboardModals";
-import { useDashboardNavigation } from "../../hooks/useDashboardNavigation";
-import { NAVIGATION_ITEMS } from "@dashboard/utils/dashboardConstants.jsx";
+
+import { useDashboardLayout } from "@dashboard/hooks/useDashboardLayout";
+import { useDashboardData } from "@dashboard/hooks/useDashboardData";
+import { useDashboardModals } from "@dashboard/hooks/useDashboardModals";
+import { useDashboardNavigation } from "@dashboard/hooks/useDashboardNavigation";
+
+import { NAVIGATION_ITEMS } from "@dashboard/utils/dashboardConstants";
 import {
   getNavigationItemBadge,
   hasNotifications,

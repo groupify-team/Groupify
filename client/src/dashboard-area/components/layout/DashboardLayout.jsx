@@ -1,10 +1,10 @@
 ﻿// DashboardLayout.jsx - Main dashboard layout wrapper
 import React from "react";
-import { useDashboardLayout } from "../../hooks/useDashboardLayout";
-import { useDashboardData } from "../../hooks/useDashboardData";
-import DashboardSidebar from "./DashboardSidebar";
-import DashboardHeader from "./DashboardHeader";
-import MobileBottomNav from "./MobileBottomNav";
+import { useDashboardLayout } from "@dashboard/hooks/useDashboardLayout";
+import { useDashboardData } from "@dashboard/hooks/useDashboardData";
+import DashboardSidebar from "@dashboard/components/layout/DashboardSidebar";
+import DashboardHeader from "@dashboard/components/layout/DashboardHeader";
+import MobileBottomNav from "@dashboard/components/layout/MobileBottomNav";
 
 const DashboardLayout = ({ children }) => {
   const {
@@ -57,7 +57,7 @@ const DashboardLayout = ({ children }) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 flex w-full transition-colors duration-500">
       {/* Desktop Sidebar */}
-      {shouldShowDesktopSidebar() && <DashboardSidebar />}
+      <DashboardSidebar isVisible={shouldShowDesktopSidebar()} />
 
       {/* Sidebar Overlay for Mobile */}
       {layout.sidebarOpen && layout.isMobile && (
