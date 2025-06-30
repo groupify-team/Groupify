@@ -33,18 +33,24 @@ const SignUpPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   
-  // URL parameters
+  // URL parameters - Enhanced to handle billing flow
+  const urlParams = new URLSearchParams(location.search);
+  const selectedPlan = urlParams.get("plan");
+  const billingCycle = urlParams.get("billing");
+  const redirectAfter = urlParams.get("redirect");
   const isFromPricingFree = location.search.includes("from=pricing-free");
-  const planFromUrl = new URLSearchParams(location.search).get("plan");
+
+  // Show plan info if user is signing up for a specific plan
+  const showPlanInfo = selectedPlan && selectedPlan !== "free";
 
   // Handle URL params and show plan message
   useEffect(() => {
     window.scrollTo(0, 0);
 
     // Show plan-specific message
-    if (planFromUrl) {
+    if (selectedPlan) {
       setTimeout(() => {
-        const planName = planFromUrl.charAt(0).toUpperCase() + planFromUrl.slice(1);
+        const planName = selectedPlan.charAt(0).toUpperCase() + selectedPlan.slice(1);
         toast.success(
           `Great choice! Let's set up your account for the ${planName} plan 🎯`,
           {
@@ -62,7 +68,7 @@ const SignUpPage = () => {
     }, 50);
 
     return () => clearTimeout(timer);
-  }, [isFromPricingFree, planFromUrl]);
+  }, [isFromPricingFree, selectedPlan]);
 
   // Handle form input changes
   const handleInputChange = (e) => {
@@ -136,16 +142,27 @@ const SignUpPage = () => {
           toast.success("Account created! Please try to resend verification email from the sign-in page.");
         }
 
-        // Step 3: Navigate to confirm email page with smooth transition
+        // Step 3: Determine redirect destination
+        let redirectPath = "/confirm-email";
+        let redirectState = {
+          email: formData.email,
+          plan: selectedPlan,
+        };
+
+        // If user signed up for a paid plan and should go to billing
+        if (redirectAfter === "billing" && selectedPlan && selectedPlan !== "free") {
+          redirectState.redirectToBilling = true;
+          redirectState.billingParams = {
+            plan: selectedPlan,
+            billing: billingCycle || "monthly"
+          };
+        }
+
+        // Navigate with smooth transition
         document.body.style.opacity = "0";
         document.body.style.transition = "opacity 0.3s ease-out";
         setTimeout(() => {
-          navigate("/confirm-email", {
-            state: {
-              email: formData.email,
-              plan: planFromUrl,
-            },
-          });
+          navigate(redirectPath, { state: redirectState });
         }, 300);
       }
     } catch (error) {
@@ -184,8 +201,17 @@ const SignUpPage = () => {
     try {
       setLoading(true);
       await signInWithGoogle();
-      toast.success("Account created successfully! Welcome to Groupify!");
-      navigate("/dashboard");
+      
+      // Handle post-signup redirect for Google users
+      if (redirectAfter === "billing" && selectedPlan && selectedPlan !== "free") {
+        toast.success("Account created successfully! Redirecting to checkout...");
+        setTimeout(() => {
+          navigate(`/billing?plan=${selectedPlan}&billing=${billingCycle || "monthly"}`);
+        }, 1000);
+      } else {
+        toast.success("Account created successfully! Welcome to Groupify!");
+        navigate("/dashboard");
+      }
     } catch (error) {
       console.error("Google sign up error:", error);
 
@@ -281,6 +307,29 @@ const SignUpPage = () => {
       {/* Right Side - Form */}
       <div className="flex-1 flex flex-col justify-center py-2 sm:py-4 md:py-6 lg:py-8 px-3 sm:px-4 md:px-6 lg:px-12 xl:px-20 2xl:px-24 bg-white dark:bg-gray-900 min-h-0">
         <div className="mx-auto w-full max-w-[280px] sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-md">
+          
+          {/* Plan Info Banner */}
+          {showPlanInfo && (
+            <div className="mb-6 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 border border-indigo-200 dark:border-indigo-800 rounded-xl p-4">
+              <div className="text-center">
+                <h3 className="text-lg font-semibold text-indigo-800 dark:text-indigo-200 mb-2">
+                  🎯 Signing up for {selectedPlan?.charAt(0).toUpperCase() + selectedPlan?.slice(1)} Plan
+                </h3>
+                <p className="text-sm text-indigo-600 dark:text-indigo-300">
+                  {redirectAfter === "billing" 
+                    ? "After creating your account, you'll be redirected to complete your subscription"
+                    : "Great choice! Let's get your account set up"
+                  }
+                </p>
+                {billingCycle === "yearly" && (
+                  <div className="mt-2 inline-flex items-center px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 rounded-full text-xs font-medium">
+                    💰 Save 20% with yearly billing
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Header */}
           <div className="mb-4 sm:mb-6 md:mb-8">
             {/* Navigation */}
@@ -643,7 +692,7 @@ const SignUpPage = () => {
               </div>
             </div>
 
-            {/* Submit Button */}
+            {/* Submit Button - Update text based on plan */}
             <button
               type="submit"
               disabled={loading || !agreedToTerms}
@@ -658,6 +707,8 @@ const SignUpPage = () => {
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
                   Creating account...
                 </>
+              ) : showPlanInfo && redirectAfter === "billing" ? (
+                `Create Account & Continue to ${selectedPlan?.charAt(0).toUpperCase() + selectedPlan?.slice(1)}`
               ) : (
                 "Create Account"
               )}

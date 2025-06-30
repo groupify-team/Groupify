@@ -23,6 +23,9 @@ import {
   TagIcon,
 } from "@heroicons/react/24/outline";
 import { toast } from "react-hot-toast";
+import SettingsModal from "../../../dashboard-area/features/settings/components/SettingsModal";
+
+
 
 const toastOptions = {
   style: {
@@ -34,7 +37,11 @@ const toastOptions = {
 
 const BlogPage = () => {
   const { currentUser } = useAuth();
-  const { handleGetStarted } = usePublicNavigation();
+  const { 
+    handleGetStarted,
+    headerProps,
+    settingsProps 
+  } = usePublicNavigation();
   const [posts, setPosts] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -44,6 +51,7 @@ const BlogPage = () => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [email, setEmail] = useState("");
   const [isSubscribing, setIsSubscribing] = useState(false);
+
 
   // Load posts from localStorage on component mount
   useEffect(() => {
@@ -237,11 +245,15 @@ const BlogPage = () => {
       <span className="hidden sm:inline">New Post</span>
     </button>
   ) : null;
+  const combinedHeaderProps = {
+  ...headerProps,
+  actions: headerActions
+};
 
   return (
     <PublicLayout 
       headerType="public"
-      headerProps={{ actions: headerActions }}
+      headerProps={combinedHeaderProps}
       footerType="simple"
     >
       {/* Hero Section */}
@@ -327,6 +339,7 @@ const BlogPage = () => {
           onLike={handleLike}
         />
       )}
+      <SettingsModal {...settingsProps} />
     </PublicLayout>
   );
 };

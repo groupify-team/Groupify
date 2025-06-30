@@ -76,27 +76,38 @@ const SignInPage = () => {
     }
 
     try {
-      setLoading(true);
-      setShowVerificationAlert(false);
+    setLoading(true);
+    setShowVerificationAlert(false);
 
-      // Handle remember me
-      if (formData.rememberMe) {
-        localStorage.setItem("rememberedEmail", formData.email);
-      } else {
-        localStorage.removeItem("rememberedEmail");
-      }
-
-      await signin(formData.email, formData.password);
-      toast.success("Welcome back!");
-      
-      // Simple navigation instead of custom transition
-      navigate("/dashboard", { replace: true });
-    } catch (error) {
-      console.error("Sign in error:", error);
-      handleSignInError(error);
-    } finally {
-      setLoading(false);
+    // Handle remember me
+    if (formData.rememberMe) {
+      localStorage.setItem("rememberedEmail", formData.email);
+    } else {
+      localStorage.removeItem("rememberedEmail");
     }
+
+    await signin(formData.email, formData.password);
+    toast.success("Welcome back!");
+    
+    // Check for billing redirect
+    const urlParams = new URLSearchParams(location.search);
+    const redirectToBilling = urlParams.get("redirect") === "billing";
+    const plan = urlParams.get("plan");
+    const billing = urlParams.get("billing");
+    
+    if (redirectToBilling && plan) {
+      // Redirect to billing with plan info
+      navigate(`/billing?plan=${plan}&billing=${billing || "monthly"}`, { replace: true });
+    } else {
+      // Normal dashboard redirect
+      navigate("/dashboard", { replace: true });
+    }
+  } catch (error) {
+    console.error("Sign in error:", error);
+    handleSignInError(error);
+  } finally {
+    setLoading(false);
+  }
   };
 
   // Handle sign-in errors
