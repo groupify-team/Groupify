@@ -360,17 +360,19 @@ const ApplicationModal = ({ job, onClose }) => {
       let cvFileBase64 = null;
       if (cvFile) {
         const reader = new FileReader();
-        cvFileBase64 = await new Promise((resolve) => {
+        cvFileBase64 = await new Promise((resolve, reject) => {
           reader.onload = () => resolve(reader.result.split(",")[1]);
+          reader.onerror = () => reject(new Error("Failed to read file"));
           reader.readAsDataURL(cvFile);
         });
       }
 
-      // Call Firebase function
+      // Call Firebase function with improved error handling
       const { httpsCallable } = await import("firebase/functions");
       const { functions } = await import(
         "../../../shared/services/firebase/config"
       );
+      
       const sendJobApplication = httpsCallable(
         functions,
         "sendJobApplicationEmail"
@@ -391,31 +393,57 @@ const ApplicationModal = ({ job, onClose }) => {
         cvFileName: cvFile?.name,
       };
 
-      await sendJobApplication(applicationData);
+      console.log("Submitting application data:", { ...applicationData, cvFile: cvFileBase64 ? "FILE_ATTACHED" : null });
 
-      // Toast success message
-      toast.success(
-        "Application submitted successfully! We'll get back to you soon.",
-        {
-          duration: 4000,
-          style: {
-            background: "#10B981",
-            color: "#fff",
-            padding: "16px",
-            borderRadius: "10px",
-            fontSize: "14px",
-            fontWeight: "500",
-          },
-        }
-      );
+      const result = await sendJobApplication(applicationData);
+      
+      console.log("Firebase function result:", result);
 
-      onClose();
+      // Check if the function executed successfully
+      // Firebase callable functions should return { data: ... }
+      if (result && (result.data || result.data === null)) {
+        // Toast success message
+        toast.success(
+          "Application submitted successfully! We'll get back to you soon.",
+          {
+            duration: 4000,
+            style: {
+              background: "#10B981",
+              color: "#fff",
+              padding: "16px",
+              borderRadius: "10px",
+              fontSize: "14px",
+              fontWeight: "500",
+            },
+          }
+        );
+
+        onClose();
+      } else {
+        throw new Error("Invalid response from server");
+      }
+
     } catch (error) {
       console.error("Application submission error:", error);
 
+      let errorMessage = "Failed to submit application. Please try again.";
+      
+      // Provide more specific error messages
+      if (error.code === "functions/not-found") {
+        errorMessage = "Service temporarily unavailable. Please try again later.";
+      } else if (error.code === "functions/internal") {
+        errorMessage = "Server error occurred. Please try again.";
+      } else if (error.code === "functions/unauthenticated") {
+        errorMessage = "Authentication required. Please refresh and try again.";
+      } else if (error.message?.includes("data field")) {
+        // This specific error - the function probably worked but didn't return data properly
+        console.warn("Function may have succeeded despite the error. Email might have been sent.");
+        errorMessage = "Application may have been submitted. Please check your email or contact us if you don't hear back.";
+      }
+
       // Toast error message
-      toast.error("Failed to submit application. Please try again.", {
-        duration: 4000,
+      toast.error(errorMessage, {
+        duration: 6000,
         style: {
           background: "#EF4444",
           color: "#fff",
