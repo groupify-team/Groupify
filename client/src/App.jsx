@@ -110,7 +110,8 @@ const FlowController = ({ children }) => {
     const determineFlow = () => {
       const currentPath = location.pathname;
       const animationShown = sessionStorage.getItem("launch_animation_shown");
-      const turnstileVerifiedSession = sessionStorage.getItem("turnstile_verified");
+      const turnstileVerifiedSession =
+        sessionStorage.getItem("turnstile_verified");
       const lastPageLoad = sessionStorage.getItem("last_page_load");
       const currentTime = Date.now();
 
@@ -258,7 +259,14 @@ const FlowController = ({ children }) => {
     if (turnstileVerified || !showTurnstile) {
       determineFlow();
     }
-  }, [currentUser, authLoading, location.pathname, navigate, turnstileVerified, showTurnstile]);
+  }, [
+    currentUser,
+    authLoading,
+    location.pathname,
+    navigate,
+    turnstileVerified,
+    showTurnstile,
+  ]);
 
   const handleTurnstileComplete = (verified, token) => {
     console.log("Flow: Turnstile verification completed:", verified);
@@ -282,9 +290,7 @@ const FlowController = ({ children }) => {
   // Show Turnstile verification first
   if (showTurnstile) {
     return (
-      <CloudflareTurnstileGate 
-        onVerificationComplete={handleTurnstileComplete}
-      >
+      <CloudflareTurnstileGate onVerificationComplete={handleTurnstileComplete}>
         <div>Turnstile Verified</div>
       </CloudflareTurnstileGate>
     );
