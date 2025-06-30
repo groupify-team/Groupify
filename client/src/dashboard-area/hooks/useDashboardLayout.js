@@ -20,7 +20,7 @@ export const useDashboardLayout = () => {
   const searchInputRef = useRef(null);
 
   // Core layout states
-  const [sidebarOpen, setSidebarOpen] = useState(shouldShowSidebar());
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeSection, setActiveSection] = useState(
     DEFAULT_STATE.activeSection
   );
@@ -63,7 +63,8 @@ export const useDashboardLayout = () => {
     const handleResize = () => {
       const width = window.innerWidth;
       setWindowWidth(width);
-      setIsMobile(width < BREAKPOINTS.mobile);
+      const isMobileDevice = width < BREAKPOINTS.mobile;
+      setIsMobile(isMobileDevice);
 
       // Auto-open sidebar on desktop, auto-close on mobile
       if (width >= BREAKPOINTS.tablet) {
@@ -72,6 +73,9 @@ export const useDashboardLayout = () => {
         setSidebarOpen(false);
       }
     };
+
+    // Set initial state based on current screen size
+    handleResize();
 
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
@@ -286,55 +290,17 @@ export const useDashboardLayout = () => {
 
   const getLayoutClasses = () => {
     if (isMobile) {
-      // Navigation actions
-      const viewTrip = (tripId) => {
-        console.log("🚀 Navigating to trip:", tripId);
-        setCurrentView("trip-detail");
-        setSelectedTripId(tripId);
-      };
-
-      const backToHome = () => {
-        setCurrentView("home");
-        setSelectedTripId(null);
-      };
-
       return {
-        main: "h-[calc(100vh-4rem)] w-full",
+        main: "h-[calc(100vh-4rem)] w-full transition-all duration-300",
         content: "pb-4 h-full",
       };
     }
 
-    if (sidebarOpen) {
-      // Navigation actions
-      const viewTrip = (tripId) => {
-        console.log("🚀 Navigating to trip:", tripId);
-        setCurrentView("trip-detail");
-        setSelectedTripId(tripId);
-      };
-
-      const backToHome = () => {
-        setCurrentView("home");
-        setSelectedTripId(null);
-      };
-
-      return {
-        main: "ml-64 w-[calc(100%-16rem)] min-h-screen",
-        content: "py-2 sm:py-4",
-      };
-    } // Navigation actions
-    const viewTrip = (tripId) => {
-      console.log("🚀 Navigating to trip:", tripId);
-      setCurrentView("trip-detail");
-      setSelectedTripId(tripId);
-    };
-
-    const backToHome = () => {
-      setCurrentView("home");
-      setSelectedTripId(null);
-    };
-
+    // Desktop: dynamically adjust based on sidebar state
     return {
-      main: "w-full min-h-screen",
+      main: sidebarOpen
+        ? "ml-64 w-[calc(100%-16rem)] min-h-screen transition-all duration-300"
+        : "ml-0 w-full min-h-screen transition-all duration-300",
       content: "py-2 sm:py-4",
     };
   };
@@ -356,16 +322,6 @@ export const useDashboardLayout = () => {
     setFilterDropdownOpen(false);
     setNotificationsDropdownOpen(false);
     setShowMobileUserMenu(false);
-  }; // Navigation actions
-  const viewTrip = (tripId) => {
-    console.log("🚀 Navigating to trip:", tripId);
-    setCurrentView("trip-detail");
-    setSelectedTripId(tripId);
-  };
-
-  const backToHome = () => {
-    setCurrentView("home");
-    setSelectedTripId(null);
   };
 
   return {
@@ -419,8 +375,6 @@ export const useDashboardLayout = () => {
       navigateToSection,
       navigateToTrip,
       navigateBackToDashboard,
-      viewTrip,
-      backToHome,
     },
 
     // Sidebar actions

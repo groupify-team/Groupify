@@ -57,28 +57,37 @@ const DashboardHeader = () => {
         <div className="flex justify-between items-center h-12 sm:h-14 w-full">
           {/* Left Section */}
           <div className="flex items-center gap-4">
-            {/* Sidebar Toggle - Desktop */}
-            <button
-              onClick={() => {
-                console.log("🔁 Desktop toggle clicked");
-                toggleSidebar();
-              }}
-              className="hidden lg:block p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-              title={sidebarOpen ? "Close sidebar" : "Open sidebar"}
-            >
-              <Bars3Icon className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-            </button>
-
-            {/* Mobile Menu Button - Tablet/Mobile */}
-            {isMobile && (
+            {/* Sidebar Toggle - Desktop Only */}
+            {!isMobile && (
               <button
                 onClick={() => {
-                  console.log("📱 Mobile toggle clicked");
+                  console.log("🔁 Desktop toggle clicked");
                   toggleSidebar();
+
+                  // DIRECT DOM MANIPULATION AS BACKUP
+                  setTimeout(() => {
+                    const sidebar = document.querySelector(
+                      '[data-sidebar="true"]'
+                    );
+                    if (sidebar) {
+                      const isCurrentlyOpen =
+                        !sidebar.classList.contains("-translate-x-full");
+                      if (isCurrentlyOpen) {
+                        sidebar.classList.add("-translate-x-full");
+                      } else {
+                        sidebar.classList.remove("-translate-x-full");
+                      }
+                      console.log(
+                        "🔧 DIRECT DOM TOGGLE - Classes:",
+                        sidebar.className
+                      );
+                    }
+                  }, 50);
                 }}
-                className="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                title={sidebarOpen ? "Close sidebar" : "Open sidebar"}
               >
-                <Bars3Icon className="w-6 h-6 text-gray-600 dark:text-gray-400" />
+                <Bars3Icon className="w-5 h-5 text-gray-600 dark:text-gray-400" />
               </button>
             )}
 

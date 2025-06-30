@@ -2,19 +2,23 @@
 import React from "react";
 import { useDashboardLayout } from "@dashboard/hooks/useDashboardLayout";
 import { useDashboardData } from "@dashboard/hooks/useDashboardData";
+import { useDashboardModals } from "@dashboard/hooks/useDashboardModals";
 import DashboardSidebar from "@dashboard/components/layout/DashboardSidebar";
 import DashboardHeader from "@dashboard/components/layout/DashboardHeader";
 import MobileBottomNav from "@dashboard/components/layout/MobileBottomNav";
+import SettingsModal from "@dashboard/features/settings/components/SettingsModal";
 
 const DashboardLayout = ({ children }) => {
   const {
     layout,
     utils: { getLayoutClasses, shouldShowMobileNav, shouldShowDesktopSidebar },
   } = useDashboardLayout();
-
+  const { sidebarOpen } = layout;
   const { loading } = useDashboardData();
-
   const layoutClasses = getLayoutClasses();
+  const { modals } = useDashboardModals();
+
+  console.log("🔧 DashboardLayout REAL TIME CHECK:", sidebarOpen);
 
   // Show loading screen while data is loading
   if (loading) {
@@ -57,8 +61,7 @@ const DashboardLayout = ({ children }) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 flex w-full transition-colors duration-500">
       {/* Desktop Sidebar */}
-      <DashboardSidebar isVisible={shouldShowDesktopSidebar()} />
-
+      <DashboardSidebar sidebarOpen={sidebarOpen} />
       {/* Sidebar Overlay for Mobile */}
       {layout.sidebarOpen && layout.isMobile && (
         <div
@@ -68,7 +71,6 @@ const DashboardLayout = ({ children }) => {
           }}
         />
       )}
-
       {/* Main Content Area */}
       <div
         className={`flex-1 flex flex-col transition-all duration-300 ${layoutClasses.main} overflow-hidden`}
@@ -84,10 +86,12 @@ const DashboardLayout = ({ children }) => {
             {children}
           </div>
         </main>
-
         {/* Mobile Bottom Navigation */}
         {shouldShowMobileNav() && <MobileBottomNav />}
       </div>
+      {/* Modals */}
+      {modals.showSettingsModal && <SettingsModal />}{" "}
+      {modals.showLogoutModal && <LogoutModal />}
     </div>
   );
 };
