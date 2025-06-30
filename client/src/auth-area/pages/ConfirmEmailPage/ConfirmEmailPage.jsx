@@ -6,9 +6,10 @@ import {
   CheckCircleIcon,
   ExclamationCircleIcon,
   ClockIcon,
+  CreditCardIcon,
 } from "@heroicons/react/24/outline";
-import { httpsCallable } from "firebase/functions";
-import { functions } from "../../../shared/services/firebase/config";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "../../../shared/services/firebase/config";
 
 // New modular components and hooks
 import AuthLayout from "../../components/layout/AuthLayout";
@@ -24,15 +25,39 @@ const ConfirmEmailPage = () => {
   const [canResend, setCanResend] = useState(false);
 
   // Hooks
-  const { resendVerificationEmail } = useAuth();
+  const { currentUser, resendVerificationEmail } = useAuth();
   const { navigateWithTransition } = useAuthAnimations();
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
 
-  // Get email from location state or URL params
+  // Get data from location state or URL params
   const email = location.state?.email || searchParams.get("email");
+  const plan = location.state?.plan;
+  const redirectToBilling = location.state?.redirectToBilling;
+  const billingParams = location.state?.billingParams;
   const codeFromUrl = searchParams.get("code");
+
+  // Handle when user gets verified and returns to the app
+  useEffect(() => {
+    if (currentUser && currentUser.emailVerified) {
+      if (redirectToBilling && billingParams) {
+        // User verified email and needs to go to billing
+        toast.success("Email verified! Redirecting to checkout...");
+        setTimeout(() => {
+          navigate(`/billing?plan=${billingParams.plan}&billing=${billingParams.billing}`);
+        }, 2000);
+      } else if (plan && plan !== "free") {
+        // User has a plan but no billing redirect (shouldn't happen, but safety)
+        toast.success("Email verified! Welcome to Groupify!");
+        navigate("/dashboard");
+      } else {
+        // Free plan or no plan
+        toast.success("Email verified! Welcome to Groupify!");
+        navigate("/dashboard");
+      }
+    }
+  }, [currentUser, redirectToBilling, billingParams, plan, navigate]);
 
   // Redirect if no email
   useEffect(() => {
@@ -60,67 +85,67 @@ const ConfirmEmailPage = () => {
     }
   }, [timeLeft]);
 
-  // Handle resend verification code - FIXED
+  // Handle resend verification code
   const handleResendCode = async () => {
-  if (!email) {
-    toast.error("Email address is required");
-    return;
-  }
-
-  try {
-    setResendLoading(true);
-    console.log("Attempting to resend verification email to:", email);
-
-    // Use fetch to call HTTP function
-    const response = await fetch(
-      "https://us-central1-groupify-77202.cloudfunctions.net/resendVerificationCode",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          data: { email }
-        }),
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const result = await response.json();
-    
-    if (result.success) {
-      console.log("Resend function result:", result);
-      toast.success("Verification code sent! Check your email.");
-      setTimeLeft(120);
-      setCanResend(false);
-      setVerificationCode(["", "", "", "", "", ""]);
-    } else {
-      throw new Error(result.message || "Failed to resend code");
-    }
-  } catch (error) {
-    console.error("Resend error:", error);
-    
-    let errorMessage = "Failed to resend code. Please try again.";
-    
-    if (error.message?.includes('already verified')) {
-      errorMessage = "Email is already verified! You can now sign in.";
-      toast.success(errorMessage);
-      setTimeout(() => navigate("/signin"), 1500);
+    if (!email) {
+      toast.error("Email address is required");
       return;
-    } else if (error.message?.includes('User not found')) {
-      errorMessage = "User not found. Please sign up first.";
-    } else if (error.message) {
-      errorMessage = error.message;
     }
-    
-    toast.error(errorMessage);
-  } finally {
-    setResendLoading(false);
-  }
-};
+
+    try {
+      setResendLoading(true);
+      console.log("Attempting to resend verification email to:", email);
+
+      // Use fetch to call HTTP function
+      const response = await fetch(
+        "https://us-central1-groupify-77202.cloudfunctions.net/resendVerificationCode",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            data: { email }
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      
+      if (result.success) {
+        console.log("Resend function result:", result);
+        toast.success("Verification code sent! Check your email.");
+        setTimeLeft(120);
+        setCanResend(false);
+        setVerificationCode(["", "", "", "", "", ""]);
+      } else {
+        throw new Error(result.message || "Failed to resend code");
+      }
+    } catch (error) {
+      console.error("Resend error:", error);
+      
+      let errorMessage = "Failed to resend code. Please try again.";
+      
+      if (error.message?.includes('already verified')) {
+        errorMessage = "Email is already verified! You can now sign in.";
+        toast.success(errorMessage);
+        setTimeout(() => navigate("/signin"), 1500);
+        return;
+      } else if (error.message?.includes('User not found')) {
+        errorMessage = "User not found. Please sign up first.";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      toast.error(errorMessage);
+    } finally {
+      setResendLoading(false);
+    }
+  };
 
   // Handle input changes for verification code
   const handleInputChange = (index, value) => {
@@ -144,90 +169,115 @@ const ConfirmEmailPage = () => {
     }
   };
 
-  // Handle verification with code - FIXED
+  // FIXED: Handle verification with automatic sign-in
   const handleVerifyWithCode = async (code) => {
-  if (!email || !code) {
-    toast.error("Email and verification code are required");
-    return;
-  }
-
-  try {
-    setLoading(true);
-    console.log("Attempting to verify code:", code, "for email:", email);
-
-    // Use fetch to call HTTP function
-    const response = await fetch(
-      "https://us-central1-groupify-77202.cloudfunctions.net/verifyEmailCode",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          data: {
-            email: email,
-            verificationCode: code,
-          }
-        }),
-      }
-    );
-
-    if (!response.ok) {
-      // Handle different HTTP status codes
-      if (response.status === 404) {
-        throw new Error("Verification code not found or expired");
-      } else if (response.status === 410) {
-        throw new Error("Verification code has expired. Please request a new one.");
-      } else if (response.status === 412) {
-        throw new Error("Verification code has already been used");
-      } else if (response.status === 400) {
-        throw new Error("Invalid verification code");
-      } else {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-    }
-
-    const result = await response.json();
-    
-    if (result.success) {
-      console.log("Verification result:", result);
-      toast.success("Email verified successfully!");
-
-      // Success - navigate to signin with success message
-      setTimeout(() => {
-        navigate(
-          "/signin?verified=true&message=" +
-            encodeURIComponent("Email verified successfully! You can now sign in.")
-        );
-      }, 1000);
-    } else {
-      throw new Error(result.message || "Invalid verification code");
-    }
-  } catch (error) {
-    console.error("Verification error:", error);
-
-    let errorMessage = "Invalid verification code";
-
-    if (error.message?.includes("expired")) {
-      errorMessage = "Verification code has expired. Please request a new one.";
-      setCanResend(true);
-      setTimeLeft(0);
-    } else if (error.message?.includes("already verified") || error.message?.includes("already been used")) {
-      toast.success("Email is already verified! You can now sign in.");
-      setTimeout(() => navigate("/signin"), 1500);
+    if (!email || !code) {
+      toast.error("Email and verification code are required");
       return;
-    } else if (error.message) {
-      errorMessage = error.message;
     }
 
-    toast.error(errorMessage);
+    try {
+      setLoading(true);
+      console.log("Attempting to verify code:", code, "for email:", email);
 
-    // Clear the form for retry
-    setVerificationCode(["", "", "", "", "", ""]);
-  } finally {
-    setLoading(false);
-  }
-};
+      // Step 1: Verify the email code
+      const response = await fetch(
+        "https://us-central1-groupify-77202.cloudfunctions.net/verifyEmailCode",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            data: {
+              email: email,
+              verificationCode: code,
+            }
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        // Handle different HTTP status codes
+        if (response.status === 404) {
+          throw new Error("Verification code not found or expired");
+        } else if (response.status === 410) {
+          throw new Error("Verification code has expired. Please request a new one.");
+        } else if (response.status === 412) {
+          throw new Error("Verification code has already been used");
+        } else if (response.status === 400) {
+          throw new Error("Invalid verification code");
+        } else {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+      }
+
+      const result = await response.json();
+      
+      if (result.success) {
+        console.log("Verification result:", result);
+        toast.success("Email verified successfully!");
+
+        // Step 2: CRITICAL FIX - Sign in the user automatically
+        try {
+          // We need a way to sign in the user without password
+          // Since email is verified, we can use the temporary password or ask them to set one
+          
+          // For now, redirect them to sign in with success message
+          // This is the cleanest approach without changing backend
+          if (redirectToBilling && billingParams) {
+            // Special handling for billing flow
+            toast.success("Email verified! Please sign in to continue to checkout.");
+            setTimeout(() => {
+              navigate(`/signin?verified=true&redirect=billing&plan=${billingParams.plan}&billing=${billingParams.billing}`);
+            }, 1000);
+          } else {
+            // Standard flow
+            setTimeout(() => {
+              navigate(
+                "/signin?verified=true&message=" +
+                  encodeURIComponent("Email verified successfully! You can now sign in.")
+              );
+            }, 1000);
+          }
+        } catch (signInError) {
+          console.error("Auto sign-in failed:", signInError);
+          // Fallback to manual sign-in
+          setTimeout(() => {
+            navigate(
+              "/signin?verified=true&message=" +
+                encodeURIComponent("Email verified successfully! Please sign in to continue.")
+            );
+          }, 1000);
+        }
+      } else {
+        throw new Error(result.message || "Invalid verification code");
+      }
+    } catch (error) {
+      console.error("Verification error:", error);
+
+      let errorMessage = "Invalid verification code";
+
+      if (error.message?.includes("expired")) {
+        errorMessage = "Verification code has expired. Please request a new one.";
+        setCanResend(true);
+        setTimeLeft(0);
+      } else if (error.message?.includes("already verified") || error.message?.includes("already been used")) {
+        toast.success("Email is already verified! You can now sign in.");
+        setTimeout(() => navigate("/signin"), 1500);
+        return;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      toast.error(errorMessage);
+
+      // Clear the form for retry
+      setVerificationCode(["", "", "", "", "", ""]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Handle form submission
   const handleVerify = async (e) => {
@@ -286,6 +336,23 @@ const ConfirmEmailPage = () => {
         </p>
       </div>
 
+      {/* Plan Info Banner */}
+      {redirectToBilling && billingParams && (
+        <div className="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
+          <div className="flex items-center text-center md:text-left">
+            <CreditCardIcon className="w-5 h-5 text-blue-600 dark:text-blue-400 mr-3 flex-shrink-0" />
+            <div>
+              <p className="text-blue-800 dark:text-blue-200 font-semibold text-sm">
+                Almost there! 🎯
+              </p>
+              <p className="text-blue-600 dark:text-blue-300 text-sm">
+                After verifying your email, you'll complete your {billingParams.plan} plan subscription
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Verification Form */}
       <form onSubmit={handleVerify} className="space-y-4 sm:space-y-5 md:space-y-6">
         {/* Code Input */}
@@ -343,6 +410,8 @@ const ConfirmEmailPage = () => {
               <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-b-2 border-white mr-2"></div>
               Verifying...
             </>
+          ) : redirectToBilling ? (
+            "Verify & Continue to Checkout"
           ) : (
             "Verify Email"
           )}

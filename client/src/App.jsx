@@ -88,13 +88,15 @@ const DashboardPlaceholder = () => {
   );
 };
 
-// Centralized Flow Controller - Handles ALL navigation logic
+// Centralized Flow Controller - Handles ALL navigation logic INCLUDING Turnstile
 const FlowController = ({ children }) => {
   const { currentUser, loading: authLoading } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [showLaunchAnimation, setShowLaunchAnimation] = useState(false);
   const [flowReady, setFlowReady] = useState(false);
+  const [turnstileVerified, setTurnstileVerified] = useState(false);
+  const [showTurnstile, setShowTurnstile] = useState(false);
 
   useEffect(() => {
     // Don't do anything while auth is still loading
@@ -103,6 +105,7 @@ const FlowController = ({ children }) => {
     const determineFlow = () => {
       const currentPath = location.pathname;
       const animationShown = sessionStorage.getItem("launch_animation_shown");
+      const turnstileVerifiedSession = sessionStorage.getItem("turnstile_verified");
       const lastPageLoad = sessionStorage.getItem("last_page_load");
       const currentTime = Date.now();
 
@@ -114,9 +117,23 @@ const FlowController = ({ children }) => {
         currentUser: !!currentUser,
         currentPath,
         animationShown,
+        turnstileVerifiedSession,
         isNewSession,
         authLoading,
       });
+
+      // === TURNSTILE VERIFICATION CHECK ===
+      // Only check Turnstile on new sessions or if not verified
+      if (isNewSession || !turnstileVerifiedSession) {
+        console.log("Flow: New session detected → Show Turnstile");
+        setShowTurnstile(true);
+        setFlowReady(false);
+        return;
+      } else {
+        // Session is verified, proceed with normal flow
+        setTurnstileVerified(true);
+        setShowTurnstile(false);
+      }
 
       // === AUTHENTICATION-BASED ROUTING ===
 
@@ -131,7 +148,7 @@ const FlowController = ({ children }) => {
         return;
       }
 
-      // 2. If user is logged in and on homepage, show placeholder dashboard
+      // 2. If user is logged in and on homepage, redirect to dashboard
       if (currentUser && currentPath === "/") {
         navigate("/dashboard", { replace: true });
         return;
@@ -232,8 +249,23 @@ const FlowController = ({ children }) => {
       sessionStorage.setItem("last_page_load", currentTime.toString());
     };
 
-    determineFlow();
-  }, [currentUser, authLoading, location.pathname, navigate]);
+    // Only run flow determination if Turnstile is verified or not needed
+    if (turnstileVerified || !showTurnstile) {
+      determineFlow();
+    }
+  }, [currentUser, authLoading, location.pathname, navigate, turnstileVerified, showTurnstile]);
+
+  const handleTurnstileComplete = (verified, token) => {
+    console.log("Flow: Turnstile verification completed:", verified);
+    if (verified) {
+      sessionStorage.setItem("turnstile_verified", "true");
+      sessionStorage.setItem("turnstile_token", token);
+      sessionStorage.setItem("last_page_load", Date.now().toString());
+      setTurnstileVerified(true);
+      setShowTurnstile(false);
+      // Flow will continue automatically via useEffect
+    }
+  };
 
   const handleAnimationComplete = () => {
     console.log("Flow: Launch animation completed");
@@ -241,6 +273,17 @@ const FlowController = ({ children }) => {
     setShowLaunchAnimation(false);
     setFlowReady(true);
   };
+
+  // Show Turnstile verification first
+  if (showTurnstile) {
+    return (
+      <CloudflareTurnstileGate 
+        onVerificationComplete={handleTurnstileComplete}
+      >
+        <div>Turnstile Verified</div>
+      </CloudflareTurnstileGate>
+    );
+  }
 
   // Show loading while determining flow
   if (authLoading || (!flowReady && !showLaunchAnimation)) {
@@ -267,9 +310,6 @@ const FlowController = ({ children }) => {
 
 // Simplified routing with centralized flow control
 function App() {
-  // Enable/disable Turnstile easily
-  const ENABLE_TURNSTILE = true;
-
   const AppContent = () => (
     <Router>
       <AuthProvider>
@@ -340,7 +380,7 @@ function App() {
               <Route path="/status" element={<Status />} />
               <Route path="/billing" element={<Billing />} />
 
-              {/* Protected Routes - Temporarily disabled for testing */}
+              {/* Protected Routes - Restored to Dashboard */}
               <Route
                 path="/dashboard"
                 element={
@@ -381,17 +421,7 @@ function App() {
 
   return (
     <ThemeProvider>
-      {ENABLE_TURNSTILE ? (
-        <CloudflareTurnstileGate
-          onVerificationComplete={(verified) => {
-            console.log("Turnstile verification complete:", verified);
-          }}
-        >
-          <AppContent />
-        </CloudflareTurnstileGate>
-      ) : (
-        <AppContent />
-      )}
+      <AppContent />
     </ThemeProvider>
   );
 }

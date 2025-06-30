@@ -64,7 +64,7 @@ export function AuthProvider({ children }) {
       displayName: displayName,
     });
 
-    // SIMPLIFIED: Try to create user document, but don't fail if it doesn't work
+    // FIXED: Create user document BEFORE signing out
     try {
       await setDoc(doc(db, "users", user.uid), {
         uid: user.uid,
@@ -85,13 +85,12 @@ export function AuthProvider({ children }) {
       // Don't fail the signup if Firestore fails
     }
 
-    // Sign out the user immediately to prevent dashboard access
+    // THEN sign out the user to prevent dashboard access
     console.log("Signing out user to prevent dashboard access before verification");
     await signOut(auth);
     
     console.log("User signed out after account creation");
 
-    // DON'T send verification email here - let SignUpPage handle it
     return {
       success: true,
       email: email,

@@ -204,31 +204,27 @@ const PricingPage = () => {
   ];
 
   const handlePlanSelect = (plan) => {
-    if (plan.name === "Free") {
-      if (currentUser) {
-        toast.success("You're already on the free plan!");
-      } else {
-        // Show modal first to try converting to paid plan
-        setShowFreeModal(true);
-      }
-    } else if (plan.name === "Enterprise") {
-      // Show enterprise modal
-      setShowEnterpriseModal(true);
-    } else if (plan.name === "Pro" || plan.name === "Family") {
-      // For Pro and Family plans
-      if (currentUser) {
-        // User is logged in - go directly to billing with billing cycle
-        navigate(
-          `/billing?plan=${plan.name.toLowerCase()}&billing=${billingCycle}`
-        );
-      } else {
-        // User not logged in - signup with plan parameter and billing cycle
-        navigate(
-          `/signup?plan=${plan.name.toLowerCase()}&billing=${billingCycle}`
-        );
-      }
+  if (plan.name === "Free") {
+    if (currentUser) {
+      toast.success("You're already on the free plan!");
+      // Optionally redirect to dashboard
+      navigate("/dashboard");
+    } else {
+      setShowFreeModal(true);
     }
-  };
+  } else if (plan.name === "Enterprise") {
+    setShowEnterpriseModal(true);
+  } else if (plan.name === "Pro" || plan.name === "Family") {
+    if (currentUser) {
+      // User is logged in - go directly to billing
+      navigate(`/billing?plan=${plan.name.toLowerCase()}&billing=${billingCycle}`);
+    } else {
+      // User not logged in - go to signup with plan info
+      // The signup page will redirect to billing after successful registration
+      navigate(`/signup?plan=${plan.name.toLowerCase()}&billing=${billingCycle}&redirect=billing`);
+    }
+  }
+};
 
   const toggleFaq = (index) => {
     setOpenFaq(openFaq === index ? null : index);
