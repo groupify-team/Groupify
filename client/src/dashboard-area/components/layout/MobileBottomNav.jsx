@@ -1,7 +1,8 @@
 ﻿// MobileBottomNav.jsx - Mobile bottom navigation bar
 import React from "react";
-import { useDashboardLayout } from "../../hooks/useDashboardLayout";
-import { useDashboardData } from "../../hooks/useDashboardData";
+import { useDashboardLayout } from "@dashboard/hooks/useDashboardLayout";
+import { useDashboardData } from "@dashboard/hooks/useDashboardData";
+
 import { BOTTOM_NAV_ITEMS } from "@dashboard/utils/dashboardConstants.jsx";
 import {
   getNavigationItemBadge,

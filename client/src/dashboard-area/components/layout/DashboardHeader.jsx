@@ -8,11 +8,13 @@ import {
   CogIcon,
   UserIcon,
 } from "@heroicons/react/24/outline";
-import { useDashboardLayout } from "../../hooks/useDashboardLayout";
-import { useDashboardData } from "../../hooks/useDashboardData";
-import { useDashboardModals } from "../../hooks/useDashboardModals";
-import { useDashboardNavigation } from "../../hooks/useDashboardNavigation";
-import NotificationsDropdown from "../widgets/NotificationsDropdown";
+
+import { useDashboardLayout } from "@dashboard/hooks/useDashboardLayout";
+import { useDashboardData } from "@dashboard/hooks/useDashboardData";
+import { useDashboardModals } from "@dashboard/hooks/useDashboardModals";
+import { useDashboardNavigation } from "@dashboard/hooks/useDashboardNavigation";
+
+import NotificationsDropdown from "@dashboard/components/widgets/NotificationsDropdown";
 import { getTotalNotificationCount } from "@dashboard/utils/dashboardHelpers";
 
 const DashboardHeader = () => {
@@ -57,7 +59,10 @@ const DashboardHeader = () => {
           <div className="flex items-center gap-4">
             {/* Sidebar Toggle - Desktop */}
             <button
-              onClick={toggleSidebar}
+              onClick={() => {
+                console.log("🔁 Desktop toggle clicked");
+                toggleSidebar();
+              }}
               className="hidden lg:block p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
               title={sidebarOpen ? "Close sidebar" : "Open sidebar"}
             >
@@ -65,9 +70,12 @@ const DashboardHeader = () => {
             </button>
 
             {/* Mobile Menu Button - Tablet/Mobile */}
-            {!isMobile && (
+            {isMobile && (
               <button
-                onClick={toggleSidebar}
+                onClick={() => {
+                  console.log("📱 Mobile toggle clicked");
+                  toggleSidebar();
+                }}
                 className="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
               >
                 <Bars3Icon className="w-6 h-6 text-gray-600 dark:text-gray-400" />

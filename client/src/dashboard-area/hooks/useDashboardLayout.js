@@ -161,14 +161,21 @@ export const useDashboardLayout = () => {
    * Sidebar actions
    */
   const toggleSidebar = () => {
-    setSidebarOpen((prev) => !prev);
+    setSidebarOpen((prev) => {
+      const next = !prev;
+      console.log(`TOGGLE SIDEBAR — was: ${prev} now: ${next}`);
+      console.trace(); // 🔍 חשוב – יציג StackTrace
+      return next;
+    });
   };
 
   const closeSidebar = () => {
+    console.log("CLOSING SIDEBAR");
     setSidebarOpen(false);
   };
 
   const openSidebar = () => {
+    console.log("OPENING SIDEBAR");
     setSidebarOpen(true);
   };
 
@@ -412,6 +419,8 @@ export const useDashboardLayout = () => {
       navigateToSection,
       navigateToTrip,
       navigateBackToDashboard,
+      viewTrip,
+      backToHome,
     },
 
     // Sidebar actions
@@ -459,11 +468,6 @@ export const useDashboardLayout = () => {
       updateDateFilter,
       resetFilters,
       focusSearchInput,
-    },
-    // Navigation actions
-    navigation: {
-      viewTrip,
-      backToHome,
     },
 
     // Utility functions
