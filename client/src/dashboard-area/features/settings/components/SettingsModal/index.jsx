@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useClickOutside } from "@/shared/hooks/useClickOutside";
 import {
   XMarkIcon,
   SunIcon,
@@ -16,7 +17,7 @@ import {
 // Accessibility icon (iPhone-style)
 const AccessibilityIcon = ({ className }) => (
   <svg className={className} fill="currentColor" viewBox="0 0 24 24">
-    <path d="M12 2a2 2 0 100 4 2 2 0 000-4zM21 9h-6L14 7.5c-.28-.35-.67-.5-1.06-.5-.39 0-.77.15-1.06.5L10.5 9H3c-.55 0-1 .45-1 1s.45 1 1 1h2.47l1.64 5.69c.15.52.61.89 1.15.89.69 0 1.23-.56 1.23-1.25 0-.09-.01-.18-.04-.27L8.41 11h7.18l-1.04 4.32c-.03.09-.04.18-.04.27 0 .69.54 1.25 1.23 1.25.54 0 1-.37 1.15-.89L18.53 11H21c.55 0 1-.45 1-1s-.45-1-1-1z" />
+    <path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM21 9V7L13.5 7.5C13.1 7.4 12.6 7.2 12.1 7.1L12 7L11.9 7.1C11.4 7.2 10.9 7.4 10.5 7.5L3 7V9L10.5 9.5L8.5 16.5C8.4 16.9 8.6 17.4 9 17.5C9.4 17.6 9.9 17.4 10 17L12 10.5L14 17C14.1 17.4 14.6 17.6 15 17.5C15.4 17.4 15.6 16.9 15.5 16.5L13.5 9.5L21 9Z" />
   </svg>
 );
 
@@ -30,6 +31,10 @@ const CountryFlags = {
 };
 
 const SettingsModal = ({ isOpen, onClose, theme, toggleTheme }) => {
+  const modalRef = useClickOutside(() => {
+    if (isOpen) onClose();
+  });
+
   // Settings state
   const [soundEffects, setSoundEffects] = useState(true);
   const [language, setLanguage] = useState("en");
@@ -185,7 +190,9 @@ const SettingsModal = ({ isOpen, onClose, theme, toggleTheme }) => {
         aria-labelledby="settings-title"
       >
         <div
+          ref={modalRef}
           className="settings-modal bg-white/95 dark:bg-gray-800/95 backdrop-blur-md rounded-2xl border border-white/20 dark:border-gray-700/50 shadow-2xl max-w-md w-full max-h-[85vh] overflow-hidden flex flex-col"
+          onClick={(e) => e.stopPropagation()}
           style={{
             animation: isOpen
               ? "slideIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards"

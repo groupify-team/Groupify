@@ -1,5 +1,5 @@
 ﻿// components/CreateTripModal.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   XMarkIcon,
   MapPinIcon,
@@ -19,8 +19,50 @@ const CreateTripModal = ({ isOpen, onClose, onTripCreated }) => {
   const [endDate, setEndDate] = useState("");
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-
   const { currentUser } = useAuth();
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [createdTripName, setCreatedTripName] = useState("");
+  const [locationSuggestions, setLocationSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
+  useEffect(() => {
+    const handleEscape = (e) => {
+      if (e.key === "Escape" && !loading) {
+        handleClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener("keydown", handleEscape);
+      return () => document.removeEventListener("keydown", handleEscape);
+    }
+  }, [isOpen, loading]);
+
+  const handleLocationSearch = async (query) => {
+    if (query.length < 2) {
+      setShowSuggestions(false);
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `http://localhost:3001/api/city-search?q=${encodeURIComponent(query)}`
+      );
+      if (!response.ok) throw new Error("Proxy failed");
+
+      const cities = await response.json();
+      const suggestions = cities.map((city) => {
+        const state = city.state ? `, ${city.state}` : "";
+        return `${city.name}${state}, ${city.country}`;
+      });
+
+      setLocationSuggestions(suggestions);
+      setShowSuggestions(true);
+    } catch (error) {
+      console.error("Error fetching cities:", error);
+      setShowSuggestions(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
@@ -64,12 +106,16 @@ const CreateTripModal = ({ isOpen, onClose, onTripCreated }) => {
         photoCount: 0,
       });
 
+      // Store trip name for success modal
+      setCreatedTripName(name);
+
       // Reset form
       setName("");
       setDescription("");
       setLocation("");
       setStartDate("");
       setEndDate("");
+      setShowSuccessModal(true);
 
       // Notify parent component
       if (onTripCreated) {
@@ -105,13 +151,19 @@ const CreateTripModal = ({ isOpen, onClose, onTripCreated }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div
+      className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in"
+      onClick={handleClose}
+    >
       <div className="relative w-full max-w-md">
         {/* Background blur effect */}
         <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-2xl blur opacity-20"></div>
 
         {/* Modal content */}
-        <div className="relative bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20 dark:border-gray-700/50 overflow-hidden">
+        <div
+          className="relative bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20 dark:border-gray-700/50 overflow-hidden animate-slide-in-scale"
+          onClick={(e) => e.stopPropagation()}
+        >
           {/* Compact Header */}
           <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-4">
             <div className="flex items-center justify-between">
@@ -176,7 +228,7 @@ const CreateTripModal = ({ isOpen, onClose, onTripCreated }) => {
               />
             </div>
 
-            {/* Location */}
+            {/* Location with Autocomplete */}
             <div className="space-y-1">
               <label className="block text-sm font-medium text-gray-800 dark:text-gray-200">
                 Location
@@ -188,11 +240,35 @@ const CreateTripModal = ({ isOpen, onClose, onTripCreated }) => {
                 <input
                   type="text"
                   value={location}
-                  onChange={(e) => setLocation(e.target.value)}
+                  onChange={(e) => {
+                    setLocation(e.target.value);
+                    handleLocationSearch(e.target.value);
+                  }}
                   className="w-full pl-10 pr-3 py-2.5 bg-white/70 dark:bg-gray-700/70 border border-white/30 dark:border-gray-600/30 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                   placeholder="Paris, France"
                   disabled={loading}
                 />
+
+                {/* Dropdown suggestions */}
+                {showSuggestions && locationSuggestions.length > 0 && (
+                  <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                    {locationSuggestions
+                      .slice(0, 4)
+                      .map((suggestion, index) => (
+                        <button
+                          key={index}
+                          type="button"
+                          onClick={() => {
+                            setLocation(suggestion);
+                            setShowSuggestions(false);
+                          }}
+                          className="w-full text-left px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-900 dark:text-white text-sm"
+                        >
+                          {suggestion}
+                        </button>
+                      ))}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -269,6 +345,47 @@ const CreateTripModal = ({ isOpen, onClose, onTripCreated }) => {
           </div>
         </div>
       </div>
+
+      {/* Success Modal */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[60]">
+          <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20 dark:border-gray-700/50 p-8 max-w-md w-full text-center animate-slide-in-scale">
+            {/* Success Icon */}
+            <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+              <CheckCircleIcon className="w-8 h-8 text-green-600 dark:text-green-400" />
+            </div>
+
+            <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-2">
+              Trip Created Successfully!
+            </h3>
+            <p className="text-gray-600 dark:text-gray-300 mb-4">
+              "{createdTripName}" is ready for your memories
+            </p>
+
+            <div className="bg-blue-50 dark:bg-blue-900/30 rounded-xl p-4 mb-6 text-left">
+              <h4 className="font-semibold text-blue-800 dark:text-blue-300 mb-2 text-sm">
+                What you can do now:
+              </h4>
+              <ul className="text-blue-700 dark:text-blue-400 text-sm space-y-1">
+                <li>• Upload photos and create shared memories</li>
+                <li>• Use face recognition to find your photos instantly</li>
+                <li>• Invite friends to join and contribute photos</li>
+                <li>• No more searching through endless folders!</li>
+              </ul>
+            </div>
+
+            <button
+              onClick={() => {
+                setShowSuccessModal(false);
+                onClose();
+              }}
+              className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white py-3 px-4 rounded-xl font-medium transition-all"
+            >
+              Start Adding Photos
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

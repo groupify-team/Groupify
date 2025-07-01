@@ -19,7 +19,7 @@ import {
   hasNotifications,
 } from "@dashboard/utils/dashboardHelpers";
 
-const DashboardSidebar = () => {
+const DashboardSidebar = ({ sidebarOpen, onSidebarClose, onLogoutClick }) => {
   const {
     layout: { activeSection, currentView, selectedTripId, isMobile },
     dropdowns: { tripsDropdownOpen, visibleTripsCount },
@@ -30,10 +30,12 @@ const DashboardSidebar = () => {
   } = useDashboardLayout();
 
   const { userData, trips, pendingRequests, tripInvites } = useDashboardData();
-
-  const {
-    logout: { open: openLogoutModal },
-  } = useDashboardModals();
+  console.log("🔍 Sidebar PROP sidebarOpen state:", sidebarOpen);
+  console.log("🔍 Sidebar sidebarOpen state:", sidebarOpen);
+  console.log(
+    "🎨 CSS classes being applied:",
+    sidebarOpen ? "translate-x-0" : "-translate-x-full"
+  );
 
   const {
     navigate: { toTrip: navigateToTrip },
@@ -42,7 +44,12 @@ const DashboardSidebar = () => {
   const currentUser = userData; // Assuming userData contains current user info
 
   return (
-    <div className="fixed inset-y-0 left-0 z-50 w-64 bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg shadow-xl border-r border-white/20 dark:border-gray-700/50 transform transition-transform duration-300 ease-in-out translate-x-0">
+    <div
+      data-sidebar="true"
+      className={`fixed inset-y-0 left-0 z-50 w-64 bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg shadow-xl border-r border-white/20 dark:border-gray-700/50 transform transition-transform duration-300 ease-in-out ${
+        sidebarOpen ? "" : "-translate-x-full"
+      }`}
+    >
       {/* Logo Section */}
       <div className="p-6 border-b border-gray-200/50 dark:border-gray-700/50">
         <div className="flex items-center justify-between">
@@ -258,7 +265,12 @@ const DashboardSidebar = () => {
       {/* Logout Section */}
       <div className="p-4 border-t border-gray-200/50 dark:border-gray-700/50">
         <button
-          onClick={openLogoutModal}
+          onClick={() => {
+            console.log("🎯 Desktop logout clicked!");
+            if (onLogoutClick) {
+              onLogoutClick();
+            }
+          }}
           className="w-full flex items-center gap-3 px-4 py-3 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl font-medium transition-colors"
         >
           <ArrowRightOnRectangleIcon className="w-5 h-5" />
