@@ -1,20 +1,99 @@
-﻿// DashboardLayout.jsx - Main dashboard layout wrapper
+﻿// DashboardLayout.jsx - Main dashboard layout wrapper with modals
 import React from "react";
+import { useAuth } from "@auth/contexts/AuthContext";
 import { useDashboardLayout } from "@dashboard/hooks/useDashboardLayout";
 import { useDashboardData } from "@dashboard/hooks/useDashboardData";
+import { useDashboardModals } from "@dashboard/contexts/DashboardModalsContext";
 import DashboardSidebar from "@dashboard/components/layout/DashboardSidebar";
 import DashboardHeader from "@dashboard/components/layout/DashboardHeader";
 import MobileBottomNav from "@dashboard/components/layout/MobileBottomNav";
 
+// Import modal components
+import AddFriendModal from "@dashboard/features/friends/components/AddFriendModal";
+import UserProfileModal from "@dashboard/features/friends/components/UserProfileModal";
+
 const DashboardLayout = ({ children }) => {
+  const { currentUser } = useAuth();
+  
   const {
     layout,
     utils: { getLayoutClasses, shouldShowMobileNav, shouldShowDesktopSidebar },
   } = useDashboardLayout();
 
-  const { loading } = useDashboardData();
+  const { 
+    loading,
+    friends,
+    pendingRequests,
+    showSuccessMessage,
+    showErrorMessage,
+    refreshFriends,
+    removeFriend,
+    removePendingRequest,
+  } = useDashboardData();
+
+  const {
+    modals: {
+      showAddFriendModal,
+      isUserProfileOpen,
+    },
+    addFriend: { close: closeAddFriendModal },
+    userProfileActions: { open: openUserProfile, close: closeUserProfile },
+    userProfile: { 
+      selectedUserProfile,
+      preservedSearchInput,
+      preservedFoundUser,
+    },
+  } = useDashboardModals();
 
   const layoutClasses = getLayoutClasses();
+
+  // Handler functions for friend operations
+  const handleAddFriendDirect = async (targetUid) => {
+    try {
+      const { sendFriendRequest } = await import("@shared/services/firebase/users");
+      await sendFriendRequest(currentUser.uid, targetUid);
+      showSuccessMessage("Friend request sent!");
+      closeAddFriendModal();
+    } catch (error) {
+      console.error("Error sending friend request:", error);
+      showErrorMessage("Failed to send friend request");
+    }
+  };
+
+  const handleUserSelect = (uid) => {
+    // Find user data and open profile modal
+    const userData = friends.find(f => f.uid === uid) || preservedFoundUser;
+    if (userData) {
+      openUserProfile(userData, true); // true = from AddFriend modal
+    }
+  };
+
+  const handleRemoveFriend = async (friendUid) => {
+    try {
+      const { removeFriend: removeFriendService } = await import("@shared/services/firebase/users");
+      await removeFriendService(currentUser.uid, friendUid);
+      removeFriend(friendUid);
+      await refreshFriends();
+      showSuccessMessage("Friend removed");
+      closeUserProfile();
+    } catch (error) {
+      console.error("Error removing friend:", error);
+      showErrorMessage("Failed to remove friend");
+    }
+  };
+
+  const handleCancelRequest = async (targetUid) => {
+    try {
+      const { cancelFriendRequest } = await import("@shared/services/firebase/users");
+      await cancelFriendRequest(currentUser.uid, targetUid);
+      removePendingRequest(targetUid);
+      showSuccessMessage("Friend request cancelled");
+      closeUserProfile();
+    } catch (error) {
+      console.error("Error cancelling friend request:", error);
+      showErrorMessage("Failed to cancel friend request");
+    }
+  };
 
   // Show loading screen while data is loading
   if (loading) {
@@ -88,6 +167,42 @@ const DashboardLayout = ({ children }) => {
         {/* Mobile Bottom Navigation */}
         {shouldShowMobileNav() && <MobileBottomNav />}
       </div>
+
+      {/* MODALS - Render all dashboard modals here */}
+      
+      {/* Add Friend Modal */}
+      {showAddFriendModal && (
+        <AddFriendModal
+          isOpen={showAddFriendModal}
+          onClose={closeAddFriendModal}
+          onUserSelect={handleUserSelect}
+          onAddFriendDirect={handleAddFriendDirect}
+          preservedInput={preservedSearchInput}
+          preservedUser={preservedFoundUser}
+        />
+      )}
+
+      {/* User Profile Modal */}
+      {isUserProfileOpen && selectedUserProfile && (
+        <UserProfileModal
+          isOpen={isUserProfileOpen}
+          onClose={closeUserProfile}
+          user={selectedUserProfile}
+          currentUserId={currentUser?.uid}
+          friends={friends.map(f => f.uid)}
+          pendingRequests={pendingRequests}
+          onAddFriend={handleAddFriendDirect}
+          onRemoveFriend={handleRemoveFriend}
+          onCancelRequest={handleCancelRequest}
+        />
+      )}
+
+      {/* Debug Modal State Indicator */}
+      {showAddFriendModal && (
+        <div className="fixed bottom-4 right-4 bg-green-500 text-white p-2 rounded text-sm z-50">
+          ✅ AddFriend Modal is rendering!
+        </div>
+      )}
     </div>
   );
 };

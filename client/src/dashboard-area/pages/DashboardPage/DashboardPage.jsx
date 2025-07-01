@@ -2,12 +2,16 @@
 import React from "react";
 import { Outlet } from "react-router-dom";
 import DashboardLayout from "../../components/layout/DashboardLayout";
+import { DashboardModalsProvider } from "@dashboard/contexts/DashboardModalsContext";
+
 
 const DashboardPage = () => {
   return (
-    <DashboardLayout>
-      <Outlet />
-    </DashboardLayout>
+    <DashboardModalsProvider>
+      <DashboardLayout>
+        <Outlet />
+      </DashboardLayout>
+    </DashboardModalsProvider>
   );
 };
 

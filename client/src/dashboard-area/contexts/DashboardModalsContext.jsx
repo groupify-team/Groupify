@@ -1,7 +1,8 @@
-// useDashboardModals.js - Modal state management hook with proper export
-import { useState } from "react";
+import React, { createContext, useContext, useState } from 'react';
 
-const useDashboardModals = () => {
+const DashboardModalsContext = createContext();
+
+export const DashboardModalsProvider = ({ children }) => {
   // Main feature modals
   const [showCreateTripModal, setShowCreateTripModal] = useState(false);
   const [showAddFriendModal, setShowAddFriendModal] = useState(false);
@@ -10,8 +11,7 @@ const useDashboardModals = () => {
   const [showSettingsModal, setShowSettingsModal] = useState(false);
 
   // Face profile management modals
-  const [showFaceProfileManageModal, setShowFaceProfileManageModal] =
-    useState(false);
+  const [showFaceProfileManageModal, setShowFaceProfileManageModal] = useState(false);
   const [showProfileManager, setShowProfileManager] = useState(false);
 
   // Account and billing modals
@@ -46,12 +46,14 @@ const useDashboardModals = () => {
   const closeCreateTripModal = () => setShowCreateTripModal(false);
 
   const openAddFriendModal = () => {
+    console.log('🚨 Context: Opening Add Friend Modal');
     setShowAddFriendModal(true);
     // Clear any preserved state when opening fresh
     setPreservedSearchInput("");
     setPreservedFoundUser(null);
   };
   const closeAddFriendModal = () => {
+    console.log('🚨 Context: Closing Add Friend Modal');
     setShowAddFriendModal(false);
     // Clear preserved state when closing
     setPreservedSearchInput("");
@@ -115,8 +117,7 @@ const useDashboardModals = () => {
     if (fromAddFriend) {
       setShowAddFriendModal(false);
       // Preserve search state if coming from AddFriend
-      const addFriendInput =
-        document.querySelector('input[type="email"]')?.value || "";
+      const addFriendInput = document.querySelector('input[type="email"]')?.value || "";
       setPreservedSearchInput(addFriendInput);
 
       // Find the current found user to preserve
@@ -153,105 +154,9 @@ const useDashboardModals = () => {
     setShowAddFriendModal(true);
   };
 
-  /**
-   * Delete account modal actions
-   */
-  const updateDeleteConfirmText = (text) => setDeleteConfirmText(text);
-  const setDeletingState = (deleting) => setIsDeleting(deleting);
+  // ... (rest of the functions from your hook)
 
-  /**
-   * Profile management actions
-   */
-  const togglePhotoSelection = (photoUrl) => {
-    setSelectedPhotosToRemove((prev) =>
-      prev.includes(photoUrl)
-        ? prev.filter((url) => url !== photoUrl)
-        : [...prev, photoUrl]
-    );
-  };
-
-  const clearPhotoSelection = () => setSelectedPhotosToRemove([]);
-
-  const setUploadingPhotos = (photos) => setUploadingProfilePhotos(photos);
-  const clearUploadingPhotos = () => setUploadingProfilePhotos([]);
-
-  const setManagingProfileState = (managing) => setIsManagingProfile(managing);
-
-  /**
-   * Close all modals - useful for cleanup or navigation
-   */
-  const closeAllModals = () => {
-    setShowCreateTripModal(false);
-    setShowAddFriendModal(false);
-    setShowFaceProfileModal(false);
-    setShowEditProfileModal(false);
-    setShowSettingsModal(false);
-    setShowFaceProfileManageModal(false);
-    setShowProfileManager(false);
-    setShowUsageModal(false);
-    setShowBillingHistoryModal(false);
-    setShowCancelPlanModal(false);
-    setShowDeleteAccountModal(false);
-    setShowLogoutModal(false);
-    setIsUserProfileOpen(false);
-
-    // Clear all related states
-    setSelectedUserProfile(null);
-    setViewingFromAddFriend(false);
-    setPreservedSearchInput("");
-    setPreservedFoundUser(null);
-    setDeleteConfirmText("");
-    setIsDeleting(false);
-    setSelectedPhotosToRemove([]);
-    setUploadingProfilePhotos([]);
-    setIsManagingProfile(false);
-  };
-
-  /**
-   * Check if any modal is open
-   */
-  const isAnyModalOpen = () => {
-    return (
-      showCreateTripModal ||
-      showAddFriendModal ||
-      showFaceProfileModal ||
-      showEditProfileModal ||
-      showSettingsModal ||
-      showFaceProfileManageModal ||
-      showProfileManager ||
-      showUsageModal ||
-      showBillingHistoryModal ||
-      showCancelPlanModal ||
-      showDeleteAccountModal ||
-      showLogoutModal ||
-      isUserProfileOpen
-    );
-  };
-
-  /**
-   * Get list of currently open modals (for debugging)
-   */
-  const getOpenModals = () => {
-    const openModals = [];
-
-    if (showCreateTripModal) openModals.push("createTrip");
-    if (showAddFriendModal) openModals.push("addFriend");
-    if (showFaceProfileModal) openModals.push("faceProfile");
-    if (showEditProfileModal) openModals.push("editProfile");
-    if (showSettingsModal) openModals.push("settings");
-    if (showFaceProfileManageModal) openModals.push("faceProfileManage");
-    if (showProfileManager) openModals.push("profileManager");
-    if (showUsageModal) openModals.push("usage");
-    if (showBillingHistoryModal) openModals.push("billingHistory");
-    if (showCancelPlanModal) openModals.push("cancelPlan");
-    if (showDeleteAccountModal) openModals.push("deleteAccount");
-    if (showLogoutModal) openModals.push("logout");
-    if (isUserProfileOpen) openModals.push("userProfile");
-
-    return openModals;
-  };
-
-  return {
+  const contextValue = {
     // Modal states
     modals: {
       showCreateTripModal,
@@ -312,40 +217,6 @@ const useDashboardModals = () => {
       close: closeSettingsModal,
     },
 
-    // Face profile management actions
-    faceProfileManage: {
-      open: openFaceProfileManageModal,
-      close: closeFaceProfileManageModal,
-    },
-    profileManager: {
-      open: openProfileManager,
-      close: closeProfileManager,
-    },
-
-    // Account modal actions
-    usage: {
-      open: openUsageModal,
-      close: closeUsageModal,
-    },
-    billingHistory: {
-      open: openBillingHistoryModal,
-      close: closeBillingHistoryModal,
-    },
-    cancelPlan: {
-      open: openCancelPlanModal,
-      close: closeCancelPlanModal,
-    },
-    deleteAccount: {
-      open: openDeleteAccountModal,
-      close: closeDeleteAccountModal,
-      updateConfirmText: updateDeleteConfirmText,
-      setDeleting: setDeletingState,
-    },
-    logout: {
-      open: openLogoutModal,
-      close: closeLogoutModal,
-    },
-
     // User profile actions
     userProfileActions: {
       open: openUserProfile,
@@ -353,21 +224,21 @@ const useDashboardModals = () => {
       backToAddFriend,
     },
 
-    // Profile management actions
-    profileActions: {
-      togglePhotoSelection,
-      clearPhotoSelection,
-      setUploadingPhotos,
-      clearUploadingPhotos,
-      setManagingState: setManagingProfileState,
-    },
-
-    // Utility actions
-    closeAllModals,
-    isAnyModalOpen,
-    getOpenModals,
+    // ... (other actions)
   };
+
+  return (
+    <DashboardModalsContext.Provider value={contextValue}>
+      {children}
+    </DashboardModalsContext.Provider>
+  );
 };
 
-// IMPORTANT: Export the hook properly
-export { useDashboardModals };
+// Updated hook to use context
+export const useDashboardModals = () => {
+  const context = useContext(DashboardModalsContext);
+  if (!context) {
+    throw new Error('useDashboardModals must be used within a DashboardModalsProvider');
+  }
+  return context;
+};

@@ -1,5 +1,4 @@
-﻿// useDashboardData.js - Main data management hook for dashboard
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect, useRef, useCallback } from "react";
 import { useAuth } from "@auth/contexts/AuthContext";
 import {
   collection,
@@ -29,33 +28,58 @@ import { ERROR_MESSAGES } from "@dashboard/utils/dashboardConstants";
 export const useDashboardData = () => {
   const { currentUser } = useAuth();
 
-  // Loading and error states
+  // ALL useRef hooks must be at the top, called unconditionally
+  const initialLoadDone = useRef(false);
+  const unsubscribersRef = useRef([]);
+  const loadingRef = useRef(false);
+
+  // ALL useState hooks must be called unconditionally
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  // Core data states
   const [userData, setUserData] = useState(null);
   const [trips, setTrips] = useState([]);
   const [friends, setFriends] = useState([]);
   const [pendingRequests, setPendingRequests] = useState([]);
   const [tripInvites, setTripInvites] = useState([]);
-
-  // Face profile states
   const [hasProfile, setHasProfile] = useState(false);
   const [profilePhotos, setProfilePhotos] = useState([]);
   const [isLoadingProfile, setIsLoadingProfile] = useState(false);
-
-  // Success/error message states
   const [showSuccess, setShowSuccess] = useState(null);
   const [showError, setShowError] = useState(null);
 
   /**
-   * Load all dashboard data
+   * Load face profile data
    */
-  const loadDashboardData = async () => {
+  const loadFaceProfile = useCallback(() => {
     if (!currentUser?.uid) return;
 
     try {
+      if (hasFaceProfile(currentUser.uid)) {
+        setHasProfile(true);
+        setProfilePhotos(getProfilePhotos(currentUser.uid));
+        console.log("✅ Face profile loaded");
+      } else {
+        setHasProfile(false);
+        setProfilePhotos([]);
+        console.log("ℹ️ No face profile found");
+      }
+    } catch (error) {
+      console.error("❌ Error loading face profile:", error);
+      setHasProfile(false);
+      setProfilePhotos([]);
+    }
+  }, [currentUser?.uid]);
+
+  /**
+   * Load all dashboard data
+   */
+  const loadDashboardData = useCallback(async () => {
+    if (!currentUser?.uid || loadingRef.current) {
+      return;
+    }
+
+    try {
+      loadingRef.current = true;
       setLoading(true);
       console.log("🔄 Loading dashboard data for user:", currentUser.uid);
 
@@ -78,23 +102,17 @@ export const useDashboardData = () => {
       let userTrips = [];
 
       try {
-        // First try the regular getUserTrips function
         userTrips = await getUserTrips(currentUser.uid);
         console.log("📋 getUserTrips result:", userTrips);
 
-        // If no trips found, try alternative approach
         if (userTrips.length === 0) {
-          console.log(
-            "🔍 No trips from getUserTrips, trying direct queries..."
-          );
+          console.log("🔍 No trips from getUserTrips, trying direct queries...");
 
-          // Query trips where user is creator
           const createdTripsQuery = query(
             collection(db, "trips"),
             where("createdBy", "==", currentUser.uid)
           );
 
-          // Query trips where user is member
           const memberTripsQuery = query(
             collection(db, "trips"),
             where("members", "array-contains", currentUser.uid)
@@ -105,9 +123,6 @@ export const useDashboardData = () => {
             getDocs(memberTripsQuery),
           ]);
 
-          console.log("📋 Created trips found:", createdSnapshot.size);
-          console.log("📋 Member trips found:", memberSnapshot.size);
-
           const foundTripIds = new Set();
           const foundTrips = [];
 
@@ -115,7 +130,6 @@ export const useDashboardData = () => {
             const trip = { id: doc.id, ...doc.data() };
             foundTrips.push(trip);
             foundTripIds.add(doc.id);
-            console.log("📋 Found created trip:", doc.id, trip.name);
           });
 
           memberSnapshot.forEach((doc) => {
@@ -123,15 +137,12 @@ export const useDashboardData = () => {
               const trip = { id: doc.id, ...doc.data() };
               foundTrips.push(trip);
               foundTripIds.add(doc.id);
-              console.log("📋 Found member trip:", doc.id, trip.name);
             }
           });
 
           userTrips = foundTrips;
 
-          // Update user's trips array if we found trips
           if (foundTripIds.size > 0) {
-            console.log("🔄 Updating user trips array...");
             try {
               const { updateDoc } = await import("firebase/firestore");
               const userRef = doc(db, "users", currentUser.uid);
@@ -141,16 +152,13 @@ export const useDashboardData = () => {
               });
               console.log("✅ User trips array updated successfully!");
             } catch (updateError) {
-              console.warn(
-                "⚠️ Could not update user trips array:",
-                updateError
-              );
+              console.warn("⚠️ Could not update user trips array:", updateError);
             }
           }
         }
       } catch (tripsError) {
         console.error("❌ Error loading trips:", tripsError);
-        userTrips = []; // Fallback to empty array
+        userTrips = [];
       }
 
       console.log("📋 Final trips result:", userTrips);
@@ -164,42 +172,24 @@ export const useDashboardData = () => {
 
       // Load face profile
       loadFaceProfile();
+      
+      // Mark initial load as done
+      initialLoadDone.current = true;
+
     } catch (error) {
       console.error("❌ Error loading dashboard data:", error);
       setError(ERROR_MESSAGES.loadingDashboard);
       showErrorMessage(ERROR_MESSAGES.loadingDashboard);
     } finally {
       setLoading(false);
+      loadingRef.current = false;
     }
-  };
+  }, [currentUser?.uid, loadFaceProfile]);
 
   /**
-   * Load face profile data
+   * Refresh functions
    */
-  const loadFaceProfile = () => {
-    if (!currentUser?.uid) return;
-
-    try {
-      if (hasFaceProfile(currentUser.uid)) {
-        setHasProfile(true);
-        setProfilePhotos(getProfilePhotos(currentUser.uid));
-        console.log("✅ Face profile loaded");
-      } else {
-        setHasProfile(false);
-        setProfilePhotos([]);
-        console.log("ℹ️ No face profile found");
-      }
-    } catch (error) {
-      console.error("❌ Error loading face profile:", error);
-      setHasProfile(false);
-      setProfilePhotos([]);
-    }
-  };
-
-  /**
-   * Refresh trips data
-   */
-  const refreshTrips = async () => {
+  const refreshTrips = useCallback(async () => {
     if (!currentUser?.uid) return;
 
     try {
@@ -209,12 +199,9 @@ export const useDashboardData = () => {
     } catch (error) {
       console.error("❌ Error refreshing trips:", error);
     }
-  };
+  }, [currentUser?.uid]);
 
-  /**
-   * Refresh friends data
-   */
-  const refreshFriends = async () => {
+  const refreshFriends = useCallback(async () => {
     if (!currentUser?.uid) return;
 
     try {
@@ -224,12 +211,9 @@ export const useDashboardData = () => {
     } catch (error) {
       console.error("❌ Error refreshing friends:", error);
     }
-  };
+  }, [currentUser?.uid]);
 
-  /**
-   * Refresh pending requests
-   */
-  const refreshPendingRequests = async () => {
+  const refreshPendingRequests = useCallback(async () => {
     if (!currentUser?.uid) return;
 
     try {
@@ -239,202 +223,213 @@ export const useDashboardData = () => {
     } catch (error) {
       console.error("❌ Error refreshing pending requests:", error);
     }
-  };
+  }, [currentUser?.uid]);
 
   /**
-   * Show success message with auto-hide
+   * Message functions
    */
-  const showSuccessMessage = (message, duration = 3000) => {
+  const showSuccessMessage = useCallback((message, duration = 3000) => {
     setShowSuccess(message);
     setTimeout(() => setShowSuccess(null), duration);
-  };
+  }, []);
 
-  /**
-   * Show error message with auto-hide
-   */
-  const showErrorMessage = (message, duration = 4000) => {
+  const showErrorMessage = useCallback((message, duration = 4000) => {
     setShowError(message);
     setTimeout(() => setShowError(null), duration);
-  };
+  }, []);
 
   /**
-   * Update face profile status
+   * State updater functions
    */
-  const updateFaceProfile = (hasProfileData, photos = []) => {
+  const updateFaceProfile = useCallback((hasProfileData, photos = []) => {
     setHasProfile(hasProfileData);
     setProfilePhotos(photos);
-  };
+  }, []);
 
-  /**
-   * Add new trip to state
-   */
-  const addTrip = (newTrip) => {
+  const addTrip = useCallback((newTrip) => {
     setTrips((prev) => [newTrip, ...prev]);
-  };
+  }, []);
 
-  /**
-   * Remove trip from state
-   */
-  const removeTrip = (tripId) => {
+  const removeTrip = useCallback((tripId) => {
     setTrips((prev) => prev.filter((trip) => trip.id !== tripId));
-  };
+  }, []);
 
-  /**
-   * Update trip in state
-   */
-  const updateTrip = (tripId, updatedData) => {
+  const updateTrip = useCallback((tripId, updatedData) => {
     setTrips((prev) =>
       prev.map((trip) =>
         trip.id === tripId ? { ...trip, ...updatedData } : trip
       )
     );
-  };
+  }, []);
 
-  /**
-   * Add friend to state
-   */
-  const addFriend = (newFriend) => {
+  const addFriend = useCallback((newFriend) => {
     setFriends((prev) => [...prev, newFriend]);
-  };
+  }, []);
 
-  /**
-   * Remove friend from state
-   */
-  const removeFriend = (friendUid) => {
-    setFriends((prev) => prev.filter((friend) => friend.uid !== friendUid));
-  };
+  const removeFriend = useCallback((friendUid) => {
+    setFriends((prev) => {
+      const filtered = prev.filter((friend) => friend.uid !== friendUid);
+      console.log("🗑️ Removing friend from state:", friendUid);
+      console.log("🗑️ Before:", prev.length, "After:", filtered.length);
+      return filtered;
+    });
+  }, []);
 
-  /**
-   * Add pending request to state
-   */
-  const addPendingRequest = (request) => {
+  const addPendingRequest = useCallback((request) => {
     setPendingRequests((prev) => [...prev, request]);
-  };
+  }, []);
 
-  /**
-   * Remove pending request from state
-   */
-  const removePendingRequest = (requestId) => {
+  const removePendingRequest = useCallback((requestId) => {
     setPendingRequests((prev) =>
       prev.filter((req) => req.id !== requestId && req.from !== requestId)
     );
-  };
+  }, []);
 
-  /**
-   * Add trip invite to state
-   */
-  const addTripInvite = (invite) => {
+  const addTripInvite = useCallback((invite) => {
     setTripInvites((prev) => [...prev, invite]);
-  };
+  }, []);
 
-  /**
-   * Remove trip invite from state
-   */
-  const removeTripInvite = (inviteId) => {
+  const removeTripInvite = useCallback((inviteId) => {
     setTripInvites((prev) => prev.filter((invite) => invite.id !== inviteId));
-  };
+  }, []);
 
-  // Set up real-time listeners
+  const manualRefresh = useCallback(() => {
+    initialLoadDone.current = false;
+    loadingRef.current = false;
+    loadDashboardData();
+  }, [loadDashboardData]);
+
+  // Set up real-time listeners (only once)
   useEffect(() => {
     if (!currentUser?.uid) return;
 
-    let unsubscribeFriends = () => {};
-    let unsubscribePendingRequests = () => {};
+    let isMounted = true;
 
-    // --- Live Friends Listener ---
-    const userDocRef = doc(db, "users", currentUser.uid);
+    const setupListeners = async () => {
+      try {
+        // Clean up existing listeners
+        unsubscribersRef.current.forEach(unsubscribe => unsubscribe());
+        unsubscribersRef.current = [];
 
-    getDoc(userDocRef).then((snap) => {
-      if (!snap.exists()) {
-        console.warn("⚠️ userDoc does not exist yet:", currentUser.uid);
-        return;
-      }
-
-      unsubscribeFriends = onSnapshot(userDocRef, async (docSnap) => {
-        if (!docSnap.exists()) return;
-        console.log("🔁 Friends snapshot triggered");
-
-        const data = docSnap.data();
-        const friendIds = data.friends || [];
-        const friendsData = [];
-
-        for (const fid of friendIds) {
-          if (!fid || typeof fid !== "string" || fid.trim() === "") {
-            console.warn("⚠️ Skipping invalid friend ID:", fid);
-            continue;
-          }
-
-          try {
-            const friendRef = doc(db, "users", fid);
-            const friendSnap = await getDoc(friendRef);
-
-            if (friendSnap.exists()) {
-              const fData = friendSnap.data();
-              friendsData.push({
-                uid: fid,
-                displayName: fData.displayName || fData.email || fid,
-                email: fData.email || "",
-                photoURL: fData.photoURL || "",
-              });
-            }
-          } catch (err) {
-            console.error(`❌ Error fetching friend ${fid}:`, err);
-          }
+        const userDocRef = doc(db, "users", currentUser.uid);
+        const snap = await getDoc(userDocRef);
+        
+        if (!snap.exists() || !isMounted) {
+          console.warn("⚠️ userDoc does not exist yet:", currentUser.uid);
+          return;
         }
 
-        setFriends(friendsData);
-      });
-    });
+        // Friends listener
+        const unsubscribeFriends = onSnapshot(userDocRef, async (docSnap) => {
+          if (!docSnap.exists() || !isMounted) return;
+          console.log("🔁 Friends snapshot triggered");
 
-    // --- Live Pending Friend Requests Listener ---
-    const pendingRequestsQuery = query(
-      collection(db, "friendRequests"),
-      where("to", "==", currentUser.uid),
-      where("status", "==", "pending")
-    );
-
-    unsubscribePendingRequests = onSnapshot(
-      pendingRequestsQuery,
-      async (snapshot) => {
-        const requests = [];
-
-        for (const docSnap of snapshot.docs) {
           const data = docSnap.data();
+          const friendIds = [...new Set(data.friends || [])]; // Remove duplicates
+          
+          const friendsData = [];
 
-          if (data.from === currentUser.uid) continue;
+          for (const fid of friendIds) {
+            if (!fid || typeof fid !== "string" || fid.trim() === "") {
+              continue;
+            }
 
-          try {
-            const senderRef = doc(db, "users", data.from);
-            const senderSnap = await getDoc(senderRef);
+            try {
+              const friendRef = doc(db, "users", fid);
+              const friendSnap = await getDoc(friendRef);
 
-            requests.push({
-              id: docSnap.id,
-              from: data.from,
-              displayName: senderSnap.exists()
-                ? senderSnap.data().displayName
-                : "",
-              email: senderSnap.exists() ? senderSnap.data().email : "",
-              photoURL: senderSnap.exists() ? senderSnap.data().photoURL : null,
-              createdAt: data.createdAt,
-            });
-          } catch (err) {
-            console.warn("⚠️ Error fetching sender:", data.from, err);
+              if (friendSnap.exists()) {
+                const fData = friendSnap.data();
+                friendsData.push({
+                  uid: fid,
+                  displayName: fData.displayName || fData.email || fid,
+                  email: fData.email || "",
+                  photoURL: fData.photoURL || "",
+                });
+              }
+            } catch (err) {
+              console.error(`❌ Error fetching friend ${fid}:`, err);
+            }
           }
-        }
 
-        setPendingRequests(requests);
+          // Remove duplicates in final data
+          const uniqueFriendsData = friendsData.filter((friend, index, self) => 
+            index === self.findIndex((f) => f.uid === friend.uid)
+          );
+
+          if (isMounted) {
+            setFriends(uniqueFriendsData);
+          }
+        });
+
+        // Pending requests listener
+        const pendingRequestsQuery = query(
+          collection(db, "friendRequests"),
+          where("to", "==", currentUser.uid),
+          where("status", "==", "pending")
+        );
+
+        const unsubscribePendingRequests = onSnapshot(
+          pendingRequestsQuery,
+          async (snapshot) => {
+            if (!isMounted) return;
+            
+            const requests = [];
+
+            for (const docSnap of snapshot.docs) {
+              const data = docSnap.data();
+
+              if (data.from === currentUser.uid) continue;
+
+              try {
+                const senderRef = doc(db, "users", data.from);
+                const senderSnap = await getDoc(senderRef);
+
+                requests.push({
+                  id: docSnap.id,
+                  from: data.from,
+                  displayName: senderSnap.exists() ? senderSnap.data().displayName : "",
+                  email: senderSnap.exists() ? senderSnap.data().email : "",
+                  photoURL: senderSnap.exists() ? senderSnap.data().photoURL : null,
+                  createdAt: data.createdAt,
+                });
+              } catch (err) {
+                console.warn("⚠️ Error fetching sender:", data.from, err);
+              }
+            }
+
+            if (isMounted) {
+              setPendingRequests(requests);
+            }
+          }
+        );
+
+        // Store unsubscribers
+        unsubscribersRef.current = [unsubscribeFriends, unsubscribePendingRequests];
+
+      } catch (error) {
+        console.error("❌ Error setting up listeners:", error);
       }
-    );
-
-    // Initial data load
-    loadDashboardData();
-
-    // Cleanup listeners
-    return () => {
-      unsubscribeFriends();
-      unsubscribePendingRequests();
     };
-  }, [currentUser]);
+
+    // Initial load only if not done
+    if (!initialLoadDone.current) {
+      loadDashboardData().then(() => {
+        if (isMounted) {
+          setupListeners();
+        }
+      });
+    } else {
+      setupListeners();
+    }
+
+    // Cleanup
+    return () => {
+      isMounted = false;
+      unsubscribersRef.current.forEach(unsubscribe => unsubscribe());
+      unsubscribersRef.current = [];
+    };
+  }, [currentUser?.uid, loadDashboardData]);
 
   return {
     // Data states
@@ -478,6 +473,6 @@ export const useDashboardData = () => {
     showErrorMessage,
 
     // Manual refresh
-    loadDashboardData,
+    loadDashboardData: manualRefresh,
   };
 };

@@ -1,4 +1,5 @@
 ﻿import React from "react";
+import { XMarkIcon } from "@heroicons/react/24/outline";
 
 const UserProfileModal = ({ 
   isOpen, 
@@ -11,7 +12,18 @@ const UserProfileModal = ({
   friends = [],
   pendingRequests = []
 }) => {
-  if (!isOpen || !user) return null;
+  console.log("🔍 UserProfileModal Debug:", {
+    isOpen,
+    user,
+    currentUserId,
+    friends,
+    pendingRequests
+  });
+
+  if (!isOpen || !user) {
+    console.log("🔍 Modal not showing - isOpen:", isOpen, "user:", user);
+    return null;
+  }
 
   const isFriend = friends.includes(user.uid);
   const isPending = pendingRequests.some(req => 
@@ -19,62 +31,116 @@ const UserProfileModal = ({
     (req.from === user.uid && req.to === currentUserId)
   );
 
+  console.log("🔍 Modal relationship status:", { isFriend, isPending });
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-        <div className="flex justify-between items-start mb-4">
-          <h2 className="text-xl font-semibold">User Profile</h2>
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-slate-800 rounded-2xl shadow-2xl max-w-sm w-full mx-4 overflow-hidden border border-slate-700">
+        {/* Header with Close Button */}
+        <div className="relative p-4">
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
+            className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors p-1 rounded-lg hover:bg-slate-700"
           >
-            ✕
+            <XMarkIcon className="w-6 h-6" />
           </button>
-        </div>
-        
-        <div className="text-center mb-6">
-          <div className="w-16 h-16 bg-gray-300 rounded-full mx-auto mb-3 flex items-center justify-center">
-            <span className="text-xl font-medium">
-              {(user.displayName || user.email || "U")[0].toUpperCase()}
-            </span>
-          </div>
-          <h3 className="font-medium">{user.displayName || "Unknown User"}</h3>
-          <p className="text-gray-600 text-sm">{user.email}</p>
         </div>
 
-        <div className="flex gap-2">
-          {currentUserId !== user.uid && (
-            <>
-              {isFriend ? (
-                <button
-                  onClick={() => onRemoveFriend?.(user.uid)}
-                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
-                >
-                  Remove Friend
-                </button>
-              ) : isPending ? (
-                <button
-                  onClick={() => onCancelRequest?.(user.uid)}
-                  className="flex-1 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
-                >
-                  Cancel Request
-                </button>
-              ) : (
-                <button
-                  onClick={() => onAddFriend?.(user.uid)}
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                >
-                  Add Friend
-                </button>
-              )}
-            </>
-          )}
-          <button
-            onClick={onClose}
-            className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300"
-          >
-            Close
-          </button>
+        {/* Profile Section */}
+        <div className="px-6 pb-6">
+          {/* Profile Image */}
+          <div className="text-center mb-6">
+            <div className="relative inline-block">
+              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 p-1 mx-auto">
+                <img
+                  src={
+                    user.photoURL ||
+                    "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg"
+                  }
+                  alt="Profile"
+                  className="w-full h-full rounded-full object-cover bg-slate-700"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* User Info */}
+          <div className="text-center mb-6">
+            <h2 className="text-xl font-bold text-white mb-1">
+              {user.displayName || "Unknown User"}
+            </h2>
+            <p className="text-slate-400 text-sm break-all mb-3">
+              {user.email}
+            </p>
+            
+            {/* User Stats */}
+            <div className="flex justify-center gap-8 mb-4">
+              <div className="text-center">
+                <div className="w-8 h-8 bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-1">
+                  <span className="text-slate-400 text-xs">📍</span>
+                </div>
+                <div className="text-2xl font-bold text-white">0</div>
+                <div className="text-xs text-slate-400 uppercase tracking-wide">TRIPS</div>
+              </div>
+              <div className="text-center">
+                <div className="w-8 h-8 bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-1">
+                  <span className="text-slate-400 text-xs">👥</span>
+                </div>
+                <div className="text-2xl font-bold text-white">0</div>
+                <div className="text-xs text-slate-400 uppercase tracking-wide">FRIENDS</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Relationship Status Button */}
+          <div className="mb-4">
+            {isFriend ? (
+              <button className="w-full bg-green-600 text-white py-3 px-4 rounded-xl font-semibold text-sm flex items-center justify-center gap-2">
+                <span className="text-lg">⭐</span>
+                Friends
+              </button>
+            ) : isPending ? (
+              <button className="w-full bg-yellow-600 text-white py-3 px-4 rounded-xl font-semibold text-sm flex items-center justify-center gap-2">
+                <span className="text-lg">⏳</span>
+                Request Pending
+              </button>
+            ) : currentUserId !== user.uid ? (
+              <button className="w-full bg-green-600 text-white py-3 px-4 rounded-xl font-semibold text-sm flex items-center justify-center gap-2">
+                <span className="text-lg">⭐</span>
+                Add Friend
+              </button>
+            ) : null}
+          </div>
+
+          {/* Action Buttons */}
+          <div className="space-y-3">
+            {currentUserId !== user.uid && (
+              <>
+                {isFriend ? (
+                  <button
+                    onClick={() => onRemoveFriend?.(user.uid)}
+                    className="w-full px-4 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-semibold transition-colors duration-200"
+                  >
+                    Remove Friend
+                  </button>
+                ) : isPending ? (
+                  <button
+                    onClick={() => onCancelRequest?.(user.uid)}
+                    className="w-full px-4 py-3 bg-slate-600 hover:bg-slate-700 text-white rounded-xl font-semibold transition-colors duration-200"
+                  >
+                    Cancel Request
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => onAddFriend?.(user.uid)}
+                    className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold transition-colors duration-200"
+                  >
+                    Send Friend Request
+                  </button>
+                )}
+              </>
+            )}
+          </div>
         </div>
       </div>
     </div>
