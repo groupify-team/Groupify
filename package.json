@@ -7,7 +7,10 @@
     "shell": "firebase functions:shell",
     "start": "npm run shell",
     "deploy": "firebase deploy --only functions",
-    "logs": "firebase functions:log"
+    "logs": "firebase functions:log",
+    "dev": "concurrently \"npm run start-client\" \"npm run weather-proxy\"",
+    "start-client": "cd client && npm run dev",
+    "weather-proxy": "node openweather-proxy.js"
   },
   "engines": {
     "node": "18"
@@ -23,6 +26,7 @@
     "react-aria": "^3.41.1"
   },
   "devDependencies": {
+    "concurrently": "^9.2.0",
     "eslint": "^8.15.0",
     "eslint-config-google": "^0.14.0",
     "firebase-functions-test": "^3.1.0"

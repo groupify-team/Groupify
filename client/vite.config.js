@@ -17,7 +17,7 @@ export default defineConfig({
 
       // Updated aliases for new folder structure
       "@auth": path.resolve(__dirname, "./src/auth-area"),
-      "@dashboard": path.resolve(__dirname, "./src/dashboard-area"), // Fixed this line
+      "@dashboard": path.resolve(__dirname, "./src/dashboard-area"),
       "@public": path.resolve(__dirname, "./src/public-area"),
 
       // Keep feature-specific aliases for dashboard features
@@ -42,6 +42,17 @@ export default defineConfig({
         __dirname,
         "./src/dashboard-area/features/notifications"
       ),
+    },
+  },
+
+  server: {
+    proxy: {
+      "/api/openweather": {
+        target: "https://api.openweathermap.org",
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/api\/openweather/, ""),
+      },
     },
   },
 });

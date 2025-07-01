@@ -7,6 +7,7 @@ import MobileBottomNav from "@dashboard/components/layout/MobileBottomNav";
 import SettingsModal from "@dashboard/features/settings/components/SettingsModal";
 import { useTheme } from "@/shared/contexts/ThemeContext";
 import { useAuth } from "@/auth-area/contexts/AuthContext";
+import { useClickOutside } from "@/shared/hooks/useClickOutside";
 import { useNavigate } from "react-router-dom";
 
 const DashboardLayout = ({ children }) => {
@@ -20,13 +21,20 @@ const DashboardLayout = ({ children }) => {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const logoutModalRef = useClickOutside(() => setShowLogoutModal(false));
 
-  console.log(
-    "🔧 DashboardLayout - Sidebar:",
-    sidebarOpen,
-    "Mobile:",
-    isMobile
-  );
+  // Escape key support
+  useEffect(() => {
+    const handleEscape = (e) => {
+      if (e.key === "Escape") {
+        if (showLogoutModal) setShowLogoutModal(false);
+        if (showSettingsModal) setShowSettingsModal(false);
+      }
+    };
+
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
+  }, [showLogoutModal, showSettingsModal]);
 
   // Handle window resize
   useEffect(() => {
@@ -162,20 +170,6 @@ const DashboardLayout = ({ children }) => {
           isMobile={isMobile}
         />
 
-        {/* TEMPORARY TEST BUTTON - Add this right here */}
-        <div className="p-4">
-          <button
-            onClick={() => {
-              console.log("🎯 TEST: Setting showLogoutModal to true");
-              setShowLogoutModal(true);
-            }}
-            className="bg-red-600 text-white px-4 py-2 rounded"
-          >
-            TEST - Show Logout Modal
-          </button>
-          <p>Modal state: {showLogoutModal ? "TRUE" : "FALSE"}</p>
-        </div>
-
         {/* Main Content */}
         <main className="flex-1 overflow-y-auto">
           <div className="w-full px-2 sm:px-4 lg:px-8 max-w-full py-2 sm:py-4">
@@ -199,8 +193,15 @@ const DashboardLayout = ({ children }) => {
 
       {/* Logout Modal */}
       {showLogoutModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-gray-200 dark:border-gray-700">
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in"
+          onClick={closeLogoutModal}
+        >
+          <div
+            ref={logoutModalRef}
+            className="bg-white dark:bg-gray-800 rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-gray-200 dark:border-gray-700 animate-slide-in-scale"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="text-center">
               <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
                 Confirm Logout
@@ -211,13 +212,13 @@ const DashboardLayout = ({ children }) => {
               <div className="flex gap-3">
                 <button
                   onClick={closeLogoutModal}
-                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                  className="smooth-hover flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleLogoutConfirm}
-                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                  className="smooth-hover flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all duration-200"
                 >
                   Logout
                 </button>

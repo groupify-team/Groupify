@@ -13,7 +13,7 @@ const TripCard = ({ trip, onViewTrip }) => {
   const tripStatus = getTripStatus(trip);
 
   return (
-    <div className="group relative">
+    <div className="group relative" data-trip-id={trip.id}>
       {/* Glass morphism card */}
       <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-xl sm:rounded-2xl shadow-lg border border-white/20 dark:border-gray-700/50 overflow-hidden transition-all duration-300 hover:shadow-xl sm:hover:scale-[1.02] hover:bg-white/70 dark:hover:bg-gray-800/70 h-full flex flex-col">
         {/* Cover Image Section */}
@@ -123,9 +123,9 @@ const TripCard = ({ trip, onViewTrip }) => {
             {/* View Trip Button */}
             <button
               onClick={() => onViewTrip && onViewTrip(trip.id)}
-              className="group/btn inline-flex items-center gap-1 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-1.5 sm:px-3 py-0.5 sm:py-1.5 rounded-md sm:rounded-xl text-xs font-medium transition-all duration-300 transform sm:hover:scale-105 shadow-md hover:shadow-lg flex-shrink-0"
+              className="group/btn inline-flex items-center gap-1 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-1.5 sm:px-3 py-0.5 sm:py-1.5 rounded-md sm:rounded-xl text-xs font-medium transition-all duration-300 transform sm:hover:scale-105 shadow-md hover:shadow-lg flex-shrink-0 active:scale-95"
             >
-              <EyeIcon className="w-3 h-3 sm:w-4 sm:h-4" />
+              <EyeIcon className="w-3 h-3 sm:w-4 sm:h-4 transition-transform group-hover/btn:scale-110" />
               <span className="hidden sm:inline">View Trip</span>
               <span className="sm:hidden">View</span>
               <ChevronRightIcon className="w-2.5 h-2.5 sm:w-3 sm:h-3 transition-transform group-hover/btn:translate-x-0.5" />
