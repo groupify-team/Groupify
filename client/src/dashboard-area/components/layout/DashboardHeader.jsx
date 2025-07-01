@@ -1,5 +1,5 @@
-﻿// DashboardHeader.jsx - Dashboard header with navigation and notifications
-import React from "react";
+﻿// DashboardHeader.jsx - Complete simple solution following PublicHeader pattern
+import React, { useState, useRef, useEffect } from "react";
 import {
   ArrowRightOnRectangleIcon,
   Bars3Icon,
@@ -9,44 +9,50 @@ import {
   UserIcon,
 } from "@heroicons/react/24/outline";
 
-import { useDashboardLayout } from "@dashboard/hooks/useDashboardLayout";
 import { useDashboardData } from "@dashboard/hooks/useDashboardData";
-import { useDashboardModals } from "@dashboard/hooks/useDashboardModals";
-import { useDashboardNavigation } from "@dashboard/hooks/useDashboardNavigation";
 
-import NotificationsDropdown from "@dashboard/components/widgets/NotificationsDropdown";
-import { getTotalNotificationCount } from "@dashboard/utils/dashboardHelpers";
-
-const DashboardHeader = () => {
-  const {
-    layout: { currentView, isMobile, sidebarOpen },
-    dropdowns: { notificationsDropdownOpen, showMobileUserMenu },
-    refs: { notificationRef, mobileUserMenuRef },
-    sidebar: { toggle: toggleSidebar },
-    dropdownActions: { toggleNotificationsDropdown },
-    mobile: { toggleUserMenu, closeUserMenu },
-    navigation: { navigateToSection },
-  } = useDashboardLayout();
-
+const DashboardHeader = ({
+  onSettingsClick,
+  onLogoutClick,
+  onSidebarToggle,
+  sidebarOpen,
+  isMobile,
+}) => {
   const { userData, pendingRequests, tripInvites } = useDashboardData();
 
-  const {
-    settings: { open: openSettingsModal },
-    logout: { open: openLogoutModal },
-  } = useDashboardModals();
+  // Simple states for dropdowns
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [mobileUserMenuOpen, setMobileUserMenuOpen] = useState(false);
 
-  const { breadcrumbs } = useDashboardNavigation();
+  // Refs for outside click detection
+  const notificationRef = useRef(null);
+  const mobileUserMenuRef = useRef(null);
 
-  const totalNotifications = getTotalNotificationCount(
-    pendingRequests,
-    tripInvites
-  );
+  const totalNotifications =
+    (pendingRequests?.length || 0) + (tripInvites?.length || 0);
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        notificationRef.current &&
+        !notificationRef.current.contains(event.target)
+      ) {
+        setNotificationsOpen(false);
+      }
+      if (
+        mobileUserMenuRef.current &&
+        !mobileUserMenuRef.current.contains(event.target)
+      ) {
+        setMobileUserMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const getWelcomeMessage = () => {
-    if (currentView === "trip") {
-      return "Trip Details";
-    }
-
     const displayName = userData?.displayName || "User";
     return `Welcome back, ${displayName}!`;
   };
@@ -57,35 +63,16 @@ const DashboardHeader = () => {
         <div className="flex justify-between items-center h-12 sm:h-14 w-full">
           {/* Left Section */}
           <div className="flex items-center gap-4">
-            {/* Sidebar Toggle - Desktop Only */}
-            {!isMobile && (
+            {/* Sidebar Toggle - Desktop Only - Same pattern as PublicHeader */}
+            {!isMobile && onSidebarToggle && (
               <button
                 onClick={() => {
-                  console.log("🔁 Desktop toggle clicked");
-                  toggleSidebar();
-
-                  // DIRECT DOM MANIPULATION AS BACKUP
-                  setTimeout(() => {
-                    const sidebar = document.querySelector(
-                      '[data-sidebar="true"]'
-                    );
-                    if (sidebar) {
-                      const isCurrentlyOpen =
-                        !sidebar.classList.contains("-translate-x-full");
-                      if (isCurrentlyOpen) {
-                        sidebar.classList.add("-translate-x-full");
-                      } else {
-                        sidebar.classList.remove("-translate-x-full");
-                      }
-                      console.log(
-                        "🔧 DIRECT DOM TOGGLE - Classes:",
-                        sidebar.className
-                      );
-                    }
-                  }, 50);
+                  console.log("🎯 Sidebar button clicked!");
+                  onSidebarToggle();
                 }}
                 className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                 title={sidebarOpen ? "Close sidebar" : "Open sidebar"}
+                aria-label="Toggle sidebar"
               >
                 <Bars3Icon className="w-5 h-5 text-gray-600 dark:text-gray-400" />
               </button>
@@ -96,80 +83,57 @@ const DashboardHeader = () => {
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
                 {getWelcomeMessage()}
               </h2>
-
-              {/* Breadcrumbs for trip view */}
-              {breadcrumbs.items.length > 0 && (
-                <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mt-1">
-                  {breadcrumbs.items.map((crumb, index) => (
-                    <React.Fragment key={index}>
-                      {crumb.action ? (
-                        <button
-                          onClick={crumb.action}
-                          className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
-                        >
-                          {crumb.label}
-                        </button>
-                      ) : (
-                        <span className="text-gray-700 dark:text-gray-300 font-medium">
-                          {crumb.label}
-                        </span>
-                      )}
-                      {index < breadcrumbs.items.length - 1 && (
-                        <span className="text-gray-400">›</span>
-                      )}
-                    </React.Fragment>
-                  ))}
-                </div>
-              )}
             </div>
 
             {/* Mobile Logo - Shows when welcome message is hidden */}
-            <button
-              onClick={() => {
-                navigateToSection("trips");
-              }}
-              className="sm:hidden flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg p-2 transition-colors"
-            >
+            <div className="sm:hidden flex items-center gap-2">
               <div className="w-8 h-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
                 <CameraIcon className="w-5 h-5 text-white" />
               </div>
               <span className="text-lg font-bold text-gray-900 dark:text-white">
                 Groupify
               </span>
-            </button>
+            </div>
           </div>
 
           {/* Center - Logo for medium screens when sidebar is closed */}
           {(!sidebarOpen ||
             (window.innerWidth >= 640 && window.innerWidth < 1024)) && (
-            <button
-              onClick={() => navigateToSection("trips")}
-              className="hidden sm:flex lg:hidden items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg p-2 transition-colors"
-            >
+            <div className="hidden sm:flex lg:hidden items-center gap-2">
               <div className="w-8 h-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
                 <CameraIcon className="w-5 h-5 text-white" />
               </div>
               <span className="text-lg font-bold text-gray-900 dark:text-white">
                 Groupify
               </span>
-            </button>
+            </div>
           )}
 
           {/* Right Section */}
           <div className="flex items-center gap-4">
-            {/* Settings Button */}
-            <button
-              onClick={openSettingsModal}
-              className="p-2 rounded-lg text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-            >
-              <CogIcon className="w-5 h-5" />
-            </button>
+            {/* Settings Button - Same pattern as PublicHeader */}
+            {onSettingsClick && (
+              <button
+                onClick={() => {
+                  console.log("🎯 Settings button clicked!");
+                  onSettingsClick();
+                }}
+                className="p-2 rounded-lg text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                aria-label="Open accessibility and settings"
+              >
+                <CogIcon className="w-5 h-5" />
+              </button>
+            )}
 
             {/* Notifications */}
             <div className="relative" ref={notificationRef}>
               <button
-                onClick={toggleNotificationsDropdown}
+                onClick={() => {
+                  console.log("🎯 Notifications button clicked!");
+                  setNotificationsOpen((prev) => !prev);
+                }}
                 className="relative p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                aria-label="Open notifications"
               >
                 <BellIcon className="w-6 h-6 text-gray-600 dark:text-gray-400" />
                 {totalNotifications > 0 && (
@@ -180,11 +144,71 @@ const DashboardHeader = () => {
               </button>
 
               {/* Notifications Dropdown */}
-              {notificationsDropdownOpen && (
-                <NotificationsDropdown
-                  pendingRequests={pendingRequests}
-                  tripInvites={tripInvites}
-                />
+              {notificationsOpen && (
+                <div className="absolute right-0 top-10 w-80 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 z-50 max-h-96 overflow-y-auto">
+                  <div className="p-4">
+                    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+                      Notifications
+                    </h3>
+                    {totalNotifications === 0 ? (
+                      <p className="text-gray-500 dark:text-gray-400 text-center py-4">
+                        No new notifications
+                      </p>
+                    ) : (
+                      <div className="space-y-2">
+                        {/* Friend Requests */}
+                        {pendingRequests?.map((request, index) => (
+                          <div
+                            key={index}
+                            className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
+                          >
+                            <div className="flex items-center gap-3">
+                              <img
+                                src={
+                                  request.photoURL ||
+                                  "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg"
+                                }
+                                alt="Profile"
+                                className="w-8 h-8 rounded-full"
+                              />
+                              <div className="flex-1">
+                                <p className="text-sm font-medium text-gray-900 dark:text-white">
+                                  Friend request from{" "}
+                                  {request.displayName || request.email}
+                                </p>
+                                <p className="text-xs text-gray-500 dark:text-gray-400">
+                                  Click to view in Friends section
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+
+                        {/* Trip Invitations */}
+                        {tripInvites?.map((invite, index) => (
+                          <div
+                            key={index}
+                            className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
+                                <CameraIcon className="w-4 h-4 text-white" />
+                              </div>
+                              <div className="flex-1">
+                                <p className="text-sm font-medium text-gray-900 dark:text-white">
+                                  Trip invitation: {invite.tripName}
+                                </p>
+                                <p className="text-xs text-gray-500 dark:text-gray-400">
+                                  From {invite.inviterName}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
               )}
             </div>
 
@@ -198,7 +222,8 @@ const DashboardHeader = () => {
                 alt="Profile"
                 onClick={() => {
                   if (isMobile) {
-                    toggleUserMenu();
+                    console.log("🎯 Mobile user menu clicked!");
+                    setMobileUserMenuOpen((prev) => !prev);
                   }
                 }}
                 className={`w-8 h-8 rounded-full object-cover border border-gray-200 dark:border-gray-600 transition-all duration-200 ${
@@ -209,7 +234,7 @@ const DashboardHeader = () => {
               />
 
               {/* Mobile User Menu */}
-              {showMobileUserMenu && isMobile && (
+              {mobileUserMenuOpen && isMobile && (
                 <div className="absolute right-0 top-10 w-64 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 z-50 overflow-hidden">
                   {/* Header */}
                   <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-4 py-3">
@@ -237,7 +262,8 @@ const DashboardHeader = () => {
                   <div className="p-2">
                     <button
                       onClick={() => {
-                        closeUserMenu();
+                        console.log("🎯 View Profile clicked!");
+                        setMobileUserMenuOpen(false);
                         // Add profile view logic here if needed
                       }}
                       className="w-full flex items-center gap-3 px-3 py-2 text-left text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors text-sm"
@@ -246,18 +272,37 @@ const DashboardHeader = () => {
                       <span>View Profile</span>
                     </button>
 
+                    {/* Settings in mobile menu */}
+                    {onSettingsClick && (
+                      <button
+                        onClick={() => {
+                          console.log("🎯 Settings from mobile menu clicked!");
+                          setMobileUserMenuOpen(false);
+                          onSettingsClick();
+                        }}
+                        className="w-full flex items-center gap-3 px-3 py-2 text-left text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors text-sm"
+                      >
+                        <CogIcon className="w-4 h-4" />
+                        <span>Settings</span>
+                      </button>
+                    )}
+
                     <div className="border-t border-gray-200 dark:border-gray-700 my-2"></div>
 
-                    <button
-                      onClick={() => {
-                        closeUserMenu();
-                        openLogoutModal();
-                      }}
-                      className="w-full flex items-center gap-3 px-3 py-2 text-left text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors text-sm"
-                    >
-                      <ArrowRightOnRectangleIcon className="w-4 h-4" />
-                      <span>Logout</span>
-                    </button>
+                    {/* Logout Button */}
+                    {onLogoutClick && (
+                      <button
+                        onClick={() => {
+                          console.log("🎯 Logout clicked!");
+                          setMobileUserMenuOpen(false);
+                          onLogoutClick();
+                        }}
+                        className="w-full flex items-center gap-3 px-3 py-2 text-left text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors text-sm"
+                      >
+                        <ArrowRightOnRectangleIcon className="w-4 h-4" />
+                        <span>Logout</span>
+                      </button>
+                    )}
                   </div>
                 </div>
               )}

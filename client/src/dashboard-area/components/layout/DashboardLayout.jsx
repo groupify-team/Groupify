@@ -1,24 +1,89 @@
-﻿// DashboardLayout.jsx - Main dashboard layout wrapper
-import React from "react";
-import { useDashboardLayout } from "@dashboard/hooks/useDashboardLayout";
+﻿// DashboardLayout.jsx - Complete simple solution following PublicHeader pattern
+import React, { useState, useEffect } from "react";
 import { useDashboardData } from "@dashboard/hooks/useDashboardData";
-import { useDashboardModals } from "@dashboard/hooks/useDashboardModals";
 import DashboardSidebar from "@dashboard/components/layout/DashboardSidebar";
 import DashboardHeader from "@dashboard/components/layout/DashboardHeader";
 import MobileBottomNav from "@dashboard/components/layout/MobileBottomNav";
 import SettingsModal from "@dashboard/features/settings/components/SettingsModal";
+import { useTheme } from "@/shared/contexts/ThemeContext";
+import { useAuth } from "@/auth-area/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const DashboardLayout = ({ children }) => {
-  const {
-    layout,
-    utils: { getLayoutClasses, shouldShowMobileNav, shouldShowDesktopSidebar },
-  } = useDashboardLayout();
-  const { sidebarOpen } = layout;
   const { loading } = useDashboardData();
-  const layoutClasses = getLayoutClasses();
-  const { modals } = useDashboardModals();
+  const { theme, toggleTheme } = useTheme();
+  const { logout } = useAuth();
+  const navigate = useNavigate();
 
-  console.log("🔧 DashboardLayout REAL TIME CHECK:", sidebarOpen);
+  // Simple states - just like PublicHeader pattern
+  const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth >= 1024);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+  console.log(
+    "🔧 DashboardLayout - Sidebar:",
+    sidebarOpen,
+    "Mobile:",
+    isMobile
+  );
+
+  // Handle window resize
+  useEffect(() => {
+    const handleResize = () => {
+      const width = window.innerWidth;
+      setIsMobile(width < 768);
+
+      // Auto-open sidebar on desktop, auto-close on mobile
+      if (width >= 1024) {
+        setSidebarOpen(true);
+      } else {
+        setSidebarOpen(false);
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // Simple callback functions - like PublicHeader pattern
+  const handleSettingsClick = () => {
+    console.log("🎯 Settings clicked!");
+    setShowSettingsModal(true);
+  };
+
+  const handleLogoutClick = () => {
+    console.log("🎯 Logout clicked!");
+    setShowLogoutModal(true);
+  };
+
+  const handleSidebarToggle = () => {
+    console.log("🎯 Sidebar toggle clicked!");
+    setSidebarOpen((prev) => !prev);
+  };
+
+  const closeSettingsModal = () => {
+    console.log("🎯 Closing settings modal");
+    setShowSettingsModal(false);
+  };
+
+  const closeLogoutModal = () => {
+    console.log("🎯 Closing logout modal");
+    setShowLogoutModal(false);
+  };
+
+  const handleLogoutConfirm = async () => {
+    try {
+      console.log("🎯 Logging out user...");
+      await logout(); // Call the real logout function
+      closeLogoutModal();
+      navigate("/", { replace: true }); // Redirect to HomePage
+      console.log("✅ User logged out successfully");
+    } catch (error) {
+      console.error("❌ Logout error:", error);
+      // You could show an error message here if needed
+    }
+  };
 
   // Show loading screen while data is loading
   if (loading) {
@@ -60,38 +125,107 @@ const DashboardLayout = ({ children }) => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 flex w-full transition-colors duration-500">
-      {/* Desktop Sidebar */}
-      <DashboardSidebar sidebarOpen={sidebarOpen} />
-      {/* Sidebar Overlay for Mobile */}
-      {layout.sidebarOpen && layout.isMobile && (
+      {/* Sidebar */}
+      <div
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg shadow-xl border-r border-white/20 dark:border-gray-700/50 transition-transform duration-300 ease-in-out ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <DashboardSidebar
+          sidebarOpen={sidebarOpen}
+          onSidebarClose={() => setSidebarOpen(false)}
+          onLogoutClick={handleLogoutClick}
+        />
+      </div>
+
+      {/* Mobile Overlay */}
+      {sidebarOpen && isMobile && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 z-40"
-          onClick={() => {
-            // This will be handled by the parent component's sidebar toggle
-          }}
+          onClick={() => setSidebarOpen(false)}
         />
       )}
-      {/* Main Content Area */}
+
+      {/* Main Content */}
       <div
-        className={`flex-1 flex flex-col transition-all duration-300 ${layoutClasses.main} overflow-hidden`}
+        className="flex-1 flex flex-col transition-all duration-300 ease-in-out overflow-hidden"
+        style={{
+          marginLeft: !isMobile && sidebarOpen ? "256px" : "0px",
+        }}
       >
         {/* Header */}
-        <DashboardHeader />
+        <DashboardHeader
+          onSettingsClick={handleSettingsClick}
+          onLogoutClick={handleLogoutClick}
+          onSidebarToggle={handleSidebarToggle}
+          sidebarOpen={sidebarOpen}
+          isMobile={isMobile}
+        />
+
+        {/* TEMPORARY TEST BUTTON - Add this right here */}
+        <div className="p-4">
+          <button
+            onClick={() => {
+              console.log("🎯 TEST: Setting showLogoutModal to true");
+              setShowLogoutModal(true);
+            }}
+            className="bg-red-600 text-white px-4 py-2 rounded"
+          >
+            TEST - Show Logout Modal
+          </button>
+          <p>Modal state: {showLogoutModal ? "TRUE" : "FALSE"}</p>
+        </div>
 
         {/* Main Content */}
         <main className="flex-1 overflow-y-auto">
-          <div
-            className={`w-full px-2 sm:px-4 lg:px-8 max-w-full ${layoutClasses.content}`}
-          >
+          <div className="w-full px-2 sm:px-4 lg:px-8 max-w-full py-2 sm:py-4">
             {children}
           </div>
         </main>
+
         {/* Mobile Bottom Navigation */}
-        {shouldShowMobileNav() && <MobileBottomNav />}
+        {isMobile && <MobileBottomNav />}
       </div>
-      {/* Modals */}
-      {modals.showSettingsModal && <SettingsModal />}{" "}
-      {modals.showLogoutModal && <LogoutModal />}
+
+      {/* Settings Modal - Just like PublicHeader pattern */}
+      {showSettingsModal && (
+        <SettingsModal
+          isOpen={showSettingsModal}
+          onClose={closeSettingsModal}
+          theme={theme}
+          toggleTheme={toggleTheme}
+        />
+      )}
+
+      {/* Logout Modal */}
+      {showLogoutModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-gray-200 dark:border-gray-700">
+            <div className="text-center">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+                Confirm Logout
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-6">
+                Are you sure you want to logout?
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={closeLogoutModal}
+                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleLogoutConfirm}
+                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                >
+                  Logout
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
