@@ -347,54 +347,21 @@ export const removeFriend = async (uid, friendUid) => {
     const userRef = doc(db, "users", uid);
     const friendRef = doc(db, "users", friendUid);
 
-    // Try to remove friend from both users' friends arrays
-    // Use Promise.allSettled to continue even if one fails
-    const results = await Promise.allSettled([
-      updateDoc(userRef, {
-        friends: arrayRemove(friendUid),
-        updatedAt: new Date().toISOString(),
-      }),
-      updateDoc(friendRef, {
-        friends: arrayRemove(uid),
-        updatedAt: new Date().toISOString(),
-      })
-    ]);
+    // Remove friend from both users' friends arrays
+    await updateDoc(userRef, {
+      friends: arrayRemove(friendUid),
+      updatedAt: new Date().toISOString(),
+    });
 
-    // Check results
-    const [userResult, friendResult] = results;
-    
-    if (userResult.status === 'fulfilled') {
-      console.log(`✅ Removed ${friendUid} from ${uid}'s friends list`);
-    } else {
-      console.error(`❌ Failed to remove ${friendUid} from ${uid}'s friends list:`, userResult.reason);
-    }
-    
-    if (friendResult.status === 'fulfilled') {
-      console.log(`✅ Removed ${uid} from ${friendUid}'s friends list`);
-    } else {
-      console.warn(`⚠️ Failed to remove ${uid} from ${friendUid}'s friends list:`, friendResult.reason);
-      // This might fail due to permissions, but that's okay - the friend will be cleaned up on their next login
-    }
+    await updateDoc(friendRef, {
+      friends: arrayRemove(uid),
+      updatedAt: new Date().toISOString(),
+    });
 
-    // If at least the current user's update succeeded, consider it successful
-    if (userResult.status === 'fulfilled') {
-      console.log(`✅ Friendship removal completed for user ${uid}`);
-      return true;
-    } else {
-      throw userResult.reason;
-    }
-
+    console.log(`✅ Successfully removed mutual friendship between ${uid} and ${friendUid}`);
   } catch (error) {
     console.error("❌ Error removing friend:", error);
-    
-    // Provide more specific error messages
-    if (error.code === 'permission-denied') {
-      throw new Error('You do not have permission to remove this friend. Please try again or contact support.');
-    } else if (error.code === 'not-found') {
-      throw new Error('Friend not found. They may have already been removed.');
-    } else {
-      throw new Error('Failed to remove friend. Please try again.');
-    }
+    throw error;
   }
 };
 

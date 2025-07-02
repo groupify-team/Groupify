@@ -1,4 +1,5 @@
-﻿import { useState, useEffect, useRef, useCallback } from "react";
+﻿// useDashboardData.js - Fixed version with proper real-time updates
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useAuth } from "@auth/contexts/AuthContext";
 import {
   collection,
@@ -280,9 +281,12 @@ export const useDashboardData = () => {
   }, []);
 
   const removePendingRequest = useCallback((requestId) => {
-    setPendingRequests((prev) =>
-      prev.filter((req) => req.id !== requestId && req.from !== requestId)
-    );
+    setPendingRequests((prev) => {
+      const filtered = prev.filter((req) => req.id !== requestId && req.from !== requestId);
+      console.log("🗑️ Removing pending request from state:", requestId);
+      console.log("🗑️ Before:", prev.length, "After:", filtered.length);
+      return filtered;
+    });
   }, []);
 
   const addTripInvite = useCallback((invite) => {
@@ -299,30 +303,33 @@ export const useDashboardData = () => {
     loadDashboardData();
   }, [loadDashboardData]);
 
-  // Set up real-time listeners (only once)
+  // Set up real-time listeners ONLY ONCE per user
   useEffect(() => {
     if (!currentUser?.uid) return;
 
     let isMounted = true;
+    const currentUid = currentUser.uid; // Capture current UID
+
+    console.log("🔧 Setting up real-time listeners for user:", currentUid);
 
     const setupListeners = async () => {
       try {
-        // Clean up existing listeners
-        unsubscribersRef.current.forEach(unsubscribe => unsubscribe());
+        // Clean up existing listeners first
+        console.log("🧹 Cleaning up existing listeners");
+        unsubscribersRef.current.forEach(unsubscribe => {
+          if (typeof unsubscribe === 'function') {
+            unsubscribe();
+          }
+        });
         unsubscribersRef.current = [];
 
-        const userDocRef = doc(db, "users", currentUser.uid);
-        const snap = await getDoc(userDocRef);
+        // --- FRIENDS LISTENER ---
+        const userDocRef = doc(db, "users", currentUid);
         
-        if (!snap.exists() || !isMounted) {
-          console.warn("⚠️ userDoc does not exist yet:", currentUser.uid);
-          return;
-        }
-
-        // Friends listener
+        console.log("🔗 Setting up friends listener");
         const unsubscribeFriends = onSnapshot(userDocRef, async (docSnap) => {
           if (!docSnap.exists() || !isMounted) return;
-          console.log("🔁 Friends snapshot triggered");
+          console.log("🔁 Friends snapshot triggered for user:", currentUid);
 
           const data = docSnap.data();
           const friendIds = [...new Set(data.friends || [])]; // Remove duplicates
@@ -358,14 +365,16 @@ export const useDashboardData = () => {
           );
 
           if (isMounted) {
+            console.log("🔄 Updating friends from real-time listener:", uniqueFriendsData.length);
             setFriends(uniqueFriendsData);
           }
         });
 
-        // Pending requests listener
+        // --- PENDING FRIEND REQUESTS LISTENER ---
+        console.log("🔗 Setting up friend requests listener");
         const pendingRequestsQuery = query(
           collection(db, "friendRequests"),
-          where("to", "==", currentUser.uid),
+          where("to", "==", currentUid),
           where("status", "==", "pending")
         );
 
@@ -373,63 +382,99 @@ export const useDashboardData = () => {
           pendingRequestsQuery,
           async (snapshot) => {
             if (!isMounted) return;
+            console.log("🔁 Friend requests snapshot triggered:", snapshot.size, "requests");
             
             const requests = [];
 
             for (const docSnap of snapshot.docs) {
               const data = docSnap.data();
+              console.log("📄 Processing friend request doc:", {
+                id: docSnap.id,
+                from: data.from,
+                to: data.to,
+                status: data.status,
+                createdAt: data.createdAt
+              });
 
-              if (data.from === currentUser.uid) continue;
+              if (data.from === currentUid) {
+                console.log("⚠️ Skipping self-request");
+                continue;
+              }
 
               try {
                 const senderRef = doc(db, "users", data.from);
                 const senderSnap = await getDoc(senderRef);
 
-                requests.push({
-                  id: docSnap.id,
-                  from: data.from,
-                  displayName: senderSnap.exists() ? senderSnap.data().displayName : "",
-                  email: senderSnap.exists() ? senderSnap.data().email : "",
-                  photoURL: senderSnap.exists() ? senderSnap.data().photoURL : null,
-                  createdAt: data.createdAt,
-                });
+                if (senderSnap.exists()) {
+                  const requestData = {
+                    id: docSnap.id,
+                    from: data.from,
+                    displayName: senderSnap.data().displayName || "",
+                    email: senderSnap.data().email || "",
+                    photoURL: senderSnap.data().photoURL || null,
+                    createdAt: data.createdAt,
+                  };
+                  
+                  console.log("✅ Adding friend request to list:", requestData);
+                  requests.push(requestData);
+                } else {
+                  console.warn("⚠️ Sender document doesn't exist for:", data.from);
+                }
               } catch (err) {
                 console.warn("⚠️ Error fetching sender:", data.from, err);
               }
             }
 
             if (isMounted) {
+              console.log("🔄 Updating pending requests from real-time listener:", requests.length);
+              console.log("📋 Request details:", requests);
               setPendingRequests(requests);
+              
+              // Show toast notification for new requests
+              if (requests.length > 0) {
+                console.log("🔔 New friend requests detected!");
+              }
             }
+          },
+          (error) => {
+            console.error("❌ Error in friend requests listener:", error);
           }
         );
 
         // Store unsubscribers
         unsubscribersRef.current = [unsubscribeFriends, unsubscribePendingRequests];
+        console.log("✅ Real-time listeners set up successfully");
 
       } catch (error) {
         console.error("❌ Error setting up listeners:", error);
       }
     };
 
-    // Initial load only if not done
-    if (!initialLoadDone.current) {
+    // Initial load and setup listeners
+    if (!initialLoadDone.current && !loadingRef.current) {
+      console.log("🚀 Starting initial load and listeners setup");
       loadDashboardData().then(() => {
         if (isMounted) {
           setupListeners();
         }
       });
-    } else {
+    } else if (initialLoadDone.current) {
+      console.log("🚀 Setting up listeners only (data already loaded)");
       setupListeners();
     }
 
     // Cleanup
     return () => {
+      console.log("🧹 Cleaning up dashboard data effect for user:", currentUid);
       isMounted = false;
-      unsubscribersRef.current.forEach(unsubscribe => unsubscribe());
+      unsubscribersRef.current.forEach(unsubscribe => {
+        if (typeof unsubscribe === 'function') {
+          unsubscribe();
+        }
+      });
       unsubscribersRef.current = [];
     };
-  }, [currentUser?.uid, loadDashboardData]);
+  }, [currentUser?.uid]); // Only depend on currentUser.uid
 
   return {
     // Data states
