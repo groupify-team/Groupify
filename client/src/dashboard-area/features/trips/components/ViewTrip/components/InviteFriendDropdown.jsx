@@ -48,7 +48,7 @@ const InviteFriendDropdown = ({
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           disabled={isInviting}
-          className="w-full pl-8 pr-8 py-2 sm:pl-10 sm:pr-10 sm:py-3 bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm border border-emerald-200/50 dark:border-emerald-700/50 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 text-xs sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full pl-8 pr-8 py-2 sm:pl-10 sm:pr-10 sm:py-3 bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm border border-emerald-200/50 dark:border-emerald-700/50 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-500 ease-in-out text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 text-xs sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
         />
         {searchTerm && !isInviting && (
           <button
@@ -62,7 +62,7 @@ const InviteFriendDropdown = ({
 
       {/* Results */}
       {searchTerm.trim().length > 0 && (
-        <div className="bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl border border-emerald-200/30 dark:border-emerald-700/30 overflow-hidden shadow-sm">
+        <div className="bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl border border-emerald-200/30 dark:border-emerald-700/30 overflow-hidden shadow-sm animate-slide-in-scale transition-all duration-500 ease-in-out">
           {isLoading ? (
             <div className="p-4 text-center">
               <div className="w-6 h-6 border-2 border-emerald-200 dark:border-emerald-700 border-t-emerald-500 dark:border-t-emerald-400 rounded-full animate-spin mx-auto mb-2"></div>
