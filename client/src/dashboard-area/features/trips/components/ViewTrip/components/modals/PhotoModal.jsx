@@ -45,7 +45,7 @@ const PhotoModal = ({ photo, photos, isOpen, onClose, onNext, onPrevious }) => {
 
   return (
     <div
-      className="fixed bg-black/95 backdrop-blur-lg flex items-center justify-center z-[9999]"
+      className="fixed bg-black/95 backdrop-blur-lg flex items-center justify-center z-[99999]"
       style={{
         position: "fixed",
         top: "-10px",
