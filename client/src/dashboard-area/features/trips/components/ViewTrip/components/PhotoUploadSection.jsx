@@ -12,7 +12,8 @@ const PhotoUploadSection = ({
   // import PhotoUpload from "../photos/PhotoUpload";
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 animate-slide-in-scale">
+      {" "}
       {/* Photo limit warning */}
       {photoLimitStatus === "full" ? (
         <div className="relative group">
@@ -79,7 +80,6 @@ const PhotoUploadSection = ({
           </div>
         </div>
       ) : null}
-
       {/* PhotoUpload Component Placeholder */}
       <div className="relative group">
         <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-2xl blur opacity-20"></div>

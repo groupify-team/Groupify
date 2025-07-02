@@ -132,7 +132,7 @@ const DashboardHeader = ({
   };
 
   return (
-    <header className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg shadow-sm border-b border-white/20 dark:border-gray-700/50 sticky top-0 z-30">
+    <header className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg shadow-sm border-b border-white/20 dark:border-gray-700/50 sticky top-0 z-20">
       <div className="w-full px-2 sm:px-4 lg:px-8">
         <div className="flex justify-between items-center h-12 sm:h-14 w-full">
           {/* Left Section */}

@@ -12,6 +12,7 @@ import { useDashboardData } from "@dashboard/hooks/useDashboardData";
 // FIXED: Proper import syntax
 import { useDashboardModals } from "@dashboard/hooks/useDashboardModals";
 import { useDashboardNavigation } from "@dashboard/hooks/useDashboardNavigation";
+import { useNavigate } from "react-router-dom";
 
 import { NAVIGATION_ITEMS } from "@dashboard/utils/dashboardConstants";
 import {
@@ -20,6 +21,7 @@ import {
 } from "@dashboard/utils/dashboardHelpers";
 
 const DashboardSidebar = ({ sidebarOpen, onSidebarClose, onLogoutClick }) => {
+  const navigate = useNavigate();
   const {
     layout: { activeSection, currentView, selectedTripId, isMobile },
     dropdowns: { tripsDropdownOpen, visibleTripsCount },
@@ -46,7 +48,7 @@ const DashboardSidebar = ({ sidebarOpen, onSidebarClose, onLogoutClick }) => {
   return (
     <div
       data-sidebar="true"
-      className={`fixed inset-y-0 left-0 z-50 w-64 bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg shadow-xl border-r border-white/20 dark:border-gray-700/50 transform transition-transform duration-300 ease-in-out ${
+      className={`fixed inset-y-0 left-0 z-30 w-64 bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg shadow-xl border-r border-white/20 dark:border-gray-700/50 transform transition-transform duration-300 ease-in-out ${
         sidebarOpen ? "" : "-translate-x-full"
       }`}
     >
@@ -55,12 +57,13 @@ const DashboardSidebar = ({ sidebarOpen, onSidebarClose, onLogoutClick }) => {
         <div className="flex items-center justify-between">
           <button
             onClick={() => {
-              navigateToSection("trips");
+              console.log("🏠 Logo clicked - navigating to dashboard");
+              navigate("/dashboard", { replace: true });
               if (isMobile) closeSidebar();
             }}
-            className="flex items-center gap-3 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded-xl p-2 transition-colors cursor-pointer group"
+            className="flex items-center gap-3 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded-xl p-2 transition-all duration-300 cursor-pointer group"
           >
-            <div className="w-10 h-10 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform">
+            <div className="w-10 h-10 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center group-hover:scale-105 transition-all duration-300">
               <CameraIcon className="w-6 h-6 text-white" />
             </div>
             <div>
@@ -223,10 +226,18 @@ const DashboardSidebar = ({ sidebarOpen, onSidebarClose, onLogoutClick }) => {
                             <button
                               key={trip.id}
                               onClick={() => {
-                                navigateToTrip(trip.id, trip);
+                                console.log(
+                                  "🎯 Trip clicked:",
+                                  trip.id,
+                                  trip.name
+                                );
+                                // Use direct navigation instead of the hook function
+                                navigate(`/dashboard/trip/${trip.id}`, {
+                                  replace: true,
+                                });
                                 if (isMobile) closeSidebar();
                               }}
-                              className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors mb-1 ${
+                              className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300 mb-1 transform hover:scale-105 ${
                                 selectedTripId === trip.id
                                   ? "bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400"
                                   : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700/50"

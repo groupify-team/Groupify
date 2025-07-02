@@ -29,6 +29,8 @@ const EditTripModal = ({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [deleting, setDeleting] = useState(false);
+  const [locationSuggestions, setLocationSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   const { currentUser } = useAuth();
 
@@ -50,6 +52,32 @@ const EditTripModal = ({
       setDeleteConfirmText("");
     }
   }, [trip, isOpen]);
+
+  const handleLocationSearch = async (query) => {
+    if (query.length < 2) {
+      setShowSuggestions(false);
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `http://localhost:3001/api/city-search?q=${encodeURIComponent(query)}`
+      );
+      if (!response.ok) throw new Error("Proxy failed");
+
+      const cities = await response.json();
+      const suggestions = cities.map((city) => {
+        const state = city.state ? `, ${city.state}` : "";
+        return `${city.name}${state}, ${city.country}`;
+      });
+
+      setLocationSuggestions(suggestions);
+      setShowSuggestions(true);
+    } catch (error) {
+      console.error("Error fetching cities:", error);
+      setShowSuggestions(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
@@ -112,22 +140,38 @@ const EditTripModal = ({
 
       toast.loading("Deleting trip... This may take a moment.", {
         id: "deleting-trip",
+        style: {
+          background: "#FEF2F2",
+          color: "#B91C1C",
+          border: "1px solid #FECACA",
+        },
       });
 
       // Delete the trip
       await deleteTrip(trip.id);
 
-      // Show success message
+      // Show sad success message
       toast.dismiss("deleting-trip");
-      toast.success("Trip deleted successfully!");
+      toast("Trip deleted permanently", {
+        icon: "🗑️",
+        style: {
+          background: "#FEF2F2",
+          color: "#B91C1C",
+          border: "1px solid #FECACA",
+        },
+        duration: 3000,
+      });
 
-      // Close modal
+      // Close modal with animation
       onClose();
 
-      // SIMPLE: Just go to dashboard and refresh
+      // Smooth navigation back to dashboard
       setTimeout(() => {
-        window.location.href = "/dashboard";
-      }, 500);
+        navigate("/dashboard", {
+          replace: true,
+          state: { deletedTrip: trip.name },
+        });
+      }, 800);
     } catch (error) {
       console.error("Error deleting trip:", error);
       toast.dismiss("deleting-trip");
@@ -168,10 +212,18 @@ const EditTripModal = ({
 
   return (
     <div
-      className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 overflow-y-auto"
+      className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] overflow-y-auto animate-fade-in"
       onClick={handleClose}
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: 9999,
+      }}
     >
-      <div className="min-h-full flex items-center justify-center p-2 sm:p-4">
+      <div className="min-h-full flex items-center justify-center p-2 sm:p-4 animate-slide-in-scale">
         <div className="relative w-full max-w-[300px] sm:max-w-sm md:max-w-md my-0 mx-2 max-[320px]:max-w-[280px]">
           {/* Background blur effect */}
           <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 via-cyan-500 to-teal-500 rounded-2xl blur opacity-20"></div>
@@ -347,16 +399,39 @@ const EditTripModal = ({
                       <input
                         type="text"
                         value={location}
-                        onChange={(e) => setLocation(e.target.value)}
+                        onChange={(e) => {
+                          setLocation(e.target.value);
+                          handleLocationSearch(e.target.value);
+                        }}
                         className="w-full pl-8 pr-3 sm:pl-10 py-2 sm:py-2.5 bg-white/70 dark:bg-gray-700/70 border border-white/30 dark:border-gray-600/30 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 text-sm"
                         placeholder="Paris, France"
                         disabled={loading}
                       />
+                      {/* Dropdown suggestions */}
+                      {showSuggestions && locationSuggestions.length > 0 && (
+                        <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto animate-slide-in-scale">
+                          {locationSuggestions
+                            .slice(0, 4)
+                            .map((suggestion, index) => (
+                              <button
+                                key={index}
+                                type="button"
+                                onClick={() => {
+                                  setLocation(suggestion);
+                                  setShowSuggestions(false);
+                                }}
+                                className="w-full text-left px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-900 dark:text-white text-sm transition-all duration-300"
+                              >
+                                {suggestion}
+                              </button>
+                            ))}
+                        </div>
+                      )}
                     </div>
                   </div>
 
                   {/* Dates */}
-                  <div className="grid grid-cols-1 gap-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div className="space-y-1">
                       <label className="block text-xs sm:text-sm font-medium text-gray-800 dark:text-gray-200">
                         Start Date

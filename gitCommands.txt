@@ -1,0 +1,126 @@
+##############################################################################
+**************************************Adir************************************
+##############################################################################
+
+
+#######################################
+# When Adir wants to push updates and create a Pull Request :
+#######################################
+
+# Adir's commands:
+git checkout dev/adir                  # Switch to your branch
+git fetch origin                       # Fetch latest from remote
+git pull origin dev/adir               # Make sure you're up to date
+git add .                              # Stage changes
+git commit -m "Your commit message"    # Commit changes
+git push origin dev/adir               # Push to your remote branch
+
+# Then go to GitHub and open a Pull Request from dev/adir to develop
+
+#######################################
+# When Ofir pushed to develop, and Adir wants to sync :
+#######################################
+
+# Sync develop into your branch (two options)
+
+git checkout dev/adir                  # Switch to your feature branch
+git fetch origin                       # Get latest refs from remote
+git merge origin/develop               # Merge latest develop into your branch
+# (Resolve conflicts if needed)
+
+# 🟢 OPTION 1: Just sync locally (no push)
+# Done – your local branch is now up to date with develop
+
+# 🟡 OPTION 2: Sync and push the merged result to remote
+git push origin dev/adir               # Push the merged state to remote
+
+
+##############################################################################
+**************************************Ofir************************************
+##############################################################################
+
+
+#######################################
+# When Ofir wants to push updates and create a Pull Request :
+#######################################
+
+# Ofir's commands:
+git checkout dev/ofir                  # Switch to your branch
+git fetch origin                       # Fetch latest from remote
+git pull origin dev/ofir               # Make sure you're up to date
+git add .                              # Stage changes
+git commit -m "Your commit message"    # Commit changes
+git push origin dev/ofir               # Push to your remote branch
+
+# Then go to GitHub and open a Pull Request from dev/ofir to develop
+
+#######################################
+# When Adir pushed to develop, and Ofir wants to sync :
+#######################################
+
+# Sync develop into your branch (two options)
+
+git checkout dev/ofir                  # Switch to your feature branch
+git fetch origin                       # Get latest refs from remote
+git merge origin/develop               # Merge latest develop into your branch
+# (Resolve conflicts if needed)
+
+# 🟢 OPTION 1: Just sync locally (no push)
+# Done – your local branch is now up to date with develop
+
+# 🟡 OPTION 2: Sync and push the merged result to remote
+git push origin dev/ofir               # Push the merged state to remote
+
+
+
+##############################################################################
+***********************************Adir/Ofir**********************************
+##############################################################################
+
+
+#######################################
+# When Merge Adir/Ofir's work into develop (shared branch) :
+#######################################
+
+git checkout develop                   # Switch to shared branch
+git fetch origin                       # Fetch latest
+git pull origin develop                # Make sure it's up to date
+git merge origin/dev/adir              # Or: merge origin/dev/ofir
+# (Resolve conflicts if needed)
+git push origin develop                # Push updated develop
+
+#######################################
+# When Release a new version to main (production) :
+#######################################
+
+git checkout main                      # Switch to main
+git fetch origin                       # Fetch latest
+git pull origin main                   # Make sure main is up to date
+git merge origin/develop               # Merge shared develop into main
+# (Resolve conflicts if needed)
+git push origin main                   # Push to production
+
+
+#######################################
+# Final GitHub Check – When after pushing you didn't seen pull request :
+#######################################
+
+# Go to: https://github.com/groupify-team/Groupify/pulls
+
+# If you see the "Compare & pull request" button — click it.
+# Make sure:
+#  - Base branch is set to: develop
+#  - Compare branch is set to: dev/adir  (or dev/ofir)
+
+# If you don’t see the button — do this:
+#   1. Click “New Pull Request” manually
+#   2. In the "Compare changes" screen:
+#      - Base:       develop
+#      - Compare:    dev/adir (or dev/ofir)
+#
+# If GitHub says "There isn’t anything to compare":
+#   → It means your branch is already fully merged into develop, or no changes exist.
+#   → You can double-check by running locally:
+    git log origin/develop..origin/dev/adir   # Shows unmerged commits (if any)
+
+# Tip: Always refresh the GitHub page after pushing to make sure it recognizes new changes.
