@@ -1,7 +1,7 @@
 ﻿import React, { useEffect, useState } from "react";
 import { useAuth } from "@auth/contexts/AuthContext";
-import { useDashboardModals } from "@dashboard/contexts/DashboardModalsContext";
-import { useDashboardData } from "@dashboard/hooks/useDashboardData";
+import { doc, onSnapshot, getDoc } from "firebase/firestore";
+import { db } from "@shared/services/firebase/config";
 import {
   UserPlusIcon,
   UsersIcon,
@@ -13,28 +13,183 @@ import {
 import {
   acceptFriendRequest,
   rejectFriendRequest,
+  sendFriendRequest,
+  removeFriend,
   getFriends,
 } from "@shared/services/firebase/users";
 import toast from "react-hot-toast";
 
+// Direct imports - like it was working before
+import AddFriend from "@dashboard/features/friends/components/AddFriend";
+import UserProfileModal from "@dashboard/features/friends/components/UserProfileModal";
+
 const FriendsSection = () => {
   const { currentUser } = useAuth();
-  const {
-    friends,
-    pendingRequests,
-    loading,
-    refreshFriends,
-    refreshPendingRequests,
-  } = useDashboardData();
 
-  const {
-    addFriend: { open: openAddFriendModal },
-    userProfileActions: { open: openUserProfile },
-  } = useDashboardModals();
-
+  // Local state for real-time data
+  const [friends, setFriends] = useState([]);
+  const [pendingRequests, setPendingRequests] = useState([]);
+  const [loading, setLoading] = useState(true);
+  
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredFriends, setFilteredFriends] = useState([]);
   const [showFriendRequests, setShowFriendRequests] = useState(true);
+  
+  // Simple modal state - like before
+  const [showAddFriendModal, setShowAddFriendModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [showUserProfileModal, setShowUserProfileModal] = useState(false);
+
+  // Set up real-time listeners - EXACTLY like in your working Dashboard
+  useEffect(() => {
+    if (!currentUser?.uid) return;
+
+    let isMounted = true;
+
+    const setupListeners = async () => {
+      try {
+        setLoading(true);
+
+        // Check if user document exists first
+        const userDocRef = doc(db, "users", currentUser.uid);
+        const snap = await getDoc(userDocRef);
+        
+        if (!snap.exists() || !isMounted) {
+          console.warn("⚠️ userDoc does not exist yet:", currentUser.uid);
+          setLoading(false);
+          return;
+        }
+
+        // Friends listener - EXACTLY like in Dashboard
+        const unsubscribeFriends = onSnapshot(userDocRef, async (docSnap) => {
+          if (!docSnap.exists() || !isMounted) return;
+          console.log("🔁 Friends snapshot triggered");
+
+          const data = docSnap.data();
+          const friendIds = [...new Set(data.friends || [])]; // Remove duplicates
+          
+          const friendsData = [];
+
+          for (const fid of friendIds) {
+            if (!fid || typeof fid !== "string" || fid.trim() === "") {
+              continue;
+            }
+
+            try {
+              const friendRef = doc(db, "users", fid);
+              const friendSnap = await getDoc(friendRef);
+
+              if (friendSnap.exists()) {
+                const fData = friendSnap.data();
+                friendsData.push({
+                  uid: fid,
+                  displayName: fData.displayName || fData.email || fid,
+                  email: fData.email || "",
+                  photoURL: fData.photoURL || "",
+                });
+              }
+            } catch (err) {
+              console.error(`❌ Error fetching friend ${fid}:`, err);
+            }
+          }
+
+          // Remove duplicates in final data
+          const uniqueFriendsData = friendsData.filter((friend, index, self) => 
+            index === self.findIndex((f) => f.uid === friend.uid)
+          );
+
+          if (isMounted) {
+            setFriends(uniqueFriendsData);
+            console.log(`🔄 Friends updated: ${uniqueFriendsData.length}`);
+          }
+        });
+
+        // Pending requests listener - EXACTLY like in Dashboard
+        const { collection, query, where } = await import("firebase/firestore");
+        const pendingRequestsQuery = query(
+          collection(db, "friendRequests"),
+          where("to", "==", currentUser.uid),
+          where("status", "==", "pending")
+        );
+
+        const unsubscribePendingRequests = onSnapshot(
+          pendingRequestsQuery,
+          async (snapshot) => {
+            if (!isMounted) return;
+            
+            const requests = [];
+
+            for (const docSnap of snapshot.docs) {
+              const data = docSnap.data();
+
+              if (data.from === currentUser.uid) continue;
+
+              try {
+                const senderRef = doc(db, "users", data.from);
+                const senderSnap = await getDoc(senderRef);
+
+                requests.push({
+                  id: docSnap.id,
+                  from: data.from,
+                  displayName: senderSnap.exists() ? senderSnap.data().displayName : "",
+                  email: senderSnap.exists() ? senderSnap.data().email : "",
+                  photoURL: senderSnap.exists() ? senderSnap.data().photoURL : null,
+                  createdAt: data.createdAt,
+                });
+              } catch (err) {
+                console.warn("⚠️ Error fetching sender:", data.from, err);
+              }
+            }
+
+            if (isMounted) {
+              setPendingRequests(requests);
+              console.log(`🔄 Pending requests updated: ${requests.length}`);
+            }
+          }
+        );
+
+        setLoading(false);
+
+        // Cleanup function
+        return () => {
+          unsubscribeFriends();
+          unsubscribePendingRequests();
+        };
+
+      } catch (error) {
+        console.error("❌ Error setting up listeners:", error);
+        setLoading(false);
+      }
+    };
+
+    setupListeners();
+
+    // Cleanup
+    return () => {
+      isMounted = false;
+    };
+  }, [currentUser?.uid]);
+
+  // Watch for new friend requests and show notifications
+  useEffect(() => {
+    if (pendingRequests.length > 0) {
+      // Check if this is a new request (not initial load)
+      const latestRequest = pendingRequests[0];
+      if (latestRequest && latestRequest.createdAt) {
+        const requestTime = new Date(latestRequest.createdAt);
+        const now = new Date();
+        const timeDiff = now - requestTime;
+        
+        // If request is less than 30 seconds old, show notification
+        if (timeDiff < 30000) {
+          toast(`🔔 New friend request from ${latestRequest.displayName || latestRequest.email}!`, {
+            duration: 5000,
+            icon: '👋',
+          });
+        }
+      }
+    }
+  }, [pendingRequests]);
 
   // Filter friends based on search term
   useEffect(() => {
@@ -50,11 +205,10 @@ const FriendsSection = () => {
     }
   }, [friends, searchTerm]);
 
+  // Handler functions - ALL DEFINED BEFORE USE
   const handleAcceptRequest = async (senderUid) => {
     try {
       await acceptFriendRequest(currentUser.uid, senderUid);
-      await refreshPendingRequests();
-      await refreshFriends();
       toast.success("Friend request accepted!");
     } catch (error) {
       console.error("Error accepting friend request:", error);
@@ -65,7 +219,6 @@ const FriendsSection = () => {
   const handleRejectRequest = async (senderUid) => {
     try {
       await rejectFriendRequest(currentUser.uid, senderUid);
-      await refreshPendingRequests();
       toast.success("Friend request declined");
     } catch (error) {
       console.error("Error rejecting friend request:", error);
@@ -73,17 +226,64 @@ const FriendsSection = () => {
     }
   };
 
-  const handleViewProfile = (friend) => {
-    openUserProfile(friend);
+  const handleRemoveFriend = async (friendUid) => {
+    try {
+      console.log(`🗑️ Removing friend: ${friendUid}`);
+      
+      // Call the removeFriend function
+      await removeFriend(currentUser.uid, friendUid);
+      
+      // The real-time listener will automatically update the friends list
+      // No need to manually refresh since we have onSnapshot listeners
+      
+      // Show success message
+      toast.success("Friend removed!");
+      
+      // Close the user profile modal
+      setShowUserProfileModal(false);
+      setSelectedUser(null);
+      
+    } catch (error) {
+      console.error("Error removing friend:", error);
+      toast.error("Failed to remove friend");
+    }
   };
 
-  const handleRefreshFriends = async () => {
+  const handleAddFriendDirect = async (targetUid) => {
     try {
-      await refreshFriends();
-      toast.success("Friends list refreshed!");
+      await sendFriendRequest(currentUser.uid, targetUid);
+      toast.success("Friend request sent!");
+      setShowAddFriendModal(false);
     } catch (error) {
-      console.error("Error refreshing friends:", error);
-      toast.error("Failed to refresh friends list");
+      console.error("Error sending friend request:", error);
+      toast.error("Failed to send friend request");
+    }
+  };
+
+  const handleCancelRequest = async (targetUid) => {
+    try {
+      const { cancelFriendRequest } = await import("@shared/services/firebase/users");
+      await cancelFriendRequest(currentUser.uid, targetUid);
+      setShowUserProfileModal(false);
+      setSelectedUser(null);
+      toast.success("Friend request cancelled!");
+    } catch (error) {
+      console.error("Error cancelling friend request:", error);
+      toast.error("Failed to cancel friend request");
+    }
+  };
+
+  const handleViewProfile = (friend) => {
+    console.log("👀 Opening profile for:", friend);
+    setSelectedUser(friend);
+    setShowUserProfileModal(true);
+  };
+
+  const handleUserSelect = (uid) => {
+    // Find user data
+    const userData = friends.find(f => f.uid === uid);
+    if (userData) {
+      handleViewProfile(userData);
     }
   };
 
@@ -120,7 +320,7 @@ const FriendsSection = () => {
               </div>
             </div>
             <button
-              onClick={openAddFriendModal}
+              onClick={() => setShowAddFriendModal(true)}
               className="bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-700 hover:to-rose-700 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center gap-2"
             >
               <UserPlusIcon className="w-5 h-5" />
@@ -240,6 +440,49 @@ const FriendsSection = () => {
           </div>
         )}
       </div>
+
+      {/* Add Friend Modal - Simple modal like before */}
+      {showAddFriendModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-md w-full shadow-2xl border border-gray-200 dark:border-gray-700">
+            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                Add Friend
+              </h3>
+              <button
+                onClick={() => setShowAddFriendModal(false)}
+                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              >
+                <XMarkIcon className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-4">
+              <AddFriend
+                onUserSelect={handleUserSelect}
+                onAddFriendDirect={handleAddFriendDirect}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* User Profile Modal */}
+      {showUserProfileModal && selectedUser && (
+        <UserProfileModal
+          isOpen={showUserProfileModal}
+          onClose={() => {
+            setShowUserProfileModal(false);
+            setSelectedUser(null);
+          }}
+          user={selectedUser}
+          currentUserId={currentUser?.uid}
+          friends={friends.map(f => f.uid)}
+          pendingRequests={pendingRequests}
+          onAddFriend={handleAddFriendDirect}
+          onRemoveFriend={handleRemoveFriend}
+          onCancelRequest={handleCancelRequest}
+        />
+      )}
     </div>
   );
 };
