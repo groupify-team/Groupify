@@ -289,10 +289,10 @@ const FriendsSection = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 flex items-center justify-center">
+      <div className="flex-1 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-purple-200 dark:border-purple-700 border-t-indigo-600 dark:border-t-indigo-400 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-xl text-gray-800 dark:text-white font-medium">
+          <div className="w-16 h-16 border-4 border-slate-600 border-t-blue-500 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-xl text-slate-300 font-medium">
             Loading friends...
           </p>
         </div>
@@ -301,27 +301,27 @@ const FriendsSection = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 p-4 sm:p-6 lg:p-8">
+    <div className="flex-1 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header Section */}
-        <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-3xl shadow-2xl border border-white/20 dark:border-gray-700/50 p-6 sm:p-8 mb-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="bg-slate-700/90 backdrop-blur-sm rounded-2xl border border-slate-600/50 p-6 mb-6">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-gradient-to-r from-pink-500 to-rose-500 rounded-2xl flex items-center justify-center shadow-lg">
-                <UsersIcon className="w-8 h-8 text-white" />
+              <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-blue-500 rounded-xl flex items-center justify-center">
+                <UsersIcon className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white">
+                <h1 className="text-2xl font-bold text-white">
                   My Friends ({friends.length})
                 </h1>
-                <p className="text-gray-600 dark:text-gray-400 text-lg">
+                <p className="text-slate-400">
                   Connect and share memories with friends
                 </p>
               </div>
             </div>
             <button
               onClick={() => setShowAddFriendModal(true)}
-              className="bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-700 hover:to-rose-700 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center gap-2"
+              className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-4 py-2 rounded-xl font-medium transition-all duration-200 flex items-center gap-2"
             >
               <UserPlusIcon className="w-5 h-5" />
               Add Friend
@@ -331,48 +331,48 @@ const FriendsSection = () => {
 
         {/* Friend Requests Section */}
         {pendingRequests.length > 0 && (
-          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-2xl shadow-lg border border-white/20 dark:border-gray-700/50 mb-6 overflow-hidden">
+          <div className="bg-slate-700/80 backdrop-blur-sm rounded-xl border border-slate-600/60 mb-6">
             <button
               onClick={() => setShowFriendRequests(!showFriendRequests)}
-              className="w-full flex items-center justify-between p-4 hover:bg-gray-50/50 dark:hover:bg-gray-700/50 transition-colors"
+              className="w-full flex items-center justify-between p-4 hover:bg-slate-700/60 transition-colors rounded-xl"
             >
               <div className="flex items-center gap-3">
-                <UsersIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                <UsersIcon className="w-5 h-5 text-blue-400" />
                 <div className="text-left">
-                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  <h2 className="text-lg font-medium text-white">
                     Friend Requests
                   </h2>
-                  <p className="text-gray-600 dark:text-gray-400 text-sm">
+                  <p className="text-slate-400 text-sm">
                     {pendingRequests.length} pending
                   </p>
                 </div>
               </div>
               {showFriendRequests ? (
-                <ChevronUpIcon className="w-5 h-5 text-gray-400" />
+                <ChevronUpIcon className="w-5 h-5 text-slate-400" />
               ) : (
-                <ChevronDownIcon className="w-5 h-5 text-gray-400" />
+                <ChevronDownIcon className="w-5 h-5 text-slate-400" />
               )}
             </button>
 
             {showFriendRequests && (
-              <div className="border-t border-gray-200/50 dark:border-gray-700/50 p-4 space-y-3">
+              <div className="border-t border-slate-600/60 p-4 space-y-3">
                 {pendingRequests.map((request) => (
                   <div
                     key={request.id}
-                    className="bg-gradient-to-br from-blue-50/80 to-indigo-50/80 dark:from-blue-900/30 dark:to-indigo-900/30 border border-blue-200/50 dark:border-blue-800/50 rounded-xl p-3"
+                    className="bg-slate-600/80 border border-slate-500/60 rounded-lg p-3"
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <img
                           src="https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg"
                           alt="User avatar"
-                          className="w-10 h-10 rounded-full object-cover border-2 border-white dark:border-gray-600"
+                          className="w-8 h-8 rounded-full object-cover border border-slate-500"
                         />
                         <div>
-                          <h4 className="font-semibold text-gray-900 dark:text-white text-sm">
+                          <h4 className="font-medium text-white text-sm">
                             {request.displayName || "Unknown User"}
                           </h4>
-                          <p className="text-blue-600 dark:text-blue-400 text-xs">
+                          <p className="text-slate-400 text-xs">
                             {request.email}
                           </p>
                         </div>
@@ -386,7 +386,7 @@ const FriendsSection = () => {
                         </button>
                         <button
                           onClick={() => handleRejectRequest(request.from)}
-                          className="bg-gray-500 hover:bg-gray-600 text-white py-1 px-3 rounded-md text-xs font-medium transition-colors"
+                          className="bg-slate-600 hover:bg-slate-700 text-white py-1 px-3 rounded-md text-xs font-medium transition-colors"
                         >
                           Decline
                         </button>
@@ -401,17 +401,25 @@ const FriendsSection = () => {
 
         {/* Friends List */}
         {friends.length === 0 ? (
-          <div className="text-center py-8">
-            <h3 className="text-lg text-gray-600 dark:text-gray-400">
-              No friends yet. Start building your network!
-            </h3>
+          <div className="bg-slate-700/60 rounded-xl border border-slate-600/60 p-12 text-center">
+            <div className="w-16 h-16 bg-slate-600/50 rounded-full flex items-center justify-center mx-auto mb-4">
+              <UsersIcon className="w-8 h-8 text-slate-400" />
+            </div>
+            <h3 className="text-xl font-medium text-white mb-2">No friends yet</h3>
+            <p className="text-slate-400 mb-6">Start connecting with people to share your travel memories</p>
+            <button
+              onClick={() => setShowAddFriendModal(true)}
+              className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-200"
+            >
+              Add Your First Friend
+            </button>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {friends.map((friend) => (
               <div
                 key={friend.uid}
-                className="bg-gradient-to-r from-gray-700/80 to-gray-800/80 dark:from-gray-700/60 dark:to-gray-800/60 backdrop-blur-lg border border-gray-600/30 dark:border-gray-600/30 rounded-xl p-4 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group"
+                className="bg-slate-700/80 hover:bg-slate-700/90 backdrop-blur-sm border border-slate-600/60 rounded-xl p-4 transition-all duration-200 cursor-pointer group"
                 onClick={() => handleViewProfile(friend)}
               >
                 <div className="flex items-center gap-3">
@@ -422,15 +430,15 @@ const FriendsSection = () => {
                         "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg"
                       }
                       alt={`${friend.displayName}'s avatar`}
-                      className="w-10 h-10 rounded-full object-cover border-2 border-white/20"
+                      className="w-10 h-10 rounded-full object-cover border-2 border-slate-500"
                     />
-                    <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-gray-800 rounded-full"></div>
+                    <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-slate-700 rounded-full"></div>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-semibold text-white text-base truncate">
+                    <h4 className="font-medium text-white text-base truncate">
                       {friend.displayName || "Unknown User"}
                     </h4>
-                    <p className="text-gray-300 text-sm truncate">
+                    <p className="text-slate-400 text-sm truncate">
                       {friend.email}
                     </p>
                   </div>
@@ -441,17 +449,17 @@ const FriendsSection = () => {
         )}
       </div>
 
-      {/* Add Friend Modal - Simple modal like before */}
+      {/* Add Friend Modal */}
       {showAddFriendModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-md w-full shadow-2xl border border-gray-200 dark:border-gray-700">
-            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+          <div className="bg-slate-800/95 rounded-2xl max-w-md w-full shadow-2xl border border-slate-700/80">
+            <div className="flex items-center justify-between p-4 border-b border-slate-700/80">
+              <h3 className="text-lg font-bold text-white">
                 Add Friend
               </h3>
               <button
                 onClick={() => setShowAddFriendModal(false)}
-                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                className="text-slate-400 hover:text-slate-200"
               >
                 <XMarkIcon className="w-5 h-5" />
               </button>
