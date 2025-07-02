@@ -1,6 +1,7 @@
-// utils/tripHelpers.js
-
-// Trip utility functions
+/**
+ * General trip utilities and helper functions
+ * Handles trip status, date formatting, member sorting, and form validation
+ */
 
 export const formatTripDate = (dateString) => {
   try {

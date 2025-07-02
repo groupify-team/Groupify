@@ -1,4 +1,8 @@
-﻿// hooks/useTripInvitations.js
+﻿/**
+ * Hook for managing trip invitations to friends
+ * Handles sending invites and checking existing invitation status
+ */
+
 import { useState } from "react";
 import { toast } from "react-hot-toast";
 import { collection, getDocs, query, where } from "firebase/firestore";

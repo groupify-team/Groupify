@@ -1,4 +1,8 @@
-// utils/tripConstants.js
+/**
+ * Trip-related constants and configuration values
+ * Defines limits, statuses, roles, and application-wide trip settings
+ */
+
 export const TRIP_CONSTANTS = {
   MAX_TRIPS_PER_USER: 5,
   MAX_PHOTOS_PER_TRIP: 100,

@@ -1,4 +1,8 @@
-// hooks/usePerformanceMonitoring.js
+/**
+ * Hook for monitoring component render performance in development
+ * Tracks render times and identifies slow-rendering components
+ */
+
 import { useEffect, useRef } from "react";
 
 export const usePerformanceMonitoring = (componentName) => {

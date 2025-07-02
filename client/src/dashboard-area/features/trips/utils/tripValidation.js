@@ -1,4 +1,8 @@
-// utils/tripValidation.js
+/**
+ * Trip and photo upload validation utilities
+ * Handles form validation, file type checking, and data sanitization
+ */
+
 import { TRIP_CONSTANTS } from "./tripConstants";
 
 export const validateTripForm = (formData) => {
