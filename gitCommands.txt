@@ -21,7 +21,7 @@ git push origin dev/adir               # Push to your remote branch
 # When Ofir pushed to develop, and Adir wants to sync :
 #######################################
 
-# ✅ Sync develop into your branch (two options)
+# Sync develop into your branch (two options)
 
 git checkout dev/adir                  # Switch to your feature branch
 git fetch origin                       # Get latest refs from remote
@@ -58,7 +58,7 @@ git push origin dev/ofir               # Push to your remote branch
 # When Adir pushed to develop, and Ofir wants to sync :
 #######################################
 
-# ✅ Sync develop into your branch (two options)
+# Sync develop into your branch (two options)
 
 git checkout dev/ofir                  # Switch to your feature branch
 git fetch origin                       # Get latest refs from remote
@@ -99,3 +99,28 @@ git pull origin main                   # Make sure main is up to date
 git merge origin/develop               # Merge shared develop into main
 # (Resolve conflicts if needed)
 git push origin main                   # Push to production
+
+
+#######################################
+# Final GitHub Check – When after pushing you didn't seen pull request :
+#######################################
+
+# Go to: https://github.com/groupify-team/Groupify/pulls
+
+# If you see the "Compare & pull request" button — click it.
+# Make sure:
+#  - Base branch is set to: develop
+#  - Compare branch is set to: dev/adir  (or dev/ofir)
+
+# If you don’t see the button — do this:
+#   1. Click “New Pull Request” manually
+#   2. In the "Compare changes" screen:
+#      - Base:       develop
+#      - Compare:    dev/adir (or dev/ofir)
+#
+# If GitHub says "There isn’t anything to compare":
+#   → It means your branch is already fully merged into develop, or no changes exist.
+#   → You can double-check by running locally:
+    git log origin/develop..origin/dev/adir   # Shows unmerged commits (if any)
+
+# Tip: Always refresh the GitHub page after pushing to make sure it recognizes new changes.

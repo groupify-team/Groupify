@@ -93,7 +93,7 @@ const DashboardPlaceholder = () => {
   );
 };
 
-// Centralized Flow Controller - Handles ALL navigation logic INCLUDING Turnstile
+// Updated FlowController component with improved Turnstile logic
 const FlowController = ({ children }) => {
   const { currentUser, loading: authLoading } = useAuth();
   const location = useLocation();
@@ -112,31 +112,46 @@ const FlowController = ({ children }) => {
       const animationShown = sessionStorage.getItem("launch_animation_shown");
       const turnstileVerifiedSession =
         sessionStorage.getItem("turnstile_verified");
+      const turnstileTimestamp = sessionStorage.getItem("turnstile_timestamp");
       const lastPageLoad = sessionStorage.getItem("last_page_load");
       const currentTime = Date.now();
 
-      // Detect if this is a new session
-      const isNewSession =
-        !lastPageLoad || currentTime - parseInt(lastPageLoad) > 300000; // 5 minutes threshold
+      // Enhanced session detection logic
+      const isFirstVisit = !turnstileVerifiedSession && !turnstileTimestamp;
+      const turnstileAge = turnstileTimestamp
+        ? currentTime - parseInt(turnstileTimestamp)
+        : Infinity;
+      const isExpiredSession = turnstileAge > 24 * 60 * 60 * 1000; // 24 hours instead of 5 minutes
+      const isLongAbsence = lastPageLoad
+        ? currentTime - parseInt(lastPageLoad) > 4 * 60 * 60 * 1000
+        : false; // 4 hours
 
-      console.log("Flow Controller:", {
+      // Only show Turnstile for:
+      // 1. First-time visitors
+      // 2. Users who haven't been verified in 24 hours
+      // 3. Users who have been away for more than 4 hours
+      const shouldShowTurnstile =
+        isFirstVisit || isExpiredSession || isLongAbsence;
+
+      console.log("Flow Controller Debug:", {
         currentUser: !!currentUser,
         currentPath,
-        animationShown,
-        turnstileVerifiedSession,
-        isNewSession,
+        isFirstVisit,
+        turnstileAge: Math.round(turnstileAge / (60 * 1000)), // minutes
+        isExpiredSession,
+        isLongAbsence,
+        shouldShowTurnstile,
         authLoading,
       });
 
       // === TURNSTILE VERIFICATION CHECK ===
-      // Only check Turnstile on new sessions or if not verified
-      if (isNewSession || !turnstileVerifiedSession) {
-        console.log("Flow: New session detected → Show Turnstile");
+      if (shouldShowTurnstile) {
+        console.log("Flow: Showing Turnstile verification");
         setShowTurnstile(true);
         setFlowReady(false);
         return;
       } else {
-        // Session is verified, proceed with normal flow
+        // Session is valid, proceed with normal flow
         setTurnstileVerified(true);
         setShowTurnstile(false);
       }
@@ -251,7 +266,7 @@ const FlowController = ({ children }) => {
       setShowLaunchAnimation(false);
       setFlowReady(true);
 
-      // Update session tracking
+      // Update session tracking - only update page load time, not verification
       sessionStorage.setItem("last_page_load", currentTime.toString());
     };
 
@@ -271,9 +286,14 @@ const FlowController = ({ children }) => {
   const handleTurnstileComplete = (verified, token) => {
     console.log("Flow: Turnstile verification completed:", verified);
     if (verified) {
+      const currentTime = Date.now();
+
+      // Store verification with timestamp
       sessionStorage.setItem("turnstile_verified", "true");
       sessionStorage.setItem("turnstile_token", token);
-      sessionStorage.setItem("last_page_load", Date.now().toString());
+      sessionStorage.setItem("turnstile_timestamp", currentTime.toString());
+      sessionStorage.setItem("last_page_load", currentTime.toString());
+
       setTurnstileVerified(true);
       setShowTurnstile(false);
       // Flow will continue automatically via useEffect
@@ -366,22 +386,85 @@ function App() {
           />
 
           {/* Main App Layout */}
-          <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+          <div className="transition-all duration-500 ease-in-out">
             <Routes>
               {/* Public Routes */}
-              <Route path="/" element={<HomePage />} />
+              <Route
+                path="/"
+                element={
+                  <div className="page-enter">
+                    <HomePage />
+                  </div>
+                }
+              />
 
               {/* Authentication Routes - Updated to use refactored components */}
-              <Route path="/signin" element={<SignInPage />} />
-              <Route path="/signup" element={<SignUpPage />} />
-              <Route path="/confirm-email" element={<ConfirmEmailPage />} />
-              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-              <Route path="/reset-password" element={<ResetPasswordPage />} />
+              <Route
+                path="/signin"
+                element={
+                  <div className="page-enter">
+                    <SignInPage />
+                  </div>
+                }
+              />
+              <Route
+                path="/signup"
+                element={
+                  <div className="page-enter">
+                    <SignUpPage />
+                  </div>
+                }
+              />
+              <Route
+                path="/confirm-email"
+                element={
+                  <div className="page-enter">
+                    <ConfirmEmailPage />
+                  </div>
+                }
+              />
+              <Route
+                path="/forgot-password"
+                element={
+                  <div className="page-enter">
+                    <ForgotPasswordPage />
+                  </div>
+                }
+              />
+              <Route
+                path="/reset-password"
+                element={
+                  <div className="page-enter">
+                    <ResetPasswordPage />
+                  </div>
+                }
+              />
 
               {/* Legal & Info Pages */}
-              <Route path="/terms" element={<TermsOfService />} />
-              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-              <Route path="/contact" element={<ContactUs />} />
+              <Route
+                path="/terms"
+                element={
+                  <div className="page-enter">
+                    <TermsOfService />
+                  </div>
+                }
+              />
+              <Route
+                path="/privacy-policy"
+                element={
+                  <div className="page-enter">
+                    <PrivacyPolicy />
+                  </div>
+                }
+              />
+              <Route
+                path="/contact"
+                element={
+                  <div className="page-enter">
+                    <ContactUs />
+                  </div>
+                }
+              />
               <Route path="/about" element={<AboutUs />} />
               <Route path="/careers" element={<Careers />} />
               <Route path="/help" element={<HelpCenter />} />
@@ -396,15 +479,52 @@ function App() {
                 path="/dashboard"
                 element={
                   <ProtectedRoute>
-                    <Dashboard />
+                    <div className="smooth-page-transition">
+                      <Dashboard />
+                    </div>
                   </ProtectedRoute>
                 }
               >
-                <Route index element={<TripsSection />} />
-                <Route path="trips" element={<TripsSection />} />
-                <Route path="trip/:tripId" element={<TripDetailView />} />
-                <Route path="friends" element={<FriendsSection />} />
-                <Route path="settings" element={<SettingsSection />} />
+                <Route
+                  index
+                  element={
+                    <div className="animate-fade-in-smooth">
+                      <TripsSection />
+                    </div>
+                  }
+                />
+                <Route
+                  path="trips"
+                  element={
+                    <div className="animate-fade-in-smooth">
+                      <TripsSection />
+                    </div>
+                  }
+                />
+                <Route
+                  path="trip/:tripId"
+                  element={
+                    <div className="animate-fade-in-smooth">
+                      <TripDetailView />
+                    </div>
+                  }
+                />
+                <Route
+                  path="friends"
+                  element={
+                    <div className="animate-fade-in-smooth">
+                      <FriendsSection />
+                    </div>
+                  }
+                />
+                <Route
+                  path="settings"
+                  element={
+                    <div className="animate-fade-in-smooth">
+                      <SettingsSection />
+                    </div>
+                  }
+                />
               </Route>
 
               {/* 404 Fallback */}

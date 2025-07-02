@@ -12,6 +12,7 @@ import { useDashboardLayout } from "@dashboard/hooks/useDashboardLayout";
 import { useDashboardData } from "@dashboard/hooks/useDashboardData";
 import { useDashboardModals } from "@dashboard/hooks/useDashboardModals";
 import { useDashboardNavigation } from "@dashboard/hooks/useDashboardNavigation";
+import { useNavigate } from "react-router-dom";
 
 import { NAVIGATION_ITEMS } from "@dashboard/utils/dashboardConstants";
 import {
@@ -20,6 +21,7 @@ import {
 } from "@dashboard/utils/dashboardHelpers";
 
 const DashboardSidebar = ({ sidebarOpen, onSidebarClose, onLogoutClick }) => {
+  const navigate = useNavigate();
   const {
     layout: { activeSection, currentView, selectedTripId, isMobile },
     dropdowns: { tripsDropdownOpen, visibleTripsCount },
@@ -46,7 +48,7 @@ const DashboardSidebar = ({ sidebarOpen, onSidebarClose, onLogoutClick }) => {
   return (
     <div
       data-sidebar="true"
-      className={`fixed inset-y-0 left-0 z-50 w-64 bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg shadow-xl border-r border-white/20 dark:border-gray-700/50 transform transition-transform duration-300 ease-in-out ${
+      className={`fixed inset-y-0 left-0 z-30 w-64 bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg shadow-xl border-r border-white/20 dark:border-gray-700/50 transform transition-transform duration-300 ease-in-out ${
         sidebarOpen ? "" : "-translate-x-full"
       }`}
     >
@@ -56,7 +58,7 @@ const DashboardSidebar = ({ sidebarOpen, onSidebarClose, onLogoutClick }) => {
           <button
             onClick={() => {
               console.log("🏠 Logo clicked - navigating to dashboard");
-              navigateToSection("trips");
+              navigate("/dashboard", { replace: true });
               if (isMobile) closeSidebar();
             }}
             className="flex items-center gap-3 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded-xl p-2 transition-all duration-300 cursor-pointer group"
@@ -229,7 +231,10 @@ const DashboardSidebar = ({ sidebarOpen, onSidebarClose, onLogoutClick }) => {
                                   trip.id,
                                   trip.name
                                 );
-                                navigateToTrip(trip.id, trip);
+                                // Use direct navigation instead of the hook function
+                                navigate(`/dashboard/trip/${trip.id}`, {
+                                  replace: true,
+                                });
                                 if (isMobile) closeSidebar();
                               }}
                               className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300 mb-1 transform hover:scale-105 ${
