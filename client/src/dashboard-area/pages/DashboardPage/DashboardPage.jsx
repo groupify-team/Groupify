@@ -6,7 +6,9 @@ import DashboardLayout from "../../components/layout/DashboardLayout";
 const DashboardPage = () => {
   return (
     <DashboardLayout>
-      <Outlet />
+      <div className="smooth-page-transition">
+        <Outlet />
+      </div>
     </DashboardLayout>
   );
 };

@@ -212,8 +212,16 @@ const EditTripModal = ({
 
   return (
     <div
-      className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 overflow-y-auto animate-fade-in"
+      className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] overflow-y-auto animate-fade-in"
       onClick={handleClose}
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: 9999,
+      }}
     >
       <div className="min-h-full flex items-center justify-center p-2 sm:p-4 animate-slide-in-scale">
         <div className="relative w-full max-w-[300px] sm:max-w-sm md:max-w-md my-0 mx-2 max-[320px]:max-w-[280px]">
