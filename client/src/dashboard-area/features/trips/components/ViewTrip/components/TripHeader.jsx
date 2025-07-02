@@ -25,20 +25,20 @@ const TripHeader = ({
       <div className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-xl shadow-lg p-3 sm:p-6 border border-white/20 dark:border-gray-700/50">
         <div className="flex flex-col gap-3 sm:gap-6">
           {/* Left side - Navigation & Trip Info */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 flex-1">
+          <div className="flex flex-col sm:flex-row items-center sm:items-center gap-3 sm:gap-4 flex-1">
             <div className="hidden sm:block w-px h-8 bg-gray-300 dark:bg-gray-600"></div>
 
-            <div className="space-y-1">
-              <div className="flex items-center gap-2 sm:gap-3">
+            <div className="space-y-1 text-center sm:text-left w-full sm:w-auto">
+              <div className="flex items-center gap-2 sm:gap-3 justify-center sm:justify-start">
                 <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg sm:rounded-xl flex items-center justify-center shadow-lg">
                   <MapPinIcon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                 </div>
-                <div>
+                <div className="text-center sm:text-left">
                   <h1 className="text-lg sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">
                     {trip.name}
                   </h1>
                   {trip.location && (
-                    <p className="text-gray-600 dark:text-gray-400 text-xs sm:text-sm flex items-center gap-1">
+                    <p className="text-gray-600 dark:text-gray-400 text-xs sm:text-sm flex items-center gap-1 justify-center sm:justify-start">
                       <MapPinIcon className="w-3 h-3 sm:w-4 sm:h-4" />
                       {trip.location}
                     </p>
@@ -49,9 +49,9 @@ const TripHeader = ({
           </div>
 
           {/* Right side - Stats & Actions */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+          <div className="flex flex-col sm:flex-row items-center sm:items-center gap-3 sm:gap-4">
             {/* Trip Stats */}
-            <div className="flex items-center gap-3 sm:gap-6">
+            <div className="flex items-center gap-3 sm:gap-6 justify-center sm:justify-start">
               <div className="text-center">
                 <div className="flex items-center gap-1 sm:gap-2 text-gray-600 dark:text-gray-400">
                   <PhotoIcon className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -80,7 +80,7 @@ const TripHeader = ({
             </div>
 
             {/* Action Buttons */}
-            <div className="flex flex-row gap-1 w-full sm:w-auto">
+            <div className="flex flex-row gap-2 sm:gap-3 w-full sm:w-auto">
               {isAdmin && (
                 <button
                   onClick={onEditTrip}

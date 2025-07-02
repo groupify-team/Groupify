@@ -31,11 +31,12 @@ const AllPhotosModal = ({
 
   return (
     <div
-      className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-6"
+      className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-6 animate-fade-in"
       onClick={onClose}
     >
+      {" "}
       <div
-        className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-2xl shadow-2xl max-w-5xl max-h-[75vh] overflow-hidden w-full border border-white/20 dark:border-gray-700/50"
+        className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-2xl shadow-2xl max-w-5xl max-h-[75vh] overflow-hidden w-full border border-white/20 dark:border-gray-700/50 animate-slide-in-scale"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Compact Header */}

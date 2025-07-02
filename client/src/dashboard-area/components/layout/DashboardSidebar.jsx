@@ -55,12 +55,13 @@ const DashboardSidebar = ({ sidebarOpen, onSidebarClose, onLogoutClick }) => {
         <div className="flex items-center justify-between">
           <button
             onClick={() => {
+              console.log("🏠 Logo clicked - navigating to dashboard");
               navigateToSection("trips");
               if (isMobile) closeSidebar();
             }}
-            className="flex items-center gap-3 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded-xl p-2 transition-colors cursor-pointer group"
+            className="flex items-center gap-3 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded-xl p-2 transition-all duration-300 cursor-pointer group"
           >
-            <div className="w-10 h-10 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform">
+            <div className="w-10 h-10 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center group-hover:scale-105 transition-all duration-300">
               <CameraIcon className="w-6 h-6 text-white" />
             </div>
             <div>
@@ -223,10 +224,15 @@ const DashboardSidebar = ({ sidebarOpen, onSidebarClose, onLogoutClick }) => {
                             <button
                               key={trip.id}
                               onClick={() => {
+                                console.log(
+                                  "🎯 Trip clicked:",
+                                  trip.id,
+                                  trip.name
+                                );
                                 navigateToTrip(trip.id, trip);
                                 if (isMobile) closeSidebar();
                               }}
-                              className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors mb-1 ${
+                              className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300 mb-1 transform hover:scale-105 ${
                                 selectedTripId === trip.id
                                   ? "bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400"
                                   : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700/50"

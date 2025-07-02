@@ -178,7 +178,11 @@ const DashboardLayout = ({ children }) => {
         </main>
 
         {/* Mobile Bottom Navigation */}
-        {isMobile && <MobileBottomNav />}
+        {isMobile && (
+          <div className="fixed bottom-0 left-0 right-0 z-40">
+            <MobileBottomNav />
+          </div>
+        )}
       </div>
 
       {/* Settings Modal - Just like PublicHeader pattern */}

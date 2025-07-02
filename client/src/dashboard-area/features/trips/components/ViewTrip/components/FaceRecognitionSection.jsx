@@ -61,11 +61,11 @@ const FaceRecognitionSection = ({
       <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 via-cyan-500 to-teal-500 rounded-2xl blur opacity-20 group-hover:opacity-30 transition duration-300"></div>
       <div className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-xl shadow-lg p-3 sm:p-6 border border-white/20 dark:border-gray-700/50">
         <div className="flex flex-col gap-3 sm:gap-4 mb-4 sm:mb-6">
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 justify-center sm:justify-start">
             <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg sm:rounded-xl flex items-center justify-center shadow-lg">
               <MagnifyingGlassIcon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
             </div>
-            <div>
+            <div className="text-center sm:text-left">
               <h2 className="text-lg sm:text-xl font-bold text-gray-800 dark:text-white">
                 Photos With Me
               </h2>
