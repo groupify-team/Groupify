@@ -1,4 +1,8 @@
-﻿// hooks/usePhotoSelection.js
+﻿/**
+ * Hook for photo selection and batch deletion operations
+ * Handles multi-select mode, photo deletion, and selection state management
+ */
+
 import { useState } from "react";
 import { toast } from "react-hot-toast";
 import { deleteDoc, doc } from "firebase/firestore";

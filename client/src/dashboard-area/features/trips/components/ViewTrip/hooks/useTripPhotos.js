@@ -1,4 +1,8 @@
-﻿// hooks/useTripPhotos.js - Optimization suggestions
+﻿/**
+ * Hook for trip photo operations and photo limit management
+ * Handles photo uploads, photo statistics, and photo count validation
+ */
+
 import { useState, useCallback, useMemo } from "react";
 import { toast } from "react-hot-toast";
 import { MAX_PHOTOS_PER_TRIP } from "@shared/services/firebase/trips";

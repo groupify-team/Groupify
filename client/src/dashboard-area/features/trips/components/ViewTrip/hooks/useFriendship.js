@@ -1,4 +1,8 @@
-﻿// hooks/useFriendship.js
+﻿/**
+ * Hook for managing friend relationships and requests
+ * Handles adding friends, removing friends, and pending request status
+ */
+
 import { useState, useEffect } from "react";
 import { toast } from "react-hot-toast";
 import {

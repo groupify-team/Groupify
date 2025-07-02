@@ -1,4 +1,9 @@
-﻿import { useState, useEffect, useMemo } from "react";
+﻿/**
+ * Hook for managing trip data, photos, and members in trip detail view
+ * Handles data fetching, loading states, and permission checks
+ */
+
+import { useState, useEffect, useMemo } from "react";
 import { getTrip, updateTrip } from "@shared/services/firebase/trips";
 import { getTripPhotos } from "@shared/services/firebase/storage";
 import { getUserProfile } from "@shared/services/firebase/users";

@@ -1,4 +1,9 @@
-﻿import { MAX_PHOTOS_PER_TRIP } from "@shared/services/firebase/trips";
+﻿/**
+ * Photo management utilities and validation helpers
+ * Handles URL fixing, photo limits, file validation, and photo statistics
+ */
+
+import { MAX_PHOTOS_PER_TRIP } from "@shared/services/firebase/trips";
 
 /**
  * Fix photo URL by replacing old domain with new Firebase storage domain

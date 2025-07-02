@@ -1,4 +1,9 @@
-﻿import { useState, useEffect } from "react";
+﻿/**
+ * Hook for AI face recognition and photo filtering functionality
+ * Handles face profile loading, photo matching, and recognition progress tracking
+ */
+
+import { useState, useEffect } from "react";
 import { toast } from "react-hot-toast";
 import {
   filterPhotosByFaceProfile,

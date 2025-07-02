@@ -1,4 +1,8 @@
-// Consistent breakpoints and responsive utilities
+/**
+ * Responsive design utilities and breakpoint helpers
+ * Handles responsive classes, grid patterns, and screen size utilities
+ */
+
 export const BREAKPOINTS = {
   xs: "320px",
   sm: "640px",
