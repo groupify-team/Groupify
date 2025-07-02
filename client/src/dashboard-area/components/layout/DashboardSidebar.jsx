@@ -1,5 +1,4 @@
-﻿// DashboardSidebar.jsx - Dashboard sidebar navigation
-import React from "react";
+﻿import React from "react";
 import {
   ArrowLeftIcon,
   ArrowRightOnRectangleIcon,
@@ -10,6 +9,7 @@ import {
 
 import { useDashboardLayout } from "@dashboard/hooks/useDashboardLayout";
 import { useDashboardData } from "@dashboard/hooks/useDashboardData";
+// FIXED: Proper import syntax
 import { useDashboardModals } from "@dashboard/hooks/useDashboardModals";
 import { useDashboardNavigation } from "@dashboard/hooks/useDashboardNavigation";
 import { useNavigate } from "react-router-dom";

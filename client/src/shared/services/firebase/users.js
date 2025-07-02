@@ -150,11 +150,7 @@ export const didISendRequest = async (fromUid, toUid) => {
   return snapshot.exists();
 };
 
-
 // Membership request approval
-
-// Replace the acceptFriendRequest function in client/src/services/firebase/users.js
-
 export const acceptFriendRequest = async (uid, senderUid) => {
   try {
     const requestId = `${senderUid}_${uid}`;
@@ -198,10 +194,85 @@ export const rejectFriendRequest = async (uid, senderUid) => {
   }
 };
 
-// Retrieve all members
+// Clean up invalid friends (including non-mutual friendships)
+export const cleanupInvalidFriends = async (uid) => {
+  try {
+    console.log(`🧹 Cleaning up invalid friends for user: ${uid}`);
+    
+    const userRef = doc(db, "users", uid);
+    const userDoc = await getDoc(userRef);
+    
+    if (!userDoc.exists()) {
+      console.warn("⚠️ User document not found:", uid);
+      return;
+    }
+    
+    const userData = userDoc.data();
+    const friendIds = userData.friends || [];
+    
+    if (friendIds.length === 0) {
+      console.log("ℹ️ No friends to clean up");
+      return;
+    }
+    
+    const validFriendIds = [];
+    
+    for (const friendId of friendIds) {
+      // Skip empty, null, or invalid friend IDs
+      if (!friendId || typeof friendId !== 'string' || friendId.trim() === '') {
+        console.log(`🗑️ Removing invalid friend ID: "${friendId}"`);
+        continue;
+      }
+      
+      try {
+        const friendRef = doc(db, "users", friendId);
+        const friendDoc = await getDoc(friendRef);
+        
+        if (friendDoc.exists()) {
+          const friendData = friendDoc.data();
+          const friendsFriends = friendData.friends || [];
+          
+          // ✅ CHECK MUTUAL FRIENDSHIP
+          if (friendsFriends.includes(uid)) {
+            validFriendIds.push(friendId);
+          } else {
+            console.log(`🗑️ Removing non-mutual friend: ${friendId} (they don't have ${uid} in their friends list)`);
+          }
+        } else {
+          console.log(`🗑️ Removing non-existent friend: ${friendId}`);
+        }
+      } catch (error) {
+        console.error(`❌ Error checking friend ${friendId}:`, error);
+        // Don't include this friend if there's an error
+      }
+    }
+    
+    // Update user document with only valid, mutual friend IDs
+    if (validFriendIds.length !== friendIds.length) {
+      await updateDoc(userRef, {
+        friends: validFriendIds,
+        updatedAt: new Date().toISOString(),
+      });
+      
+      console.log(`✅ Cleaned up friends for user ${uid}: ${friendIds.length} -> ${validFriendIds.length}`);
+    } else {
+      console.log(`✅ All friends are valid and mutual for user ${uid}`);
+    }
+    
+    return validFriendIds;
+  } catch (error) {
+    console.error("❌ Error cleaning up friends:", error);
+    throw error;
+  }
+};
+
+// Retrieve all friends with mutual friendship validation
 export const getFriends = async (uid) => {
   console.log("🔍 getFriends called with UID:", uid);
   try {
+    // First, cleanup any invalid friend references
+    await cleanupInvalidFriends(uid);
+    
     const userRef = doc(db, "users", uid);
     const userSnap = await getDoc(userRef);
 
@@ -211,13 +282,13 @@ export const getFriends = async (uid) => {
     }
 
     const friendIds = userSnap.data().friends || [];
-
     const friends = [];
+    const invalidFriendIds = []; // Track friends to remove
 
     for (const fid of friendIds) {
-      if (!fid) {
-        console.warn("⚠️ Skipping invalid friend ID:", fid);
-        continue;
+      if (!fid || typeof fid !== 'string' || fid.trim() === '') {
+        invalidFriendIds.push(fid);
+        continue; // Skip invalid IDs
       }
 
       const fRef = doc(db, "users", fid);
@@ -225,17 +296,43 @@ export const getFriends = async (uid) => {
 
       if (fSnap.exists()) {
         const fData = fSnap.data();
-        friends.push({
-          uid: fid,
-          displayName: fData.displayName || fData.email || fid,
-          email: fData.email || "",
-          photoURL: fData.photoURL || "",
-        });
+        const friendsFriends = fData.friends || [];
+        
+        // ✅ CHECK MUTUAL FRIENDSHIP: Verify that the friend also has current user in their friends list
+        if (friendsFriends.includes(uid)) {
+          friends.push({
+            uid: fid,
+            displayName: fData.displayName || fData.email || fid,
+            email: fData.email || "",
+            photoURL: fData.photoURL || "",
+          });
+        } else {
+          // ❌ FRIENDSHIP IS NOT MUTUAL: Friend removed current user but current user still has them
+          console.warn(`⚠️ Non-mutual friendship detected: ${uid} -> ${fid}. Friend ${fid} doesn't have ${uid} in their friends list.`);
+          invalidFriendIds.push(fid);
+        }
       } else {
-        console.warn("⚠️ Friend doc not found for ID:", fid);
+        // Friend document doesn't exist
+        console.warn(`⚠️ Friend document doesn't exist: ${fid}`);
+        invalidFriendIds.push(fid);
       }
     }
 
+    // Clean up invalid/non-mutual friendships from current user's friends array
+    if (invalidFriendIds.length > 0) {
+      console.log(`🧹 Cleaning up ${invalidFriendIds.length} invalid/non-mutual friendships for user ${uid}`);
+      
+      const validFriendIds = friendIds.filter(id => !invalidFriendIds.includes(id));
+      
+      await updateDoc(userRef, {
+        friends: validFriendIds,
+        updatedAt: new Date().toISOString(),
+      });
+      
+      console.log(`✅ Removed non-mutual friends: ${invalidFriendIds.join(', ')}`);
+    }
+
+    console.log(`✅ Retrieved ${friends.length} valid mutual friends`);
     return friends;
   } catch (error) {
     console.error("❌ Error getting friends:", error);
@@ -245,19 +342,59 @@ export const getFriends = async (uid) => {
 
 export const removeFriend = async (uid, friendUid) => {
   try {
+    console.log(`🗑️ Attempting to remove friendship: ${uid} <-> ${friendUid}`);
+    
     const userRef = doc(db, "users", uid);
     const friendRef = doc(db, "users", friendUid);
 
-    await updateDoc(userRef, {
-      friends: arrayRemove(friendUid),
-    });
+    // Try to remove friend from both users' friends arrays
+    // Use Promise.allSettled to continue even if one fails
+    const results = await Promise.allSettled([
+      updateDoc(userRef, {
+        friends: arrayRemove(friendUid),
+        updatedAt: new Date().toISOString(),
+      }),
+      updateDoc(friendRef, {
+        friends: arrayRemove(uid),
+        updatedAt: new Date().toISOString(),
+      })
+    ]);
 
-    await updateDoc(friendRef, {
-      friends: arrayRemove(uid),
-    });
+    // Check results
+    const [userResult, friendResult] = results;
+    
+    if (userResult.status === 'fulfilled') {
+      console.log(`✅ Removed ${friendUid} from ${uid}'s friends list`);
+    } else {
+      console.error(`❌ Failed to remove ${friendUid} from ${uid}'s friends list:`, userResult.reason);
+    }
+    
+    if (friendResult.status === 'fulfilled') {
+      console.log(`✅ Removed ${uid} from ${friendUid}'s friends list`);
+    } else {
+      console.warn(`⚠️ Failed to remove ${uid} from ${friendUid}'s friends list:`, friendResult.reason);
+      // This might fail due to permissions, but that's okay - the friend will be cleaned up on their next login
+    }
+
+    // If at least the current user's update succeeded, consider it successful
+    if (userResult.status === 'fulfilled') {
+      console.log(`✅ Friendship removal completed for user ${uid}`);
+      return true;
+    } else {
+      throw userResult.reason;
+    }
+
   } catch (error) {
-    console.error("Error removing friend:", error);
-    throw error;
+    console.error("❌ Error removing friend:", error);
+    
+    // Provide more specific error messages
+    if (error.code === 'permission-denied') {
+      throw new Error('You do not have permission to remove this friend. Please try again or contact support.');
+    } else if (error.code === 'not-found') {
+      throw new Error('Friend not found. They may have already been removed.');
+    } else {
+      throw new Error('Failed to remove friend. Please try again.');
+    }
   }
 };
 

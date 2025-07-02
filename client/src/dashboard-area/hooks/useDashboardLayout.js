@@ -85,15 +85,22 @@ export const useDashboardLayout = () => {
    * Handle URL parameters on route change
    */
   useEffect(() => {
-    const urlParams = new URLSearchParams(location.search);
-    const section = urlParams.get("section");
-    if (section) {
-      setActiveSection(section);
-      setCurrentView("home");
-      // Clear the URL parameter
-      navigate("/dashboard", { replace: true });
+    const path = location.pathname;
+    
+    if (path.includes('/dashboard/friends')) {
+      setActiveSection('friends');
+    } else if (path.includes('/dashboard/settings')) {
+      setActiveSection('settings');
+    } else if (path.includes('/dashboard/trip/')) {
+      setActiveSection('trips');
+      setCurrentView('trip');
+      const tripId = path.split('/').pop();
+      setSelectedTripId(tripId);
+    } else if (path.includes('/dashboard/trips') || path === '/dashboard') {
+      setActiveSection('trips');
+      setCurrentView('home');
     }
-  }, [location.search, navigate]);
+  }, [location.pathname]);
 
   /**
    * Close dropdowns when clicking outside
@@ -134,6 +141,8 @@ export const useDashboardLayout = () => {
     setCurrentView("home");
     setSelectedTripId(null);
 
+    navigate(`/dashboard/${sectionId}`);
+
     // Close sidebar on mobile when changing sections
     if (isMobile) {
       setSidebarOpen(false);
@@ -145,6 +154,9 @@ export const useDashboardLayout = () => {
     setSelectedTripId(tripId);
     setTripsDropdownOpen(false);
 
+    // Navigate to the trip route
+    navigate(`/dashboard/trip/${tripId}`);
+
     // Close sidebar on mobile when navigating to trip
     if (isMobile) {
       setSidebarOpen(false);
@@ -154,6 +166,9 @@ export const useDashboardLayout = () => {
   const navigateBackToDashboard = () => {
     setCurrentView("home");
     setSelectedTripId(null);
+
+    // Navigate back to trips section
+    navigate("/dashboard/trips");
 
     // Close sidebar on mobile when going back
     if (isMobile) {

@@ -1,27 +1,135 @@
-﻿// DashboardLayout.jsx - Complete simple solution following PublicHeader pattern
+﻿// DashboardLayout.jsx - Unified version supporting both old and new patterns
 import React, { useState, useEffect } from "react";
+import { useAuth } from "@auth/contexts/AuthContext";
 import { useDashboardData } from "@dashboard/hooks/useDashboardData";
+import { useTheme } from "@/shared/contexts/ThemeContext";
+import { useClickOutside } from "@/shared/hooks/useClickOutside";
+import { useNavigate } from "react-router-dom";
+
+// Import layout components
 import DashboardSidebar from "@dashboard/components/layout/DashboardSidebar";
 import DashboardHeader from "@dashboard/components/layout/DashboardHeader";
 import MobileBottomNav from "@dashboard/components/layout/MobileBottomNav";
 import SettingsModal from "@dashboard/features/settings/components/SettingsModal";
-import { useTheme } from "@/shared/contexts/ThemeContext";
-import { useAuth } from "@/auth-area/contexts/AuthContext";
-import { useClickOutside } from "@/shared/hooks/useClickOutside";
-import { useNavigate } from "react-router-dom";
+
+// Try to import new hooks and modals, fallback if they don't exist
+let useDashboardLayout, useDashboardModals, AddFriendModal, UserProfileModal;
+
+try {
+  const layoutModule = require("@dashboard/hooks/useDashboardLayout");
+  useDashboardLayout = layoutModule.useDashboardLayout;
+} catch (e) {
+  console.log("useDashboardLayout not available, using fallback");
+}
+
+try {
+  const modalsModule = require("@dashboard/contexts/DashboardModalsContext");
+  useDashboardModals = modalsModule.useDashboardModals;
+} catch (e) {
+  console.log("useDashboardModals not available, using fallback");
+}
+
+try {
+  AddFriendModal = require("@dashboard/features/friends/components/AddFriendModal").default;
+} catch (e) {
+  console.log("AddFriendModal not available");
+}
+
+try {
+  UserProfileModal = require("@dashboard/features/friends/components/UserProfileModal").default;
+} catch (e) {
+  console.log("UserProfileModal not available");
+}
 
 const DashboardLayout = ({ children }) => {
-  const { loading } = useDashboardData();
+  const { currentUser, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
-  const { logout } = useAuth();
   const navigate = useNavigate();
+  
+  const { 
+    loading,
+    friends,
+    pendingRequests,
+    showSuccessMessage,
+    showErrorMessage,
+    refreshFriends,
+    removeFriend,
+    removePendingRequest,
+  } = useDashboardData();
 
-  // Simple states - just like PublicHeader pattern
-  const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth >= 1024);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  // Try to use new layout system, fallback to local state
+  let layoutData = null;
+  let modalsData = null;
+
+  if (useDashboardLayout) {
+    try {
+      layoutData = useDashboardLayout();
+    } catch (e) {
+      console.log("Error using useDashboardLayout, falling back to local state");
+    }
+  }
+
+  if (useDashboardModals) {
+    try {
+      modalsData = useDashboardModals();
+    } catch (e) {
+      console.log("Error using useDashboardModals, falling back to local state");
+    }
+  }
+
+  // Local state for when new hooks aren't available
+  const [localSidebarOpen, setLocalSidebarOpen] = useState(typeof window !== 'undefined' ? window.innerWidth >= 1024 : true);
+  const [localIsMobile, setLocalIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth < 768 : false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [showLocalAddFriendModal, setShowLocalAddFriendModal] = useState(false);
+  const [showLocalUserProfileModal, setShowLocalUserProfileModal] = useState(false);
+  const [selectedLocalUser, setSelectedLocalUser] = useState(null);
+
+  // Use new layout system or local state
+  const sidebarOpen = layoutData?.layout?.sidebarOpen ?? localSidebarOpen;
+  const isMobile = layoutData?.layout?.isMobile ?? localIsMobile;
+  const setSidebarOpen = layoutData?.sidebar?.toggle ?? setLocalSidebarOpen;
+
+  // Use new modals system or local state
+  const showAddFriendModal = modalsData?.modals?.showAddFriendModal ?? showLocalAddFriendModal;
+  const isUserProfileOpen = modalsData?.modals?.isUserProfileOpen ?? showLocalUserProfileModal;
+  const selectedUserProfile = modalsData?.userProfile?.selectedUserProfile ?? selectedLocalUser;
+  const preservedSearchInput = modalsData?.userProfile?.preservedSearchInput ?? "";
+  const preservedFoundUser = modalsData?.userProfile?.preservedFoundUser ?? null;
+
+  const closeAddFriendModal = modalsData?.addFriend?.close ?? (() => setShowLocalAddFriendModal(false));
+  const closeUserProfile = modalsData?.userProfileActions?.close ?? (() => {
+    setShowLocalUserProfileModal(false);
+    setSelectedLocalUser(null);
+  });
+  const openUserProfile = modalsData?.userProfileActions?.open ?? ((user) => {
+    setSelectedLocalUser(user);
+    setShowLocalUserProfileModal(true);
+  });
+
+  // Refs for click outside detection
   const logoutModalRef = useClickOutside(() => setShowLogoutModal(false));
+
+  // Handle window resize (only for local state)
+  useEffect(() => {
+    if (layoutData) return; // Skip if using new layout system
+
+    const handleResize = () => {
+      const width = window.innerWidth;
+      setLocalIsMobile(width < 768);
+
+      // Auto-open sidebar on desktop, auto-close on mobile
+      if (width >= 1024) {
+        setLocalSidebarOpen(true);
+      } else {
+        setLocalSidebarOpen(false);
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [layoutData]);
 
   // Escape key support
   useEffect(() => {
@@ -29,32 +137,16 @@ const DashboardLayout = ({ children }) => {
       if (e.key === "Escape") {
         if (showLogoutModal) setShowLogoutModal(false);
         if (showSettingsModal) setShowSettingsModal(false);
+        if (showAddFriendModal && closeAddFriendModal) closeAddFriendModal();
+        if (isUserProfileOpen && closeUserProfile) closeUserProfile();
       }
     };
 
     document.addEventListener("keydown", handleEscape);
     return () => document.removeEventListener("keydown", handleEscape);
-  }, [showLogoutModal, showSettingsModal]);
+  }, [showLogoutModal, showSettingsModal, showAddFriendModal, isUserProfileOpen, closeAddFriendModal, closeUserProfile]);
 
-  // Handle window resize
-  useEffect(() => {
-    const handleResize = () => {
-      const width = window.innerWidth;
-      setIsMobile(width < 768);
-
-      // Auto-open sidebar on desktop, auto-close on mobile
-      if (width >= 1024) {
-        setSidebarOpen(true);
-      } else {
-        setSidebarOpen(false);
-      }
-    };
-
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  // Simple callback functions - like PublicHeader pattern
+  // Handler functions
   const handleSettingsClick = () => {
     console.log("🎯 Settings clicked!");
     setShowSettingsModal(true);
@@ -67,7 +159,11 @@ const DashboardLayout = ({ children }) => {
 
   const handleSidebarToggle = () => {
     console.log("🎯 Sidebar toggle clicked!");
-    setSidebarOpen((prev) => !prev);
+    if (layoutData?.sidebar?.toggle) {
+      layoutData.sidebar.toggle();
+    } else {
+      setLocalSidebarOpen((prev) => !prev);
+    }
   };
 
   const closeSettingsModal = () => {
@@ -83,13 +179,61 @@ const DashboardLayout = ({ children }) => {
   const handleLogoutConfirm = async () => {
     try {
       console.log("🎯 Logging out user...");
-      await logout(); // Call the real logout function
+      await logout();
       closeLogoutModal();
-      navigate("/", { replace: true }); // Redirect to HomePage
+      navigate("/", { replace: true });
       console.log("✅ User logged out successfully");
     } catch (error) {
       console.error("❌ Logout error:", error);
-      // You could show an error message here if needed
+      showErrorMessage("Failed to logout. Please try again.");
+    }
+  };
+
+  // Friend operation handlers
+  const handleAddFriendDirect = async (targetUid) => {
+    try {
+      const { sendFriendRequest } = await import("@shared/services/firebase/users");
+      await sendFriendRequest(currentUser.uid, targetUid);
+      showSuccessMessage("Friend request sent!");
+      closeAddFriendModal();
+    } catch (error) {
+      console.error("Error sending friend request:", error);
+      showErrorMessage("Failed to send friend request");
+    }
+  };
+
+  const handleUserSelect = (uid) => {
+    // Find user data and open profile modal
+    const userData = friends.find(f => f.uid === uid) || preservedFoundUser;
+    if (userData) {
+      openUserProfile(userData);
+    }
+  };
+
+  const handleRemoveFriend = async (friendUid) => {
+    try {
+      const { removeFriend: removeFriendService } = await import("@shared/services/firebase/users");
+      await removeFriendService(currentUser.uid, friendUid);
+      removeFriend(friendUid);
+      await refreshFriends();
+      showSuccessMessage("Friend removed");
+      closeUserProfile();
+    } catch (error) {
+      console.error("Error removing friend:", error);
+      showErrorMessage("Failed to remove friend");
+    }
+  };
+
+  const handleCancelRequest = async (targetUid) => {
+    try {
+      const { cancelFriendRequest } = await import("@shared/services/firebase/users");
+      await cancelFriendRequest(currentUser.uid, targetUid);
+      removePendingRequest(targetUid);
+      showSuccessMessage("Friend request cancelled");
+      closeUserProfile();
+    } catch (error) {
+      console.error("Error cancelling friend request:", error);
+      showErrorMessage("Failed to cancel friend request");
     }
   };
 
@@ -141,7 +285,13 @@ const DashboardLayout = ({ children }) => {
       >
         <DashboardSidebar
           sidebarOpen={sidebarOpen}
-          onSidebarClose={() => setSidebarOpen(false)}
+          onSidebarClose={() => {
+            if (layoutData?.sidebar?.close) {
+              layoutData.sidebar.close();
+            } else {
+              setLocalSidebarOpen(false);
+            }
+          }}
           onLogoutClick={handleLogoutClick}
         />
       </div>
@@ -150,7 +300,13 @@ const DashboardLayout = ({ children }) => {
       {sidebarOpen && isMobile && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 z-40"
-          onClick={() => setSidebarOpen(false)}
+          onClick={() => {
+            if (layoutData?.sidebar?.close) {
+              layoutData.sidebar.close();
+            } else {
+              setLocalSidebarOpen(false);
+            }
+          }}
         />
       )}
 
@@ -185,7 +341,36 @@ const DashboardLayout = ({ children }) => {
         )}
       </div>
 
-      {/* Settings Modal - Just like PublicHeader pattern */}
+      {/* MODALS */}
+      
+      {/* Add Friend Modal - Only render if component exists */}
+      {showAddFriendModal && AddFriendModal && (
+        <AddFriendModal
+          isOpen={showAddFriendModal}
+          onClose={closeAddFriendModal}
+          onUserSelect={handleUserSelect}
+          onAddFriendDirect={handleAddFriendDirect}
+          preservedInput={preservedSearchInput}
+          preservedUser={preservedFoundUser}
+        />
+      )}
+
+      {/* User Profile Modal - Only render if component exists */}
+      {isUserProfileOpen && selectedUserProfile && UserProfileModal && (
+        <UserProfileModal
+          isOpen={isUserProfileOpen}
+          onClose={closeUserProfile}
+          user={selectedUserProfile}
+          currentUserId={currentUser?.uid}
+          friends={friends.map(f => f.uid)}
+          pendingRequests={pendingRequests}
+          onAddFriend={handleAddFriendDirect}
+          onRemoveFriend={handleRemoveFriend}
+          onCancelRequest={handleCancelRequest}
+        />
+      )}
+
+      {/* Settings Modal */}
       {showSettingsModal && (
         <SettingsModal
           isOpen={showSettingsModal}
@@ -216,13 +401,13 @@ const DashboardLayout = ({ children }) => {
               <div className="flex gap-3">
                 <button
                   onClick={closeLogoutModal}
-                  className="smooth-hover flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200"
+                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleLogoutConfirm}
-                  className="smooth-hover flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all duration-200"
+                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all duration-200"
                 >
                   Logout
                 </button>
@@ -231,6 +416,48 @@ const DashboardLayout = ({ children }) => {
           </div>
         </div>
       )}
+
+      {/* Debug indicators for modal state */}
+      {process.env.NODE_ENV === 'development' && (
+        <>
+          {showAddFriendModal && (
+            <div className="fixed bottom-4 right-4 bg-green-500 text-white p-2 rounded text-sm z-50">
+              ✅ AddFriend Modal is rendering!
+            </div>
+          )}
+          {isUserProfileOpen && (
+            <div className="fixed bottom-16 right-4 bg-blue-500 text-white p-2 rounded text-sm z-50">
+              ✅ UserProfile Modal is rendering!
+            </div>
+          )}
+        </>
+      )}
+
+      <style jsx>{`
+        @keyframes fade-in {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        
+        @keyframes slide-in-scale {
+          from { 
+            opacity: 0; 
+            transform: scale(0.95) translateY(-10px); 
+          }
+          to { 
+            opacity: 1; 
+            transform: scale(1) translateY(0); 
+          }
+        }
+        
+        .animate-fade-in {
+          animation: fade-in 0.2s ease-out;
+        }
+        
+        .animate-slide-in-scale {
+          animation: slide-in-scale 0.3s ease-out;
+        }
+      `}</style>
     </div>
   );
 };
