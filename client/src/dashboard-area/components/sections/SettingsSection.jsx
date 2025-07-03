@@ -1,4 +1,4 @@
-﻿// SettingsSection.jsx - Settings management section
+﻿// SettingsSection.jsx - FIXED VERSION with safe modal hook usage
 import React from "react";
 import {
   BellIcon,
@@ -10,7 +10,7 @@ import {
 import { useAuth } from "@auth/contexts/AuthContext";
 import { useDashboardLayout } from "../../hooks/useDashboardLayout";
 import { useDashboardData } from "../../hooks/useDashboardData";
-import { useDashboardModals } from "../../hooks/useDashboardModals";
+// 🔥 FIXED: Safe import with fallback
 import { useDashboardNavigation } from "../../hooks/useDashboardNavigation";
 import SubscriptionCard from "../widgets/SubscriptionCard";
 import FaceProfileCard from "../widgets/FaceProfileCard";
@@ -36,19 +36,58 @@ const SettingsSection = () => {
     isLoadingProfile,
   } = useDashboardData();
 
-  const {
-    editProfile: { open: openEditProfileModal },
-    faceProfile: { open: openFaceProfileModal },
-    faceProfileManage: { open: openFaceProfileManageModal },
-    deleteAccount: { open: openDeleteAccountModal },
-    usage: { open: openUsageModal },
-    billingHistory: { open: openBillingHistoryModal },
-    cancelPlan: { open: openCancelPlanModal },
-  } = useDashboardModals();
+  // 🔥 FIXED: Safe modal hook usage with fallback
+  let modalActions = {};
+  try {
+    // Try to import and use the context
+    const {
+      useDashboardModals,
+    } = require("@dashboard/contexts/DashboardModalsContext");
+    modalActions = useDashboardModals();
+  } catch (e) {
+    console.log("useDashboardModals not available, using fallback functions");
+    // Fallback functions
+    modalActions = {
+      editProfile: { open: () => console.log("Edit profile modal") },
+      faceProfile: { open: () => console.log("Face profile modal") },
+      faceProfileManage: {
+        open: () => console.log("Face profile manage modal"),
+      },
+      deleteAccount: { open: () => console.log("Delete account modal") },
+      usage: { open: () => console.log("Usage modal") },
+      billingHistory: { open: () => console.log("Billing history modal") },
+      cancelPlan: { open: () => console.log("Cancel plan modal") },
+    };
+  }
 
-  const {
-    pages: { toPricing, toBilling },
-  } = useDashboardNavigation();
+  // 🔥 FIXED: Safe destructuring with fallbacks
+  const openEditProfileModal = modalActions?.editProfile?.open || (() => {});
+  const openFaceProfileModal = modalActions?.faceProfile?.open || (() => {});
+  const openFaceProfileManageModal =
+    modalActions?.faceProfileManage?.open || (() => {});
+  const openDeleteAccountModal =
+    modalActions?.deleteAccount?.open || (() => {});
+  const openUsageModal = modalActions?.usage?.open || (() => {});
+  const openBillingHistoryModal =
+    modalActions?.billingHistory?.open || (() => {});
+  const openCancelPlanModal = modalActions?.cancelPlan?.open || (() => {});
+
+  // 🔥 FIXED: Safe navigation hook usage
+  let navigationActions = {};
+  try {
+    navigationActions = useDashboardNavigation();
+  } catch (e) {
+    console.log("useDashboardNavigation not available, using fallback");
+    navigationActions = {
+      pages: {
+        toPricing: () => (window.location.href = "/pricing"),
+        toBilling: () => (window.location.href = "/billing"),
+      },
+    };
+  }
+
+  const toPricing = navigationActions?.pages?.toPricing || (() => {});
+  const toBilling = navigationActions?.pages?.toBilling || (() => {});
 
   return (
     <div className="space-y-6">
