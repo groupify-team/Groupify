@@ -1,4 +1,9 @@
-﻿import { useState, useEffect } from "react";
+﻿/**
+ * Hook for trip member management and friend operations
+ * Handles member actions, role changes, friend requests, and member removal
+ */
+
+import { useState, useEffect } from "react";
 import { toast } from "react-hot-toast";
 import {
   doc,

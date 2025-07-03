@@ -1,4 +1,8 @@
-﻿// hooks/useInviteFriends.js
+﻿/**
+ * Hook for friend search and invitation within trip context
+ * Handles friend filtering, search functionality, and trip invitations
+ */
+
 import { useState, useEffect } from "react";
 import { toast } from "react-hot-toast";
 import { collection, getDocs, query, where } from "firebase/firestore";

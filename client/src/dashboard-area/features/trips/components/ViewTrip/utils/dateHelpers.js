@@ -1,6 +1,8 @@
 /**
- * Format date for display in different contexts
+ * Date formatting and validation utilities for trip dates
+ * Handles date display, relative time, trip duration, and date validation
  */
+
 export const formatDate = (dateString, format = "short") => {
   if (!dateString) return null;
 

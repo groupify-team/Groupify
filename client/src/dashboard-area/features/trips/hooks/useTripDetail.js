@@ -1,7 +1,14 @@
-﻿// hooks/useTripDetail.js
+﻿/**
+ * Hook for generic trip operations and management
+ * Handles trip fetching, updating, member management, and photo operations
+ */
+
 import { useState, useEffect } from "react";
 import { tripsService } from "../services/tripsService";
-import { isUserTripAdmin, isUserTripMember } from "@dashboard/utils/tripHelpers";
+import {
+  isUserTripAdmin,
+  isUserTripMember,
+} from "@dashboard/utils/tripHelpers";
 
 export const useTripDetail = (tripId, currentUser) => {
   const [trip, setTrip] = useState(null);

@@ -1,4 +1,4 @@
-﻿// SettingsSection.jsx - Complete Settings management section
+// SettingsSection.jsx - Complete Settings management section
 import React, { useState } from "react";
 import {
   BellIcon,
@@ -43,6 +43,9 @@ const SettingsSection = () => {
   const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
   const [showBackupModal, setShowBackupModal] = useState(false);
+  const [showUsageModal, setShowUsageModal] = useState(false);
+  const [showBillingHistoryModal, setShowBillingHistoryModal] = useState(false);
+  const [showCancelPlanModal, setShowCancelPlanModal] = useState(false);
 
   const {
     layout: { isMobile },
@@ -59,9 +62,22 @@ const SettingsSection = () => {
     loadFaceProfile,
   } = useDashboardData();
 
-  const {
-    pages: { toPricing, toBilling },
-  } = useDashboardNavigation();
+  // Safe navigation hook usage with fallback
+  let navigationActions = {};
+  try {
+    navigationActions = useDashboardNavigation();
+  } catch (e) {
+    console.log("useDashboardNavigation not available, using fallback");
+    navigationActions = {
+      pages: {
+        toPricing: () => (window.location.href = "/pricing"),
+        toBilling: () => (window.location.href = "/billing"),
+      },
+    };
+  }
+
+  const toPricing = navigationActions?.pages?.toPricing || (() => {});
+  const toBilling = navigationActions?.pages?.toBilling || (() => {});
 
   // Check if face recognition is enabled
   const faceRecognitionEnabled = settings.privacy?.faceRecognition ?? false;
@@ -142,35 +158,44 @@ const SettingsSection = () => {
     setShowFaceProfileManageModal(true);
   };
 
-  // Handle modal state changes
+  // Modal handlers - FIXED: Single definition for each
   const openEditProfileModal = () => setShowEditProfileModal(true);
   const closeEditProfileModal = () => setShowEditProfileModal(false);
   const openDeleteAccountModal = () => setShowDeleteAccountModal(true);
   const closeDeleteAccountModal = () => setShowDeleteAccountModal(false);
-
-  // Mock functions for usage and billing modals (if needed)
-  const [showUsageModal, setShowUsageModal] = useState(false);
-  const [showBillingHistoryModal, setShowBillingHistoryModal] = useState(false);
-  const [showCancelPlanModal, setShowCancelPlanModal] = useState(false);
-
   const openUsageModal = () => setShowUsageModal(true);
   const openBillingHistoryModal = () => setShowBillingHistoryModal(true);
   const openCancelPlanModal = () => setShowCancelPlanModal(true);
 
-  // Handle export functions
+  // Export/Backup handlers - FIXED: Proper async handling
   const handleExportData = async () => {
-    await exportData();
-    setShowExportModal(false);
+    try {
+      await exportData();
+      setShowExportModal(false);
+    } catch (error) {
+      console.error("Export error:", error);
+      // Modal stays open on error so user can retry
+    }
   };
 
   const handleCreateBackup = async () => {
-    await createBackup();
-    setShowBackupModal(false);
+    try {
+      await createBackup();
+      setShowBackupModal(false);
+    } catch (error) {
+      console.error("Backup error:", error);
+      // Modal stays open on error so user can retry
+    }
   };
 
   const handleExportCSV = async (dataType) => {
-    await exportCSV(dataType);
-    setShowExportModal(false);
+    try {
+      await exportCSV(dataType);
+      setShowExportModal(false);
+    } catch (error) {
+      console.error("CSV export error:", error);
+      // Modal stays open on error so user can retry
+    }
   };
 
   return (
@@ -250,7 +275,7 @@ const SettingsSection = () => {
         <div className="bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-800 dark:to-blue-900/20 rounded-xl p-3 sm:p-4 lg:p-6 border border-gray-200/50 dark:border-gray-700/50">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
             {/* Notifications */}
-            <div className="space-y-3 sm:space-y-4">
+            <div className="space-y-3 sm:space-y-4" data-section="notifications">
               <div className="flex items-center gap-2 mb-2 sm:mb-3">
                 <div className="w-6 h-6 sm:w-7 sm:h-7 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-sm">
                   <BellIcon className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
@@ -302,7 +327,7 @@ const SettingsSection = () => {
             </div>
 
             {/* Privacy */}
-            <div className="space-y-3 sm:space-y-4">
+            <div className="space-y-3 sm:space-y-4" data-section="privacy">
               <div className="flex items-center gap-2 mb-2 sm:mb-3">
                 <div className="w-6 h-6 sm:w-7 sm:h-7 bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg flex items-center justify-center shadow-sm">
                   <svg

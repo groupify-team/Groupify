@@ -1,4 +1,8 @@
-// hooks/useTrips.js
+/**
+ * Hook for managing user trips list and trip CRUD operations
+ * Handles fetching all trips, creating new trips, and trip validation
+ */
+
 import { useState, useEffect } from "react";
 import { tripsService } from "../services/tripsService";
 

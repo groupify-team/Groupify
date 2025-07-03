@@ -1,4 +1,4 @@
-﻿// DashboardHeader.jsx - Unified version supporting both old and new patterns
+﻿// DashboardHeader.jsx - FIXED VERSION with proper sticky positioning
 import React, { useState, useRef, useEffect } from "react";
 import { useClickOutside } from "@/shared/hooks/useClickOutside";
 import { useDashboardData } from "@dashboard/hooks/useDashboardData";
@@ -64,8 +64,10 @@ const DashboardHeader = ({
   const currentSidebarOpen = layoutData?.layout?.sidebarOpen ?? sidebarOpen;
   const currentIsMobile = layoutData?.layout?.isMobile ?? isMobile;
   const toggleSidebar = layoutData?.sidebar?.toggle ?? onSidebarToggle;
-  const toggleNotificationsDropdown = layoutData?.dropdownActions?.toggleNotificationsDropdown;
-  const notificationsDropdownOpen = layoutData?.dropdowns?.notificationsDropdownOpen;
+  const toggleNotificationsDropdown =
+    layoutData?.dropdownActions?.toggleNotificationsDropdown;
+  const notificationsDropdownOpen =
+    layoutData?.dropdowns?.notificationsDropdownOpen;
   const navigateToSection = layoutData?.navigation?.navigateToSection;
 
   // Local state for when new hooks aren't available
@@ -74,13 +76,15 @@ const DashboardHeader = ({
 
   // Use new hook state or local state
   const notificationsOpen = notificationsDropdownOpen ?? localNotificationsOpen;
-  const setNotificationsOpen = toggleNotificationsDropdown ?? setLocalNotificationsOpen;
+  const setNotificationsOpen =
+    toggleNotificationsDropdown ?? setLocalNotificationsOpen;
 
   // Refs for outside click detection
   const notificationRef = useRef(null);
   const mobileUserMenuRef = useRef(null);
 
-  const totalNotifications = (pendingRequests?.length || 0) + (tripInvites?.length || 0);
+  const totalNotifications =
+    (pendingRequests?.length || 0) + (tripInvites?.length || 0);
 
   // Close dropdowns when clicking outside (only for local state)
   useEffect(() => {
@@ -127,12 +131,25 @@ const DashboardHeader = ({
   };
 
   const shouldShowCenterLogo = () => {
-    if (typeof window === 'undefined') return false;
-    return (!currentSidebarOpen && window.innerWidth >= 640 && window.innerWidth < 1024);
+    if (typeof window === "undefined") return false;
+    return (
+      !currentSidebarOpen &&
+      window.innerWidth >= 640 &&
+      window.innerWidth < 1024
+    );
   };
 
   return (
-    <header className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg shadow-sm border-b border-white/20 dark:border-gray-700/50 sticky top-0 z-20">
+    // 🔥 FIXED: Changed from 'sticky top-0' to 'fixed top-0 left-0 right-0'
+    // This ensures the header is ALWAYS pinned to the top regardless of scroll
+    <header
+      className="fixed top-0 bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg shadow-sm border-b border-white/20 dark:border-gray-700/50 z-50 transition-all duration-300"
+      style={{
+        left: !currentIsMobile && currentSidebarOpen ? "256px" : "0px",
+        right: "0px",
+      }}
+    >
+      {" "}
       <div className="w-full px-2 sm:px-4 lg:px-8">
         <div className="flex justify-between items-center h-12 sm:h-14 w-full">
           {/* Left Section */}
@@ -169,7 +186,7 @@ const DashboardHeader = ({
 
           {/* Center - Logo for medium screens when sidebar is closed */}
           {shouldShowCenterLogo() && (
-            <div 
+            <div
               className="hidden sm:flex lg:hidden items-center gap-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg p-2 transition-colors"
               onClick={() => navigateToSection && navigateToSection("trips")}
             >
@@ -394,7 +411,6 @@ const DashboardHeader = ({
           </div>
         </div>
       </div>
-
       <style jsx>{`
         @keyframes slideInFromTop {
           0% {

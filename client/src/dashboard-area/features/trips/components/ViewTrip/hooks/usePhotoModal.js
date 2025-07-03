@@ -1,3 +1,8 @@
+/**
+ * Hook for photo modal navigation and display management
+ * Handles photo navigation, random selection, and modal state
+ */
+
 import { useState } from "react";
 
 export const usePhotoModal = () => {

@@ -1,4 +1,9 @@
-﻿import { useState, useEffect } from "react";
+﻿/**
+ * Hook for AI face recognition and photo filtering functionality
+ * Handles face profile loading, photo matching, and recognition progress tracking
+ */
+
+import { useState, useEffect } from "react";
 import { toast } from "react-hot-toast";
 import {
   filterPhotosByFaceProfile,
@@ -248,9 +253,15 @@ export const useFaceRecognition = (photos, currentUserId, isMember) => {
 
   // Auto-load face profile on component mount
   useEffect(() => {
-    if (currentUserId) {
+    let isMounted = true;
+
+    if (currentUserId && isMounted) {
       loadUserFaceProfile();
     }
+
+    return () => {
+      isMounted = false;
+    };
   }, [currentUserId]);
 
   return {

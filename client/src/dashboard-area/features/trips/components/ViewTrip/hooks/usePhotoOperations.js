@@ -1,4 +1,9 @@
-﻿import { useState } from "react";
+﻿/**
+ * Hook for photo operations within trip view
+ * Handles photo uploads, deletions, selection mode, and photo limit checks
+ */
+
+import { useState } from "react";
 import { toast } from "react-hot-toast";
 import { doc, deleteDoc } from "firebase/firestore";
 import { ref, deleteObject } from "firebase/storage";

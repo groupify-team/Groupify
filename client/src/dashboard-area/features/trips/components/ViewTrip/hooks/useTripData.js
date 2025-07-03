@@ -1,4 +1,9 @@
-﻿import { useState, useEffect } from "react";
+﻿/**
+ * Hook for managing trip data, photos, and members in trip detail view
+ * Handles data fetching, loading states, and permission checks
+ */
+
+import { useState, useEffect, useMemo } from "react";
 import { getTrip, updateTrip } from "@shared/services/firebase/trips";
 import { getTripPhotos } from "@shared/services/firebase/storage";
 import { getUserProfile } from "@shared/services/firebase/users";
@@ -70,9 +75,22 @@ export const useTripData = (tripId, currentUserId) => {
   }, [tripId, currentUserId]);
 
   return {
+    // Data
     trip,
     photos,
-    tripMembers,
+    tripMembers: useMemo(
+      () =>
+        [...tripMembers].sort((a, b) => {
+          if (a.uid === currentUserId) return -1;
+          if (b.uid === currentUserId) return 1;
+          if (a.uid === trip?.createdBy) return -1;
+          if (b.uid === trip?.createdBy) return 1;
+          return (a.displayName || a.email || "").localeCompare(
+            b.displayName || b.email || ""
+          );
+        }),
+      [tripMembers, currentUserId, trip?.createdBy]
+    ),
     memberProfiles,
     isAdmin,
     loading,

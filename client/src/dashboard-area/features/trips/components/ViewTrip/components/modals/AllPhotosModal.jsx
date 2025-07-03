@@ -31,7 +31,7 @@ const AllPhotosModal = ({
 
   return (
     <div
-      className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-6 animate-fade-in"
+      className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-[99999] p-3 sm:p-6 animate-fade-in"
       onClick={onClose}
     >
       {" "}
