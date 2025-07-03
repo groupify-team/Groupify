@@ -7,11 +7,11 @@ import { useAuth } from "@auth/contexts/AuthContext";
 
 // Components
 import TripHeader from "./components/TripHeader";
-import PhotoUploadSection from "./components/PhotoUploadSection";
 import PhotoGallery from "./components/PhotoGallery";
 import FaceRecognitionSection from "./components/FaceRecognitionSection";
 import TripMembersCard from "./components/TripMembersCard";
 import InvitePeopleCard from "./components/InvitePeopleCard";
+import TripStatistics from "./components/TripStatistics";
 
 // Modals
 import PhotoModal from "./components/modals/PhotoModal";
@@ -472,6 +472,13 @@ const TripDetailView = ({ tripId: propTripId }) => {
               onCancelProcessing={handleCancelFaceRecognition}
               onNavigateToProfile={handleNavigateToProfile}
               onPhotoSelect={setSelectedPhoto}
+            />
+
+            {/* ADD THIS - Trip Statistics */}
+            <TripStatistics
+              trip={trip}
+              photos={photos}
+              tripMembers={tripMembers}
             />
           </div>
 
