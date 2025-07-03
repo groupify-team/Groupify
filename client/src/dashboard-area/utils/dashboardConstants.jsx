@@ -92,9 +92,12 @@ export const PLAN_CONFIGS = {
   },
 };
 
-// Notification Settings
+// Streamlined notification settings - only core app features
 export const NOTIFICATION_SETTINGS = [
   {
+    id: "emailNotifications",
+    label: "Email Notifications",
+    description: "Receive important updates via email",
     icon: (
       <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center shadow-sm">
         <svg
@@ -107,50 +110,49 @@ export const NOTIFICATION_SETTINGS = [
         </svg>
       </div>
     ),
-    label: "Email Notifications",
     defaultChecked: true,
   },
   {
+    id: "tripUpdates",
+    label: "Trip Updates",
+    description: "Get notified about trip activities and changes",
     icon: (
       <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center shadow-sm">
         <MapIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white" />
       </div>
     ),
-    label: "Trip Updates",
     defaultChecked: true,
   },
   {
-    icon: (
-      <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-lg flex items-center justify-center shadow-sm">
-        <UserGroupIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white" />
-      </div>
-    ),
-    label: "Friend Requests",
-    defaultChecked: false,
-  },
-  {
+    id: "photoRecognition",
+    label: "Photo Recognition",
+    description: "Notifications when you're tagged in photos",
     icon: (
       <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg flex items-center justify-center shadow-sm">
         <CameraIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white" />
       </div>
     ),
-    label: "Photo Recognition",
     defaultChecked: true,
   },
 ];
 
-// Privacy Settings
+// Streamlined privacy settings - core privacy controls
 export const PRIVACY_SETTINGS = [
   {
+    id: "publicProfile",
+    label: "Public Profile",
+    description: "Allow others to find and view your profile",
     icon: (
       <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg flex items-center justify-center shadow-sm">
         <UserCircleIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white" />
       </div>
     ),
-    label: "Public Profile",
     defaultChecked: true,
   },
   {
+    id: "faceRecognition",
+    label: "Face Recognition",
+    description: "Enable face detection and tagging in photos",
     icon: (
       <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-r from-pink-500 to-rose-500 rounded-lg flex items-center justify-center shadow-sm">
         <svg
@@ -167,38 +169,48 @@ export const PRIVACY_SETTINGS = [
         </svg>
       </div>
     ),
-    label: "Face Recognition",
-    defaultChecked: false,
+    defaultChecked: false, // Privacy-first approach
   },
   {
+    id: "searchVisibility",
+    label: "Search Visibility",
+    description: "Allow others to find you in search results",
     icon: (
       <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-lg flex items-center justify-center shadow-sm">
         <MagnifyingGlassIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white" />
       </div>
     ),
-    label: "Search Visibility",
     defaultChecked: true,
   },
-  {
-    icon: (
-      <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-r from-violet-500 to-purple-500 rounded-lg flex items-center justify-center shadow-sm">
-        <svg
-          className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white"
-          fill="currentColor"
-          viewBox="0 0 20 20"
-        >
-          <path
-            fillRule="evenodd"
-            d="M4.083 9h1.946c.089-1.546.383-2.97.837-4.118A6.004 6.004 0 004.083 9zM10 2a8 8 0 100 16 8 8 0 000-16zm0 2c-.076 0-.232.032-.465.262-.238.234-.497.623-.737 1.182-.389.907-.673 2.142-.766 3.556h3.936c-.093-1.414-.377-2.649-.766-3.556-.24-.56-.5-.948-.737-1.182C10.232 4.032 10.076 4 10 4zm3.971 5c-.089-1.546-.383-2.97-.837-4.118A6.004 6.004 0 0115.917 9h-1.946zm-2.003 2H8.032c.093 1.414.377 2.649.766 3.556.24.56.5.948.737 1.182.233.23.389.262.465.262.076 0 .232-.032.465-.262.238-.234.498-.623.737-1.182.389-.907.673-2.142.766-3.556zm1.166 4.118c.454-1.147.748-2.572.837-4.118h1.946a6.004 6.004 0 01-2.783 4.118zm-6.268 0C6.412 13.97 6.118 12.546 6.03 11H4.083a6.004 6.004 0 002.783 4.118z"
-            clipRule="evenodd"
-          />
-        </svg>
-      </div>
-    ),
-    label: "Data Sharing",
-    defaultChecked: false,
-  },
 ];
+
+// Settings sections configuration
+export const SETTINGS_SECTIONS = {
+  NOTIFICATIONS: "notifications",
+  PRIVACY: "privacy",
+  ACCOUNT: "account",
+  FACE_PROFILE: "faceProfile",
+  SUBSCRIPTION: "subscription",
+  DATA: "data",
+};
+
+// Default settings object for new users
+export const DEFAULT_USER_SETTINGS = {
+  notifications: {
+    emailNotifications: true,
+    tripUpdates: true,
+    photoRecognition: true,
+  },
+  privacy: {
+    publicProfile: true,
+    faceRecognition: false,
+    searchVisibility: true,
+  },
+  preferences: {
+    theme: "system",
+    language: "en",
+  },
+};
 
 // Responsive Breakpoints
 export const BREAKPOINTS = {
@@ -238,6 +250,8 @@ export const TOAST_MESSAGES = {
     "Plan canceled successfully! You've been downgraded to the free plan.",
   tripInviteAccepted: "Trip invitation accepted",
   tripInviteDeclined: "Trip invitation declined",
+  settingsUpdated: "Settings updated successfully!",
+  settingsError: "Failed to update settings. Please try again.",
 };
 
 // Error Messages
@@ -253,6 +267,8 @@ export const ERROR_MESSAGES = {
   confirmDelete: "Please type 'DELETE' to confirm",
   requiresRecentLogin:
     "For security reasons, please log out and log back in, then try deleting your account again.",
+  loadingSettings: "Failed to load settings",
+  updatingSettings: "Failed to update settings",
 };
 
 // User Menu Items (Mobile)
