@@ -18,7 +18,6 @@ export class ExportService {
    */
   static async exportUserData(userId) {
     try {
-      console.log('📤 Starting data export for user:', userId);
       
       const exportData = {
         exportInfo: {
@@ -38,14 +37,12 @@ export class ExportService {
       };
 
       // Get user profile
-      console.log('👤 Exporting user profile...');
       const userDoc = await getDoc(doc(db, 'users', userId));
       if (userDoc.exists()) {
         exportData.userData = userDoc.data();
       }
 
       // Get user settings
-      console.log('⚙️ Exporting user settings...');
       try {
         exportData.settings = await SettingsService.getUserSettings(userId);
       } catch (error) {
@@ -54,7 +51,6 @@ export class ExportService {
       }
 
       // Get user's trips
-      console.log('🗺️ Exporting trips...');
       const tripsQuery = query(
         collection(db, 'trips'),
         where('members', 'array-contains', userId)
@@ -66,7 +62,6 @@ export class ExportService {
       }));
 
       // Get user's photos
-      console.log('📸 Exporting photos...');
       const photosQuery = query(
         collection(db, 'photos'),
         where('uploadedBy', '==', userId)
@@ -78,7 +73,6 @@ export class ExportService {
       }));
 
       // Get friend requests
-      console.log('👥 Exporting friend requests...');
       const sentRequestsQuery = query(
         collection(db, 'friendRequests'),
         where('from', '==', userId)
@@ -99,7 +93,6 @@ export class ExportService {
       };
 
       // Get face profile
-      console.log('🎭 Exporting face profile...');
       try {
         const faceProfileDoc = await getDoc(doc(db, 'faceProfiles', userId));
         if (faceProfileDoc.exists()) {
@@ -110,7 +103,6 @@ export class ExportService {
       }
 
       // Get friends list
-      console.log('👫 Exporting friends list...');
       if (exportData.userData.friends && exportData.userData.friends.length > 0) {
         const friendsData = [];
         for (const friendId of exportData.userData.friends) {
@@ -133,7 +125,6 @@ export class ExportService {
       }
 
       // Calculate statistics
-      console.log('📊 Calculating statistics...');
       exportData.statistics = {
         totalTrips: exportData.trips.length,
         totalPhotos: exportData.photos.length,
@@ -143,7 +134,6 @@ export class ExportService {
         lastActive: exportData.userData.lastLoginAt || 'Unknown'
       };
 
-      console.log('✅ Data export completed successfully');
       return exportData;
     } catch (error) {
       console.error('❌ Error exporting user data:', error);
@@ -194,7 +184,6 @@ export class ExportService {
    */
   static async createBackup(userId) {
     try {
-      console.log('💾 Creating backup for user:', userId);
       
       const exportData = await this.exportUserData(userId);
       
@@ -213,7 +202,6 @@ export class ExportService {
         }
       };
 
-      console.log('✅ Backup created successfully');
       return backupData;
     } catch (error) {
       console.error('❌ Error creating backup:', error);
@@ -244,7 +232,6 @@ export class ExportService {
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
 
-      console.log('✅ Backup downloaded successfully as:', filename);
       return true;
     } catch (error) {
       console.error('❌ Error downloading backup:', error);
@@ -259,7 +246,6 @@ export class ExportService {
    */
   static async exportToCSV(userId, dataType = 'trips') {
     try {
-      console.log(`📊 Exporting ${dataType} as CSV for user:`, userId);
       
       const exportData = await this.exportUserData(userId);
       let csvData = '';

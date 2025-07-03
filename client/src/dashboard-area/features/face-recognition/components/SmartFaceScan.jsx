@@ -116,7 +116,6 @@ const SmartFaceScan = forwardRef(({ isOpen, onClose, onProfileCreated, onBack, o
   // Enhanced camera management with proper cleanup
   const startCamera = async () => {
     try {
-      console.log("📷 Starting camera in SmartFaceScan...");
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: {
           width: { ideal: 1280 },
@@ -125,18 +124,15 @@ const SmartFaceScan = forwardRef(({ isOpen, onClose, onProfileCreated, onBack, o
         },
       });
       
-      console.log("📷 Camera stream obtained:", mediaStream);
       setStream(mediaStream);
 
       // Pass stream to parent for tracking
       if (onCameraStream) {
-        console.log("📷 Passing stream to parent component");
         onCameraStream(mediaStream);
       }
 
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
-        console.log("📷 Stream assigned to video element");
       }
     } catch (error) {
       setError("Could not access camera. Please check permissions.");
@@ -145,27 +141,22 @@ const SmartFaceScan = forwardRef(({ isOpen, onClose, onProfileCreated, onBack, o
   };
 
   const stopCamera = () => {
-    console.log("🛑 Stopping camera in SmartFaceScan...");
     if (stream) {
       stream.getTracks().forEach((track) => {
-        console.log(`🛑 Stopping track: ${track.kind}, state: ${track.readyState}`);
         track.stop();
       });
       setStream(null);
-      console.log("✅ Camera stream stopped and cleared");
     }
     
     // Also clear video ref
     if (videoRef.current) {
       videoRef.current.srcObject = null;
-      console.log("✅ Video element cleared");
     }
   };
 
   // Expose cleanup method to parent via ref
   useImperativeHandle(ref, () => ({
     cleanup: () => {
-      console.log("🧹 SmartFaceScan cleanup called from parent");
       stopCamera();
       capturedPhotos.forEach((photo) => {
         if (photo.url) {
@@ -180,7 +171,6 @@ const SmartFaceScan = forwardRef(({ isOpen, onClose, onProfileCreated, onBack, o
       setShowPreview(false);
       setShowMobileGuide(false);
       setMobileGuideAutoOpened(false);
-      console.log("✅ SmartFaceScan cleanup completed");
     },
     stopCamera: stopCamera
   }), [stream, capturedPhotos]);
@@ -380,11 +370,10 @@ const SmartFaceScan = forwardRef(({ isOpen, onClose, onProfileCreated, onBack, o
     }
   };
 
-  // Enhanced cleanup function - DON'T stop camera here, let parent handle it
+  // Enhanced cleanup function
   const handleClose = () => {
-    console.log("🚪 SmartFaceScan handleClose called - NOT stopping camera (parent will handle)");
     
-    // Clean up blob URLs but don't stop camera (parent will do that)
+    // Clean up blob URLs
     capturedPhotos.forEach((photo) => {
       if (photo.url) {
         URL.revokeObjectURL(photo.url);
@@ -405,7 +394,6 @@ const SmartFaceScan = forwardRef(({ isOpen, onClose, onProfileCreated, onBack, o
 
   // Enhanced back handler
   const handleBack = () => {
-    console.log("⬅️ SmartFaceScan handleBack called");
     stopCamera();
     capturedPhotos.forEach((photo) => {
       if (photo.url) {
@@ -426,11 +414,9 @@ const SmartFaceScan = forwardRef(({ isOpen, onClose, onProfileCreated, onBack, o
   // Initialize camera
   useEffect(() => {
     if (isOpen) {
-      console.log("🚀 SmartFaceScan opening, starting camera");
       startCamera();
     }
     return () => {
-      console.log("🔄 SmartFaceScan effect cleanup");
       stopCamera();
     };
   }, [isOpen]);

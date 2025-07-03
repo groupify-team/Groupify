@@ -1,4 +1,4 @@
-// SettingsSection.jsx - Complete Settings management section
+// SettingsSection.jsx - Complete Settings management section with EditProfileModal
 import React, { useState } from "react";
 import {
   BellIcon,
@@ -19,6 +19,7 @@ import QuickStatsCard from "../widgets/QuickStatsCard";
 import FaceProfileModal from "../../features/face-recognition/components/FaceProfileModal";
 import FaceProfileManageModal from "../../features/face-recognition/components/FaceProfileManageModal";
 import DeleteAccountModal from "../modals/DeleteAccountModal";
+import EditProfileModal from "../../features/settings/components/EditProfileModal"; // New import
 import {
   NOTIFICATION_SETTINGS,
   PRIVACY_SETTINGS,
@@ -84,23 +85,19 @@ const SettingsSection = () => {
 
   // Handle face profile creation success
   const handleFaceProfileCreated = async (success) => {
-    console.log("🎯 Face profile creation result:", success);
+    
     
     if (success) {
-      console.log("✅ Face profile created successfully!");
       setShowFaceProfileModal(false);
       
       // Force refresh of face profile data to update UI immediately
       try {
         if (loadFaceProfile) {
-          console.log("🔄 Refreshing face profile data...");
           loadFaceProfile();
         }
         
         if (refreshData) {
-          console.log("🔄 Refreshing dashboard data to update UI...");
           await refreshData();
-          console.log("✅ Dashboard data refreshed - UI should now show profile");
         } else {
           console.log("⚠️ No refreshData function available - face profile data refreshed manually");
         }
@@ -115,7 +112,6 @@ const SettingsSection = () => {
 
   // Handle face profile updates from manage modal
   const handleFaceProfileUpdated = async () => {
-    console.log("🔄 Face profile updated, refreshing data...");
     
     try {
       if (loadFaceProfile) {
@@ -154,7 +150,6 @@ const SettingsSection = () => {
       return;
     }
     
-    console.log("🚀 Opening face profile manage modal!");
     setShowFaceProfileManageModal(true);
   };
 
@@ -198,6 +193,18 @@ const SettingsSection = () => {
     }
   };
 
+  // Handle profile edit completion with data refresh
+  const handleProfileEditComplete = async () => {
+    // Refresh dashboard data to reflect profile changes
+    try {
+      if (refreshData) {
+        await refreshData();
+      }
+    } catch (error) {
+      console.error("❌ Error refreshing data after profile edit:", error);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -232,6 +239,7 @@ const SettingsSection = () => {
                   }
                   alt="Profile"
                   className="w-28 h-28 sm:w-32 sm:h-32 lg:w-36 lg:h-36 rounded-full object-cover border-4 border-white dark:border-gray-600 shadow-lg transition-all duration-300 group-hover:shadow-xl group-hover:scale-105 cursor-pointer"
+                  onClick={openEditProfileModal} // Added click handler to open edit modal
                 />
 
                 {/* Interactive overlay on hover */}
@@ -345,7 +353,7 @@ const SettingsSection = () => {
                 <h4 className="text-sm sm:text-base lg:text-lg font-semibold text-gray-800 dark:text-white">
                   Privacy Settings
                 </h4>
-              </div>
+                </div>
               <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-3 sm:mb-4">
                 Control your privacy and data sharing preferences
               </p>
@@ -640,7 +648,6 @@ const SettingsSection = () => {
         <FaceProfileModal
           isOpen={showFaceProfileModal}
           onClose={() => {
-            console.log("🚪 Closing face profile modal");
             setShowFaceProfileModal(false);
           }}
           onProfileCreated={handleFaceProfileCreated}
@@ -652,10 +659,20 @@ const SettingsSection = () => {
         <FaceProfileManageModal
           isOpen={showFaceProfileManageModal}
           onClose={() => {
-            console.log("🚪 Closing face profile manage modal");
             setShowFaceProfileManageModal(false);
           }}
           onProfileUpdated={handleFaceProfileUpdated}
+        />
+      )}
+
+      {/* Edit Profile Modal */}
+      {showEditProfileModal && (
+        <EditProfileModal
+          isOpen={showEditProfileModal}
+          onClose={() => {
+            closeEditProfileModal();
+            handleProfileEditComplete(); // Refresh data when modal closes
+          }}
         />
       )}
 
@@ -666,8 +683,6 @@ const SettingsSection = () => {
           onClose={closeDeleteAccountModal}
         />
       )}
-
-      {/* Other modals can be added here - EditProfileModal, etc. */}
     </div>
   );
 };
