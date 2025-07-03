@@ -1,8 +1,7 @@
 ﻿// MobileBottomNav.jsx - Mobile bottom navigation bar
 import React from "react";
-import { useDashboardLayout } from "@dashboard/hooks/useDashboardLayout";
-import { useDashboardData } from "@dashboard/hooks/useDashboardData";
-
+import { useDashboardLayout } from "../../hooks/useDashboardLayout";
+import { useDashboardData } from "../../hooks/useDashboardData";
 import { BOTTOM_NAV_ITEMS } from "@dashboard/utils/dashboardConstants.jsx";
 import {
   getNavigationItemBadge,
@@ -18,7 +17,7 @@ const MobileBottomNav = () => {
   const { pendingRequests, tripInvites, trips } = useDashboardData();
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg border-t border-gray-200/50 dark:border-gray-700/50 z-40 h-14">
+    <div className="fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg border-t border-gray-200/50 dark:border-gray-700/50 z-50 h-14 shadow-lg">
       <div className="flex justify-around items-center py-1.5 h-full">
         {BOTTOM_NAV_ITEMS.map((item) => {
           const Icon = item.icon;

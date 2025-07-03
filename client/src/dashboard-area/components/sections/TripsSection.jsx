@@ -20,7 +20,7 @@ import { useAuth } from "@/auth-area/contexts/AuthContext";
 // Dashboard Hooks
 import { useDashboardLayout } from "@/dashboard-area/hooks/useDashboardLayout";
 import { useDashboardData } from "@/dashboard-area/hooks/useDashboardData";
-import { useDashboardModals } from "@/dashboard-area/hooks/useDashboardModals";
+import { useDashboardModals } from "@dashboard/contexts/DashboardModalsContext";
 
 // Dashboard Components
 import TabSwitcher from "@/dashboard-area/components/ui/TabSwitcher";

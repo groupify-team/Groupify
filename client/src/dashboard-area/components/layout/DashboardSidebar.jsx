@@ -9,8 +9,7 @@ import {
 
 import { useDashboardLayout } from "@dashboard/hooks/useDashboardLayout";
 import { useDashboardData } from "@dashboard/hooks/useDashboardData";
-// FIXED: Proper import syntax
-import { useDashboardModals } from "@dashboard/hooks/useDashboardModals";
+import { useDashboardModals } from "@dashboard/contexts/DashboardModalsContext";
 import { useDashboardNavigation } from "@dashboard/hooks/useDashboardNavigation";
 import { useNavigate } from "react-router-dom";
 
