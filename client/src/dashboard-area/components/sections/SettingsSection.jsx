@@ -1,5 +1,5 @@
-﻿// SettingsSection.jsx - FIXED VERSION with safe modal hook usage
-import React from "react";
+// SettingsSection.jsx - Complete Settings management section
+import React, { useState } from "react";
 import {
   BellIcon,
   CameraIcon,
@@ -7,21 +7,45 @@ import {
   TrashIcon,
   UserCircleIcon,
 } from "@heroicons/react/24/outline";
-import { useAuth } from "@auth/contexts/AuthContext";
+import { useAuth } from "../../../auth-area/contexts/AuthContext";
 import { useDashboardLayout } from "../../hooks/useDashboardLayout";
 import { useDashboardData } from "../../hooks/useDashboardData";
-// 🔥 FIXED: Safe import with fallback
 import { useDashboardNavigation } from "../../hooks/useDashboardNavigation";
+import { useSettings } from "../../features/settings/hooks/useSettings";
+import { useExportBackup } from "../../hooks/useExportBackup";
 import SubscriptionCard from "../widgets/SubscriptionCard";
 import FaceProfileCard from "../widgets/FaceProfileCard";
 import QuickStatsCard from "../widgets/QuickStatsCard";
+import FaceProfileModal from "../../features/face-recognition/components/FaceProfileModal";
+import FaceProfileManageModal from "../../features/face-recognition/components/FaceProfileManageModal";
+import DeleteAccountModal from "../modals/DeleteAccountModal";
 import {
   NOTIFICATION_SETTINGS,
   PRIVACY_SETTINGS,
-} from "@dashboard/utils/dashboardConstants.jsx";
+} from "../../utils/dashboardConstants.jsx";
 
 const SettingsSection = () => {
   const { currentUser } = useAuth();
+  const { settings, toggleSetting, loading: settingsLoading } = useSettings();
+  const { 
+    loading: exportLoading, 
+    error: exportError, 
+    success: exportSuccess,
+    exportData, 
+    createBackup,
+    exportCSV 
+  } = useExportBackup();
+  
+  // Local state for modals
+  const [showFaceProfileModal, setShowFaceProfileModal] = useState(false);
+  const [showFaceProfileManageModal, setShowFaceProfileManageModal] = useState(false);
+  const [showEditProfileModal, setShowEditProfileModal] = useState(false);
+  const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [showBackupModal, setShowBackupModal] = useState(false);
+  const [showUsageModal, setShowUsageModal] = useState(false);
+  const [showBillingHistoryModal, setShowBillingHistoryModal] = useState(false);
+  const [showCancelPlanModal, setShowCancelPlanModal] = useState(false);
 
   const {
     layout: { isMobile },
@@ -34,45 +58,11 @@ const SettingsSection = () => {
     hasProfile,
     profilePhotos,
     isLoadingProfile,
+    loadDashboardData: refreshData,
+    loadFaceProfile,
   } = useDashboardData();
 
-  // 🔥 FIXED: Safe modal hook usage with fallback
-  let modalActions = {};
-  try {
-    // Try to import and use the context
-    const {
-      useDashboardModals,
-    } = require("@dashboard/contexts/DashboardModalsContext");
-    modalActions = useDashboardModals();
-  } catch (e) {
-    console.log("useDashboardModals not available, using fallback functions");
-    // Fallback functions
-    modalActions = {
-      editProfile: { open: () => console.log("Edit profile modal") },
-      faceProfile: { open: () => console.log("Face profile modal") },
-      faceProfileManage: {
-        open: () => console.log("Face profile manage modal"),
-      },
-      deleteAccount: { open: () => console.log("Delete account modal") },
-      usage: { open: () => console.log("Usage modal") },
-      billingHistory: { open: () => console.log("Billing history modal") },
-      cancelPlan: { open: () => console.log("Cancel plan modal") },
-    };
-  }
-
-  // 🔥 FIXED: Safe destructuring with fallbacks
-  const openEditProfileModal = modalActions?.editProfile?.open || (() => {});
-  const openFaceProfileModal = modalActions?.faceProfile?.open || (() => {});
-  const openFaceProfileManageModal =
-    modalActions?.faceProfileManage?.open || (() => {});
-  const openDeleteAccountModal =
-    modalActions?.deleteAccount?.open || (() => {});
-  const openUsageModal = modalActions?.usage?.open || (() => {});
-  const openBillingHistoryModal =
-    modalActions?.billingHistory?.open || (() => {});
-  const openCancelPlanModal = modalActions?.cancelPlan?.open || (() => {});
-
-  // 🔥 FIXED: Safe navigation hook usage
+  // Safe navigation hook usage with fallback
   let navigationActions = {};
   try {
     navigationActions = useDashboardNavigation();
@@ -88,6 +78,125 @@ const SettingsSection = () => {
 
   const toPricing = navigationActions?.pages?.toPricing || (() => {});
   const toBilling = navigationActions?.pages?.toBilling || (() => {});
+
+  // Check if face recognition is enabled
+  const faceRecognitionEnabled = settings.privacy?.faceRecognition ?? false;
+
+  // Handle face profile creation success
+  const handleFaceProfileCreated = async (success) => {
+    console.log("🎯 Face profile creation result:", success);
+    
+    if (success) {
+      console.log("✅ Face profile created successfully!");
+      setShowFaceProfileModal(false);
+      
+      // Force refresh of face profile data to update UI immediately
+      try {
+        if (loadFaceProfile) {
+          console.log("🔄 Refreshing face profile data...");
+          loadFaceProfile();
+        }
+        
+        if (refreshData) {
+          console.log("🔄 Refreshing dashboard data to update UI...");
+          await refreshData();
+          console.log("✅ Dashboard data refreshed - UI should now show profile");
+        } else {
+          console.log("⚠️ No refreshData function available - face profile data refreshed manually");
+        }
+      } catch (error) {
+        console.error("❌ Error refreshing data:", error);
+        console.log("⚠️ Refresh failed but profile was created successfully");
+      }
+    } else {
+      console.log("❌ Face profile creation failed");
+    }
+  };
+
+  // Handle face profile updates from manage modal
+  const handleFaceProfileUpdated = async () => {
+    console.log("🔄 Face profile updated, refreshing data...");
+    
+    try {
+      if (loadFaceProfile) {
+        loadFaceProfile();
+      }
+      
+      if (refreshData) {
+        await refreshData();
+      }
+    } catch (error) {
+      console.error("❌ Error refreshing data after profile update:", error);
+    }
+  };
+
+  // Check face recognition setting before allowing setup
+  const handleOpenFaceProfileModal = () => {
+    if (!faceRecognitionEnabled) {
+      alert("Please enable Face Recognition in Privacy Settings first.");
+      return;
+    }
+    
+    console.log("🚀 Opening face profile modal!");
+    console.log("📊 Current state:", {
+      hasProfile,
+      profilePhotos: profilePhotos?.length || 0,
+      isLoadingProfile,
+      currentUser: currentUser?.uid
+    });
+    setShowFaceProfileModal(true);
+  };
+
+  // Check face recognition setting before allowing management
+  const handleOpenFaceProfileManageModal = () => {
+    if (!faceRecognitionEnabled) {
+      alert("Please enable Face Recognition in Privacy Settings first.");
+      return;
+    }
+    
+    console.log("🚀 Opening face profile manage modal!");
+    setShowFaceProfileManageModal(true);
+  };
+
+  // Modal handlers - FIXED: Single definition for each
+  const openEditProfileModal = () => setShowEditProfileModal(true);
+  const closeEditProfileModal = () => setShowEditProfileModal(false);
+  const openDeleteAccountModal = () => setShowDeleteAccountModal(true);
+  const closeDeleteAccountModal = () => setShowDeleteAccountModal(false);
+  const openUsageModal = () => setShowUsageModal(true);
+  const openBillingHistoryModal = () => setShowBillingHistoryModal(true);
+  const openCancelPlanModal = () => setShowCancelPlanModal(true);
+
+  // Export/Backup handlers - FIXED: Proper async handling
+  const handleExportData = async () => {
+    try {
+      await exportData();
+      setShowExportModal(false);
+    } catch (error) {
+      console.error("Export error:", error);
+      // Modal stays open on error so user can retry
+    }
+  };
+
+  const handleCreateBackup = async () => {
+    try {
+      await createBackup();
+      setShowBackupModal(false);
+    } catch (error) {
+      console.error("Backup error:", error);
+      // Modal stays open on error so user can retry
+    }
+  };
+
+  const handleExportCSV = async (dataType) => {
+    try {
+      await exportCSV(dataType);
+      setShowExportModal(false);
+    } catch (error) {
+      console.error("CSV export error:", error);
+      // Modal stays open on error so user can retry
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -166,7 +275,7 @@ const SettingsSection = () => {
         <div className="bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-800 dark:to-blue-900/20 rounded-xl p-3 sm:p-4 lg:p-6 border border-gray-200/50 dark:border-gray-700/50">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
             {/* Notifications */}
-            <div className="space-y-3 sm:space-y-4">
+            <div className="space-y-3 sm:space-y-4" data-section="notifications">
               <div className="flex items-center gap-2 mb-2 sm:mb-3">
                 <div className="w-6 h-6 sm:w-7 sm:h-7 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-sm">
                   <BellIcon className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
@@ -180,32 +289,45 @@ const SettingsSection = () => {
               </p>
 
               <div className="space-y-2 sm:space-y-3">
-                {NOTIFICATION_SETTINGS.map((item, index) => (
-                  <div key={index} className="group">
-                    <label className="flex items-center justify-between py-2 sm:py-3 px-3 sm:px-4 bg-white/60 dark:bg-gray-700/40 rounded-lg hover:bg-white/80 dark:hover:bg-gray-700/60 transition-all duration-200 cursor-pointer border border-transparent hover:border-blue-200 dark:hover:border-blue-600/30">
-                      <div className="flex items-center gap-2 sm:gap-3 flex-1">
-                        {item.icon}
-                        <span className="text-xs sm:text-sm lg:text-base font-medium text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white transition-colors">
-                          {item.label}
-                        </span>
-                      </div>
-                      <div className="relative">
-                        <input
-                          type="checkbox"
-                          className="sr-only peer"
-                          defaultChecked={item.defaultChecked}
-                        />
-                        <div className="w-10 h-5 sm:w-11 sm:h-6 bg-gray-200 dark:bg-gray-600 rounded-full peer peer-checked:bg-gradient-to-r peer-checked:from-blue-500 peer-checked:to-indigo-600 transition-all duration-300 shadow-inner"></div>
-                        <div className="absolute top-0.5 left-0.5 w-4 h-4 sm:w-5 sm:h-5 bg-white rounded-full shadow-md transform peer-checked:translate-x-5 sm:peer-checked:translate-x-5 transition-transform duration-300"></div>
-                      </div>
-                    </label>
-                  </div>
-                ))}
+                {NOTIFICATION_SETTINGS.map((item) => {
+                  // Check if setting should be disabled
+                  const isDisabled = item.id !== 'emailNotifications' && 
+                                   !settings.notifications?.emailNotifications;
+                  
+                  return (
+                    <div key={item.id} className="group">
+                      <label className={`flex items-center justify-between py-2 sm:py-3 px-3 sm:px-4 bg-white/60 dark:bg-gray-700/40 rounded-lg hover:bg-white/80 dark:hover:bg-gray-700/60 transition-all duration-200 cursor-pointer border border-transparent hover:border-blue-200 dark:hover:border-blue-600/30 ${isDisabled ? 'opacity-50' : ''}`}>
+                        <div className="flex items-center gap-2 sm:gap-3 flex-1">
+                          {item.icon}
+                          <div>
+                            <span className="text-xs sm:text-sm lg:text-base font-medium text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white transition-colors block">
+                              {item.label}
+                            </span>
+                            <span className="text-xs text-gray-500 dark:text-gray-400">
+                              {item.description}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="relative">
+                          <input
+                            type="checkbox"
+                            className="sr-only peer"
+                            checked={settings.notifications?.[item.id] ?? item.defaultChecked}
+                            onChange={() => toggleSetting('notifications', item.id)}
+                            disabled={settingsLoading || isDisabled}
+                          />
+                          <div className="w-10 h-5 sm:w-11 sm:h-6 bg-gray-200 dark:bg-gray-600 rounded-full peer peer-checked:bg-gradient-to-r peer-checked:from-blue-500 peer-checked:to-indigo-600 transition-all duration-300 shadow-inner"></div>
+                          <div className="absolute top-0.5 left-0.5 w-4 h-4 sm:w-5 sm:h-5 bg-white rounded-full shadow-md transform peer-checked:translate-x-5 sm:peer-checked:translate-x-5 transition-transform duration-300"></div>
+                        </div>
+                      </label>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
             {/* Privacy */}
-            <div className="space-y-3 sm:space-y-4">
+            <div className="space-y-3 sm:space-y-4" data-section="privacy">
               <div className="flex items-center gap-2 mb-2 sm:mb-3">
                 <div className="w-6 h-6 sm:w-7 sm:h-7 bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg flex items-center justify-center shadow-sm">
                   <svg
@@ -229,20 +351,27 @@ const SettingsSection = () => {
               </p>
 
               <div className="space-y-2 sm:space-y-3">
-                {PRIVACY_SETTINGS.map((item, index) => (
-                  <div key={index} className="group">
+                {PRIVACY_SETTINGS.map((item) => (
+                  <div key={item.id} className="group">
                     <label className="flex items-center justify-between py-2 sm:py-3 px-3 sm:px-4 bg-white/60 dark:bg-gray-700/40 rounded-lg hover:bg-white/80 dark:hover:bg-gray-700/60 transition-all duration-200 cursor-pointer border border-transparent hover:border-green-200 dark:hover:border-green-600/30">
                       <div className="flex items-center gap-2 sm:gap-3 flex-1">
                         {item.icon}
-                        <span className="text-xs sm:text-sm lg:text-base font-medium text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white transition-colors">
-                          {item.label}
-                        </span>
+                        <div>
+                          <span className="text-xs sm:text-sm lg:text-base font-medium text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white transition-colors block">
+                            {item.label}
+                          </span>
+                          <span className="text-xs text-gray-500 dark:text-gray-400">
+                            {item.description}
+                          </span>
+                        </div>
                       </div>
                       <div className="relative">
                         <input
                           type="checkbox"
                           className="sr-only peer"
-                          defaultChecked={item.defaultChecked}
+                          checked={settings.privacy?.[item.id] ?? item.defaultChecked}
+                          onChange={() => toggleSetting('privacy', item.id)}
+                          disabled={settingsLoading}
                         />
                         <div className="w-10 h-5 sm:w-11 sm:h-6 bg-gray-200 dark:bg-gray-600 rounded-full peer peer-checked:bg-gradient-to-r peer-checked:from-green-500 peer-checked:to-emerald-600 transition-all duration-300 shadow-inner"></div>
                         <div className="absolute top-0.5 left-0.5 w-4 h-4 sm:w-5 sm:h-5 bg-white rounded-full shadow-md transform peer-checked:translate-x-5 sm:peer-checked:translate-x-5 transition-transform duration-300"></div>
@@ -256,14 +385,44 @@ const SettingsSection = () => {
         </div>
       </div>
 
-      {/* Face Profile Management */}
-      <FaceProfileCard
-        hasProfile={hasProfile}
-        profilePhotos={profilePhotos}
-        isLoading={isLoadingProfile}
-        onOpenSetup={openFaceProfileModal}
-        onOpenManage={openFaceProfileManageModal}
-      />
+      {/* Face Profile Management with Privacy Check */}
+      {faceRecognitionEnabled ? (
+        <FaceProfileCard
+          hasProfile={hasProfile}
+          profilePhotos={profilePhotos}
+          isLoading={isLoadingProfile}
+          onOpenSetup={handleOpenFaceProfileModal}
+          onOpenManage={handleOpenFaceProfileManageModal}
+        />
+      ) : (
+        <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-xl shadow-lg p-6 border border-white/20 dark:border-gray-700/50">
+          <div className="text-center">
+            <div className="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636 5.636 18.364" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+              Face Recognition Disabled
+            </h3>
+            <p className="text-gray-600 dark:text-gray-300 mb-4">
+              Enable face recognition in Privacy Settings to set up your face profile and get tagged in photos.
+            </p>
+            <button 
+              onClick={() => {
+                // Scroll to privacy settings
+                const privacySection = document.querySelector('[data-section="privacy"]');
+                if (privacySection) {
+                  privacySection.scrollIntoView({ behavior: 'smooth' });
+                }
+              }}
+              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors"
+            >
+              Enable Face Recognition
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Subscription & Billing */}
       <SubscriptionCard
@@ -302,17 +461,59 @@ const SettingsSection = () => {
             </h3>
           </div>
 
+          {/* Export/Backup Status Messages */}
+          {exportError && (
+            <div className="mb-4 p-3 bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 rounded-lg">
+              <p className="text-sm text-red-800 dark:text-red-400">{exportError}</p>
+            </div>
+          )}
+          
+          {exportSuccess && (
+            <div className="mb-4 p-3 bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-700 rounded-lg">
+              <p className="text-sm text-green-800 dark:text-green-400">{exportSuccess}</p>
+            </div>
+          )}
+
           {/* Mobile: 2x2 Grid Layout for Actions */}
           <div className="grid grid-cols-2 gap-2 mb-2 md:grid-cols-2">
-            <button className="flex items-center justify-center gap-2 p-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg font-medium text-gray-800 dark:text-gray-200 transition-colors text-sm">
-              <span>📤</span>
-              <span className="hidden sm:inline">Export Data</span>
-              <span className="sm:hidden">Export</span>
+            <button 
+              onClick={() => setShowExportModal(true)}
+              disabled={exportLoading}
+              className="flex items-center justify-center gap-2 p-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg font-medium text-gray-800 dark:text-gray-200 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {exportLoading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-gray-600 border-t-transparent rounded-full animate-spin"></div>
+                  <span className="hidden sm:inline">Exporting...</span>
+                  <span className="sm:hidden">Export</span>
+                </>
+              ) : (
+                <>
+                  <span>📤</span>
+                  <span className="hidden sm:inline">Export Data</span>
+                  <span className="sm:hidden">Export</span>
+                </>
+              )}
             </button>
-            <button className="flex items-center justify-center gap-2 p-3 bg-blue-100 dark:bg-blue-900/30 hover:bg-blue-200 dark:hover:bg-blue-900/50 rounded-lg font-medium text-blue-800 dark:text-blue-400 transition-colors text-sm">
-              <span>🔄</span>
-              <span className="hidden sm:inline">Backup</span>
-              <span className="sm:hidden">Backup</span>
+            
+            <button 
+              onClick={() => setShowBackupModal(true)}
+              disabled={exportLoading}
+              className="flex items-center justify-center gap-2 p-3 bg-blue-100 dark:bg-blue-900/30 hover:bg-blue-200 dark:hover:bg-blue-900/50 rounded-lg font-medium text-blue-800 dark:text-blue-400 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {exportLoading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                  <span className="hidden sm:inline">Creating...</span>
+                  <span className="sm:hidden">Backup</span>
+                </>
+              ) : (
+                <>
+                  <span>🔄</span>
+                  <span className="hidden sm:inline">Backup</span>
+                  <span className="sm:hidden">Backup</span>
+                </>
+              )}
             </button>
           </div>
 
@@ -328,6 +529,145 @@ const SettingsSection = () => {
           </button>
         </div>
       </div>
+
+      {/* Export Modal */}
+      {showExportModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 w-full max-w-md">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+              Export Your Data
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-300 mb-6">
+              Choose what type of data you'd like to export from your Groupify account.
+            </p>
+            
+            <div className="space-y-3">
+              <button
+                onClick={handleExportData}
+                disabled={exportLoading}
+                className="w-full flex items-center justify-center gap-3 p-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors disabled:opacity-50"
+              >
+                <span>📦</span>
+                <span>Complete Data Export (JSON)</span>
+              </button>
+              
+              <button
+                onClick={() => handleExportCSV('trips')}
+                disabled={exportLoading}
+                className="w-full flex items-center justify-center gap-3 p-3 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition-colors disabled:opacity-50"
+              >
+                <span>🗺️</span>
+                <span>Trips Data (CSV)</span>
+              </button>
+              
+              <button
+                onClick={() => handleExportCSV('photos')}
+                disabled={exportLoading}
+                className="w-full flex items-center justify-center gap-3 p-3 bg-purple-500 hover:bg-purple-600 text-white rounded-lg font-medium transition-colors disabled:opacity-50"
+              >
+                <span>📸</span>
+                <span>Photos Data (CSV)</span>
+              </button>
+              
+              <button
+                onClick={() => handleExportCSV('friends')}
+                disabled={exportLoading}
+                className="w-full flex items-center justify-center gap-3 p-3 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium transition-colors disabled:opacity-50"
+              >
+                <span>👥</span>
+                <span>Friends Data (CSV)</span>
+              </button>
+            </div>
+            
+            <div className="mt-6 flex justify-end">
+              <button
+                onClick={() => setShowExportModal(false)}
+                className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 font-medium"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Backup Modal */}
+      {showBackupModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 w-full max-w-md">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+              Create Backup
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-300 mb-6">
+              Create a complete backup of your Groupify account data including metadata and integrity verification.
+            </p>
+            
+            <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg mb-6">
+              <h4 className="font-medium text-blue-900 dark:text-blue-300 mb-2">
+                🔒 What's included:
+              </h4>
+              <ul className="text-sm text-blue-800 dark:text-blue-400 space-y-1">
+                <li>• All your trips and photos</li>
+                <li>• Friends and settings data</li>
+                <li>• Face recognition profile</li>
+                <li>• Backup verification data</li>
+              </ul>
+            </div>
+            
+            <div className="flex gap-3">
+              <button
+                onClick={handleCreateBackup}
+                disabled={exportLoading}
+                className="flex-1 flex items-center justify-center gap-2 p-3 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition-colors disabled:opacity-50"
+              >
+                <span>💾</span>
+                <span>Create Backup</span>
+              </button>
+              
+              <button
+                onClick={() => setShowBackupModal(false)}
+                className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 font-medium"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Face Profile Modal */}
+      {showFaceProfileModal && (
+        <FaceProfileModal
+          isOpen={showFaceProfileModal}
+          onClose={() => {
+            console.log("🚪 Closing face profile modal");
+            setShowFaceProfileModal(false);
+          }}
+          onProfileCreated={handleFaceProfileCreated}
+        />
+      )}
+
+      {/* Face Profile Manage Modal */}
+      {showFaceProfileManageModal && (
+        <FaceProfileManageModal
+          isOpen={showFaceProfileManageModal}
+          onClose={() => {
+            console.log("🚪 Closing face profile manage modal");
+            setShowFaceProfileManageModal(false);
+          }}
+          onProfileUpdated={handleFaceProfileUpdated}
+        />
+      )}
+
+      {/* Delete Account Modal */}
+      {showDeleteAccountModal && (
+        <DeleteAccountModal
+          isOpen={showDeleteAccountModal}
+          onClose={closeDeleteAccountModal}
+        />
+      )}
+
+      {/* Other modals can be added here - EditProfileModal, etc. */}
     </div>
   );
 };
