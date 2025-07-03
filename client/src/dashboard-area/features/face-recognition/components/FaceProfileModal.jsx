@@ -44,20 +44,16 @@ const FaceProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
 
   // Enhanced cleanup function with camera stop
   const cleanup = () => {
-    console.log("🧹 Cleaning up FaceProfileModal...");
     
     // Clean up SmartFaceScan component first (this should stop the camera)
     if (smartFaceScanRef.current && smartFaceScanRef.current.cleanup) {
-      console.log("🎯 Cleaning up SmartFaceScan component...");
       smartFaceScanRef.current.cleanup();
     }
     
     // Also stop camera stream if active (backup cleanup)
     if (currentStream) {
-      console.log("📷 Stopping camera stream (backup cleanup)...");
       currentStream.getTracks().forEach(track => {
         track.stop();
-        console.log(`🛑 Stopped track: ${track.kind}`);
       });
       setCurrentStream(null);
     }
@@ -70,39 +66,31 @@ const FaceProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
     setSuccess(false);
     setProgress(null);
     setIsCreating(false);
-
-    console.log("✅ FaceProfileModal cleanup completed");
   };
 
   const handleClose = () => {
-    console.log("🚪 FaceProfileModal closing...");
     cleanup();
     onClose();
   };
 
   // Handle back navigation from guided setup
   const handleBackFromGuided = () => {
-    console.log("⬅️ Back from guided setup, cleaning up camera...");
     cleanup();
     setSetupMethod(null);
   };
 
   // Camera stream handler for SmartFaceScan
   const handleCameraStream = (stream) => {
-    console.log("📷 Camera stream received in FaceProfileModal");
     setCurrentStream(stream);
   };
 
   // Enhanced cleanup on unmount or modal close
   useEffect(() => {
     return () => {
-      console.log("🔄 FaceProfileModal unmounting, performing cleanup...");
-      
       // Clean up camera stream
       if (currentStream) {
         currentStream.getTracks().forEach(track => {
           track.stop();
-          console.log(`🛑 Unmount cleanup - stopped track: ${track.kind}`);
         });
       }
 
@@ -118,7 +106,6 @@ const FaceProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
   // Cleanup when modal closes
   useEffect(() => {
     if (!isOpen) {
-      console.log("🚪 Modal closed, performing cleanup...");
       cleanup();
     }
   }, [isOpen]);
@@ -214,7 +201,6 @@ const FaceProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
         ref={smartFaceScanRef}
         isOpen={isOpen}
         onClose={() => {
-          console.log("🚪 SmartFaceScan onClose called, performing cleanup...");
           cleanup(); // This will stop camera and clean everything
           onClose(); // Then close the parent modal
         }}
