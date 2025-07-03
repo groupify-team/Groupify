@@ -40,7 +40,7 @@ import Billing from "./public-area/pages/BillingPage/BillingPage";
 import Dashboard from "@/dashboard-area/pages/DashboardPage/DashboardPage";
 import DashboardLayout from "@/dashboard-area/components/layout/DashboardLayout";
 import TripsSection from "@/dashboard-area/components/sections/TripsSection";
-import TripDetailView from "@/dashboard-area/features/trips/components/ViewTrip/TripDetailView";
+import TripDetailView from "@/dashboard-area/features/trips/ViewTrip/TripDetailView";
 import SettingsSection from "@/dashboard-area/components/sections/SettingsSection";
 import FriendsSection from "@/dashboard-area/components/sections/FriendsSection";
 
