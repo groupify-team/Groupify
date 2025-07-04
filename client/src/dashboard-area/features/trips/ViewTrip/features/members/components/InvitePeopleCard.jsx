@@ -2,7 +2,12 @@ import React from "react";
 import { PlusIcon } from "@heroicons/react/24/outline";
 import InviteFriendDropdown from "./InviteFriendDropdown";
 
-const InvitePeopleCard = ({ currentUser, tripId, tripMembers = [] }) => {
+const InvitePeopleCard = ({
+  currentUser,
+  tripId,
+  tripMembers = [],
+  onFriendClick = null, // ADD THIS LINE
+}) => {
   return (
     <div className="relative group">
       <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl blur opacity-20 group-hover:opacity-30 transition duration-300"></div>
@@ -28,6 +33,7 @@ const InvitePeopleCard = ({ currentUser, tripId, tripMembers = [] }) => {
             currentUser={currentUser}
             tripId={tripId}
             excludedUserIds={tripMembers}
+            onFriendClick={onFriendClick}
           />
         </div>
       </div>

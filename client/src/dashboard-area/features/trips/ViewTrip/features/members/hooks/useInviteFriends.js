@@ -66,11 +66,11 @@ export const useInviteFriends = (currentUser, tripId, excludedUserIds = []) => {
     try {
       setIsInviting(true);
 
-      // Check if invitation already exists
+      // Check if invitation already exists using the correct field names
       const q = query(
         collection(db, "tripInvites"),
         where("tripId", "==", tripId),
-        where("inviteeUid", "==", friend.uid),
+        where("inviteeUid", "==", friend.uid), // or "to" depending on your schema
         where("status", "==", "pending")
       );
 
@@ -89,9 +89,23 @@ export const useInviteFriends = (currentUser, tripId, excludedUserIds = []) => {
         return;
       }
 
-      // Send the invitation
-      await sendTripInvite(tripId, currentUser.uid, friend.uid);
+      // Send the invitation with better error handling
+      try {
+        await sendTripInvite(tripId, currentUser.uid, friend.uid);
+      } catch (inviteError) {
+        console.error("Detailed invite error:", inviteError);
 
+        if (inviteError.code === "permission-denied") {
+          toast.error(
+            "You don't have permission to send invites to this trip."
+          );
+        } else if (inviteError.code === "not-found") {
+          toast.error("Trip not found or friend doesn't exist.");
+        } else {
+          toast.error(`Failed to send invitation: ${inviteError.message}`);
+        }
+        return;
+      }
       // Remove friend from available list (they're now invited)
       setFriends((prev) => prev.filter((f) => f.uid !== friend.uid));
 
@@ -106,7 +120,17 @@ export const useInviteFriends = (currentUser, tripId, excludedUserIds = []) => {
       toast.success(`Invitation sent to ${friend.displayName}!`);
     } catch (error) {
       console.error("Error sending trip invite:", error);
-      toast.error("Failed to send invitation. Please try again.");
+
+      // Better error handling
+      if (error.code === "permission-denied") {
+        toast.error(
+          "Permission denied. You may not have permission to send invites."
+        );
+      } else if (error.code === "not-found") {
+        toast.error("Trip not found or user doesn't exist.");
+      } else {
+        toast.error("Failed to send invitation. Please try again.");
+      }
     } finally {
       setIsInviting(false);
     }

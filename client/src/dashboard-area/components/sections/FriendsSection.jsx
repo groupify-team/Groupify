@@ -487,18 +487,16 @@ const FriendsSection = () => {
       {/* User Profile Modal */}
       {showUserProfileModal && selectedUser && (
         <UserProfileModal
-          isOpen={showUserProfileModal}
-          onClose={() => {
-            setShowUserProfileModal(false);
-            setSelectedUser(null);
-          }}
           user={selectedUser}
           currentUserId={currentUser?.uid}
-          friends={friends.map((f) => f.uid)}
-          pendingRequests={pendingRequests}
-          onAddFriend={handleAddFriendDirect}
+          context="friends"
+          // Only friendship props needed
+          isFriend={selectedUser.__isFriend || false}
+          isPending={selectedUser.__isPending || false}
+          onAddFriend={handleAddFriend}
           onRemoveFriend={handleRemoveFriend}
-          onCancelRequest={handleCancelRequest}
+          onCancelRequest={handleCancelFriendRequest}
+          onClose={() => setSelectedUser(null)}
         />
       )}
     </div>

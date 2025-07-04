@@ -116,6 +116,54 @@ export const useTripMembers = (currentUserId, trip, setTrip) => {
     }
   };
 
+  const handleInviteToTrip = async (friend) => {
+    if (!trip || !currentUserId) {
+      toast.error("Trip or user information not available");
+      return;
+    }
+
+    try {
+      // Check if invitation already exists
+      const q = query(
+        collection(db, "tripInvites"),
+        where("tripId", "==", trip.id),
+        where("inviteeUid", "==", friend.uid),
+        where("status", "==", "pending")
+      );
+
+      const existing = await getDocs(q);
+
+      if (!existing.empty) {
+        toast(`${friend.displayName} already has a pending invite.`, {
+          style: {
+            borderRadius: "10px",
+            background: "#fdf6e3",
+            color: "#333",
+            border: "1px solid #f59e0b",
+          },
+          icon: "⚠️",
+        });
+        return;
+      }
+
+      // Send the invitation
+      await sendTripInvite(trip.id, currentUserId, friend.uid);
+      toast.success(`Invitation sent to ${friend.displayName}!`);
+
+      // Close the modal
+      setSelectedUser(null);
+    } catch (error) {
+      console.error("Error sending trip invite:", error);
+      if (error.code === "permission-denied") {
+        toast.error(
+          "Permission denied. You may not have permission to send invites."
+        );
+      } else {
+        toast.error("Failed to send invitation. Please try again.");
+      }
+    }
+  };
+
   const handleRemoveFriend = async (targetUid) => {
     try {
       await removeFriend(currentUserId, targetUid);
@@ -132,22 +180,78 @@ export const useTripMembers = (currentUserId, trip, setTrip) => {
 
   const handleCancelFriendRequest = async (targetUid) => {
     try {
-      const ref = doc(db, "friendRequests", `${currentUserId}_${targetUid}`);
-      await deleteDoc(ref);
-      setPendingFriendRequests((prev) =>
-        prev.filter((uid) => uid !== targetUid)
-      );
-      setCancelSuccess(
-        `Friend request to ${
-          selectedUser?.displayName || selectedUser?.email
-        } was cancelled.`
-      );
-      setTimeout(() => setCancelSuccess(null), 3000);
+      // Try different possible document ID formats and query approaches
+      let requestDeleted = false;
 
-      setSelectedUser((prevUser) => ({
-        ...prevUser,
-        __isPending: false,
-      }));
+      // Method 1: Try the direct document ID format
+      const possibleDocIds = [
+        `${currentUserId}_${targetUid}`,
+        `${targetUid}_${currentUserId}`,
+      ];
+
+      for (const docId of possibleDocIds) {
+        try {
+          const ref = doc(db, "friendRequests", docId);
+          const docSnap = await import("firebase/firestore").then(
+            ({ getDoc }) => getDoc(ref)
+          );
+          if (docSnap.exists()) {
+            await deleteDoc(ref);
+            requestDeleted = true;
+            break;
+          }
+        } catch (error) {
+          // Continue to next method if this fails
+          console.log("Method 1 failed, trying query method...");
+        }
+      }
+
+      // Method 2: If direct deletion failed, try query-based approach
+      if (!requestDeleted) {
+        const queries = [
+          query(
+            collection(db, "friendRequests"),
+            where("from", "==", currentUserId),
+            where("to", "==", targetUid),
+            where("status", "==", "pending")
+          ),
+          query(
+            collection(db, "friendRequests"),
+            where("from", "==", targetUid),
+            where("to", "==", currentUserId),
+            where("status", "==", "pending")
+          ),
+        ];
+
+        for (const q of queries) {
+          const querySnapshot = await getDocs(q);
+          if (!querySnapshot.empty) {
+            const docToDelete = querySnapshot.docs[0];
+            await deleteDoc(docToDelete.ref);
+            requestDeleted = true;
+            break;
+          }
+        }
+      }
+
+      if (requestDeleted) {
+        setPendingFriendRequests((prev) =>
+          prev.filter((uid) => uid !== targetUid)
+        );
+        setCancelSuccess(
+          `Friend request to ${
+            selectedUser?.displayName || selectedUser?.email
+          } was cancelled.`
+        );
+        setTimeout(() => setCancelSuccess(null), 3000);
+
+        setSelectedUser((prevUser) => ({
+          ...prevUser,
+          __isPending: false,
+        }));
+      } else {
+        throw new Error("Friend request not found");
+      }
     } catch (error) {
       console.error("❌ Failed to cancel friend request:", error);
       throw error;
@@ -302,6 +406,7 @@ export const useTripMembers = (currentUserId, trip, setTrip) => {
     handleRemoveFriend,
     handleCancelFriendRequest,
     handleInviteFriend,
+    handleInviteToTrip,
     handlePromoteToAdmin,
     handleDemoteFromAdmin,
     handleRemoveFromTrip,
