@@ -509,50 +509,6 @@ const EditProfileModal = ({ isOpen, onClose }) => {
           </div>
         </div>
       </div>
-
-      <style jsx>{`
-        .animate-fade-in {
-          animation: fadeIn 0.3s ease-out;
-        }
-
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-            transform: translateY(10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        .shadow-3xl {
-          box-shadow: 0 35px 60px -12px rgba(0, 0, 0, 0.25);
-        }
-
-        .custom-scrollbar {
-          scrollbar-width: thin;
-          scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
-        }
-
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 6px;
-        }
-
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: transparent;
-        }
-
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background-color: rgba(156, 163, 175, 0.5);
-          border-radius: 3px;
-          border: none;
-        }
-
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background-color: rgba(156, 163, 175, 0.8);
-        }
-      `}</style>
     </>
   );
 };

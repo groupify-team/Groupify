@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 
 // Context
-import { useAuth } from "@auth/contexts/AuthContext";
+import { useAuth } from "@/auth-area/contexts/AuthContext";
 
 // Components
 import TripHeader from "./components/TripHeader";
@@ -37,6 +37,7 @@ const TripDetailView = ({ tripId: propTripId }) => {
   const tripId = propTripId || paramTripId;
   const navigate = useNavigate();
   const { currentUser } = useAuth();
+  const userId = currentUser?.uid;
 
   // Core trip data and loading
   const {
@@ -274,7 +275,7 @@ const TripDetailView = ({ tripId: propTripId }) => {
             {/* Photo Upload Section */}
             {showUploadForm && (
               <div
-                className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[99999] p-4 animate-fade-in"
+                className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 animate-fade-in z-50"
                 onClick={() => setShowUploadForm(false)}
               >
                 <div
@@ -454,6 +455,7 @@ const TripDetailView = ({ tripId: propTripId }) => {
             <PhotoGallery
               photos={photos}
               tripMembers={tripMembers}
+              tripId={tripId} // Add this line
               maxPhotos={100}
               onPhotoSelect={(photo) => {
                 setSelectedPhoto(photo);
