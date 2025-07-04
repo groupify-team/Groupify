@@ -15,11 +15,6 @@ export const usePerformanceMonitoring = (componentName) => {
 
     // Log performance in development
     if (process.env.NODE_ENV === "development") {
-      console.log(`🔍 ${componentName} Performance:`, {
-        renderTime: `${renderTime.toFixed(2)}ms`,
-        renderCount: renderCount.current,
-      });
-
       // Warn about slow renders
       if (renderTime > 100) {
         console.warn(
