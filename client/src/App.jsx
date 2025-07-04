@@ -342,40 +342,9 @@ function App() {
           {/* Global Toast Notifications */}
           <Toaster
             position="top-center"
-            reverseOrder={false}
             toastOptions={{
               duration: 3000,
-              style: {
-                background: "#363636",
-                color: "#fff",
-                borderRadius: "8px",
-                fontSize: "14px",
-                padding: "12px 16px",
-                maxWidth: "400px",
-              },
-              success: {
-                style: {
-                  background: "#10B981",
-                },
-                iconTheme: {
-                  primary: "#fff",
-                  secondary: "#10B981",
-                },
-              },
-              error: {
-                style: {
-                  background: "#EF4444",
-                },
-                iconTheme: {
-                  primary: "#fff",
-                  secondary: "#EF4444",
-                },
-              },
-              loading: {
-                style: {
-                  background: "#3B82F6",
-                },
-              },
+              className: "z-[70]",
             }}
           />
 

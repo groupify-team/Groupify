@@ -1453,3 +1453,20 @@ body {
   transform: scale(1.05);
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
 }
+
+/* Toast Notification Styles */
+.Toaster__toast {
+  z-index: 70 !important;
+}
+
+.Toaster__toast--success {
+  background: #10b981 !important;
+}
+
+.Toaster__toast--error {
+  background: #ef4444 !important;
+}
+
+.Toaster__toast--loading {
+  background: #3b82f6 !important;
+}

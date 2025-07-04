@@ -6,31 +6,31 @@ import { toast } from "react-hot-toast";
 import { useAuth } from "@/auth-area/contexts/AuthContext";
 
 // Components
-import TripHeader from "./components/TripHeader";
-import PhotoGallery from "./components/PhotoGallery";
-import FaceRecognitionSection from "./components/FaceRecognitionSection";
-import TripMembersCard from "./components/TripMembersCard";
-import InvitePeopleCard from "./components/InvitePeopleCard";
-import TripStatistics from "./components/TripStatistics";
+import TripHeader from "./features/header/components/TripHeader";
+import PhotoGallery from "./features/gallery/components/PhotoGallery";
+import FaceRecognition from "./features/faceRecognition/components/FaceRecognition";
+import TripMembersCard from "./features/members/components/TripMembersCard";
+import InvitePeopleCard from "./features/invite/components/InvitePeopleCard";
+import TripStatistics from "./features/statistics/components/TripStatistics";
 
 // Modals
 import PhotoModal from "./components/modals/PhotoModal";
-import AllPhotosModal from "./components/modals/AllPhotosModal";
-import EditTripModal from "./components/modals/EditTripModal";
+import AllPhotosModal from "./features/gallery/components/modals/AllPhotosModal";
+import EditTripModal from "./features/header/hooks/EditTripModal";
 import UserProfileModal from "@friends/components/UserProfileModal";
 
 // Hooks
 import { useTripData } from "./hooks/useTripData";
-import { useFaceRecognition } from "./hooks/useFaceRecognition";
-import { usePhotoOperations } from "./hooks/usePhotoOperations";
-import { useTripMembers } from "./hooks/useTripMembers";
-import { usePhotoModal } from "./hooks/usePhotoModal";
+import { useFaceRecognition } from "./features/faceRecognition/hooks/useFaceRecognition";
+import { usePhotoOperations } from "./features/gallery/hooks/usePhotoOperations";
+import { useTripMembers } from "./features/members/hooks/useTripMembers";
+import { usePhotoModal } from "./features/gallery/hooks/usePhotoModal";
 
 // Utils
 import {
   getPhotoLimitStatus,
   getRemainingPhotoSlots,
-} from "./utils/photoHelpers";
+} from "./features/gallery/utils/photoHelpers";
 
 const TripDetailView = ({ tripId: propTripId }) => {
   const { tripId: paramTripId } = useParams();
@@ -275,7 +275,7 @@ const TripDetailView = ({ tripId: propTripId }) => {
             {/* Photo Upload Section */}
             {showUploadForm && (
               <div
-                className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 animate-fade-in z-50"
+                className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in"
                 onClick={() => setShowUploadForm(false)}
               >
                 <div
@@ -468,7 +468,7 @@ const TripDetailView = ({ tripId: propTripId }) => {
             />
 
             {/* Face Recognition Section */}
-            <FaceRecognitionSection
+            <FaceRecognition
               canFilterByFace={canFilterByFace}
               hasProfile={hasProfile}
               isLoadingProfile={isLoadingProfile}

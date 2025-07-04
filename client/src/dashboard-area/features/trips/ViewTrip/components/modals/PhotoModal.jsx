@@ -44,7 +44,7 @@ const PhotoModal = ({ photo, photos, isOpen, onClose, onNext, onPrevious }) => {
   const photoCount = photos.length;
 
   return (
-    <div className="fixed inset-0 bg-black/95 backdrop-blur-lg flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black/95 backdrop-blur-sm z-50 flex items-center justify-center">
       {/* Fixed container with consistent dimensions */}
       <div className="relative w-full h-full max-w-7xl max-h-screen flex items-center justify-center p-4">
         {/* Image container with fixed aspect ratio */}
