@@ -9,13 +9,33 @@ const TripMembersCard = ({
 }) => {
   // Sort members: current user first, then creator, then alphabetical
   const sortedMembers = [...tripMembers].sort((a, b) => {
+    // 1. Current user first
     if (a.uid === currentUserId) return -1;
     if (b.uid === currentUserId) return 1;
+
+    // 2. Creator second (if not current user)
     if (a.uid === trip.createdBy) return -1;
     if (b.uid === trip.createdBy) return 1;
-    return (a.displayName || a.email || "").localeCompare(
-      b.displayName || b.email || ""
-    );
+
+    // 3. Both are admins - sort by join date (oldest first)
+    const aIsAdmin = trip.admins?.includes(a.uid);
+    const bIsAdmin = trip.admins?.includes(b.uid);
+
+    if (aIsAdmin && bIsAdmin) {
+      // Both admins - compare join dates (you'll need to add joinDate to member data)
+      const aJoinDate = new Date(a.joinDate || a.createdAt || 0);
+      const bJoinDate = new Date(b.joinDate || b.createdAt || 0);
+      return aJoinDate - bJoinDate;
+    }
+
+    // 4. Admin vs non-admin
+    if (aIsAdmin && !bIsAdmin) return -1;
+    if (!aIsAdmin && bIsAdmin) return 1;
+
+    // 5. Both are regular members - sort by join date (oldest first)
+    const aJoinDate = new Date(a.joinDate || a.createdAt || 0);
+    const bJoinDate = new Date(b.joinDate || b.createdAt || 0);
+    return aJoinDate - bJoinDate;
   });
 
   return (
