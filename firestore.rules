@@ -58,15 +58,14 @@ service cloud.firestore {
     }
     
     // Trip invites collection
-    match /tripInvites/{inviteId} {
-      allow read: if request.auth != null && 
-        (request.auth.uid == resource.data.inviteeUid || request.auth.uid == resource.data.inviterUid);
-      
-      allow create: if request.auth != null && request.auth.uid == request.resource.data.inviterUid;
-      
-      allow update, delete: if request.auth != null && 
-        (request.auth.uid == resource.data.inviteeUid || request.auth.uid == resource.data.inviterUid);
-    }
+match /tripInvites/{inviteId} {
+  allow read, write: if request.auth != null && 
+    (resource.data.inviterUid == request.auth.uid || 
+     get(/databases/$(database)/documents/trips/$(resource.data.tripId)).data.admins.hasAny([request.auth.uid]) ||
+     get(/databases/$(database)/documents/trips/$(resource.data.tripId)).data.createdBy == request.auth.uid);
+  allow create: if request.auth != null && 
+    request.auth.uid == request.resource.data.inviterUid;
+}
     
     // Trips rules
     match /trips/{tripId} {

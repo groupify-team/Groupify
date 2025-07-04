@@ -115,6 +115,7 @@ const TripDetailView = ({ tripId: propTripId }) => {
     handleRemoveFriend,
     handleCancelFriendRequest,
     handleInviteFriend,
+    handleInviteToTrip,
     handlePromoteToAdmin,
     handleDemoteFromAdmin,
     handleRemoveFromTrip,
@@ -511,6 +512,14 @@ const TripDetailView = ({ tripId: propTripId }) => {
               currentUser={currentUser}
               tripId={tripId}
               tripMembers={trip.members}
+              onFriendClick={(friend) => {
+                // Show the friend's profile modal
+                setSelectedUser({
+                  ...friend,
+                  __isFriend: true, // They're in the friends list
+                  __isPending: false,
+                });
+              }}
             />
           </div>
         </div>
@@ -566,22 +575,25 @@ const TripDetailView = ({ tripId: propTripId }) => {
           <UserProfileModal
             user={selectedUser}
             currentUserId={currentUser?.uid}
-            isAdmin={isAdmin}
+            context="trip"
+            // Friendship props
             isFriend={selectedUser.__isFriend || false}
             isPending={selectedUser.__isPending || false}
             onAddFriend={handleAddFriend}
             onRemoveFriend={handleRemoveFriend}
             onCancelRequest={handleCancelFriendRequest}
-            onClose={() => setSelectedUser(null)}
+            // Trip props
             trip={trip}
             setTrip={setTrip}
             tripMembers={tripMembers}
             setTripMembers={setTripMembers}
-            setSelectedUser={setSelectedUser}
-            onPromoteToAdmin={(uid) => handlePromoteToAdmin(uid)}
-            onDemoteFromAdmin={(uid) => handleDemoteFromAdmin(uid)}
+            isAdmin={isAdmin}
+            onPromoteToAdmin={handlePromoteToAdmin}
+            onDemoteFromAdmin={handleDemoteFromAdmin}
             onRemoveFromTrip={handleRemoveFromTrip}
-            onlyTripMembers={true}
+            onInviteToTrip={handleInviteToTrip} // NEW - for inviting friends to trip
+            onClose={() => setSelectedUser(null)}
+            setSelectedUser={setSelectedUser}
           />
         )}
 

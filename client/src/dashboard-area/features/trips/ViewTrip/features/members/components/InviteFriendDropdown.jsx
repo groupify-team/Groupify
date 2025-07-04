@@ -12,6 +12,7 @@ const InviteFriendDropdown = ({
   currentUser,
   tripId,
   excludedUserIds = [],
+  onFriendClick = null,
 }) => {
   const {
     friends,
@@ -86,8 +87,7 @@ const InviteFriendDropdown = ({
                 {filteredFriends.map((friend) => (
                   <div
                     key={friend.uid}
-                    onClick={() => !isInviting && handleInviteFriend(friend)}
-                    className={`flex items-center gap-3 p-3 cursor-pointer hover:bg-emerald-50/50 dark:hover:bg-emerald-900/20 transition-all duration-200 group ${
+                    className={`flex items-center gap-3 p-3 hover:bg-emerald-50/50 dark:hover:bg-emerald-900/20 transition-all duration-200 group ${
                       isInviting ? "opacity-50 cursor-not-allowed" : ""
                     }`}
                   >
@@ -106,8 +106,15 @@ const InviteFriendDropdown = ({
                       )}
                     </div>
 
-                    {/* Friend Info */}
-                    <div className="flex-1 min-w-0">
+                    {/* Friend Info - Clickable to show profile */}
+                    <div
+                      className="flex-1 min-w-0 cursor-pointer"
+                      onClick={() => {
+                        if (!isInviting && onFriendClick) {
+                          onFriendClick(friend);
+                        }
+                      }}
+                    >
                       <p className="font-medium text-gray-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors truncate text-sm">
                         {friend.displayName}
                       </p>
@@ -116,8 +123,9 @@ const InviteFriendDropdown = ({
                       </p>
                     </div>
 
-                    {/* Action Button */}
+                    {/* Action Button - Only for invite */}
                     <button
+                      onClick={() => !isInviting && handleInviteFriend(friend)}
                       disabled={isInviting}
                       className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-300 transform hover:scale-105 opacity-0 group-hover:opacity-100 translate-x-1 group-hover:translate-x-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                     >
