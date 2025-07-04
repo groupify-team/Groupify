@@ -107,7 +107,7 @@ const AllPhotosModal = ({
 
   return (
     <div
-      className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 animate-fade-in"
+      className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-6 animate-fade-in"
       style={{ zIndex: 9999 }}
       onClick={(e) => {
         if (e.target === e.currentTarget) {

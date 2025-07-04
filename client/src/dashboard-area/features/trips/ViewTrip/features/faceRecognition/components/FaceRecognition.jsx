@@ -11,7 +11,7 @@ import {
   TrashIcon,
 } from "@heroicons/react/24/outline";
 
-const FaceRecognitionSection = ({
+const FaceRecognition = ({
   canFilterByFace,
   hasProfile,
   isLoadingProfile,
@@ -581,4 +581,4 @@ const FaceRecognitionSection = ({
   );
 };
 
-export default FaceRecognitionSection;
+export default FaceRecognition;
