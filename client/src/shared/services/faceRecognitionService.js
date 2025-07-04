@@ -642,9 +642,6 @@ class ModernFaceRecognitionService {
     const img = await this.loadImageFromUrl(photoUrl);
     const faces = await this.detectFacesWithQuality(img);
 
-    console.log(`\n🔍 PHOTO ANALYSIS: ${photoUrl}`);
-    console.log(`   Faces detected: ${faces.length}`);
-
     if (faces.length === 0) {
       console.log(
         `   ❌ No faces detected - check image quality, lighting, or face size`
@@ -767,12 +764,10 @@ export const analyzePhoto = async (photoUrl, userId) => {
 // Threshold adjustment functions
 export const setMatchingThreshold = (threshold) => {
   faceRecognitionService.FACE_MATCHER_THRESHOLD = threshold;
-  console.log(`🔧 Matching threshold set to: ${threshold}`);
 };
 
 export const setQualityThreshold = (threshold) => {
   faceRecognitionService.MIN_QUALITY_THRESHOLD = threshold;
-  console.log(`🔧 Quality threshold set to: ${threshold}`);
 };
 
 // Additional exports for backward compatibility
@@ -860,10 +855,6 @@ export const optimizeProfile = (userId, minQuality = 0.75) => {
     );
     return profile;
   }
-
-  console.log(
-    `🔧 Optimizing profile: using ${highQualityImages.length}/${profile.allFaces.length} high quality faces`
-  );
   return faceRecognitionService.createFaceProfile(
     userId,
     highQualityImages.map((url) => ({ url }))
@@ -876,8 +867,6 @@ export const filterPhotosByFace = async (
   userPhotoURL,
   onProgress = null
 ) => {
-  console.log("⚠️ Using legacy single-photo recognition with face-api.js.");
-
   // Initialize the service if needed
   if (!faceRecognitionService.isInitialized) {
     await faceRecognitionService.initialize();

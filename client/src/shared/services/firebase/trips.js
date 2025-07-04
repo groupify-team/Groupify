@@ -1,26 +1,25 @@
-import { 
-  collection, 
-  addDoc, 
-  doc, 
-  getDoc, 
-  setDoc,        
-  updateDoc, 
-  deleteDoc, 
-  query, 
-  where, 
-  getDocs, 
-  arrayUnion, 
-  serverTimestamp 
-} from 'firebase/firestore';
-import { ref, listAll, deleteObject } from 'firebase/storage';
-import { db, storage } from './config';
-import { 
-  addUserToTrip, 
-  removeUserFromTrip, 
+import {
+  collection,
+  addDoc,
+  doc,
+  getDoc,
+  setDoc,
+  updateDoc,
+  deleteDoc,
+  query,
+  where,
+  getDocs,
+  arrayUnion,
+  serverTimestamp,
+} from "firebase/firestore";
+import { ref, listAll, deleteObject } from "firebase/storage";
+import { db, storage } from "./config";
+import {
+  addUserToTrip,
+  removeUserFromTrip,
   removeTripFromAllUsers,
-  getUserTripsWithValidation 
-} from './users';
-
+  getUserTripsWithValidation,
+} from "./users";
 
 // Constants
 const MAX_TRIPS_PER_USER = 5;
@@ -29,10 +28,7 @@ const MAX_PHOTOS_PER_TRIP = 30;
 // Function to check user's trip count
 export const getUserTripCount = async (userId) => {
   try {
-    const q = query(
-      collection(db, "trips"),
-      where("createdBy", "==", userId)
-    );
+    const q = query(collection(db, "trips"), where("createdBy", "==", userId));
     const querySnapshot = await getDocs(q);
     return querySnapshot.size;
   } catch (error) {
@@ -71,7 +67,7 @@ export const getTripPhotoCount = async (tripId) => {
 export const canTripAcceptMorePhotos = async (tripId, additionalPhotos = 1) => {
   try {
     const currentPhotoCount = await getTripPhotoCount(tripId);
-    return (currentPhotoCount + additionalPhotos) <= MAX_PHOTOS_PER_TRIP;
+    return currentPhotoCount + additionalPhotos <= MAX_PHOTOS_PER_TRIP;
   } catch (error) {
     console.error("Error checking photo limit:", error);
     return false;
@@ -84,7 +80,7 @@ export const createTrip = async (tripData) => {
     // Create the trip document
     const tripRef = doc(collection(db, "trips"));
     const tripId = tripRef.id;
-    
+
     const newTrip = {
       ...tripData,
       id: tripId,
@@ -94,13 +90,12 @@ export const createTrip = async (tripData) => {
       members: [tripData.createdBy],
       admins: [tripData.createdBy],
     };
-    
+
     await setDoc(tripRef, newTrip);
-    
+
     // Add trip to user's trips array
     await addUserToTrip(tripData.createdBy, tripId);
-    
-    console.log("✅ Trip created and added to user:", tripId);
+
     return newTrip;
   } catch (error) {
     console.error("❌ Error creating trip:", error);
@@ -111,18 +106,18 @@ export const createTrip = async (tripData) => {
 // Get a trip by ID
 export const getTrip = async (tripId) => {
   try {
-    const tripDoc = await getDoc(doc(db, 'trips', tripId));
-    
+    const tripDoc = await getDoc(doc(db, "trips", tripId));
+
     if (!tripDoc.exists()) {
-      throw new Error('Trip not found');
+      throw new Error("Trip not found");
     }
-    
+
     return {
       id: tripDoc.id,
-      ...tripDoc.data()
+      ...tripDoc.data(),
     };
   } catch (error) {
-    console.error('Error getting trip:', error);
+    console.error("Error getting trip:", error);
     throw error;
   }
 };
@@ -130,87 +125,73 @@ export const getTrip = async (tripId) => {
 // Update a trip
 export const updateTrip = async (tripId, updates) => {
   try {
-    await updateDoc(doc(db, 'trips', tripId), {
+    await updateDoc(doc(db, "trips", tripId), {
       ...updates,
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
     });
-    
+
     return {
       id: tripId,
-      ...updates
+      ...updates,
     };
   } catch (error) {
-    console.error('Error updating trip:', error);
+    console.error("Error updating trip:", error);
     throw error;
   }
 };
 
-
-
 // Enhanced delete trip function with Storage cleanup
 export const deleteTrip = async (tripId) => {
-  console.log("🗑️ Starting deletion process for trip:", tripId);
-  
   try {
     // 1. Remove trip from all users' trips arrays FIRST
     await removeTripFromAllUsers(tripId);
-    
+
     // 2. Delete trip photos from Firestore
     const tripPhotosQuery = query(
       collection(db, "tripPhotos"),
       where("tripId", "==", tripId)
     );
     const tripPhotosSnapshot = await getDocs(tripPhotosQuery);
-    
-    console.log(`📸 Found ${tripPhotosSnapshot.size} photos to delete from Firestore`);
-    
-    const deletePhotoPromises = tripPhotosSnapshot.docs.map((photoDoc) => 
+
+    const deletePhotoPromises = tripPhotosSnapshot.docs.map((photoDoc) =>
       deleteDoc(photoDoc.ref)
     );
-    
+
     await Promise.all(deletePhotoPromises);
-    
+
     // 3. Delete photos from Firebase Storage (if any exist)
     try {
       const tripPhotosRef = ref(storage, `trip_photos/${tripId}/`);
       const photosList = await listAll(tripPhotosRef);
-      
+
       if (photosList.items.length > 0) {
-        console.log(`🗑️ Deleting ${photosList.items.length} photos from Storage`);
-        
         const deleteStoragePromises = photosList.items.map((photoRef) =>
           deleteObject(photoRef)
         );
-        
+
         await Promise.all(deleteStoragePromises);
-        console.log("✅ All trip photos deleted from Storage");
       }
     } catch (storageError) {
       console.warn("⚠️ Error deleting trip photos from Storage:", storageError);
       // Don't fail the entire deletion if storage cleanup fails
     }
-    
+
     // 4. Delete trip invitations
     const invitesQuery = query(
       collection(db, "tripInvites"),
       where("tripId", "==", tripId)
     );
     const invitesSnapshot = await getDocs(invitesQuery);
-    
-    console.log(`📬 Found ${invitesSnapshot.size} invitations to delete`);
-    
+
     const deleteInvitePromises = invitesSnapshot.docs.map((inviteDoc) =>
       deleteDoc(inviteDoc.ref)
     );
-    
+
     await Promise.all(deleteInvitePromises);
-    
+
     // 5. Delete the main trip document
     const tripRef = doc(db, "trips", tripId);
     await deleteDoc(tripRef);
-    
-    console.log("✅ Successfully deleted trip", tripId, "and all associated data");
-    
   } catch (error) {
     console.error("❌ Error deleting trip:", error);
     throw error;
@@ -222,14 +203,14 @@ export const getUserTrips = async (uid) => {
   try {
     // Use the new validation function instead of the old query
     const trips = await getUserTripsWithValidation(uid);
-    
+
     // Sort trips by creation date (newest first)
     trips.sort((a, b) => {
       const dateA = new Date(a.createdAt || 0);
       const dateB = new Date(b.createdAt || 0);
       return dateB - dateA;
     });
-    
+
     return trips;
   } catch (error) {
     console.error("❌ Error getting user trips:", error);
@@ -240,30 +221,30 @@ export const getUserTrips = async (uid) => {
 // Add a member to a trip
 export const addTripMember = async (tripId, userId) => {
   try {
-    const tripDoc = await getDoc(doc(db, 'trips', tripId));
-    
+    const tripDoc = await getDoc(doc(db, "trips", tripId));
+
     if (!tripDoc.exists()) {
-      throw new Error('Trip not found');
+      throw new Error("Trip not found");
     }
-    
+
     const tripData = tripDoc.data();
     const members = tripData.members || [];
-    
+
     if (!members.includes(userId)) {
       members.push(userId);
-      await updateDoc(doc(db, 'trips', tripId), {
+      await updateDoc(doc(db, "trips", tripId), {
         members,
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
       });
     }
-    
+
     return {
       id: tripId,
       ...tripData,
-      members
+      members,
     };
   } catch (error) {
-    console.error('Error adding trip member:', error);
+    console.error("Error adding trip member:", error);
     throw error;
   }
 };
@@ -274,7 +255,6 @@ export const inviteUserToTripByUid = async (tripId, userId) => {
     await updateDoc(tripRef, {
       members: arrayUnion(userId),
     });
-    console.log("✅ User invited to trip");
   } catch (error) {
     console.error("❌ Error inviting user:", error);
     throw error;
@@ -282,17 +262,13 @@ export const inviteUserToTripByUid = async (tripId, userId) => {
 };
 
 export const sendTripInvite = async (tripId, inviterUid, inviteeUid) => {
-  console.log("🔥 sendTripInvite called with:", { tripId, inviterUid, inviteeUid });
-
   const inviteData = {
     tripId,
     inviterUid,
     inviteeUid,
     status: "pending",
-    createdAt: serverTimestamp()
+    createdAt: serverTimestamp(),
   };
-
-  console.log("📤 Firestore inviteData:", inviteData);
 
   await addDoc(collection(db, "tripInvites"), inviteData);
 };
@@ -339,20 +315,12 @@ export const getPendingInvites = async (uid) => {
       tripName,
       inviterName,
     });
-
-    console.log("✅ invite loaded:", {
-      tripName,
-      inviterName,
-      tripId: invite.tripId,
-    });
   }
 
   return invites;
 };
 
 export const acceptTripInvite = async (inviteId, userId) => {
-  console.log("🔁 Accepting invite:", { inviteId, userId });
-
   const inviteRef = doc(db, "tripInvites", inviteId);
   const inviteSnap = await getDoc(inviteRef);
   if (!inviteSnap.exists()) throw new Error("Invite not found");
@@ -365,12 +333,11 @@ export const acceptTripInvite = async (inviteId, userId) => {
   });
 
   await deleteDoc(inviteRef);
-  console.log("✅ Invite accepted and user added to trip");
 };
 
 export const declineTripInvite = async (inviteId) => {
   await updateDoc(doc(db, "tripInvites", inviteId), {
-    status: "declined"
+    status: "declined",
   });
 };
 
