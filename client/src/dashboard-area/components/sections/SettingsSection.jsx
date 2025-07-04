@@ -418,15 +418,21 @@ const SettingsSection = () => {
             </p>
             <button 
               onClick={() => {
-                // Scroll to privacy settings
-                const privacySection = document.querySelector('[data-section="privacy"]');
-                if (privacySection) {
-                  privacySection.scrollIntoView({ behavior: 'smooth' });
-                }
+                // Toggle the face recognition setting to enabled
+                toggleSetting('privacy', 'faceRecognition');
+                
+                // Optional: Still scroll to privacy settings to show the change
+                setTimeout(() => {
+                  const privacySection = document.querySelector('[data-section="privacy"]');
+                  if (privacySection) {
+                    privacySection.scrollIntoView({ behavior: 'smooth' });
+                  }
+                }, 100); // Small delay to allow state update
               }}
-              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors"
+              disabled={settingsLoading}
+              className="bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg transition-colors"
             >
-              Enable Face Recognition
+              {settingsLoading ? 'Enabling...' : 'Enable Face Recognition'}
             </button>
           </div>
         </div>
