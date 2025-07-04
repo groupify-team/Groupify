@@ -64,8 +64,8 @@ const BenefitsSection = ({ benefits }) => (
           Why You'll Love Working Here
         </h2>
         <p className="text-base sm:text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-          We offer competitive benefits and perks to support your
-          professional growth and personal well-being
+          We offer competitive benefits and perks to support your professional
+          growth and personal well-being
         </p>
       </div>
 
@@ -177,8 +177,8 @@ const OpenPositionsSection = ({ jobListings, onApply }) => (
           Open Positions
         </h2>
         <p className="text-base sm:text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-          Join our growing team and help shape the future of photo sharing
-          and organization
+          Join our growing team and help shape the future of photo sharing and
+          organization
         </p>
       </div>
 
@@ -194,9 +194,9 @@ const OpenPositionsSection = ({ jobListings, onApply }) => (
             Don't See a Perfect Match?
           </h3>
           <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 mb-4 sm:mb-6 leading-relaxed">
-            We're always looking for talented individuals to join our team.
-            If you're passionate about our mission and think you'd be a
-            great fit, we'd love to hear from you.
+            We're always looking for talented individuals to join our team. If
+            you're passionate about our mission and think you'd be a great fit,
+            we'd love to hear from you.
           </p>
           <a
             href="/contact"
@@ -218,8 +218,7 @@ const HiringProcessSection = () => (
           Our Hiring Process
         </h2>
         <p className="text-base sm:text-lg text-gray-600 dark:text-gray-300">
-          Simple, transparent, and designed to help us get to know each
-          other
+          Simple, transparent, and designed to help us get to know each other
         </p>
       </div>
 
@@ -287,8 +286,8 @@ const CallToActionSection = ({ handleGetStarted }) => (
         Ready to Shape the Future?
       </h2>
       <p className="text-base sm:text-lg md:text-xl text-indigo-100 mb-6 sm:mb-8 leading-relaxed max-w-2xl mx-auto">
-        Join our mission to help people organize and share their most
-        precious memories. Apply today and be part of something amazing.
+        Join our mission to help people organize and share their most precious
+        memories. Apply today and be part of something amazing.
       </p>
       <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
         <a
@@ -372,7 +371,7 @@ const ApplicationModal = ({ job, onClose }) => {
       const { functions } = await import(
         "../../../shared/services/firebase/config"
       );
-      
+
       const sendJobApplication = httpsCallable(
         functions,
         "sendJobApplicationEmail"
@@ -393,11 +392,7 @@ const ApplicationModal = ({ job, onClose }) => {
         cvFileName: cvFile?.name,
       };
 
-      console.log("Submitting application data:", { ...applicationData, cvFile: cvFileBase64 ? "FILE_ATTACHED" : null });
-
       const result = await sendJobApplication(applicationData);
-      
-      console.log("Firebase function result:", result);
 
       // Check if the function executed successfully
       // Firebase callable functions should return { data: ... }
@@ -422,23 +417,26 @@ const ApplicationModal = ({ job, onClose }) => {
       } else {
         throw new Error("Invalid response from server");
       }
-
     } catch (error) {
       console.error("Application submission error:", error);
 
       let errorMessage = "Failed to submit application. Please try again.";
-      
+
       // Provide more specific error messages
       if (error.code === "functions/not-found") {
-        errorMessage = "Service temporarily unavailable. Please try again later.";
+        errorMessage =
+          "Service temporarily unavailable. Please try again later.";
       } else if (error.code === "functions/internal") {
         errorMessage = "Server error occurred. Please try again.";
       } else if (error.code === "functions/unauthenticated") {
         errorMessage = "Authentication required. Please refresh and try again.";
       } else if (error.message?.includes("data field")) {
         // This specific error - the function probably worked but didn't return data properly
-        console.warn("Function may have succeeded despite the error. Email might have been sent.");
-        errorMessage = "Application may have been submitted. Please check your email or contact us if you don't hear back.";
+        console.warn(
+          "Function may have succeeded despite the error. Email might have been sent."
+        );
+        errorMessage =
+          "Application may have been submitted. Please check your email or contact us if you don't hear back.";
       }
 
       // Toast error message
@@ -734,9 +732,7 @@ const ApplicationModal = ({ job, onClose }) => {
                   </>
                 ) : (
                   <>
-                    <span className="hidden sm:inline">
-                      Submit Application
-                    </span>
+                    <span className="hidden sm:inline">Submit Application</span>
                     <span className="sm:hidden">Submit</span>
                   </>
                 )}
@@ -975,7 +971,9 @@ const Careers = () => {
     <PublicLayout
       headerType="public"
       footerType="extended"
-      footerProps={{ customText: "© 2025 Groupify. Built with ❤️ by Ofir & Adir." }}
+      footerProps={{
+        customText: "© 2025 Groupify. Built with ❤️ by Ofir & Adir.",
+      }}
     >
       {/* Hero Section */}
       <HeroSection
@@ -1000,9 +998,9 @@ const Careers = () => {
       <BenefitsSection benefits={benefits} />
 
       {/* Open Positions Section */}
-      <OpenPositionsSection 
-        jobListings={jobListings} 
-        onApply={handleApplyToJob} 
+      <OpenPositionsSection
+        jobListings={jobListings}
+        onApply={handleApplyToJob}
       />
 
       {/* Application Process Section */}

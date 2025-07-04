@@ -28,18 +28,19 @@ import {
 const SettingsSection = () => {
   const { currentUser } = useAuth();
   const { settings, toggleSetting, loading: settingsLoading } = useSettings();
-  const { 
-    loading: exportLoading, 
-    error: exportError, 
+  const {
+    loading: exportLoading,
+    error: exportError,
     success: exportSuccess,
-    exportData, 
+    exportData,
     createBackup,
-    exportCSV 
+    exportCSV,
   } = useExportBackup();
-  
+
   // Local state for modals
   const [showFaceProfileModal, setShowFaceProfileModal] = useState(false);
-  const [showFaceProfileManageModal, setShowFaceProfileManageModal] = useState(false);
+  const [showFaceProfileManageModal, setShowFaceProfileManageModal] =
+    useState(false);
   const [showEditProfileModal, setShowEditProfileModal] = useState(false);
   const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
@@ -68,7 +69,6 @@ const SettingsSection = () => {
   try {
     navigationActions = useDashboardNavigation();
   } catch (e) {
-    console.log("useDashboardNavigation not available, using fallback");
     navigationActions = {
       pages: {
         toPricing: () => (window.location.href = "/pricing"),
@@ -85,39 +85,33 @@ const SettingsSection = () => {
 
   // Handle face profile creation success
   const handleFaceProfileCreated = async (success) => {
-    
-    
     if (success) {
       setShowFaceProfileModal(false);
-      
+
       // Force refresh of face profile data to update UI immediately
       try {
         if (loadFaceProfile) {
           loadFaceProfile();
         }
-        
+
         if (refreshData) {
           await refreshData();
         } else {
-          console.log("⚠️ No refreshData function available - face profile data refreshed manually");
         }
       } catch (error) {
         console.error("❌ Error refreshing data:", error);
-        console.log("⚠️ Refresh failed but profile was created successfully");
       }
     } else {
-      console.log("❌ Face profile creation failed");
     }
   };
 
   // Handle face profile updates from manage modal
   const handleFaceProfileUpdated = async () => {
-    
     try {
       if (loadFaceProfile) {
         loadFaceProfile();
       }
-      
+
       if (refreshData) {
         await refreshData();
       }
@@ -132,14 +126,7 @@ const SettingsSection = () => {
       alert("Please enable Face Recognition in Privacy Settings first.");
       return;
     }
-    
-    console.log("🚀 Opening face profile modal!");
-    console.log("📊 Current state:", {
-      hasProfile,
-      profilePhotos: profilePhotos?.length || 0,
-      isLoadingProfile,
-      currentUser: currentUser?.uid
-    });
+
     setShowFaceProfileModal(true);
   };
 
@@ -149,7 +136,7 @@ const SettingsSection = () => {
       alert("Please enable Face Recognition in Privacy Settings first.");
       return;
     }
-    
+
     setShowFaceProfileManageModal(true);
   };
 
@@ -283,7 +270,10 @@ const SettingsSection = () => {
         <div className="bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-800 dark:to-blue-900/20 rounded-xl p-3 sm:p-4 lg:p-6 border border-gray-200/50 dark:border-gray-700/50">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
             {/* Notifications */}
-            <div className="space-y-3 sm:space-y-4" data-section="notifications">
+            <div
+              className="space-y-3 sm:space-y-4"
+              data-section="notifications"
+            >
               <div className="flex items-center gap-2 mb-2 sm:mb-3">
                 <div className="w-6 h-6 sm:w-7 sm:h-7 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-sm">
                   <BellIcon className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
@@ -299,12 +289,17 @@ const SettingsSection = () => {
               <div className="space-y-2 sm:space-y-3">
                 {NOTIFICATION_SETTINGS.map((item) => {
                   // Check if setting should be disabled
-                  const isDisabled = item.id !== 'emailNotifications' && 
-                                   !settings.notifications?.emailNotifications;
-                  
+                  const isDisabled =
+                    item.id !== "emailNotifications" &&
+                    !settings.notifications?.emailNotifications;
+
                   return (
                     <div key={item.id} className="group">
-                      <label className={`flex items-center justify-between py-2 sm:py-3 px-3 sm:px-4 bg-white/60 dark:bg-gray-700/40 rounded-lg hover:bg-white/80 dark:hover:bg-gray-700/60 transition-all duration-200 cursor-pointer border border-transparent hover:border-blue-200 dark:hover:border-blue-600/30 ${isDisabled ? 'opacity-50' : ''}`}>
+                      <label
+                        className={`flex items-center justify-between py-2 sm:py-3 px-3 sm:px-4 bg-white/60 dark:bg-gray-700/40 rounded-lg hover:bg-white/80 dark:hover:bg-gray-700/60 transition-all duration-200 cursor-pointer border border-transparent hover:border-blue-200 dark:hover:border-blue-600/30 ${
+                          isDisabled ? "opacity-50" : ""
+                        }`}
+                      >
                         <div className="flex items-center gap-2 sm:gap-3 flex-1">
                           {item.icon}
                           <div>
@@ -320,8 +315,13 @@ const SettingsSection = () => {
                           <input
                             type="checkbox"
                             className="sr-only peer"
-                            checked={settings.notifications?.[item.id] ?? item.defaultChecked}
-                            onChange={() => toggleSetting('notifications', item.id)}
+                            checked={
+                              settings.notifications?.[item.id] ??
+                              item.defaultChecked
+                            }
+                            onChange={() =>
+                              toggleSetting("notifications", item.id)
+                            }
                             disabled={settingsLoading || isDisabled}
                           />
                           <div className="w-10 h-5 sm:w-11 sm:h-6 bg-gray-200 dark:bg-gray-600 rounded-full peer peer-checked:bg-gradient-to-r peer-checked:from-blue-500 peer-checked:to-indigo-600 transition-all duration-300 shadow-inner"></div>
@@ -353,7 +353,7 @@ const SettingsSection = () => {
                 <h4 className="text-sm sm:text-base lg:text-lg font-semibold text-gray-800 dark:text-white">
                   Privacy Settings
                 </h4>
-                </div>
+              </div>
               <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-3 sm:mb-4">
                 Control your privacy and data sharing preferences
               </p>
@@ -377,8 +377,10 @@ const SettingsSection = () => {
                         <input
                           type="checkbox"
                           className="sr-only peer"
-                          checked={settings.privacy?.[item.id] ?? item.defaultChecked}
-                          onChange={() => toggleSetting('privacy', item.id)}
+                          checked={
+                            settings.privacy?.[item.id] ?? item.defaultChecked
+                          }
+                          onChange={() => toggleSetting("privacy", item.id)}
                           disabled={settingsLoading}
                         />
                         <div className="w-10 h-5 sm:w-11 sm:h-6 bg-gray-200 dark:bg-gray-600 rounded-full peer peer-checked:bg-gradient-to-r peer-checked:from-green-500 peer-checked:to-emerald-600 transition-all duration-300 shadow-inner"></div>
@@ -406,17 +408,28 @@ const SettingsSection = () => {
         <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-xl shadow-lg p-6 border border-white/20 dark:border-gray-700/50">
           <div className="text-center">
             <div className="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636 5.636 18.364" />
+              <svg
+                className="w-8 h-8 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636 5.636 18.364"
+                />
               </svg>
             </div>
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
               Face Recognition Disabled
             </h3>
             <p className="text-gray-600 dark:text-gray-300 mb-4">
-              Enable face recognition in Privacy Settings to set up your face profile and get tagged in photos.
+              Enable face recognition in Privacy Settings to set up your face
+              profile and get tagged in photos.
             </p>
-            <button 
+            <button
               onClick={() => {
                 // Toggle the face recognition setting to enabled
                 toggleSetting('privacy', 'faceRecognition');
@@ -478,19 +491,23 @@ const SettingsSection = () => {
           {/* Export/Backup Status Messages */}
           {exportError && (
             <div className="mb-4 p-3 bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 rounded-lg">
-              <p className="text-sm text-red-800 dark:text-red-400">{exportError}</p>
+              <p className="text-sm text-red-800 dark:text-red-400">
+                {exportError}
+              </p>
             </div>
           )}
-          
+
           {exportSuccess && (
             <div className="mb-4 p-3 bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-700 rounded-lg">
-              <p className="text-sm text-green-800 dark:text-green-400">{exportSuccess}</p>
+              <p className="text-sm text-green-800 dark:text-green-400">
+                {exportSuccess}
+              </p>
             </div>
           )}
 
           {/* Mobile: 2x2 Grid Layout for Actions */}
           <div className="grid grid-cols-2 gap-2 mb-2 md:grid-cols-2">
-            <button 
+            <button
               onClick={() => setShowExportModal(true)}
               disabled={exportLoading}
               className="flex items-center justify-center gap-2 p-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg font-medium text-gray-800 dark:text-gray-200 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
@@ -509,8 +526,8 @@ const SettingsSection = () => {
                 </>
               )}
             </button>
-            
-            <button 
+
+            <button
               onClick={() => setShowBackupModal(true)}
               disabled={exportLoading}
               className="flex items-center justify-center gap-2 p-3 bg-blue-100 dark:bg-blue-900/30 hover:bg-blue-200 dark:hover:bg-blue-900/50 rounded-lg font-medium text-blue-800 dark:text-blue-400 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
@@ -552,9 +569,10 @@ const SettingsSection = () => {
               Export Your Data
             </h3>
             <p className="text-sm text-gray-600 dark:text-gray-300 mb-6">
-              Choose what type of data you'd like to export from your Groupify account.
+              Choose what type of data you'd like to export from your Groupify
+              account.
             </p>
-            
+
             <div className="space-y-3">
               <button
                 onClick={handleExportData}
@@ -564,27 +582,27 @@ const SettingsSection = () => {
                 <span>📦</span>
                 <span>Complete Data Export (JSON)</span>
               </button>
-              
+
               <button
-                onClick={() => handleExportCSV('trips')}
+                onClick={() => handleExportCSV("trips")}
                 disabled={exportLoading}
                 className="w-full flex items-center justify-center gap-3 p-3 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition-colors disabled:opacity-50"
               >
                 <span>🗺️</span>
                 <span>Trips Data (CSV)</span>
               </button>
-              
+
               <button
-                onClick={() => handleExportCSV('photos')}
+                onClick={() => handleExportCSV("photos")}
                 disabled={exportLoading}
                 className="w-full flex items-center justify-center gap-3 p-3 bg-purple-500 hover:bg-purple-600 text-white rounded-lg font-medium transition-colors disabled:opacity-50"
               >
                 <span>📸</span>
                 <span>Photos Data (CSV)</span>
               </button>
-              
+
               <button
-                onClick={() => handleExportCSV('friends')}
+                onClick={() => handleExportCSV("friends")}
                 disabled={exportLoading}
                 className="w-full flex items-center justify-center gap-3 p-3 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium transition-colors disabled:opacity-50"
               >
@@ -592,7 +610,7 @@ const SettingsSection = () => {
                 <span>Friends Data (CSV)</span>
               </button>
             </div>
-            
+
             <div className="mt-6 flex justify-end">
               <button
                 onClick={() => setShowExportModal(false)}
@@ -613,9 +631,10 @@ const SettingsSection = () => {
               Create Backup
             </h3>
             <p className="text-sm text-gray-600 dark:text-gray-300 mb-6">
-              Create a complete backup of your Groupify account data including metadata and integrity verification.
+              Create a complete backup of your Groupify account data including
+              metadata and integrity verification.
             </p>
-            
+
             <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg mb-6">
               <h4 className="font-medium text-blue-900 dark:text-blue-300 mb-2">
                 🔒 What's included:
@@ -627,7 +646,7 @@ const SettingsSection = () => {
                 <li>• Backup verification data</li>
               </ul>
             </div>
-            
+
             <div className="flex gap-3">
               <button
                 onClick={handleCreateBackup}
@@ -637,7 +656,7 @@ const SettingsSection = () => {
                 <span>💾</span>
                 <span>Create Backup</span>
               </button>
-              
+
               <button
                 onClick={() => setShowBackupModal(false)}
                 className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 font-medium"

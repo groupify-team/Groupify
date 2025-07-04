@@ -381,14 +381,7 @@ export const useDashboardNavigation = () => {
   /**
    * Preload route data (for performance)
    */
-  const preloadRoute = useCallback(async (routeType, routeId) => {
-    // This would typically preload data for the route
-    // For now, we'll just log the preload intention
-    console.log(`🚀 Preloading ${routeType}:`, routeId);
-
-    // In a real implementation, this might fetch trip data, user data, etc.
-    // return await fetchRouteData(routeType, routeId);
-  }, []);
+  const preloadRoute = useCallback(async (routeType, routeId) => {}, []);
 
   return {
     // Navigation state

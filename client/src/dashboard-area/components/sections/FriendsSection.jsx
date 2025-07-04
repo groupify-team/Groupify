@@ -30,11 +30,11 @@ const FriendsSection = () => {
   const [friends, setFriends] = useState([]);
   const [pendingRequests, setPendingRequests] = useState([]);
   const [loading, setLoading] = useState(true);
-  
+
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredFriends, setFilteredFriends] = useState([]);
   const [showFriendRequests, setShowFriendRequests] = useState(true);
-  
+
   // Simple modal state - like before
   const [showAddFriendModal, setShowAddFriendModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
@@ -53,7 +53,7 @@ const FriendsSection = () => {
         // Check if user document exists first
         const userDocRef = doc(db, "users", currentUser.uid);
         const snap = await getDoc(userDocRef);
-        
+
         if (!snap.exists() || !isMounted) {
           console.warn("⚠️ userDoc does not exist yet:", currentUser.uid);
           setLoading(false);
@@ -63,11 +63,10 @@ const FriendsSection = () => {
         // Friends listener - EXACTLY like in Dashboard
         const unsubscribeFriends = onSnapshot(userDocRef, async (docSnap) => {
           if (!docSnap.exists() || !isMounted) return;
-          console.log("🔁 Friends snapshot triggered");
 
           const data = docSnap.data();
           const friendIds = [...new Set(data.friends || [])]; // Remove duplicates
-          
+
           const friendsData = [];
 
           for (const fid of friendIds) {
@@ -94,13 +93,13 @@ const FriendsSection = () => {
           }
 
           // Remove duplicates in final data
-          const uniqueFriendsData = friendsData.filter((friend, index, self) => 
-            index === self.findIndex((f) => f.uid === friend.uid)
+          const uniqueFriendsData = friendsData.filter(
+            (friend, index, self) =>
+              index === self.findIndex((f) => f.uid === friend.uid)
           );
 
           if (isMounted) {
             setFriends(uniqueFriendsData);
-            console.log(`🔄 Friends updated: ${uniqueFriendsData.length}`);
           }
         });
 
@@ -116,7 +115,7 @@ const FriendsSection = () => {
           pendingRequestsQuery,
           async (snapshot) => {
             if (!isMounted) return;
-            
+
             const requests = [];
 
             for (const docSnap of snapshot.docs) {
@@ -131,9 +130,13 @@ const FriendsSection = () => {
                 requests.push({
                   id: docSnap.id,
                   from: data.from,
-                  displayName: senderSnap.exists() ? senderSnap.data().displayName : "",
+                  displayName: senderSnap.exists()
+                    ? senderSnap.data().displayName
+                    : "",
                   email: senderSnap.exists() ? senderSnap.data().email : "",
-                  photoURL: senderSnap.exists() ? senderSnap.data().photoURL : null,
+                  photoURL: senderSnap.exists()
+                    ? senderSnap.data().photoURL
+                    : null,
                   createdAt: data.createdAt,
                 });
               } catch (err) {
@@ -143,7 +146,6 @@ const FriendsSection = () => {
 
             if (isMounted) {
               setPendingRequests(requests);
-              console.log(`🔄 Pending requests updated: ${requests.length}`);
             }
           }
         );
@@ -155,7 +157,6 @@ const FriendsSection = () => {
           unsubscribeFriends();
           unsubscribePendingRequests();
         };
-
       } catch (error) {
         console.error("❌ Error setting up listeners:", error);
         setLoading(false);
@@ -179,13 +180,18 @@ const FriendsSection = () => {
         const requestTime = new Date(latestRequest.createdAt);
         const now = new Date();
         const timeDiff = now - requestTime;
-        
+
         // If request is less than 30 seconds old, show notification
         if (timeDiff < 30000) {
-          toast(`🔔 New friend request from ${latestRequest.displayName || latestRequest.email}!`, {
-            duration: 5000,
-            icon: '👋',
-          });
+          toast(
+            `🔔 New friend request from ${
+              latestRequest.displayName || latestRequest.email
+            }!`,
+            {
+              duration: 5000,
+              icon: "👋",
+            }
+          );
         }
       }
     }
@@ -198,7 +204,9 @@ const FriendsSection = () => {
     } else {
       const filtered = friends.filter(
         (friend) =>
-          friend.displayName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          friend.displayName
+            ?.toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
           friend.email?.toLowerCase().includes(searchTerm.toLowerCase())
       );
       setFilteredFriends(filtered);
@@ -228,21 +236,18 @@ const FriendsSection = () => {
 
   const handleRemoveFriend = async (friendUid) => {
     try {
-      console.log(`🗑️ Removing friend: ${friendUid}`);
-      
       // Call the removeFriend function
       await removeFriend(currentUser.uid, friendUid);
-      
+
       // The real-time listener will automatically update the friends list
       // No need to manually refresh since we have onSnapshot listeners
-      
+
       // Show success message
       toast.success("Friend removed!");
-      
+
       // Close the user profile modal
       setShowUserProfileModal(false);
       setSelectedUser(null);
-      
     } catch (error) {
       console.error("Error removing friend:", error);
       toast.error("Failed to remove friend");
@@ -262,7 +267,9 @@ const FriendsSection = () => {
 
   const handleCancelRequest = async (targetUid) => {
     try {
-      const { cancelFriendRequest } = await import("@shared/services/firebase/users");
+      const { cancelFriendRequest } = await import(
+        "@shared/services/firebase/users"
+      );
       await cancelFriendRequest(currentUser.uid, targetUid);
       setShowUserProfileModal(false);
       setSelectedUser(null);
@@ -274,14 +281,13 @@ const FriendsSection = () => {
   };
 
   const handleViewProfile = (friend) => {
-    console.log("👀 Opening profile for:", friend);
     setSelectedUser(friend);
     setShowUserProfileModal(true);
   };
 
   const handleUserSelect = (uid) => {
     // Find user data
-    const userData = friends.find(f => f.uid === uid);
+    const userData = friends.find((f) => f.uid === uid);
     if (userData) {
       handleViewProfile(userData);
     }
@@ -405,8 +411,12 @@ const FriendsSection = () => {
             <div className="w-16 h-16 bg-gray-200/50 dark:bg-slate-600/50 rounded-full flex items-center justify-center mx-auto mb-4">
               <UsersIcon className="w-8 h-8 text-gray-500 dark:text-slate-400" />
             </div>
-            <h3 className="text-xl font-medium text-gray-900 dark:text-white mb-2">No friends yet</h3>
-            <p className="text-gray-600 dark:text-slate-400 mb-6">Start connecting with people to share your travel memories</p>
+            <h3 className="text-xl font-medium text-gray-900 dark:text-white mb-2">
+              No friends yet
+            </h3>
+            <p className="text-gray-600 dark:text-slate-400 mb-6">
+              Start connecting with people to share your travel memories
+            </p>
             <button
               onClick={() => setShowAddFriendModal(true)}
               className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-200"
@@ -477,18 +487,16 @@ const FriendsSection = () => {
       {/* User Profile Modal */}
       {showUserProfileModal && selectedUser && (
         <UserProfileModal
-          isOpen={showUserProfileModal}
-          onClose={() => {
-            setShowUserProfileModal(false);
-            setSelectedUser(null);
-          }}
           user={selectedUser}
           currentUserId={currentUser?.uid}
-          friends={friends.map(f => f.uid)}
-          pendingRequests={pendingRequests}
-          onAddFriend={handleAddFriendDirect}
+          context="friends"
+          // Only friendship props needed
+          isFriend={selectedUser.__isFriend || false}
+          isPending={selectedUser.__isPending || false}
+          onAddFriend={handleAddFriend}
           onRemoveFriend={handleRemoveFriend}
-          onCancelRequest={handleCancelRequest}
+          onCancelRequest={handleCancelFriendRequest}
+          onClose={() => setSelectedUser(null)}
         />
       )}
     </div>

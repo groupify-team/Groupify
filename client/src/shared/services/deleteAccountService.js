@@ -1,24 +1,20 @@
 // shared/services/deleteAccountService.js
-import { 
-  collection, 
-  query, 
-  where, 
-  getDocs, 
-  doc, 
-  deleteDoc, 
-  writeBatch 
-} from 'firebase/firestore';
-import { 
-  deleteUser, 
-  reauthenticateWithCredential, 
-  EmailAuthProvider 
-} from 'firebase/auth';
-import { 
-  ref, 
-  deleteObject, 
-  listAll 
-} from 'firebase/storage';
-import { db, storage } from './firebase/config';
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  doc,
+  deleteDoc,
+  writeBatch,
+} from "firebase/firestore";
+import {
+  deleteUser,
+  reauthenticateWithCredential,
+  EmailAuthProvider,
+} from "firebase/auth";
+import { ref, deleteObject, listAll } from "firebase/storage";
+import { db, storage } from "./firebase/config";
 
 export class DeleteAccountService {
   /**
@@ -29,37 +25,25 @@ export class DeleteAccountService {
    */
   static async deleteAccount(currentUser, password) {
     if (!currentUser) {
-      throw new Error('No user authenticated');
+      throw new Error("No user authenticated");
     }
 
     const userId = currentUser.uid;
-    console.log('🗑️ Starting account deletion process for user:', userId);
 
     try {
-      // Step 1: Reauthenticate user for security
-      console.log('🔐 Reauthenticating user...');
       await this.reauthenticateUser(currentUser, password);
 
-      // Step 2: Create final data export (optional backup)
-      console.log('📋 Creating final data export...');
       const finalExport = await this.createFinalExport(userId);
 
-      // Step 3: Delete all user data from Firestore
-      console.log('🗃️ Deleting Firestore data...');
       await this.deleteFirestoreData(userId);
 
-      // Step 4: Delete all user files from Storage
-      console.log('📁 Deleting storage files...');
       await this.deleteStorageFiles(userId);
 
-      // Step 5: Delete the user account
-      console.log('👤 Deleting user account...');
       await deleteUser(currentUser);
 
-      console.log('✅ Account deletion completed successfully');
       return { success: true, finalExport };
     } catch (error) {
-      console.error('❌ Account deletion failed:', error);
+      console.error("❌ Account deletion failed:", error);
       throw error;
     }
   }
@@ -71,10 +55,13 @@ export class DeleteAccountService {
    */
   static async reauthenticateUser(currentUser, password) {
     if (!currentUser.email) {
-      throw new Error('User email not available for reauthentication');
+      throw new Error("User email not available for reauthentication");
     }
 
-    const credential = EmailAuthProvider.credential(currentUser.email, password);
+    const credential = EmailAuthProvider.credential(
+      currentUser.email,
+      password
+    );
     await reauthenticateWithCredential(currentUser, credential);
   }
 
@@ -86,10 +73,10 @@ export class DeleteAccountService {
   static async createFinalExport(userId) {
     try {
       // Import ExportService dynamically to avoid circular dependencies
-      const { ExportService } = await import('./exportService');
+      const { ExportService } = await import("./exportService");
       return await ExportService.exportUserData(userId);
     } catch (error) {
-      console.warn('Could not create final export:', error);
+      console.warn("Could not create final export:", error);
       return null;
     }
   }
@@ -104,47 +91,44 @@ export class DeleteAccountService {
 
     // Helper function to execute batch when it gets too large
     const executeBatchIfNeeded = async () => {
-      if (batchCount >= 450) { // Firestore batch limit is 500
+      if (batchCount >= 450) {
+        // Firestore batch limit is 500
         await batch.commit();
         batchCount = 0;
       }
     };
 
     // Delete user settings
-    console.log('🔧 Deleting user settings...');
-    const settingsRef = doc(db, 'userSettings', userId);
+    const settingsRef = doc(db, "userSettings", userId);
     batch.delete(settingsRef);
     batchCount++;
 
     // Delete face profile
-    console.log('🎭 Deleting face profile...');
-    const faceProfileRef = doc(db, 'faceProfiles', userId);
+    const faceProfileRef = doc(db, "faceProfiles", userId);
     batch.delete(faceProfileRef);
     batchCount++;
 
     // Delete user document
-    console.log('👤 Deleting user document...');
-    const userRef = doc(db, 'users', userId);
+    const userRef = doc(db, "users", userId);
     batch.delete(userRef);
     batchCount++;
 
     // Delete friend requests (sent and received)
-    console.log('👥 Deleting friend requests...');
     const sentRequestsQuery = query(
-      collection(db, 'friendRequests'),
-      where('from', '==', userId)
+      collection(db, "friendRequests"),
+      where("from", "==", userId)
     );
     const receivedRequestsQuery = query(
-      collection(db, 'friendRequests'),
-      where('to', '==', userId)
+      collection(db, "friendRequests"),
+      where("to", "==", userId)
     );
 
     const [sentSnapshot, receivedSnapshot] = await Promise.all([
       getDocs(sentRequestsQuery),
-      getDocs(receivedRequestsQuery)
+      getDocs(receivedRequestsQuery),
     ]);
 
-    [...sentSnapshot.docs, ...receivedSnapshot.docs].forEach(doc => {
+    [...sentSnapshot.docs, ...receivedSnapshot.docs].forEach((doc) => {
       batch.delete(doc.ref);
       batchCount++;
     });
@@ -152,14 +136,13 @@ export class DeleteAccountService {
     await executeBatchIfNeeded();
 
     // Delete photos uploaded by user
-    console.log('📸 Deleting user photos...');
     const photosQuery = query(
-      collection(db, 'photos'),
-      where('uploadedBy', '==', userId)
+      collection(db, "photos"),
+      where("uploadedBy", "==", userId)
     );
     const photosSnapshot = await getDocs(photosQuery);
 
-    photosSnapshot.docs.forEach(doc => {
+    photosSnapshot.docs.forEach((doc) => {
       batch.delete(doc.ref);
       batchCount++;
     });
@@ -167,82 +150,85 @@ export class DeleteAccountService {
     await executeBatchIfNeeded();
 
     // Handle trips - delete if user is creator, remove from members if not
-    console.log('🗺️ Handling trips...');
     const tripsQuery = query(
-      collection(db, 'trips'),
-      where('members', 'array-contains', userId)
+      collection(db, "trips"),
+      where("members", "array-contains", userId)
     );
     const tripsSnapshot = await getDocs(tripsQuery);
 
     for (const tripDoc of tripsSnapshot.docs) {
       const tripData = tripDoc.data();
-      
+
       if (tripData.createdBy === userId) {
         // User is trip creator - delete entire trip
         batch.delete(tripDoc.ref);
         batchCount++;
-        
+
         // Also delete all trip invites for this trip
         const tripInvitesQuery = query(
-          collection(db, 'tripInvites'),
-          where('tripId', '==', tripDoc.id)
+          collection(db, "tripInvites"),
+          where("tripId", "==", tripDoc.id)
         );
         const tripInvitesSnapshot = await getDocs(tripInvitesQuery);
-        
-        tripInvitesSnapshot.docs.forEach(inviteDoc => {
+
+        tripInvitesSnapshot.docs.forEach((inviteDoc) => {
           batch.delete(inviteDoc.ref);
           batchCount++;
         });
       } else {
         // User is just a member - remove from members array
-        const updatedMembers = tripData.members.filter(member => member !== userId);
-        batch.update(tripDoc.ref, { 
+        const updatedMembers = tripData.members.filter(
+          (member) => member !== userId
+        );
+        batch.update(tripDoc.ref, {
           members: updatedMembers,
-          updatedAt: new Date()
+          updatedAt: new Date(),
         });
         batchCount++;
       }
-      
+
       await executeBatchIfNeeded();
     }
 
     // Delete trip invites sent by or to the user
-    console.log('📨 Deleting trip invites...');
     const sentInvitesQuery = query(
-      collection(db, 'tripInvites'),
-      where('inviterUid', '==', userId)
+      collection(db, "tripInvites"),
+      where("inviterUid", "==", userId)
     );
     const receivedInvitesQuery = query(
-      collection(db, 'tripInvites'),
-      where('inviteeUid', '==', userId)
+      collection(db, "tripInvites"),
+      where("inviteeUid", "==", userId)
     );
 
     const [sentInvitesSnapshot, receivedInvitesSnapshot] = await Promise.all([
       getDocs(sentInvitesQuery),
-      getDocs(receivedInvitesQuery)
+      getDocs(receivedInvitesQuery),
     ]);
 
-    [...sentInvitesSnapshot.docs, ...receivedInvitesSnapshot.docs].forEach(doc => {
-      batch.delete(doc.ref);
-      batchCount++;
-    });
+    [...sentInvitesSnapshot.docs, ...receivedInvitesSnapshot.docs].forEach(
+      (doc) => {
+        batch.delete(doc.ref);
+        batchCount++;
+      }
+    );
 
     await executeBatchIfNeeded();
 
     // Remove user from friends lists of other users
-    console.log('🤝 Removing from friends lists...');
     const allUsersQuery = query(
-      collection(db, 'users'),
-      where('friends', 'array-contains', userId)
+      collection(db, "users"),
+      where("friends", "array-contains", userId)
     );
     const allUsersSnapshot = await getDocs(allUsersQuery);
 
-    allUsersSnapshot.docs.forEach(userDoc => {
+    allUsersSnapshot.docs.forEach((userDoc) => {
       const userData = userDoc.data();
-      const updatedFriends = userData.friends.filter(friend => friend !== userId);
-      batch.update(userDoc.ref, { 
+      const updatedFriends = userData.friends.filter(
+        (friend) => friend !== userId
+      );
+      batch.update(userDoc.ref, {
         friends: updatedFriends,
-        updatedAt: new Date()
+        updatedAt: new Date(),
       });
       batchCount++;
     });
@@ -251,8 +237,6 @@ export class DeleteAccountService {
     if (batchCount > 0) {
       await batch.commit();
     }
-
-    console.log('✅ All Firestore data deleted successfully');
   }
 
   /**
@@ -272,10 +256,8 @@ export class DeleteAccountService {
       // Delete user's profile images
       const profileRef = ref(storage, `profiles/${userId}`);
       await this.deleteStorageFolder(profileRef);
-
-      console.log('✅ All storage files deleted successfully');
     } catch (error) {
-      console.warn('⚠️ Some storage files could not be deleted:', error);
+      console.warn("⚠️ Some storage files could not be deleted:", error);
       // Don't throw here - continue with account deletion even if some files remain
     }
   }
@@ -287,18 +269,18 @@ export class DeleteAccountService {
   static async deleteStorageFolder(folderRef) {
     try {
       const listResult = await listAll(folderRef);
-      
+
       // Delete all files in the folder
-      const deletePromises = listResult.items.map(item => deleteObject(item));
+      const deletePromises = listResult.items.map((item) => deleteObject(item));
       await Promise.all(deletePromises);
-      
+
       // Recursively delete subfolders
-      const subfolderPromises = listResult.prefixes.map(prefix => 
+      const subfolderPromises = listResult.prefixes.map((prefix) =>
         this.deleteStorageFolder(prefix)
       );
       await Promise.all(subfolderPromises);
     } catch (error) {
-      console.warn('Could not delete storage folder:', error);
+      console.warn("Could not delete storage folder:", error);
     }
   }
 
@@ -309,10 +291,10 @@ export class DeleteAccountService {
    */
   static needsReauthentication(currentUser) {
     if (!currentUser?.metadata?.lastSignInTime) return true;
-    
+
     const lastSignIn = new Date(currentUser.metadata.lastSignInTime);
     const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
-    
+
     return lastSignIn < fiveMinutesAgo;
   }
 
@@ -329,59 +311,59 @@ export class DeleteAccountService {
         friends: 0,
         friendRequests: 0,
         settings: false,
-        faceProfile: false
+        faceProfile: false,
       };
 
       // Count trips
       const tripsQuery = query(
-        collection(db, 'trips'),
-        where('members', 'array-contains', userId)
+        collection(db, "trips"),
+        where("members", "array-contains", userId)
       );
       const tripsSnapshot = await getDocs(tripsQuery);
       summary.trips = tripsSnapshot.size;
 
       // Count photos
       const photosQuery = query(
-        collection(db, 'photos'),
-        where('uploadedBy', '==', userId)
+        collection(db, "photos"),
+        where("uploadedBy", "==", userId)
       );
       const photosSnapshot = await getDocs(photosQuery);
       summary.photos = photosSnapshot.size;
 
       // Count friends
-      const userDoc = await getDocs(doc(db, 'users', userId));
+      const userDoc = await getDocs(doc(db, "users", userId));
       if (userDoc.exists()) {
         summary.friends = userDoc.data().friends?.length || 0;
       }
 
       // Count friend requests
       const sentRequestsQuery = query(
-        collection(db, 'friendRequests'),
-        where('from', '==', userId)
+        collection(db, "friendRequests"),
+        where("from", "==", userId)
       );
       const receivedRequestsQuery = query(
-        collection(db, 'friendRequests'),
-        where('to', '==', userId)
+        collection(db, "friendRequests"),
+        where("to", "==", userId)
       );
-      
+
       const [sentSnapshot, receivedSnapshot] = await Promise.all([
         getDocs(sentRequestsQuery),
-        getDocs(receivedRequestsQuery)
+        getDocs(receivedRequestsQuery),
       ]);
-      
+
       summary.friendRequests = sentSnapshot.size + receivedSnapshot.size;
 
       // Check settings
-      const settingsDoc = await getDocs(doc(db, 'userSettings', userId));
+      const settingsDoc = await getDocs(doc(db, "userSettings", userId));
       summary.settings = settingsDoc.exists();
 
       // Check face profile
-      const faceProfileDoc = await getDocs(doc(db, 'faceProfiles', userId));
+      const faceProfileDoc = await getDocs(doc(db, "faceProfiles", userId));
       summary.faceProfile = faceProfileDoc.exists();
 
       return summary;
     } catch (error) {
-      console.error('Error getting deletion summary:', error);
+      console.error("Error getting deletion summary:", error);
       return null;
     }
   }

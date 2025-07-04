@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { toast } from "react-hot-toast";
-import { 
-  CheckIcon, 
+import {
+  CheckIcon,
   ChevronUpIcon,
   EyeIcon,
   EyeSlashIcon,
@@ -25,14 +25,15 @@ const SignUpPage = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
-  const [showPasswordRequirements, setShowPasswordRequirements] = useState(true);
+  const [showPasswordRequirements, setShowPasswordRequirements] =
+    useState(true);
 
   // Hooks
   const { signup, signInWithGoogle } = useAuth();
   const { validateSignUp, getPasswordStrength } = useAuthValidation();
   const navigate = useNavigate();
   const location = useLocation();
-  
+
   // URL parameters - Enhanced to handle billing flow
   const urlParams = new URLSearchParams(location.search);
   const selectedPlan = urlParams.get("plan");
@@ -50,7 +51,8 @@ const SignUpPage = () => {
     // Show plan-specific message
     if (selectedPlan) {
       setTimeout(() => {
-        const planName = selectedPlan.charAt(0).toUpperCase() + selectedPlan.slice(1);
+        const planName =
+          selectedPlan.charAt(0).toUpperCase() + selectedPlan.slice(1);
         toast.success(
           `Great choice! Let's set up your account for the ${planName} plan 🎯`,
           {
@@ -73,7 +75,7 @@ const SignUpPage = () => {
   // Handle form input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
@@ -92,22 +94,15 @@ const SignUpPage = () => {
 
     try {
       setLoading(true);
-      console.log("Starting signup process...");
 
-      // Step 1: Create the user account
       const result = await signup(
         formData.email,
         formData.password,
         formData.displayName,
         formData.gender
       );
-      
-      console.log("Signup result:", result);
 
       if (result.success) {
-        // Step 2: Send verification email
-        console.log("Account created, now sending verification email...");
-        
         try {
           const response = await fetch(
             "https://us-central1-groupify-77202.cloudfunctions.net/sendVerificationEmail",
@@ -117,10 +112,10 @@ const SignUpPage = () => {
                 "Content-Type": "application/json",
               },
               body: JSON.stringify({
-                data: { 
+                data: {
                   email: formData.email,
-                  name: formData.displayName
-                }
+                  name: formData.displayName,
+                },
               }),
             }
           );
@@ -130,16 +125,22 @@ const SignUpPage = () => {
           }
 
           const emailResult = await response.json();
-          
+
           if (emailResult.success) {
             console.log("Verification email sent successfully");
-            toast.success("Account created! Please check your email to verify your account.");
+            toast.success(
+              "Account created! Please check your email to verify your account."
+            );
           } else {
-            throw new Error(emailResult.message || "Failed to send verification email");
+            throw new Error(
+              emailResult.message || "Failed to send verification email"
+            );
           }
         } catch (emailError) {
           console.error("Send verification email error:", emailError);
-          toast.success("Account created! Please try to resend verification email from the sign-in page.");
+          toast.success(
+            "Account created! Please try to resend verification email from the sign-in page."
+          );
         }
 
         // Step 3: Determine redirect destination
@@ -150,11 +151,15 @@ const SignUpPage = () => {
         };
 
         // If user signed up for a paid plan and should go to billing
-        if (redirectAfter === "billing" && selectedPlan && selectedPlan !== "free") {
+        if (
+          redirectAfter === "billing" &&
+          selectedPlan &&
+          selectedPlan !== "free"
+        ) {
           redirectState.redirectToBilling = true;
           redirectState.billingParams = {
             plan: selectedPlan,
-            billing: billingCycle || "monthly"
+            billing: billingCycle || "monthly",
           };
         }
 
@@ -167,10 +172,12 @@ const SignUpPage = () => {
       }
     } catch (error) {
       console.error("Signup error:", error);
-      
+
       // Handle specific errors
       if (error.code === "auth/email-already-in-use") {
-        toast.error("An account with this email already exists. Please sign in instead.");
+        toast.error(
+          "An account with this email already exists. Please sign in instead."
+        );
       } else {
         handleSignUpError(error);
       }
@@ -187,7 +194,8 @@ const SignUpPage = () => {
       "auth/invalid-email": "Invalid email address",
     };
 
-    const errorMessage = errorMessages[error.code] || error.message || "Failed to create account";
+    const errorMessage =
+      errorMessages[error.code] || error.message || "Failed to create account";
     toast.error(errorMessage);
   };
 
@@ -201,12 +209,20 @@ const SignUpPage = () => {
     try {
       setLoading(true);
       await signInWithGoogle();
-      
+
       // Handle post-signup redirect for Google users
-      if (redirectAfter === "billing" && selectedPlan && selectedPlan !== "free") {
-        toast.success("Account created successfully! Redirecting to checkout...");
+      if (
+        redirectAfter === "billing" &&
+        selectedPlan &&
+        selectedPlan !== "free"
+      ) {
+        toast.success(
+          "Account created successfully! Redirecting to checkout..."
+        );
         setTimeout(() => {
-          navigate(`/billing?plan=${selectedPlan}&billing=${billingCycle || "monthly"}`);
+          navigate(
+            `/billing?plan=${selectedPlan}&billing=${billingCycle || "monthly"}`
+          );
         }, 1000);
       } else {
         toast.success("Account created successfully! Welcome to Groupify!");
@@ -217,12 +233,14 @@ const SignUpPage = () => {
 
       const errorMessages = {
         "auth/popup-closed-by-user": "Sign up was cancelled",
-        "auth/popup-blocked": "Popup was blocked. Please allow popups and try again",
-        "auth/account-exists-with-different-credential": 
+        "auth/popup-blocked":
+          "Popup was blocked. Please allow popups and try again",
+        "auth/account-exists-with-different-credential":
           "An account already exists with this email using a different sign-in method",
       };
 
-      const errorMessage = errorMessages[error.code] || "Failed to create account with Google";
+      const errorMessage =
+        errorMessages[error.code] || "Failed to create account with Google";
       toast.error(errorMessage);
     } finally {
       setLoading(false);
@@ -307,19 +325,20 @@ const SignUpPage = () => {
       {/* Right Side - Form */}
       <div className="flex-1 flex flex-col justify-center py-2 sm:py-4 md:py-6 lg:py-8 px-3 sm:px-4 md:px-6 lg:px-12 xl:px-20 2xl:px-24 bg-white dark:bg-gray-900 min-h-0">
         <div className="mx-auto w-full max-w-[280px] sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-md">
-          
           {/* Plan Info Banner */}
           {showPlanInfo && (
             <div className="mb-6 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 border border-indigo-200 dark:border-indigo-800 rounded-xl p-4">
               <div className="text-center">
                 <h3 className="text-lg font-semibold text-indigo-800 dark:text-indigo-200 mb-2">
-                  🎯 Signing up for {selectedPlan?.charAt(0).toUpperCase() + selectedPlan?.slice(1)} Plan
+                  🎯 Signing up for{" "}
+                  {selectedPlan?.charAt(0).toUpperCase() +
+                    selectedPlan?.slice(1)}{" "}
+                  Plan
                 </h3>
                 <p className="text-sm text-indigo-600 dark:text-indigo-300">
-                  {redirectAfter === "billing" 
+                  {redirectAfter === "billing"
                     ? "After creating your account, you'll be redirected to complete your subscription"
-                    : "Great choice! Let's get your account set up"
-                  }
+                    : "Great choice! Let's get your account set up"}
                 </p>
                 {billingCycle === "yearly" && (
                   <div className="mt-2 inline-flex items-center px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 rounded-full text-xs font-medium">
@@ -708,7 +727,9 @@ const SignUpPage = () => {
                   Creating account...
                 </>
               ) : showPlanInfo && redirectAfter === "billing" ? (
-                `Create Account & Continue to ${selectedPlan?.charAt(0).toUpperCase() + selectedPlan?.slice(1)}`
+                `Create Account & Continue to ${
+                  selectedPlan?.charAt(0).toUpperCase() + selectedPlan?.slice(1)
+                }`
               ) : (
                 "Create Account"
               )}

@@ -40,7 +40,7 @@ import Billing from "./public-area/pages/BillingPage/BillingPage";
 import Dashboard from "@/dashboard-area/pages/DashboardPage/DashboardPage";
 import DashboardLayout from "@/dashboard-area/components/layout/DashboardLayout";
 import TripsSection from "@/dashboard-area/components/sections/TripsSection";
-import TripDetailView from "@/dashboard-area/features/trips/components/ViewTrip/TripDetailView";
+import TripDetailView from "@/dashboard-area/features/trips/ViewTrip/TripDetailView";
 import SettingsSection from "@/dashboard-area/components/sections/SettingsSection";
 import FriendsSection from "@/dashboard-area/components/sections/FriendsSection";
 
@@ -254,15 +254,11 @@ const FlowController = ({ children }) => {
           "/",
         ].includes(currentPath)
       ) {
-        console.log(
-          "Flow: Guest user accessing protected page → Redirect to signin"
-        );
         navigate("/signin", { replace: true });
         return;
       }
 
       // Default: proceed normally
-      console.log("Flow: Default case → Direct access");
       setShowLaunchAnimation(false);
       setFlowReady(true);
 
@@ -284,7 +280,6 @@ const FlowController = ({ children }) => {
   ]);
 
   const handleTurnstileComplete = (verified, token) => {
-    console.log("Flow: Turnstile verification completed:", verified);
     if (verified) {
       const currentTime = Date.now();
 
@@ -301,7 +296,6 @@ const FlowController = ({ children }) => {
   };
 
   const handleAnimationComplete = () => {
-    console.log("Flow: Launch animation completed");
     sessionStorage.setItem("launch_animation_shown", "true");
     setShowLaunchAnimation(false);
     setFlowReady(true);
@@ -348,40 +342,9 @@ function App() {
           {/* Global Toast Notifications */}
           <Toaster
             position="top-center"
-            reverseOrder={false}
             toastOptions={{
               duration: 3000,
-              style: {
-                background: "#363636",
-                color: "#fff",
-                borderRadius: "8px",
-                fontSize: "14px",
-                padding: "12px 16px",
-                maxWidth: "400px",
-              },
-              success: {
-                style: {
-                  background: "#10B981",
-                },
-                iconTheme: {
-                  primary: "#fff",
-                  secondary: "#10B981",
-                },
-              },
-              error: {
-                style: {
-                  background: "#EF4444",
-                },
-                iconTheme: {
-                  primary: "#fff",
-                  secondary: "#EF4444",
-                },
-              },
-              loading: {
-                style: {
-                  background: "#3B82F6",
-                },
-              },
+              className: "z-[70]",
             }}
           />
 

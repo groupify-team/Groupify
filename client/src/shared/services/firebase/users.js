@@ -172,8 +172,6 @@ export const acceptFriendRequest = async (uid, senderUid) => {
     await updateDoc(senderRef, {
       friends: arrayUnion(uid),
     });
-
-    console.log(`✅ Mutual friendship created between ${uid} and ${senderUid}`);
   } catch (error) {
     console.error("❌ Error accepting friend request:", error);
     throw error;
@@ -186,8 +184,6 @@ export const rejectFriendRequest = async (uid, senderUid) => {
     const requestId = `${senderUid}_${uid}`;
     const requestRef = doc(db, "friendRequests", requestId);
     await deleteDoc(requestRef);
-
-    console.log(`❌ Friend request rejected: ${senderUid} -> ${uid}`);
   } catch (error) {
     console.error("Error rejecting friend request:", error);
     throw error;
@@ -197,68 +193,57 @@ export const rejectFriendRequest = async (uid, senderUid) => {
 // Clean up invalid friends (including non-mutual friendships)
 export const cleanupInvalidFriends = async (uid) => {
   try {
-    console.log(`🧹 Cleaning up invalid friends for user: ${uid}`);
-    
     const userRef = doc(db, "users", uid);
     const userDoc = await getDoc(userRef);
-    
+
     if (!userDoc.exists()) {
       console.warn("⚠️ User document not found:", uid);
       return;
     }
-    
+
     const userData = userDoc.data();
     const friendIds = userData.friends || [];
-    
+
     if (friendIds.length === 0) {
-      console.log("ℹ️ No friends to clean up");
       return;
     }
-    
+
     const validFriendIds = [];
-    
+
     for (const friendId of friendIds) {
       // Skip empty, null, or invalid friend IDs
-      if (!friendId || typeof friendId !== 'string' || friendId.trim() === '') {
-        console.log(`🗑️ Removing invalid friend ID: "${friendId}"`);
+      if (!friendId || typeof friendId !== "string" || friendId.trim() === "") {
         continue;
       }
-      
+
       try {
         const friendRef = doc(db, "users", friendId);
         const friendDoc = await getDoc(friendRef);
-        
+
         if (friendDoc.exists()) {
           const friendData = friendDoc.data();
           const friendsFriends = friendData.friends || [];
-          
+
           // ✅ CHECK MUTUAL FRIENDSHIP
           if (friendsFriends.includes(uid)) {
             validFriendIds.push(friendId);
           } else {
-            console.log(`🗑️ Removing non-mutual friend: ${friendId} (they don't have ${uid} in their friends list)`);
           }
         } else {
-          console.log(`🗑️ Removing non-existent friend: ${friendId}`);
         }
       } catch (error) {
         console.error(`❌ Error checking friend ${friendId}:`, error);
         // Don't include this friend if there's an error
       }
     }
-    
+
     // Update user document with only valid, mutual friend IDs
     if (validFriendIds.length !== friendIds.length) {
       await updateDoc(userRef, {
         friends: validFriendIds,
         updatedAt: new Date().toISOString(),
       });
-      
-      console.log(`✅ Cleaned up friends for user ${uid}: ${friendIds.length} -> ${validFriendIds.length}`);
-    } else {
-      console.log(`✅ All friends are valid and mutual for user ${uid}`);
     }
-    
     return validFriendIds;
   } catch (error) {
     console.error("❌ Error cleaning up friends:", error);
@@ -268,11 +253,10 @@ export const cleanupInvalidFriends = async (uid) => {
 
 // Retrieve all friends with mutual friendship validation
 export const getFriends = async (uid) => {
-  console.log("🔍 getFriends called with UID:", uid);
   try {
     // First, cleanup any invalid friend references
     await cleanupInvalidFriends(uid);
-    
+
     const userRef = doc(db, "users", uid);
     const userSnap = await getDoc(userRef);
 
@@ -286,7 +270,7 @@ export const getFriends = async (uid) => {
     const invalidFriendIds = []; // Track friends to remove
 
     for (const fid of friendIds) {
-      if (!fid || typeof fid !== 'string' || fid.trim() === '') {
+      if (!fid || typeof fid !== "string" || fid.trim() === "") {
         invalidFriendIds.push(fid);
         continue; // Skip invalid IDs
       }
@@ -297,7 +281,7 @@ export const getFriends = async (uid) => {
       if (fSnap.exists()) {
         const fData = fSnap.data();
         const friendsFriends = fData.friends || [];
-        
+
         // ✅ CHECK MUTUAL FRIENDSHIP: Verify that the friend also has current user in their friends list
         if (friendsFriends.includes(uid)) {
           friends.push({
@@ -308,7 +292,9 @@ export const getFriends = async (uid) => {
           });
         } else {
           // ❌ FRIENDSHIP IS NOT MUTUAL: Friend removed current user but current user still has them
-          console.warn(`⚠️ Non-mutual friendship detected: ${uid} -> ${fid}. Friend ${fid} doesn't have ${uid} in their friends list.`);
+          console.warn(
+            `⚠️ Non-mutual friendship detected: ${uid} -> ${fid}. Friend ${fid} doesn't have ${uid} in their friends list.`
+          );
           invalidFriendIds.push(fid);
         }
       } else {
@@ -320,19 +306,16 @@ export const getFriends = async (uid) => {
 
     // Clean up invalid/non-mutual friendships from current user's friends array
     if (invalidFriendIds.length > 0) {
-      console.log(`🧹 Cleaning up ${invalidFriendIds.length} invalid/non-mutual friendships for user ${uid}`);
-      
-      const validFriendIds = friendIds.filter(id => !invalidFriendIds.includes(id));
-      
+      const validFriendIds = friendIds.filter(
+        (id) => !invalidFriendIds.includes(id)
+      );
+
       await updateDoc(userRef, {
         friends: validFriendIds,
         updatedAt: new Date().toISOString(),
       });
-      
-      console.log(`✅ Removed non-mutual friends: ${invalidFriendIds.join(', ')}`);
     }
 
-    console.log(`✅ Retrieved ${friends.length} valid mutual friends`);
     return friends;
   } catch (error) {
     console.error("❌ Error getting friends:", error);
@@ -342,8 +325,6 @@ export const getFriends = async (uid) => {
 
 export const removeFriend = async (uid, friendUid) => {
   try {
-    console.log(`🗑️ Attempting to remove friendship: ${uid} <-> ${friendUid}`);
-    
     const userRef = doc(db, "users", uid);
     const friendRef = doc(db, "users", friendUid);
 
@@ -357,8 +338,6 @@ export const removeFriend = async (uid, friendUid) => {
       friends: arrayRemove(uid),
       updatedAt: new Date().toISOString(),
     });
-
-    console.log(`✅ Successfully removed mutual friendship between ${uid} and ${friendUid}`);
   } catch (error) {
     console.error("❌ Error removing friend:", error);
     throw error;
@@ -373,7 +352,6 @@ export const addUserToTrip = async (uid, tripId) => {
       trips: arrayUnion(tripId),
       updatedAt: new Date().toISOString(),
     });
-    console.log(`✅ Added user ${uid} to trip ${tripId}`);
   } catch (error) {
     console.error("❌ Error adding user to trip:", error);
     throw error;
@@ -388,7 +366,6 @@ export const removeUserFromTrip = async (uid, tripId) => {
       trips: arrayRemove(tripId),
       updatedAt: new Date().toISOString(),
     });
-    console.log(`✅ Removed user ${uid} from trip ${tripId}`);
   } catch (error) {
     console.error("❌ Error removing user from trip:", error);
     throw error;
@@ -400,44 +377,39 @@ export const cleanupUserTrips = async (uid) => {
   try {
     const userRef = doc(db, "users", uid);
     const userDoc = await getDoc(userRef);
-    
+
     if (!userDoc.exists()) {
       console.warn("⚠️ User document not found:", uid);
       return;
     }
-    
+
     const userData = userDoc.data();
     const userTripIds = userData.trips || [];
-    
+
     if (userTripIds.length === 0) {
-      console.log("ℹ️ No trips to clean up for user:", uid);
       return;
     }
-    
+
     // Check which trips actually exist
     const validTripIds = [];
-    
+
     for (const tripId of userTripIds) {
       const tripRef = doc(db, "trips", tripId);
       const tripDoc = await getDoc(tripRef);
-      
+
       if (tripDoc.exists()) {
         validTripIds.push(tripId);
-      } else {
-        console.log(`🗑️ Removing non-existent trip ${tripId} from user ${uid}`);
       }
     }
-    
+
     // Update user's trips array with only valid trips
     if (validTripIds.length !== userTripIds.length) {
       await updateDoc(userRef, {
         trips: validTripIds,
         updatedAt: new Date().toISOString(),
       });
-      
-      console.log(`✅ Cleaned up trips for user ${uid}: ${userTripIds.length} -> ${validTripIds.length}`);
     }
-    
+
     return validTripIds;
   } catch (error) {
     console.error("❌ Error cleaning up user trips:", error);
@@ -448,76 +420,72 @@ export const cleanupUserTrips = async (uid) => {
 // Get user's actual trips (with validation)
 export const getUserTripsWithValidation = async (uid) => {
   try {
-    console.log(`🔍 Getting trips with validation for user: ${uid}`);
-    
     // First clean up any stale trip references
     const validTripIds = await cleanupUserTrips(uid);
-    
+
     if (!validTripIds || validTripIds.length === 0) {
-      console.log(`ℹ️ No valid trips found for user: ${uid}`);
       return [];
     }
-    
+
     // Fetch the actual trip documents
     const trips = [];
-    
+
     for (const tripId of validTripIds) {
       try {
         const tripRef = doc(db, "trips", tripId);
         const tripDoc = await getDoc(tripRef);
-        
+
         if (tripDoc.exists()) {
           trips.push({
             id: tripDoc.id,
-            ...tripDoc.data()
+            ...tripDoc.data(),
           });
         } else {
-          console.warn(`⚠️ Trip document ${tripId} not found, but was in user's array`);
+          console.warn(
+            `⚠️ Trip document ${tripId} not found, but was in user's array`
+          );
         }
       } catch (error) {
         console.error(`❌ Error fetching trip ${tripId}:`, error);
       }
     }
-    
-    console.log(`✅ Retrieved ${trips.length} valid trips for user ${uid}`);
+
     return trips;
   } catch (error) {
     console.error("❌ Error getting user trips with validation:", error);
-    
+
     // Fallback: try to get trips without validation
     try {
-      console.log("🔄 Attempting fallback trip retrieval...");
       const userRef = doc(db, "users", uid);
       const userDoc = await getDoc(userRef);
-      
+
       if (userDoc.exists()) {
         const userData = userDoc.data();
         const tripIds = userData.trips || [];
-        
+
         const trips = [];
         for (const tripId of tripIds) {
           try {
             const tripRef = doc(db, "trips", tripId);
             const tripDoc = await getDoc(tripRef);
-            
+
             if (tripDoc.exists()) {
               trips.push({
                 id: tripDoc.id,
-                ...tripDoc.data()
+                ...tripDoc.data(),
               });
             }
           } catch (tripError) {
             console.warn(`⚠️ Could not fetch trip ${tripId}:`, tripError);
           }
         }
-        
-        console.log(`✅ Fallback retrieval got ${trips.length} trips`);
+
         return trips;
       }
     } catch (fallbackError) {
       console.error("❌ Fallback trip retrieval also failed:", fallbackError);
     }
-    
+
     return [];
   }
 };
@@ -525,21 +493,18 @@ export const getUserTripsWithValidation = async (uid) => {
 // Remove trip from ALL users who have it
 export const removeTripFromAllUsers = async (tripId) => {
   try {
-    console.log(`🔍 Finding users with trip ${tripId}...`);
-    
     // Query all users who have this trip in their trips array
     const usersRef = collection(db, "users");
     const q = query(usersRef, where("trips", "array-contains", tripId));
     const querySnapshot = await getDocs(q);
-    
+
     if (querySnapshot.empty) {
-      console.log(`ℹ️ No users found with trip ${tripId}`);
       return;
     }
-    
+
     // Remove the trip from each user's trips array
     const updatePromises = [];
-    
+
     querySnapshot.forEach((userDoc) => {
       const userRef = doc(db, "users", userDoc.id);
       updatePromises.push(
@@ -548,12 +513,9 @@ export const removeTripFromAllUsers = async (tripId) => {
           updatedAt: new Date().toISOString(),
         })
       );
-      console.log(`🗑️ Removing trip ${tripId} from user ${userDoc.id}`);
     });
-    
+
     await Promise.all(updatePromises);
-    
-    console.log(`✅ Removed trip ${tripId} from ${querySnapshot.size} users`);
   } catch (error) {
     console.error("❌ Error removing trip from users:", error);
     throw error;
@@ -565,7 +527,7 @@ export const updateUserPhotoCount = async (uid, increment = 1) => {
   try {
     const userRef = doc(db, "users", uid);
     const userDoc = await getDoc(userRef);
-    
+
     if (userDoc.exists()) {
       const currentCount = userDoc.data().photoCount || 0;
       await updateDoc(userRef, {

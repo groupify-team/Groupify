@@ -115,7 +115,6 @@ const DashboardHeader = ({
   };
 
   const handleNotificationClick = () => {
-    console.log("🎯 Notifications button clicked!");
     if (toggleNotificationsDropdown) {
       toggleNotificationsDropdown();
     } else {
@@ -124,7 +123,6 @@ const DashboardHeader = ({
   };
 
   const handleSidebarToggle = () => {
-    console.log("🎯 Sidebar button clicked!");
     if (toggleSidebar) {
       toggleSidebar();
     }
@@ -207,7 +205,6 @@ const DashboardHeader = ({
               {onSettingsClick && (
                 <button
                   onClick={() => {
-                    console.log("🎯 Accessibility button clicked!");
                     onSettingsClick();
                   }}
                   className="p-2 rounded-lg text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
@@ -318,7 +315,6 @@ const DashboardHeader = ({
                 alt="Profile"
                 onClick={() => {
                   if (currentIsMobile) {
-                    console.log("🎯 Mobile user menu clicked!");
                     setMobileUserMenuOpen((prev) => !prev);
                   }
                 }}
@@ -364,7 +360,6 @@ const DashboardHeader = ({
                   <div className="p-2">
                     <button
                       onClick={() => {
-                        console.log("🎯 View Profile clicked!");
                         setMobileUserMenuOpen(false);
                       }}
                       className="w-full flex items-center gap-3 px-3 py-2 text-left text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors text-sm"
@@ -377,7 +372,6 @@ const DashboardHeader = ({
                     {onSettingsClick && (
                       <button
                         onClick={() => {
-                          console.log("🎯 Settings from mobile menu clicked!");
                           setMobileUserMenuOpen(false);
                           onSettingsClick();
                         }}
@@ -394,7 +388,6 @@ const DashboardHeader = ({
                     {onLogoutClick && (
                       <button
                         onClick={() => {
-                          console.log("🎯 Logout clicked!");
                           setMobileUserMenuOpen(false);
                           onLogoutClick();
                         }}
@@ -411,18 +404,6 @@ const DashboardHeader = ({
           </div>
         </div>
       </div>
-      <style jsx>{`
-        @keyframes slideInFromTop {
-          0% {
-            opacity: 0;
-            transform: translateY(-10px) scale(0.95);
-          }
-          100% {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-          }
-        }
-      `}</style>
     </header>
   );
 };
