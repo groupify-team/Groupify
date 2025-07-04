@@ -54,7 +54,7 @@ const TripMembersCard = ({
               <div
                 key={member.uid}
                 className="group/member flex items-center justify-between p-2 sm:p-3 rounded-lg sm:rounded-xl bg-gradient-to-r from-gray-50/50 to-orange-50/50 dark:from-gray-800/50 dark:to-orange-900/20 hover:from-orange-50 hover:to-orange-100 dark:hover:from-orange-900/30 dark:hover:to-orange-900/40 transition-all duration-300 cursor-pointer border border-gray-200/30 dark:border-gray-700/30 backdrop-blur-sm"
-                onClick={() => onMemberClick(member)}
+                onClick={() => onMemberClick(member, currentUserId)}
               >
                 <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
                   <div className="relative flex-shrink-0">

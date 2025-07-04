@@ -10,14 +10,14 @@ import TripHeader from "./features/header/components/TripHeader";
 import PhotoGallery from "./features/gallery/components/PhotoGallery";
 import FaceRecognition from "./features/faceRecognition/components/FaceRecognition";
 import TripMembersCard from "./features/members/components/TripMembersCard";
-import InvitePeopleCard from "./features/invite/components/InvitePeopleCard";
+import InvitePeopleCard from "./features/members/components/InvitePeopleCard";
+import UserProfileModal from "./features/members/components/UserProfileModal";
 import TripStatistics from "./features/statistics/components/TripStatistics";
 
 // Modals
-import PhotoModal from "./components/modals/PhotoModal";
+import PhotoModal from "./components/PhotoModal";
 import AllPhotosModal from "./features/gallery/components/modals/AllPhotosModal";
 import EditTripModal from "./features/header/hooks/EditTripModal";
-import UserProfileModal from "@friends/components/UserProfileModal";
 
 // Hooks
 import { useTripData } from "./hooks/useTripData";
@@ -118,7 +118,7 @@ const TripDetailView = ({ tripId: propTripId }) => {
     handlePromoteToAdmin,
     handleDemoteFromAdmin,
     handleRemoveFromTrip,
-  } = useTripMembers(currentUser?.uid);
+  } = useTripMembers(currentUser?.uid, trip, setTrip);
 
   // Photo modal navigation
   const {
@@ -567,36 +567,20 @@ const TripDetailView = ({ tripId: propTripId }) => {
             user={selectedUser}
             currentUserId={currentUser?.uid}
             isAdmin={isAdmin}
-            isFriend={friends.includes(selectedUser.uid)}
-            isPending={pendingFriendRequests.includes(selectedUser.uid)}
-            onAddFriend={() =>
-              handleAddFriend(selectedUser.uid, currentUser?.uid)
-            }
-            onRemoveFriend={() =>
-              handleRemoveFriend(selectedUser.uid, currentUser?.uid)
-            }
-            onCancelRequest={() =>
-              handleCancelFriendRequest(selectedUser.uid, currentUser?.uid)
-            }
+            isFriend={selectedUser.__isFriend || false}
+            isPending={selectedUser.__isPending || false}
+            onAddFriend={handleAddFriend}
+            onRemoveFriend={handleRemoveFriend}
+            onCancelRequest={handleCancelFriendRequest}
             onClose={() => setSelectedUser(null)}
             trip={trip}
             setTrip={setTrip}
             tripMembers={tripMembers}
             setTripMembers={setTripMembers}
             setSelectedUser={setSelectedUser}
-            onPromoteToAdmin={(uid) => handlePromoteToAdmin(uid, trip, setTrip)}
-            onDemoteFromAdmin={(uid) =>
-              handleDemoteFromAdmin(uid, trip, setTrip)
-            }
-            onRemoveFromTrip={(uid) =>
-              handleRemoveFromTrip(
-                uid,
-                trip,
-                tripMembers,
-                setTrip,
-                setTripMembers
-              )
-            }
+            onPromoteToAdmin={(uid) => handlePromoteToAdmin(uid)}
+            onDemoteFromAdmin={(uid) => handleDemoteFromAdmin(uid)}
+            onRemoveFromTrip={handleRemoveFromTrip}
             onlyTripMembers={true}
           />
         )}
