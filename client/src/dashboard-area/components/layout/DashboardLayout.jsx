@@ -462,36 +462,6 @@ const DashboardLayout = ({ children }) => {
           )}
         </>
       )}
-
-      <style jsx>{`
-        @keyframes fade-in {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
-          }
-        }
-
-        @keyframes slide-in-scale {
-          from {
-            opacity: 0;
-            transform: scale(0.95) translateY(-10px);
-          }
-          to {
-            opacity: 1;
-            transform: scale(1) translateY(0);
-          }
-        }
-
-        .animate-fade-in {
-          animation: fade-in 0.2s ease-out;
-        }
-
-        .animate-slide-in-scale {
-          animation: slide-in-scale 0.3s ease-out;
-        }
-      `}</style>
     </div>
   );
 };

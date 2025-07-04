@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { toast } from "react-hot-toast";
+import { uploadPhoto } from "@shared/services/firebase/storage"; // Import the upload function
+import { useAuth } from "@/auth-area/contexts/AuthContext"; // Import the auth context
 
 import {
   PhotoIcon,
@@ -17,18 +19,22 @@ import {
 const PhotoGallery = ({
   photos = [],
   tripMembers = [],
+  tripId, // Add this prop - it's needed for upload
   maxPhotos = 100,
   onPhotoSelect,
   onShowAllPhotos,
   onRandomPhoto,
   onUploadFirst,
-  onPhotoUploaded, // Add this line
+  onPhotoUploaded, // This callback will be called when photos are uploaded
 }) => {
+  const { currentUser } = useAuth(); // Get current user from auth context
   const [showManageModal, setShowManageModal] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [selectMode, setSelectMode] = useState(false);
   const [selectedPhotos, setSelectedPhotos] = useState([]);
   const [gridCols, setGridCols] = useState(6);
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState({});
 
   const fixPhotoUrl = (url) => {
     return url.replace(
@@ -82,6 +88,113 @@ const PhotoGallery = ({
       link.click();
       document.body.removeChild(link);
     });
+  };
+
+  // Fixed upload handler with actual Firebase integration
+  const handleFileUpload = async (files) => {
+    if (!files || files.length === 0) return;
+
+    if (!tripId) {
+      toast.error("Trip ID is missing. Cannot upload photos.");
+      return;
+    }
+
+    if (!currentUser?.uid) {
+      toast.error("You must be logged in to upload photos.");
+      return;
+    }
+
+    // Check photo limit
+    const availableSlots = maxPhotos - photos.length;
+    if (availableSlots <= 0) {
+      toast.error("Photo limit reached! Please delete some photos first.");
+      return;
+    }
+
+    const filesToUpload = Array.from(files).slice(0, availableSlots);
+    const rejectedFiles = files.length - filesToUpload.length;
+
+    if (rejectedFiles > 0) {
+      toast.warning(
+        `Only uploading ${filesToUpload.length} photos due to limit. ${rejectedFiles} photos rejected.`
+      );
+    }
+
+    setUploading(true);
+    const uploadedPhotos = [];
+    const totalFiles = filesToUpload.length;
+
+    try {
+      // Show initial loading toast
+      const loadingToast = toast.loading(
+        `Uploading ${totalFiles} photo${totalFiles > 1 ? "s" : ""}...`
+      );
+
+      // Upload files one by one
+      for (let i = 0; i < filesToUpload.length; i++) {
+        const file = filesToUpload[i];
+
+        try {
+          // Get current user ID from auth context
+          const userId = currentUser?.uid;
+
+          if (!userId) {
+            throw new Error("User not authenticated");
+          }
+
+          const photoData = await uploadPhoto(
+            file,
+            tripId,
+            userId,
+            {}, // metadata
+            (percent) => {
+              // Update progress for this specific file
+              setUploadProgress((prev) => ({
+                ...prev,
+                [file.name]: percent,
+              }));
+            }
+          );
+
+          uploadedPhotos.push(photoData);
+
+          // Update progress toast
+          toast.dismiss(loadingToast);
+          if (i < filesToUpload.length - 1) {
+            toast.loading(`Uploading ${i + 2}/${totalFiles} photos...`);
+          }
+        } catch (error) {
+          console.error(`Failed to upload ${file.name}:`, error);
+          toast.error(`Failed to upload ${file.name}`);
+        }
+      }
+
+      // Clear progress
+      setUploadProgress({});
+      toast.dismiss();
+
+      if (uploadedPhotos.length > 0) {
+        // Call the callback to update the parent component
+        if (onPhotoUploaded) {
+          onPhotoUploaded(uploadedPhotos);
+        }
+
+        toast.success(
+          `${uploadedPhotos.length} photo${
+            uploadedPhotos.length > 1 ? "s" : ""
+          } uploaded successfully!`
+        );
+        setShowUploadModal(false);
+      } else {
+        toast.error("No photos were uploaded successfully.");
+      }
+    } catch (error) {
+      console.error("Upload error:", error);
+      toast.error("Failed to upload photos. Please try again.");
+    } finally {
+      setUploading(false);
+      setUploadProgress({});
+    }
   };
 
   const ManagePhotosModal = () => (
@@ -249,7 +362,7 @@ const PhotoGallery = ({
       className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in"
       style={{ zIndex: 9999 }}
       onClick={(e) => {
-        if (e.target === e.currentTarget) {
+        if (e.target === e.currentTarget && !uploading) {
           setShowUploadModal(false);
         }
       }}
@@ -265,12 +378,14 @@ const PhotoGallery = ({
               <PlusIcon className="w-6 h-6 text-white" />
               <h3 className="text-lg font-bold text-white">Upload Photos</h3>
             </div>
-            <button
-              onClick={() => setShowUploadModal(false)}
-              className="p-1 rounded-lg bg-white/20 hover:bg-white/30 transition-colors"
-            >
-              <XMarkIcon className="w-5 h-5 text-white" />
-            </button>
+            {!uploading && (
+              <button
+                onClick={() => setShowUploadModal(false)}
+                className="p-1 rounded-lg bg-white/20 hover:bg-white/30 transition-colors"
+              >
+                <XMarkIcon className="w-5 h-5 text-white" />
+              </button>
+            )}
           </div>
         </div>
 
@@ -289,9 +404,11 @@ const PhotoGallery = ({
             </p>
             <label
               htmlFor="photo-upload"
-              className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white px-6 py-2 rounded-lg font-medium transition-all cursor-pointer"
+              className={`bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white px-6 py-2 rounded-lg font-medium transition-all cursor-pointer ${
+                uploading ? "opacity-50 cursor-not-allowed" : ""
+              }`}
             >
-              Choose Files
+              {uploading ? "Uploading..." : "Choose Files"}
             </label>
             <input
               id="photo-upload"
@@ -299,41 +416,41 @@ const PhotoGallery = ({
               multiple
               accept="image/*"
               className="hidden"
+              disabled={uploading}
               onChange={async (e) => {
                 const files = Array.from(e.target.files);
                 if (files.length === 0) return;
 
-                // Show loading toast
-                const loadingToast = toast.loading(
-                  `Uploading ${files.length} photo${
-                    files.length > 1 ? "s" : ""
-                  }...`
-                );
-
-                try {
-                  // Your Firebase upload logic should go here
-                  // For now, simulate upload
-                  await new Promise((resolve) => setTimeout(resolve, 2000));
-
-                  toast.dismiss(loadingToast);
-                  toast.success(
-                    `${files.length} photo${
-                      files.length > 1 ? "s" : ""
-                    } uploaded successfully!`
-                  );
-
-                  setShowUploadModal(false);
-                } catch (error) {
-                  toast.dismiss(loadingToast);
-                  toast.error("Failed to upload photos. Please try again.");
-                  console.error("Upload error:", error);
-                }
+                await handleFileUpload(files);
 
                 // Reset the input
                 e.target.value = "";
               }}
             />
           </div>
+
+          {/* Upload Progress */}
+          {uploading && Object.keys(uploadProgress).length > 0 && (
+            <div className="mt-4 space-y-2">
+              {Object.entries(uploadProgress).map(([fileName, progress]) => (
+                <div
+                  key={fileName}
+                  className="bg-gray-100 dark:bg-gray-700 rounded-lg p-3"
+                >
+                  <div className="flex justify-between text-sm mb-1">
+                    <span className="truncate">{fileName}</span>
+                    <span>{progress}%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
+                    <div
+                      className="bg-gradient-to-r from-indigo-500 to-purple-500 h-2 rounded-full transition-all duration-300"
+                      style={{ width: `${progress}%` }}
+                    ></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* Progress Bar */}
           <div className="mt-6">
@@ -379,10 +496,13 @@ const PhotoGallery = ({
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setShowUploadModal(true)}
-                className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2"
+                disabled={uploading}
+                className={`bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
+                  uploading ? "opacity-50 cursor-not-allowed" : ""
+                }`}
               >
                 <PlusIcon className="w-4 h-4" />
-                Add Photos
+                {uploading ? "Uploading..." : "Add Photos"}
               </button>
             </div>
           </div>
@@ -404,10 +524,13 @@ const PhotoGallery = ({
               </p>
               <button
                 onClick={() => setShowUploadModal(true)}
-                className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-6 py-3 rounded-xl font-medium transition-all flex items-center gap-2 mx-auto"
+                disabled={uploading}
+                className={`bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-6 py-3 rounded-xl font-medium transition-all flex items-center gap-2 mx-auto ${
+                  uploading ? "opacity-50 cursor-not-allowed" : ""
+                }`}
               >
                 <PlusIcon className="w-5 h-5" />
-                Upload First Photos
+                {uploading ? "Uploading..." : "Upload First Photos"}
               </button>
             </div>
           ) : (
@@ -470,37 +593,6 @@ const PhotoGallery = ({
       {/* Modals */}
       {showManageModal && <ManagePhotosModal />}
       {showUploadModal && <UploadModal />}
-
-      {/* Add CSS for smooth transitions */}
-      <style jsx>{`
-        .animate-fade-in {
-          animation: fadeIn 0.3s ease-out;
-        }
-
-        .animate-slide-in-scale {
-          animation: slideInScale 0.3s ease-out;
-        }
-
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
-          }
-        }
-
-        @keyframes slideInScale {
-          from {
-            opacity: 0;
-            transform: scale(0.95) translateY(-20px);
-          }
-          to {
-            opacity: 1;
-            transform: scale(1) translateY(0);
-          }
-        }
-      `}</style>
     </>
   );
 };

@@ -44,21 +44,7 @@ const PhotoModal = ({ photo, photos, isOpen, onClose, onNext, onPrevious }) => {
   const photoCount = photos.length;
 
   return (
-    <div
-      className="fixed bg-black/95 backdrop-blur-lg flex items-center justify-center z-[99999] transition-all duration-300 ease-in-out"
-      style={{
-        position: "fixed",
-        top: "-10px",
-        left: "-10px",
-        right: "-10px",
-        bottom: "-10px",
-        width: "calc(100vw + 20px)",
-        height: "calc(100vh + 20px)",
-        margin: 0,
-        padding: 0,
-      }}
-      onClick={onClose}
-    >
+    <div className="fixed inset-0 bg-black/95 backdrop-blur-lg flex items-center justify-center z-50">
       {/* Fixed container with consistent dimensions */}
       <div className="relative w-full h-full max-w-7xl max-h-screen flex items-center justify-center p-4">
         {/* Image container with fixed aspect ratio */}
@@ -166,22 +152,6 @@ const PhotoModal = ({ photo, photos, isOpen, onClose, onNext, onPrevious }) => {
           </div>
         </div>
       </div>
-      <style jsx>{`
-        .modal-enter {
-          animation: modalEnter 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-
-        @keyframes modalEnter {
-          from {
-            opacity: 0;
-            transform: scale(0.95);
-          }
-          to {
-            opacity: 1;
-            transform: scale(1);
-          }
-        }
-      `}</style>
     </div>
   );
 };

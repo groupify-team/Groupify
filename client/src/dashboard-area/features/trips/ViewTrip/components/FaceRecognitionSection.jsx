@@ -577,37 +577,6 @@ const FaceRecognitionSection = ({
       {/* Modals */}
       {showScanModal && <ScanModal />}
       {showResultsModal && <ResultsModal />}
-
-      {/* Add CSS for smooth transitions */}
-      <style jsx>{`
-        .animate-fade-in {
-          animation: fadeIn 0.3s ease-out;
-        }
-
-        .animate-slide-in-scale {
-          animation: slideInScale 0.3s ease-out;
-        }
-
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
-          }
-        }
-
-        @keyframes slideInScale {
-          from {
-            opacity: 0;
-            transform: scale(0.95) translateY(-20px);
-          }
-          to {
-            opacity: 1;
-            transform: scale(1) translateY(0);
-          }
-        }
-      `}</style>
     </>
   );
 };
