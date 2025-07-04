@@ -385,6 +385,23 @@ body {
   }
 }
 
+@keyframes modalEnterSmooth {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(-30px);
+    backdrop-filter: blur(0px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    backdrop-filter: blur(8px);
+  }
+}
+
+.animate-modal-enter {
+  animation: modalEnterSmooth 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
 /* Page transition utility classes */
 .page-enter {
   animation: fadeInSlideUp 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
@@ -513,13 +530,15 @@ body {
 }
 
 .modal-overlay {
-  position: fixed;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  z-index: 50;
+  position: fixed !important;
+  top: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  background-color: rgba(0, 0, 0, 0.6) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  z-index: 9999 !important;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1263,15 +1282,16 @@ body {
 
 /* OVERLAY FOR MOBILE SIDEBAR */
 .sidebar-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: 850;
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  background: rgba(0, 0, 0, 0.5) !important;
+  backdrop-filter: blur(4px) !important;
+  -webkit-backdrop-filter: blur(4px) !important;
+  z-index: 850 !important;
+  transition: opacity 0.3s ease-in-out;
 }
 
 /* Hide overlay on desktop */
@@ -1469,4 +1489,102 @@ body {
 
 .Toaster__toast--loading {
   background: #3b82f6 !important;
+}
+
+/* ========================================
+   MODAL BACKDROP FIXES
+   ======================================== */
+
+/* Ensure all modal backdrops cover properly */
+[class*="fixed"][class*="inset-0"][class*="bg-black"] {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+}
+
+/* Specific z-index hierarchy for modals */
+.z-\[9999\] {
+  z-index: 9999 !important;
+}
+
+.z-\[10000\] {
+  z-index: 10000 !important;
+}
+
+/* Remove any conflicting backdrop styles */
+.backdrop-blur-sm {
+  backdrop-filter: blur(4px) !important;
+  -webkit-backdrop-filter: blur(4px) !important;
+}
+
+/* Ensure no body scroll when modals are open */
+.modal-open {
+  overflow: hidden !important;
+}
+
+/* ========================================
+   ENHANCED SMOOTH TRANSITIONS
+   ======================================== */
+
+.animate-fade-in {
+  animation: fadeInSmooth 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.animate-slide-in-scale {
+  animation: slideInScaleSmooth 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes fadeInSmooth {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideInScaleSmooth {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Smooth photo transitions */
+.photo-delete-exit {
+  animation: photoDeleteExit 0.4s ease-out forwards;
+}
+
+@keyframes photoDeleteExit {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(0.8);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.6);
+    height: 0;
+    margin: 0;
+  }
+}
+
+/* Toast positioning fix */
+.Toaster__toast-container {
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
 }

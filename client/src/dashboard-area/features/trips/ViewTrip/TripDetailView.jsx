@@ -546,19 +546,18 @@ const TripDetailView = ({ tripId: propTripId }) => {
         <AllPhotosModal
           isOpen={showAllPhotosModal}
           photos={photos}
+          tripId={tripId}
           maxPhotos={100}
           isAdmin={isAdmin}
-          selectMode={selectMode}
-          selectedPhotos={selectedPhotos}
           onClose={() => setShowAllPhotosModal(false)}
           onPhotoSelect={(photo) => {
             setSelectedPhoto(photo);
             setModalSource("allPhotos");
             setShowAllPhotosModal(false);
           }}
-          onToggleSelectMode={toggleSelectMode}
-          onSelectPhoto={selectPhoto}
-          onDeleteSelected={handleDeleteSelectedPhotos}
+          onPhotoDeleted={(updatedPhotos) => {
+            setPhotos(updatedPhotos);
+          }}
         />
 
         {/* Edit Trip Modal */}
