@@ -11,8 +11,6 @@ import {
   DocumentIcon,
 } from "@heroicons/react/24/outline";
 
-console.log("🔍 STORAGE:", storage);
-
 const PhotoUpload = ({
   tripId,
   onPhotoUploaded,

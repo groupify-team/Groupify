@@ -86,19 +86,19 @@ export const useDashboardLayout = () => {
    */
   useEffect(() => {
     const path = location.pathname;
-    
-    if (path.includes('/dashboard/friends')) {
-      setActiveSection('friends');
-    } else if (path.includes('/dashboard/settings')) {
-      setActiveSection('settings');
-    } else if (path.includes('/dashboard/trip/')) {
-      setActiveSection('trips');
-      setCurrentView('trip');
-      const tripId = path.split('/').pop();
+
+    if (path.includes("/dashboard/friends")) {
+      setActiveSection("friends");
+    } else if (path.includes("/dashboard/settings")) {
+      setActiveSection("settings");
+    } else if (path.includes("/dashboard/trip/")) {
+      setActiveSection("trips");
+      setCurrentView("trip");
+      const tripId = path.split("/").pop();
       setSelectedTripId(tripId);
-    } else if (path.includes('/dashboard/trips') || path === '/dashboard') {
-      setActiveSection('trips');
-      setCurrentView('home');
+    } else if (path.includes("/dashboard/trips") || path === "/dashboard") {
+      setActiveSection("trips");
+      setCurrentView("home");
     }
   }, [location.pathname]);
 
@@ -182,19 +182,16 @@ export const useDashboardLayout = () => {
   const toggleSidebar = () => {
     setSidebarOpen((prev) => {
       const next = !prev;
-      console.log(`TOGGLE SIDEBAR — was: ${prev} now: ${next}`);
-      console.trace(); // 🔍 חשוב – יציג StackTrace
+      console.trace();
       return next;
     });
   };
 
   const closeSidebar = () => {
-    console.log("CLOSING SIDEBAR");
     setSidebarOpen(false);
   };
 
   const openSidebar = () => {
-    console.log("OPENING SIDEBAR");
     setSidebarOpen(true);
   };
 

@@ -1,37 +1,27 @@
 ﻿import React from "react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 
-const UserProfileModal = ({ 
-  isOpen, 
-  onClose, 
-  user, 
+const UserProfileModal = ({
+  isOpen,
+  onClose,
+  user,
   currentUserId,
   onAddFriend,
   onRemoveFriend,
   onCancelRequest,
   friends = [],
-  pendingRequests = []
+  pendingRequests = [],
 }) => {
-  console.log("🔍 UserProfileModal Debug:", {
-    isOpen,
-    user,
-    currentUserId,
-    friends,
-    pendingRequests
-  });
-
   if (!isOpen || !user) {
-    console.log("🔍 Modal not showing - isOpen:", isOpen, "user:", user);
     return null;
   }
 
   const isFriend = friends.includes(user.uid);
-  const isPending = pendingRequests.some(req => 
-    (req.from === currentUserId && req.to === user.uid) ||
-    (req.from === user.uid && req.to === currentUserId)
+  const isPending = pendingRequests.some(
+    (req) =>
+      (req.from === currentUserId && req.to === user.uid) ||
+      (req.from === user.uid && req.to === currentUserId)
   );
-
-  console.log("🔍 Modal relationship status:", { isFriend, isPending });
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -72,7 +62,7 @@ const UserProfileModal = ({
             <p className="text-slate-400 text-sm break-all mb-3">
               {user.email}
             </p>
-            
+
             {/* User Stats */}
             <div className="flex justify-center gap-8 mb-4">
               <div className="text-center">
@@ -80,14 +70,18 @@ const UserProfileModal = ({
                   <span className="text-slate-400 text-xs">📍</span>
                 </div>
                 <div className="text-2xl font-bold text-white">0</div>
-                <div className="text-xs text-slate-400 uppercase tracking-wide">TRIPS</div>
+                <div className="text-xs text-slate-400 uppercase tracking-wide">
+                  TRIPS
+                </div>
               </div>
               <div className="text-center">
                 <div className="w-8 h-8 bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-1">
                   <span className="text-slate-400 text-xs">👥</span>
                 </div>
                 <div className="text-2xl font-bold text-white">0</div>
-                <div className="text-xs text-slate-400 uppercase tracking-wide">FRIENDS</div>
+                <div className="text-xs text-slate-400 uppercase tracking-wide">
+                  FRIENDS
+                </div>
               </div>
             </div>
           </div>

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState } from "react";
 
 const DashboardModalsContext = createContext();
 
@@ -11,7 +11,8 @@ export const DashboardModalsProvider = ({ children }) => {
   const [showSettingsModal, setShowSettingsModal] = useState(false);
 
   // Face profile management modals
-  const [showFaceProfileManageModal, setShowFaceProfileManageModal] = useState(false);
+  const [showFaceProfileManageModal, setShowFaceProfileManageModal] =
+    useState(false);
   const [showProfileManager, setShowProfileManager] = useState(false);
 
   // Account and billing modals
@@ -46,14 +47,12 @@ export const DashboardModalsProvider = ({ children }) => {
   const closeCreateTripModal = () => setShowCreateTripModal(false);
 
   const openAddFriendModal = () => {
-    console.log('🚨 Context: Opening Add Friend Modal');
     setShowAddFriendModal(true);
     // Clear any preserved state when opening fresh
     setPreservedSearchInput("");
     setPreservedFoundUser(null);
   };
   const closeAddFriendModal = () => {
-    console.log('🚨 Context: Closing Add Friend Modal');
     setShowAddFriendModal(false);
     // Clear preserved state when closing
     setPreservedSearchInput("");
@@ -109,7 +108,6 @@ export const DashboardModalsProvider = ({ children }) => {
    * User profile modal actions
    */
   const openUserProfile = (user, fromAddFriend = false) => {
-    console.log("🔗 Opening user profile modal:", user);
     setSelectedUserProfile(user);
     setIsUserProfileOpen(true);
     setViewingFromAddFriend(fromAddFriend);
@@ -117,7 +115,8 @@ export const DashboardModalsProvider = ({ children }) => {
     if (fromAddFriend) {
       setShowAddFriendModal(false);
       // Preserve search state if coming from AddFriend
-      const addFriendInput = document.querySelector('input[type="email"]')?.value || "";
+      const addFriendInput =
+        document.querySelector('input[type="email"]')?.value || "";
       setPreservedSearchInput(addFriendInput);
 
       // Find the current found user to preserve
@@ -134,7 +133,6 @@ export const DashboardModalsProvider = ({ children }) => {
   };
 
   const closeUserProfile = () => {
-    console.log("🔗 Closing user profile modal");
     setIsUserProfileOpen(false);
     setSelectedUserProfile(null);
 
@@ -238,7 +236,9 @@ export const DashboardModalsProvider = ({ children }) => {
 export const useDashboardModals = () => {
   const context = useContext(DashboardModalsContext);
   if (!context) {
-    throw new Error('useDashboardModals must be used within a DashboardModalsProvider');
+    throw new Error(
+      "useDashboardModals must be used within a DashboardModalsProvider"
+    );
   }
   return context;
 };

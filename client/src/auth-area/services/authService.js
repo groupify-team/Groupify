@@ -15,9 +15,11 @@ export const authService = {
   // Sign up with email and password
   async signUp(email, password, displayName, gender = "male") {
     try {
-      console.log("Creating user account:", email);
-      
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
       const user = userCredential.user;
 
       await updateProfile(user, { displayName });
@@ -38,7 +40,10 @@ export const authService = {
       });
 
       // Send verification email
-      const sendVerificationEmail = httpsCallable(functions, "sendVerificationEmail");
+      const sendVerificationEmail = httpsCallable(
+        functions,
+        "sendVerificationEmail"
+      );
       await sendVerificationEmail({ email, name: displayName });
 
       // Sign out user until verified
@@ -54,12 +59,18 @@ export const authService = {
   // Sign in with email and password
   async signIn(email, password) {
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
       const user = userCredential.user;
 
       if (!user.emailVerified) {
         await signOut(auth);
-        throw new Error("Please verify your email before signing in. Check your inbox!");
+        throw new Error(
+          "Please verify your email before signing in. Check your inbox!"
+        );
       }
 
       return userCredential;
@@ -140,5 +151,5 @@ export const authService = {
       console.error("Resend verification error:", error);
       throw error;
     }
-  }
+  },
 };

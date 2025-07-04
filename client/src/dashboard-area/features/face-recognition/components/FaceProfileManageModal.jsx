@@ -1,13 +1,13 @@
 // features/face-recognition/components/FaceProfileManageModal.jsx
 import React, { useState, useEffect } from "react";
-import { 
-  XMarkIcon, 
-  CheckCircleIcon, 
+import {
+  XMarkIcon,
+  CheckCircleIcon,
   TrashIcon,
   UserCircleIcon,
   CameraIcon,
   SparklesIcon,
-  ExclamationTriangleIcon
+  ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
 import { useAuth } from "../../../../auth-area/contexts/AuthContext";
 import { toast } from "react-hot-toast";
@@ -17,11 +17,9 @@ import {
   optimizeProfile,
   deleteFaceProfile,
   getFaceProfile,
-  getProfilePhotos
+  getProfilePhotos,
 } from "../../../../shared/services/faceRecognitionService";
-import { 
-  deleteFaceProfileFromStorage
-} from "../../../../shared/services/firebase/faceProfiles";
+import { deleteFaceProfileFromStorage } from "../../../../shared/services/firebase/faceProfiles";
 import { uploadPhoto } from "../../../../shared/services/firebase/storage";
 
 const FaceProfileManageModal = ({ isOpen, onClose, onProfileUpdated }) => {
@@ -46,7 +44,6 @@ const FaceProfileManageModal = ({ isOpen, onClose, onProfileUpdated }) => {
       const photos = getProfilePhotos(currentUser.uid);
       setProfile(currentProfile);
       setProfilePhotos(photos);
-      console.log("🔄 Loaded profile data:", { profile: currentProfile, photos: photos.length });
     } catch (error) {
       console.error("❌ Error loading profile data:", error);
     }
@@ -57,20 +54,15 @@ const FaceProfileManageModal = ({ isOpen, onClose, onProfileUpdated }) => {
     const uploadPromises = files.map(async (file, index) => {
       // Create a temporary tripId for face profile uploads or use a special identifier
       const tempTripId = `face-profile-${userId}`;
-      
-      const uploadedPhoto = await uploadPhoto(
-        file,
-        tempTripId,
-        userId,
-        {
-          originalName: file.name,
-          size: file.size,
-          type: file.type,
-          lastModified: file.lastModified,
-          isFaceProfile: true, // Flag to identify face profile photos
-        }
-      );
-      
+
+      const uploadedPhoto = await uploadPhoto(file, tempTripId, userId, {
+        originalName: file.name,
+        size: file.size,
+        type: file.type,
+        lastModified: file.lastModified,
+        isFaceProfile: true, // Flag to identify face profile photos
+      });
+
       return uploadedPhoto.downloadURL || uploadedPhoto.url;
     });
 
@@ -100,12 +92,14 @@ const FaceProfileManageModal = ({ isOpen, onClose, onProfileUpdated }) => {
     setIsProcessing(true);
 
     try {
-      console.log("🔄 Uploading new profile photos...");
-      const imageUrls = await uploadProfilePhotos(uploadingPhotos, currentUser.uid);
+      const imageUrls = await uploadProfilePhotos(
+        uploadingPhotos,
+        currentUser.uid
+      );
 
       const updatedProfile = await addPhotosToProfile(
         currentUser.uid,
-        imageUrls.map(url => ({ url })),
+        imageUrls.map((url) => ({ url })),
         (progress) => console.log("Adding photos progress:", progress)
       );
 
@@ -114,10 +108,10 @@ const FaceProfileManageModal = ({ isOpen, onClose, onProfileUpdated }) => {
       setUploadingPhotos([]);
 
       toast.success(`Added ${uploadingPhotos.length} photos to your profile!`);
-      
+
       // Reset file input
       const fileInput = document.querySelector('input[type="file"]');
-      if (fileInput) fileInput.value = '';
+      if (fileInput) fileInput.value = "";
 
       // Notify parent component
       if (onProfileUpdated) {
@@ -139,7 +133,9 @@ const FaceProfileManageModal = ({ isOpen, onClose, onProfileUpdated }) => {
     }
 
     if (profilePhotos.length - selectedPhotosToRemove.length < 2) {
-      toast.error("Cannot remove - would leave less than 2 photos. Delete the profile instead.");
+      toast.error(
+        "Cannot remove - would leave less than 2 photos. Delete the profile instead."
+      );
       return;
     }
 
@@ -152,7 +148,9 @@ const FaceProfileManageModal = ({ isOpen, onClose, onProfileUpdated }) => {
       setProfilePhotos(getProfilePhotos(currentUser.uid));
       setSelectedPhotosToRemove([]);
 
-      toast.success(`Removed ${selectedPhotosToRemove.length} photos from profile`);
+      toast.success(
+        `Removed ${selectedPhotosToRemove.length} photos from profile`
+      );
 
       // Notify parent component
       if (onProfileUpdated) {
@@ -200,13 +198,15 @@ const FaceProfileManageModal = ({ isOpen, onClose, onProfileUpdated }) => {
       // Delete from Firebase Storage
       try {
         await deleteFaceProfileFromStorage(currentUser.uid);
-        console.log("✅ Face profile deleted from Firebase Storage");
       } catch (storageError) {
-        console.warn("⚠️ Could not delete from Firebase Storage:", storageError);
+        console.warn(
+          "⚠️ Could not delete from Firebase Storage:",
+          storageError
+        );
       }
 
       toast.success("🗑️ Face profile deleted successfully");
-      
+
       // Notify parent component
       if (onProfileUpdated) {
         onProfileUpdated();
@@ -399,7 +399,8 @@ const FaceProfileManageModal = ({ isOpen, onClose, onProfileUpdated }) => {
                   {uploadingPhotos.length > 0 && (
                     <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-xl p-4">
                       <p className="text-sm text-blue-700 dark:text-blue-300 mb-3">
-                        Ready to upload {uploadingPhotos.length} photo{uploadingPhotos.length > 1 ? 's' : ''}
+                        Ready to upload {uploadingPhotos.length} photo
+                        {uploadingPhotos.length > 1 ? "s" : ""}
                       </p>
                       <button
                         onClick={addMorePhotosToProfile}
@@ -408,7 +409,9 @@ const FaceProfileManageModal = ({ isOpen, onClose, onProfileUpdated }) => {
                       >
                         {isProcessing
                           ? "Adding Photos..."
-                          : `Add ${uploadingPhotos.length} Photo${uploadingPhotos.length > 1 ? "s" : ""}`}
+                          : `Add ${uploadingPhotos.length} Photo${
+                              uploadingPhotos.length > 1 ? "s" : ""
+                            }`}
                       </button>
                     </div>
                   )}
@@ -428,7 +431,8 @@ const FaceProfileManageModal = ({ isOpen, onClose, onProfileUpdated }) => {
                       className="bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-xl text-sm sm:text-base font-semibold transition-all duration-200 disabled:opacity-50 shadow-lg flex items-center justify-center gap-2"
                     >
                       <TrashIcon className="w-4 h-4" />
-                      Remove {selectedPhotosToRemove.length} Photo{selectedPhotosToRemove.length > 1 ? "s" : ""}
+                      Remove {selectedPhotosToRemove.length} Photo
+                      {selectedPhotosToRemove.length > 1 ? "s" : ""}
                     </button>
                   )}
                 </div>
@@ -463,16 +467,22 @@ const FaceProfileManageModal = ({ isOpen, onClose, onProfileUpdated }) => {
                       </div>
                       {/* Quality indicator */}
                       <div className="absolute top-1 right-1">
-                        <div className={`w-2 h-2 rounded-full ${
-                          photo.quality > 0.8 ? 'bg-green-500' :
-                          photo.quality > 0.6 ? 'bg-yellow-500' : 'bg-red-500'
-                        }`}></div>
+                        <div
+                          className={`w-2 h-2 rounded-full ${
+                            photo.quality > 0.8
+                              ? "bg-green-500"
+                              : photo.quality > 0.6
+                              ? "bg-yellow-500"
+                              : "bg-red-500"
+                          }`}
+                        ></div>
                       </div>
                     </div>
                   ))}
                 </div>
                 <p className="text-center text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-3">
-                  Click photos to select for removal. Quality indicated by colored dots.
+                  Click photos to select for removal. Quality indicated by
+                  colored dots.
                 </p>
               </div>
 
@@ -519,7 +529,8 @@ const FaceProfileManageModal = ({ isOpen, onClose, onProfileUpdated }) => {
                 Delete Face Profile?
               </h3>
               <p className="text-gray-600 dark:text-gray-400">
-                This will permanently remove your face profile and all recognition data. You can always create a new one later.
+                This will permanently remove your face profile and all
+                recognition data. You can always create a new one later.
               </p>
             </div>
 

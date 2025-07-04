@@ -41,65 +41,67 @@ export function AuthProvider({ children }) {
 
   // Sign up function with email verification
   async function signup(email, password, displayName, gender = "male") {
-  try {
-    console.log("Starting signup process for:", email);
-
-    // Validate inputs
-    if (!email || !password || !displayName) {
-      throw new Error("Email, password, and name are required");
-    }
-
-    // Create user account
-    const userCredential = await createUserWithEmailAndPassword(
-      auth,
-      email,
-      password
-    );
-    const user = userCredential.user;
-
-    console.log("User account created:", user.email);
-
-    // Update user profile
-    await updateProfile(user, {
-      displayName: displayName,
-    });
-
-    // FIXED: Create user document BEFORE signing out
     try {
-      await setDoc(doc(db, "users", user.uid), {
-        uid: user.uid,
-        email: email,
+      console.log("Starting signup process for:", email);
+
+      // Validate inputs
+      if (!email || !password || !displayName) {
+        throw new Error("Email, password, and name are required");
+      }
+
+      // Create user account
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+      const user = userCredential.user;
+
+      console.log("User account created:", user.email);
+
+      // Update user profile
+      await updateProfile(user, {
         displayName: displayName,
-        gender: gender,
-        createdAt: new Date().toISOString(),
-        emailVerified: false,
-        friends: [],
-        profilePicture: null,
-        bio: "",
-        location: "",
-        joinedAt: new Date().toISOString(),
       });
-      console.log("User document created in Firestore");
-    } catch (firestoreError) {
-      console.warn("Failed to save user data to Firestore:", firestoreError);
-      // Don't fail the signup if Firestore fails
+
+      // FIXED: Create user document BEFORE signing out
+      try {
+        await setDoc(doc(db, "users", user.uid), {
+          uid: user.uid,
+          email: email,
+          displayName: displayName,
+          gender: gender,
+          createdAt: new Date().toISOString(),
+          emailVerified: false,
+          friends: [],
+          profilePicture: null,
+          bio: "",
+          location: "",
+          joinedAt: new Date().toISOString(),
+        });
+        console.log("User document created in Firestore");
+      } catch (firestoreError) {
+        console.warn("Failed to save user data to Firestore:", firestoreError);
+        // Don't fail the signup if Firestore fails
+      }
+
+      // THEN sign out the user to prevent dashboard access
+      console.log(
+        "Signing out user to prevent dashboard access before verification"
+      );
+      await signOut(auth);
+
+      console.log("User signed out after account creation");
+
+      return {
+        success: true,
+        email: email,
+      };
+    } catch (error) {
+      console.error("Signup error:", error);
+      throw error;
     }
-
-    // THEN sign out the user to prevent dashboard access
-    console.log("Signing out user to prevent dashboard access before verification");
-    await signOut(auth);
-    
-    console.log("User signed out after account creation");
-
-    return {
-      success: true,
-      email: email,
-    };
-  } catch (error) {
-    console.error("Signup error:", error);
-    throw error;
   }
-}
 
   // Fixed signin function - uses Firebase Auth verification only
   async function signin(email, password) {
@@ -151,7 +153,7 @@ export function AuthProvider({ children }) {
                 email: user.email,
                 displayName: user.displayName,
                 photoURL: user.photoURL,
-              }
+              },
             }),
           }
         );
@@ -160,7 +162,10 @@ export function AuthProvider({ children }) {
           console.warn("Failed to enable Google auth, but continuing");
         }
       } catch (error) {
-        console.warn("EnableGoogleAuth function failed, but continuing:", error);
+        console.warn(
+          "EnableGoogleAuth function failed, but continuing:",
+          error
+        );
       }
 
       // Check if user document exists, if not create it
@@ -193,39 +198,41 @@ export function AuthProvider({ children }) {
   }
 
   async function resetPassword(email) {
-  try {
-    console.log("Sending password reset email to:", email);
+    try {
+      console.log("Sending password reset email to:", email);
 
-    const response = await fetch(
-      "https://us-central1-groupify-77202.cloudfunctions.net/sendPasswordResetEmail",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          data: { email }
-        }),
+      const response = await fetch(
+        "https://us-central1-groupify-77202.cloudfunctions.net/sendPasswordResetEmail",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            data: { email },
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-    );
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
+      const result = await response.json();
 
-    const result = await response.json();
-    
-    if (result.success) {
-      console.log("Password reset email sent successfully");
-      return result;
-    } else {
-      throw new Error(result.message || "Failed to send password reset email");
+      if (result.success) {
+        console.log("Password reset email sent successfully");
+        return result;
+      } else {
+        throw new Error(
+          result.message || "Failed to send password reset email"
+        );
+      }
+    } catch (error) {
+      console.error("Failed to send password reset email:", error);
+      throw error;
     }
-  } catch (error) {
-    console.error("Failed to send password reset email:", error);
-    throw error;
   }
-}
 
   // Fixed resend verification email
   async function resendVerificationEmail(email) {
@@ -240,7 +247,7 @@ export function AuthProvider({ children }) {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            data: { email }
+            data: { email },
           }),
         }
       );
@@ -250,12 +257,13 @@ export function AuthProvider({ children }) {
       }
 
       const result = await response.json();
-      
+
       if (result.success) {
-        console.log("Verification email resent successfully");
         return result;
       } else {
-        throw new Error(result.message || "Failed to resend verification email");
+        throw new Error(
+          result.message || "Failed to resend verification email"
+        );
       }
     } catch (error) {
       console.error("Failed to resend verification email:", error);
@@ -264,41 +272,43 @@ export function AuthProvider({ children }) {
   }
 
   useEffect(() => {
-  const unsubscribe = onAuthStateChanged(auth, async (user) => {
-    console.log("Auth state changed:", user?.email || "No user");
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      console.log("Auth state changed:", user?.email || "No user");
 
-    if (user) {
-      // For Google users, allow immediate access
-      if (user.providerData[0]?.providerId === "google.com") {
-        console.log("Google user signed in:", user.email);
-        setCurrentUser(user);
-      } else if (user.emailVerified) {
-        // Email/password user with verified email
-        console.log("Verified email/password user signed in:", user.email);
-        setCurrentUser(user);
-      } else {
-        // Email/password user without verification - sign them out immediately
-        console.log("Email/password user detected, signing out for verification");
-        
-        // Set currentUser to null FIRST to prevent dashboard flash
-        setCurrentUser(null);
-        
-        // Then sign them out
-        try {
-          await signOut(auth);
-        } catch (signOutError) {
-          console.error("Error signing out unverified user:", signOutError);
+      if (user) {
+        // For Google users, allow immediate access
+        if (user.providerData[0]?.providerId === "google.com") {
+          console.log("Google user signed in:", user.email);
+          setCurrentUser(user);
+        } else if (user.emailVerified) {
+          // Email/password user with verified email
+          console.log("Verified email/password user signed in:", user.email);
+          setCurrentUser(user);
+        } else {
+          // Email/password user without verification - sign them out immediately
+          console.log(
+            "Email/password user detected, signing out for verification"
+          );
+
+          // Set currentUser to null FIRST to prevent dashboard flash
+          setCurrentUser(null);
+
+          // Then sign them out
+          try {
+            await signOut(auth);
+          } catch (signOutError) {
+            console.error("Error signing out unverified user:", signOutError);
+          }
         }
+      } else {
+        setCurrentUser(null);
       }
-    } else {
-      setCurrentUser(null);
-    }
 
-    setLoading(false);
-  });
+      setLoading(false);
+    });
 
-  return unsubscribe;
-}, []); // Remove all dependencies
+    return unsubscribe;
+  }, []); // Remove all dependencies
 
   const value = {
     currentUser,

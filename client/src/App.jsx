@@ -254,15 +254,11 @@ const FlowController = ({ children }) => {
           "/",
         ].includes(currentPath)
       ) {
-        console.log(
-          "Flow: Guest user accessing protected page → Redirect to signin"
-        );
         navigate("/signin", { replace: true });
         return;
       }
 
       // Default: proceed normally
-      console.log("Flow: Default case → Direct access");
       setShowLaunchAnimation(false);
       setFlowReady(true);
 
@@ -284,7 +280,6 @@ const FlowController = ({ children }) => {
   ]);
 
   const handleTurnstileComplete = (verified, token) => {
-    console.log("Flow: Turnstile verification completed:", verified);
     if (verified) {
       const currentTime = Date.now();
 
@@ -301,7 +296,6 @@ const FlowController = ({ children }) => {
   };
 
   const handleAnimationComplete = () => {
-    console.log("Flow: Launch animation completed");
     sessionStorage.setItem("launch_animation_shown", "true");
     setShowLaunchAnimation(false);
     setFlowReady(true);

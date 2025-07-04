@@ -1,4 +1,4 @@
-﻿import React from "react";
+﻿import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 
@@ -7,11 +7,11 @@ import { useAuth } from "@auth/contexts/AuthContext";
 
 // Components
 import TripHeader from "./components/TripHeader";
-import PhotoUploadSection from "./components/PhotoUploadSection";
 import PhotoGallery from "./components/PhotoGallery";
 import FaceRecognitionSection from "./components/FaceRecognitionSection";
 import TripMembersCard from "./components/TripMembersCard";
 import InvitePeopleCard from "./components/InvitePeopleCard";
+import TripStatistics from "./components/TripStatistics";
 
 // Modals
 import PhotoModal from "./components/modals/PhotoModal";
@@ -137,6 +137,8 @@ const TripDetailView = ({ tripId: propTripId }) => {
   // Helper functions
   const photoLimitStatus = getPhotoLimitStatus(photos.length);
   const remainingPhotoSlots = getRemainingPhotoSlots(photos.length);
+
+  const [modalSource, setModalSource] = useState(null); // 'gallery' or 'allPhotos'
 
   const handleNavigateToProfile = () => {
     navigate("/dashboard?section=faceprofile");
@@ -452,11 +454,15 @@ const TripDetailView = ({ tripId: propTripId }) => {
             <PhotoGallery
               photos={photos}
               tripMembers={tripMembers}
-              maxPhotos={100} // MAX_PHOTOS_PER_TRIP
-              onPhotoSelect={setSelectedPhoto}
+              maxPhotos={100}
+              onPhotoSelect={(photo) => {
+                setSelectedPhoto(photo);
+                setModalSource("gallery");
+              }}
               onShowAllPhotos={() => setShowAllPhotosModal(true)}
               onRandomPhoto={() => selectRandomPhoto(photos)}
               onUploadFirst={() => setShowUploadForm(true)}
+              onPhotoUploaded={handlePhotoUploaded}
             />
 
             {/* Face Recognition Section */}
@@ -472,6 +478,13 @@ const TripDetailView = ({ tripId: propTripId }) => {
               onCancelProcessing={handleCancelFaceRecognition}
               onNavigateToProfile={handleNavigateToProfile}
               onPhotoSelect={setSelectedPhoto}
+            />
+
+            {/* ADD THIS - Trip Statistics */}
+            <TripStatistics
+              trip={trip}
+              photos={photos}
+              tripMembers={tripMembers}
             />
           </div>
 
@@ -507,7 +520,13 @@ const TripDetailView = ({ tripId: propTripId }) => {
           photo={selectedPhoto}
           photos={photos}
           isOpen={!!selectedPhoto}
-          onClose={closeModal}
+          onClose={() => {
+            setSelectedPhoto(null);
+            if (modalSource === "allPhotos") {
+              setShowAllPhotosModal(true);
+            }
+            setModalSource(null);
+          }}
           onNext={() => navigateToNext(photos)}
           onPrevious={() => navigateToPrevious(photos)}
         />
@@ -516,12 +535,16 @@ const TripDetailView = ({ tripId: propTripId }) => {
         <AllPhotosModal
           isOpen={showAllPhotosModal}
           photos={photos}
-          maxPhotos={100} // MAX_PHOTOS_PER_TRIP
+          maxPhotos={100}
           isAdmin={isAdmin}
           selectMode={selectMode}
           selectedPhotos={selectedPhotos}
           onClose={() => setShowAllPhotosModal(false)}
-          onPhotoSelect={setSelectedPhoto}
+          onPhotoSelect={(photo) => {
+            setSelectedPhoto(photo);
+            setModalSource("allPhotos");
+            setShowAllPhotosModal(false);
+          }}
           onToggleSelectMode={toggleSelectMode}
           onSelectPhoto={selectPhoto}
           onDeleteSelected={handleDeleteSelectedPhotos}

@@ -71,12 +71,10 @@ export const useTripMembers = (currentUserId) => {
         const userFriends = await getFriends(currentUserId);
         const friendIds = userFriends.map((f) => f.uid);
         setFriends(friendIds);
-        console.log("✅ Loaded friends:", friendIds);
 
         const pending = await getPendingFriendRequests(currentUserId);
         const pendingIds = pending.map((r) => r.uid);
         setPendingFriendRequests(pendingIds);
-        console.log("🕒 Pending requests:", pendingIds);
       } catch (error) {
         console.error("❌ Failed to fetch friends or pending:", error);
       }
@@ -102,8 +100,6 @@ export const useTripMembers = (currentUserId) => {
       setPendingFriendRequests((prev) => [...prev, targetUid]);
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 3000);
-      console.log("✅ Friend request sent to:", targetUid);
-
       setSelectedUser((prevUser) => ({
         ...prevUser,
         __isPending: true,
@@ -121,7 +117,6 @@ export const useTripMembers = (currentUserId) => {
         ...prevUser,
         __isFriend: false,
       }));
-      console.log("🗑️ Removed friend:", targetUid);
     } catch (error) {
       console.error("❌ Failed to remove friend:", error);
     }
@@ -145,8 +140,6 @@ export const useTripMembers = (currentUserId) => {
         ...prevUser,
         __isPending: false,
       }));
-
-      console.log("🗑️ Friend request canceled:", targetUid);
     } catch (error) {
       console.error("❌ Failed to cancel friend request:", error);
     }
