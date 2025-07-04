@@ -1,6 +1,6 @@
-﻿// useDashboardNavigation.js - Navigation and routing management
-import { useState, useEffect, useCallback } from "react";
+﻿import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import navigationService from "../../shared/services/navigationService";
 import {
   smoothPageTransition,
   resetBodyStyles,
@@ -16,7 +16,7 @@ export const useDashboardNavigation = () => {
 
   // Page transition states
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const [transitionDirection, setTransitionDirection] = useState("forward"); // 'forward' | 'backward'
+  const [transitionDirection, setTransitionDirection] = useState("forward");
 
   // Breadcrumb navigation
   const [breadcrumbs, setBreadcrumbs] = useState([]);
@@ -62,8 +62,6 @@ export const useDashboardNavigation = () => {
         setTransitionDirection("forward");
 
         smoothPageTransition(() => {
-          // The actual navigation will be handled by the parent component
-          // This hook just manages the navigation state and history
           setIsTransitioning(false);
         });
       }
@@ -190,25 +188,52 @@ export const useDashboardNavigation = () => {
   );
 
   /**
-   * Navigate to pricing page
+   * Navigate to pricing page with context
    */
   const navigateToPricing = useCallback(
-    (plan = null) => {
-      const path = plan ? `/pricing?plan=${plan}` : "/pricing";
-      navigateToExternalPage(path);
+    (plan = null, options = {}) => {
+      const { from = 'dashboard' } = options;
+      
+      // Set navigation context using the navigation service
+      navigationService.setContext({
+        origin: from,
+        returnPath: location.pathname + location.search,
+        section: new URLSearchParams(location.search).get('section'),
+        metadata: { action: 'pricing', originalPlan: plan }
+      });
+
+      // Navigate to pricing
+      navigationService.navigateToPricing(navigate, {
+        plan,
+        from
+      });
     },
-    [navigateToExternalPage]
+    [navigate, location]
   );
 
   /**
-   * Navigate to billing page
+   * Navigate to billing page with context
    */
   const navigateToBilling = useCallback(
-    (plan = null) => {
-      const path = plan ? `/billing?plan=${plan}` : "/billing";
-      navigateToExternalPage(path);
+    (plan = null, billing = 'monthly', options = {}) => {
+      const { from = 'dashboard' } = options;
+      
+      // Set navigation context using the navigation service
+      navigationService.setContext({
+        origin: from,
+        returnPath: location.pathname + location.search,
+        section: new URLSearchParams(location.search).get('section'),
+        metadata: { action: 'billing', originalPlan: plan, billing }
+      });
+
+      // Navigate to billing
+      navigationService.navigateToBilling(navigate, {
+        plan,
+        billing,
+        from
+      });
     },
-    [navigateToExternalPage]
+    [navigate, location]
   );
 
   /**
@@ -216,7 +241,6 @@ export const useDashboardNavigation = () => {
    */
   useEffect(() => {
     const handlePopState = (event) => {
-      // Handle browser navigation
       if (event.state?.dashboardNavigation) {
         const { type, sectionId, tripId } = event.state.dashboardNavigation;
 
@@ -381,7 +405,54 @@ export const useDashboardNavigation = () => {
   /**
    * Preload route data (for performance)
    */
-  const preloadRoute = useCallback(async (routeType, routeId) => {}, []);
+  const preloadRoute = useCallback(async (routeType, routeId) => {
+    console.log(`Preloading ${routeType}:${routeId}`);
+  }, []);
+
+  /**
+   * Handle successful navigation return from external pages
+   */
+  const handleNavigationReturn = useCallback((result) => {
+    if (result?.success) {
+      console.log('Navigation return successful:', result);
+    }
+  }, []);
+
+  /**
+   * Get navigation service context
+   */
+  const getNavigationContext = useCallback(() => {
+    return navigationService.getContext();
+  }, []);
+
+  /**
+   * Clear navigation service context
+   */
+  const clearNavigationContext = useCallback(() => {
+    navigationService.clearContext();
+  }, []);
+
+  /**
+   * Subscribe to navigation service events
+   */
+  useEffect(() => {
+    const unsubscribe = navigationService.subscribe((event, data) => {
+      console.log('Navigation service event:', event, data);
+      
+      switch (event) {
+        case 'contextSet':
+          break;
+        case 'contextCleared':
+          break;
+        case 'metadataUpdated':
+          break;
+        default:
+          break;
+      }
+    });
+
+    return unsubscribe;
+  }, []);
 
   return {
     // Navigation state
@@ -402,7 +473,7 @@ export const useDashboardNavigation = () => {
       toExternalPage: navigateToExternalPage,
     },
 
-    // Specific page navigation
+    // Enhanced page navigation with context
     pages: {
       toPricing: navigateToPricing,
       toBilling: navigateToBilling,
@@ -437,5 +508,14 @@ export const useDashboardNavigation = () => {
       items: breadcrumbs,
       setBreadcrumbs,
     },
+
+    // Navigation service integration
+    service: {
+      getContext: getNavigationContext,
+      clearContext: clearNavigationContext,
+      handleReturn: handleNavigationReturn,
+    },
   };
 };
+
+export default useDashboardNavigation;

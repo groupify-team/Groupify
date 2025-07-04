@@ -1,4 +1,4 @@
-// SettingsSection.jsx - Complete Settings management section with EditProfileModal
+// src/dashboard-area/components/sections/SettingsSection.jsx - Enhanced settings section with professional subscription management
 import React, { useState } from "react";
 import {
   BellIcon,
@@ -10,7 +10,6 @@ import {
 import { useAuth } from "../../../auth-area/contexts/AuthContext";
 import { useDashboardLayout } from "../../hooks/useDashboardLayout";
 import { useDashboardData } from "../../hooks/useDashboardData";
-import { useDashboardNavigation } from "../../hooks/useDashboardNavigation";
 import { useSettings } from "../../features/settings/hooks/useSettings";
 import { useExportBackup } from "../../hooks/useExportBackup";
 import SubscriptionCard from "../widgets/SubscriptionCard";
@@ -19,7 +18,10 @@ import QuickStatsCard from "../widgets/QuickStatsCard";
 import FaceProfileModal from "../../features/face-recognition/components/FaceProfileModal";
 import FaceProfileManageModal from "../../features/face-recognition/components/FaceProfileManageModal";
 import DeleteAccountModal from "../modals/DeleteAccountModal";
-import EditProfileModal from "../../features/settings/components/EditProfileModal"; // New import
+import EditProfileModal from "../../features/settings/components/EditProfileModal";
+import UsageModal from "../modals/UsageModal";
+import BillingHistoryModal from "../modals/BillingHistoryModal";
+import PlanManagementModal from "../modals/PlanManagementModal";
 import {
   NOTIFICATION_SETTINGS,
   PRIVACY_SETTINGS,
@@ -39,15 +41,16 @@ const SettingsSection = () => {
 
   // Local state for modals
   const [showFaceProfileModal, setShowFaceProfileModal] = useState(false);
-  const [showFaceProfileManageModal, setShowFaceProfileManageModal] =
-    useState(false);
+  const [showFaceProfileManageModal, setShowFaceProfileManageModal] = useState(false);
   const [showEditProfileModal, setShowEditProfileModal] = useState(false);
   const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
   const [showBackupModal, setShowBackupModal] = useState(false);
+  
+  // Professional subscription management modals
   const [showUsageModal, setShowUsageModal] = useState(false);
   const [showBillingHistoryModal, setShowBillingHistoryModal] = useState(false);
-  const [showCancelPlanModal, setShowCancelPlanModal] = useState(false);
+  const [showPlanManagementModal, setShowPlanManagementModal] = useState(false);
 
   const {
     layout: { isMobile },
@@ -63,22 +66,6 @@ const SettingsSection = () => {
     loadDashboardData: refreshData,
     loadFaceProfile,
   } = useDashboardData();
-
-  // Safe navigation hook usage with fallback
-  let navigationActions = {};
-  try {
-    navigationActions = useDashboardNavigation();
-  } catch (e) {
-    navigationActions = {
-      pages: {
-        toPricing: () => (window.location.href = "/pricing"),
-        toBilling: () => (window.location.href = "/billing"),
-      },
-    };
-  }
-
-  const toPricing = navigationActions?.pages?.toPricing || (() => {});
-  const toBilling = navigationActions?.pages?.toBilling || (() => {});
 
   // Check if face recognition is enabled
   const faceRecognitionEnabled = settings.privacy?.faceRecognition ?? false;
@@ -96,12 +83,10 @@ const SettingsSection = () => {
 
         if (refreshData) {
           await refreshData();
-        } else {
         }
       } catch (error) {
         console.error("❌ Error refreshing data:", error);
       }
-    } else {
     }
   };
 
@@ -140,16 +125,21 @@ const SettingsSection = () => {
     setShowFaceProfileManageModal(true);
   };
 
-  // Modal handlers - FIXED: Single definition for each
+  // Modal handlers
   const openEditProfileModal = () => setShowEditProfileModal(true);
   const closeEditProfileModal = () => setShowEditProfileModal(false);
   const openDeleteAccountModal = () => setShowDeleteAccountModal(true);
   const closeDeleteAccountModal = () => setShowDeleteAccountModal(false);
-  const openUsageModal = () => setShowUsageModal(true);
-  const openBillingHistoryModal = () => setShowBillingHistoryModal(true);
-  const openCancelPlanModal = () => setShowCancelPlanModal(true);
 
-  // Export/Backup handlers - FIXED: Proper async handling
+  // Professional subscription modal handlers
+  const openUsageModal = () => setShowUsageModal(true);
+  const closeUsageModal = () => setShowUsageModal(false);
+  const openBillingHistoryModal = () => setShowBillingHistoryModal(true);
+  const closeBillingHistoryModal = () => setShowBillingHistoryModal(false);
+  const openPlanManagementModal = () => setShowPlanManagementModal(true);
+  const closePlanManagementModal = () => setShowPlanManagementModal(false);
+
+  // Export/Backup handlers
   const handleExportData = async () => {
     try {
       await exportData();
@@ -226,7 +216,7 @@ const SettingsSection = () => {
                   }
                   alt="Profile"
                   className="w-28 h-28 sm:w-32 sm:h-32 lg:w-36 lg:h-36 rounded-full object-cover border-4 border-white dark:border-gray-600 shadow-lg transition-all duration-300 group-hover:shadow-xl group-hover:scale-105 cursor-pointer"
-                  onClick={openEditProfileModal} // Added click handler to open edit modal
+                  onClick={openEditProfileModal}
                 />
 
                 {/* Interactive overlay on hover */}
@@ -270,10 +260,7 @@ const SettingsSection = () => {
         <div className="bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-800 dark:to-blue-900/20 rounded-xl p-3 sm:p-4 lg:p-6 border border-gray-200/50 dark:border-gray-700/50">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
             {/* Notifications */}
-            <div
-              className="space-y-3 sm:space-y-4"
-              data-section="notifications"
-            >
+            <div className="space-y-3 sm:space-y-4" data-section="notifications">
               <div className="flex items-center gap-2 mb-2 sm:mb-3">
                 <div className="w-6 h-6 sm:w-7 sm:h-7 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-sm">
                   <BellIcon className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
@@ -431,29 +418,31 @@ const SettingsSection = () => {
             </p>
             <button
               onClick={() => {
-                // Scroll to privacy settings
-                const privacySection = document.querySelector(
-                  '[data-section="privacy"]'
-                );
-                if (privacySection) {
-                  privacySection.scrollIntoView({ behavior: "smooth" });
-                }
+                // Toggle the face recognition setting to enabled
+                toggleSetting('privacy', 'faceRecognition');
+                
+                // Optional: Still scroll to privacy settings to show the change
+                setTimeout(() => {
+                  const privacySection = document.querySelector('[data-section="privacy"]');
+                  if (privacySection) {
+                    privacySection.scrollIntoView({ behavior: 'smooth' });
+                  }
+                }, 100); // Small delay to allow state update
               }}
-              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors"
+              disabled={settingsLoading}
+              className="bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg transition-colors"
             >
-              Enable Face Recognition
+              {settingsLoading ? 'Enabling...' : 'Enable Face Recognition'}
             </button>
           </div>
         </div>
       )}
 
-      {/* Subscription & Billing */}
+      {/* Enhanced Subscription & Billing */}
       <SubscriptionCard
-        onNavigateToPricing={toPricing}
-        onNavigateToBilling={toBilling}
         onOpenUsage={openUsageModal}
         onOpenBillingHistory={openBillingHistoryModal}
-        onOpenCancelPlan={openCancelPlanModal}
+        onOpenCancelPlan={openPlanManagementModal}
       />
 
       {/* Data & Storage */}
@@ -704,6 +693,22 @@ const SettingsSection = () => {
           onClose={closeDeleteAccountModal}
         />
       )}
+
+      {/* Professional Subscription Management Modals */}
+      <UsageModal 
+        isOpen={showUsageModal}
+        onClose={closeUsageModal}
+      />
+
+      <BillingHistoryModal 
+        isOpen={showBillingHistoryModal}
+        onClose={closeBillingHistoryModal}
+      />
+
+      <PlanManagementModal 
+        isOpen={showPlanManagementModal}
+        onClose={closePlanManagementModal}
+      />
     </div>
   );
 };
