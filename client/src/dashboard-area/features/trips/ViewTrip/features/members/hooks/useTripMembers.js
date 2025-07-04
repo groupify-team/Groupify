@@ -22,7 +22,7 @@ import {
   removeFriend,
 } from "@shared/services/firebase/users";
 
-export const useTripMembers = (currentUserId) => {
+export const useTripMembers = (currentUserId, trip, setTrip) => {
   const [friends, setFriends] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -34,17 +34,17 @@ export const useTripMembers = (currentUserId) => {
     try {
       const q = query(
         collection(db, "friendRequests"),
-        where("fromUid", "==", uid),
+        where("from", "==", uid), // Changed from "fromUid" to "from"
         where("status", "==", "pending")
       );
       const querySnapshot = await getDocs(q);
       return querySnapshot.docs.map((doc) => ({
-        uid: doc.data().toUid,
+        uid: doc.data().to, // Changed from "toUid" to "to"
         ...doc.data(),
       }));
     } catch (error) {
       console.error("Error fetching pending requests:", error);
-      return [];
+      return []; // Return empty array on error
     }
   };
 
@@ -83,18 +83,24 @@ export const useTripMembers = (currentUserId) => {
     fetchFriendsAndPending();
   }, [currentUserId]);
 
-  const handleMemberClick = async (member, currentUserId) => {
-    const isFriendNow = friends.includes(member.uid);
-    const status = await checkFriendStatus(currentUserId, member.uid);
-    const isPendingNow = status === "pending";
-    setSelectedUser({
-      ...member,
-      __isFriend: isFriendNow,
-      __isPending: isPendingNow,
-    });
+  const handleMemberClick = async (member) => {
+    try {
+      const isFriendNow = friends.includes(member.uid);
+      const status = await checkFriendStatus(currentUserId, member.uid);
+      const isPendingNow = status === "pending";
+
+      setSelectedUser({
+        ...member,
+        __isFriend: isFriendNow,
+        __isPending: isPendingNow,
+      });
+    } catch (error) {
+      console.error("Error checking member status:", error);
+      setSelectedUser(member);
+    }
   };
 
-  const handleAddFriend = async (targetUid, currentUserId) => {
+  const handleAddFriend = async (targetUid) => {
     try {
       await sendFriendRequest(currentUserId, targetUid);
       setPendingFriendRequests((prev) => [...prev, targetUid]);
@@ -106,10 +112,11 @@ export const useTripMembers = (currentUserId) => {
       }));
     } catch (error) {
       console.error("❌ Failed to send friend request:", error);
+      throw error;
     }
   };
 
-  const handleRemoveFriend = async (targetUid, currentUserId) => {
+  const handleRemoveFriend = async (targetUid) => {
     try {
       await removeFriend(currentUserId, targetUid);
       setFriends((prev) => prev.filter((uid) => uid !== targetUid));
@@ -119,10 +126,11 @@ export const useTripMembers = (currentUserId) => {
       }));
     } catch (error) {
       console.error("❌ Failed to remove friend:", error);
+      throw error;
     }
   };
 
-  const handleCancelFriendRequest = async (targetUid, currentUserId) => {
+  const handleCancelFriendRequest = async (targetUid) => {
     try {
       const ref = doc(db, "friendRequests", `${currentUserId}_${targetUid}`);
       await deleteDoc(ref);
@@ -142,6 +150,7 @@ export const useTripMembers = (currentUserId) => {
       }));
     } catch (error) {
       console.error("❌ Failed to cancel friend request:", error);
+      throw error;
     }
   };
 
@@ -177,27 +186,67 @@ export const useTripMembers = (currentUserId) => {
     }
   };
 
-  const handlePromoteToAdmin = (uid, trip, setTrip) => {
-    setTrip({
-      ...trip,
-      admins: [...(trip.admins || []), uid],
-    });
+  const handlePromoteToAdmin = async (uid) => {
+    if (!trip) {
+      console.error("Trip data not available");
+      return;
+    }
+
+    try {
+      const updatedTrip = {
+        ...trip,
+        admins: [...(trip.admins || []), uid],
+      };
+
+      // Update in Firebase
+      await updateTrip(trip.id, { admins: updatedTrip.admins });
+
+      // Update local state
+      setTrip(updatedTrip);
+      setSelectedUser(null);
+
+      toast.success("User promoted to admin successfully!");
+    } catch (error) {
+      console.error("Error promoting to admin:", error);
+      toast.error("Failed to promote user to admin");
+      throw error;
+    }
   };
 
-  const handleDemoteFromAdmin = (uid, trip, setTrip) => {
+  const handleDemoteFromAdmin = async (uid) => {
+    if (!trip) {
+      console.error("Trip data not available");
+      return;
+    }
+
     const isLastAdmin = trip.admins?.length === 1 && trip.admins[0] === uid;
 
     if (isLastAdmin) {
-      alert(
-        "❌ You are the only Group Admin. Either delete the trip or assign another admin first."
+      toast.error(
+        "Cannot remove the last admin. Either delete the trip or assign another admin first."
       );
       return;
     }
 
-    setTrip({
-      ...trip,
-      admins: trip.admins?.filter((id) => id !== uid),
-    });
+    try {
+      const updatedAdmins = trip.admins?.filter((id) => id !== uid) || [];
+
+      // Update in Firebase
+      await updateTrip(trip.id, { admins: updatedAdmins });
+
+      // Update local state
+      setTrip({
+        ...trip,
+        admins: updatedAdmins,
+      });
+      setSelectedUser(null);
+
+      toast.success("Admin privileges removed successfully!");
+    } catch (error) {
+      console.error("Error demoting admin:", error);
+      toast.error("Failed to remove admin privileges");
+      throw error;
+    }
   };
 
   const handleRemoveFromTrip = async (
