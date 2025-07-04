@@ -20,7 +20,6 @@ app.get("/api/city-search", async (req, res) => {
     );
 
     const data = await response.json();
-    console.log("🔍 API Response:", data);
 
     if (!Array.isArray(data)) {
       return res.status(500).json({ error: "Unexpected API response", data });

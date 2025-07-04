@@ -1,14 +1,14 @@
 // shared/services/exportService.js
-import { 
-  collection, 
-  query, 
-  where, 
-  getDocs, 
-  doc, 
-  getDoc 
-} from 'firebase/firestore';
-import { db } from './firebase/config';
-import { SettingsService } from '../../dashboard-area/features/settings/services/settingsService';
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  doc,
+  getDoc,
+} from "firebase/firestore";
+import { db } from "./firebase/config";
+import { SettingsService } from "../../dashboard-area/features/settings/services/settingsService";
 
 export class ExportService {
   /**
@@ -18,14 +18,12 @@ export class ExportService {
    */
   static async exportUserData(userId) {
     try {
-      console.log('📤 Starting data export for user:', userId);
-      
       const exportData = {
         exportInfo: {
           userId,
           exportDate: new Date().toISOString(),
-          version: '1.0.0',
-          appName: 'Groupify'
+          version: "1.0.0",
+          appName: "Groupify",
         },
         userData: {},
         settings: {},
@@ -34,95 +32,94 @@ export class ExportService {
         friends: [],
         friendRequests: [],
         faceProfile: null,
-        statistics: {}
+        statistics: {},
       };
 
       // Get user profile
-      console.log('👤 Exporting user profile...');
-      const userDoc = await getDoc(doc(db, 'users', userId));
+      const userDoc = await getDoc(doc(db, "users", userId));
       if (userDoc.exists()) {
         exportData.userData = userDoc.data();
       }
 
       // Get user settings
-      console.log('⚙️ Exporting user settings...');
       try {
         exportData.settings = await SettingsService.getUserSettings(userId);
       } catch (error) {
-        console.warn('Could not export settings:', error);
-        exportData.settings = { error: 'Could not access settings' };
+        console.warn("Could not export settings:", error);
+        exportData.settings = { error: "Could not access settings" };
       }
 
       // Get user's trips
-      console.log('🗺️ Exporting trips...');
       const tripsQuery = query(
-        collection(db, 'trips'),
-        where('members', 'array-contains', userId)
+        collection(db, "trips"),
+        where("members", "array-contains", userId)
       );
       const tripsSnapshot = await getDocs(tripsQuery);
-      exportData.trips = tripsSnapshot.docs.map(doc => ({
+      exportData.trips = tripsSnapshot.docs.map((doc) => ({
         id: doc.id,
-        ...doc.data()
+        ...doc.data(),
       }));
 
       // Get user's photos
-      console.log('📸 Exporting photos...');
       const photosQuery = query(
-        collection(db, 'photos'),
-        where('uploadedBy', '==', userId)
+        collection(db, "photos"),
+        where("uploadedBy", "==", userId)
       );
       const photosSnapshot = await getDocs(photosQuery);
-      exportData.photos = photosSnapshot.docs.map(doc => ({
+      exportData.photos = photosSnapshot.docs.map((doc) => ({
         id: doc.id,
-        ...doc.data()
+        ...doc.data(),
       }));
 
       // Get friend requests
-      console.log('👥 Exporting friend requests...');
       const sentRequestsQuery = query(
-        collection(db, 'friendRequests'),
-        where('from', '==', userId)
+        collection(db, "friendRequests"),
+        where("from", "==", userId)
       );
       const receivedRequestsQuery = query(
-        collection(db, 'friendRequests'),
-        where('to', '==', userId)
+        collection(db, "friendRequests"),
+        where("to", "==", userId)
       );
-      
+
       const [sentSnapshot, receivedSnapshot] = await Promise.all([
         getDocs(sentRequestsQuery),
-        getDocs(receivedRequestsQuery)
+        getDocs(receivedRequestsQuery),
       ]);
 
       exportData.friendRequests = {
-        sent: sentSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })),
-        received: receivedSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+        sent: sentSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })),
+        received: receivedSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        })),
       };
 
       // Get face profile
-      console.log('🎭 Exporting face profile...');
       try {
-        const faceProfileDoc = await getDoc(doc(db, 'faceProfiles', userId));
+        const faceProfileDoc = await getDoc(doc(db, "faceProfiles", userId));
         if (faceProfileDoc.exists()) {
           exportData.faceProfile = faceProfileDoc.data();
         }
       } catch (error) {
-        console.warn('Could not export face profile:', error);
+        console.warn("Could not export face profile:", error);
       }
 
       // Get friends list
-      console.log('👫 Exporting friends list...');
-      if (exportData.userData.friends && exportData.userData.friends.length > 0) {
+      if (
+        exportData.userData.friends &&
+        exportData.userData.friends.length > 0
+      ) {
         const friendsData = [];
         for (const friendId of exportData.userData.friends) {
           try {
-            const friendDoc = await getDoc(doc(db, 'users', friendId));
+            const friendDoc = await getDoc(doc(db, "users", friendId));
             if (friendDoc.exists()) {
               friendsData.push({
                 id: friendId,
                 displayName: friendDoc.data().displayName,
                 email: friendDoc.data().email,
                 photoURL: friendDoc.data().photoURL,
-                friendSince: friendDoc.data().createdAt
+                friendSince: friendDoc.data().createdAt,
               });
             }
           } catch (error) {
@@ -133,20 +130,22 @@ export class ExportService {
       }
 
       // Calculate statistics
-      console.log('📊 Calculating statistics...');
       exportData.statistics = {
         totalTrips: exportData.trips.length,
         totalPhotos: exportData.photos.length,
         totalFriends: exportData.friends.length,
-        pendingFriendRequests: exportData.friendRequests.sent.length + exportData.friendRequests.received.length,
-        accountAge: exportData.userData.createdAt ? this.calculateAccountAge(exportData.userData.createdAt) : 'Unknown',
-        lastActive: exportData.userData.lastLoginAt || 'Unknown'
+        pendingFriendRequests:
+          exportData.friendRequests.sent.length +
+          exportData.friendRequests.received.length,
+        accountAge: exportData.userData.createdAt
+          ? this.calculateAccountAge(exportData.userData.createdAt)
+          : "Unknown",
+        lastActive: exportData.userData.lastLoginAt || "Unknown",
       };
 
-      console.log('✅ Data export completed successfully');
       return exportData;
     } catch (error) {
-      console.error('❌ Error exporting user data:', error);
+      console.error("❌ Error exporting user data:", error);
       throw new Error(`Failed to export data: ${error.message}`);
     }
   }
@@ -159,19 +158,19 @@ export class ExportService {
   static async downloadUserData(userId, filename = null) {
     try {
       const exportData = await this.exportUserData(userId);
-      
+
       // Create filename if not provided
       if (!filename) {
-        const date = new Date().toISOString().split('T')[0];
+        const date = new Date().toISOString().split("T")[0];
         filename = `groupify-data-export-${date}.json`;
       }
 
       // Create and download file
       const dataStr = JSON.stringify(exportData, null, 2);
-      const dataBlob = new Blob([dataStr], { type: 'application/json' });
-      
+      const dataBlob = new Blob([dataStr], { type: "application/json" });
+
       const url = URL.createObjectURL(dataBlob);
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = url;
       link.download = filename;
       document.body.appendChild(link);
@@ -179,10 +178,9 @@ export class ExportService {
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
 
-      console.log('✅ Data exported successfully as:', filename);
       return true;
     } catch (error) {
-      console.error('❌ Error downloading user data:', error);
+      console.error("❌ Error downloading user data:", error);
       throw error;
     }
   }
@@ -194,29 +192,26 @@ export class ExportService {
    */
   static async createBackup(userId) {
     try {
-      console.log('💾 Creating backup for user:', userId);
-      
       const exportData = await this.exportUserData(userId);
-      
+
       // Add backup-specific metadata
       const backupData = {
         ...exportData,
         backupInfo: {
           ...exportData.exportInfo,
-          backupType: 'full',
+          backupType: "full",
           backupId: this.generateBackupId(),
           backupDate: new Date().toISOString(),
           dataIntegrity: {
             totalRecords: this.countRecords(exportData),
-            checksum: this.generateChecksum(exportData)
-          }
-        }
+            checksum: this.generateChecksum(exportData),
+          },
+        },
       };
 
-      console.log('✅ Backup created successfully');
       return backupData;
     } catch (error) {
-      console.error('❌ Error creating backup:', error);
+      console.error("❌ Error creating backup:", error);
       throw error;
     }
   }
@@ -228,15 +223,15 @@ export class ExportService {
   static async downloadBackup(userId) {
     try {
       const backupData = await this.createBackup(userId);
-      
-      const date = new Date().toISOString().split('T')[0];
+
+      const date = new Date().toISOString().split("T")[0];
       const filename = `groupify-backup-${date}-${backupData.backupInfo.backupId}.json`;
-      
+
       const dataStr = JSON.stringify(backupData, null, 2);
-      const dataBlob = new Blob([dataStr], { type: 'application/json' });
-      
+      const dataBlob = new Blob([dataStr], { type: "application/json" });
+
       const url = URL.createObjectURL(dataBlob);
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = url;
       link.download = filename;
       document.body.appendChild(link);
@@ -244,10 +239,9 @@ export class ExportService {
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
 
-      console.log('✅ Backup downloaded successfully as:', filename);
       return true;
     } catch (error) {
-      console.error('❌ Error downloading backup:', error);
+      console.error("❌ Error downloading backup:", error);
       throw error;
     }
   }
@@ -257,35 +251,41 @@ export class ExportService {
    * @param {string} userId - User ID
    * @param {string} dataType - Type of data to export ('trips', 'photos', 'friends')
    */
-  static async exportToCSV(userId, dataType = 'trips') {
+  static async exportToCSV(userId, dataType = "trips") {
     try {
       console.log(`📊 Exporting ${dataType} as CSV for user:`, userId);
-      
+
       const exportData = await this.exportUserData(userId);
-      let csvData = '';
-      let filename = '';
+      let csvData = "";
+      let filename = "";
 
       switch (dataType) {
-        case 'trips':
+        case "trips":
           csvData = this.convertTripsToCSV(exportData.trips);
-          filename = `groupify-trips-${new Date().toISOString().split('T')[0]}.csv`;
+          filename = `groupify-trips-${
+            new Date().toISOString().split("T")[0]
+          }.csv`;
           break;
-        case 'photos':
+        case "photos":
           csvData = this.convertPhotosToCSV(exportData.photos);
-          filename = `groupify-photos-${new Date().toISOString().split('T')[0]}.csv`;
+          filename = `groupify-photos-${
+            new Date().toISOString().split("T")[0]
+          }.csv`;
           break;
-        case 'friends':
+        case "friends":
           csvData = this.convertFriendsToCSV(exportData.friends);
-          filename = `groupify-friends-${new Date().toISOString().split('T')[0]}.csv`;
+          filename = `groupify-friends-${
+            new Date().toISOString().split("T")[0]
+          }.csv`;
           break;
         default:
           throw new Error(`Unsupported data type: ${dataType}`);
       }
 
       // Download CSV
-      const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
+      const blob = new Blob([csvData], { type: "text/csv;charset=utf-8;" });
       const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = url;
       link.download = filename;
       document.body.appendChild(link);
@@ -293,36 +293,42 @@ export class ExportService {
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
 
-      console.log('✅ CSV exported successfully as:', filename);
       return true;
     } catch (error) {
-      console.error('❌ Error exporting CSV:', error);
+      console.error("❌ Error exporting CSV:", error);
       throw error;
     }
   }
 
   // Helper methods
   static calculateAccountAge(createdAt) {
-    const created = new Date(createdAt.seconds ? createdAt.seconds * 1000 : createdAt);
+    const created = new Date(
+      createdAt.seconds ? createdAt.seconds * 1000 : createdAt
+    );
     const now = new Date();
     const diffTime = Math.abs(now - created);
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays < 30) return `${diffDays} days`;
     if (diffDays < 365) return `${Math.floor(diffDays / 30)} months`;
     return `${Math.floor(diffDays / 365)} years`;
   }
 
   static generateBackupId() {
-    return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    return (
+      Math.random().toString(36).substring(2, 15) +
+      Math.random().toString(36).substring(2, 15)
+    );
   }
 
   static countRecords(data) {
-    return (data.trips?.length || 0) + 
-           (data.photos?.length || 0) + 
-           (data.friends?.length || 0) + 
-           (data.friendRequests?.sent?.length || 0) + 
-           (data.friendRequests?.received?.length || 0);
+    return (
+      (data.trips?.length || 0) +
+      (data.photos?.length || 0) +
+      (data.friends?.length || 0) +
+      (data.friendRequests?.sent?.length || 0) +
+      (data.friendRequests?.received?.length || 0)
+    );
   }
 
   static generateChecksum(data) {
@@ -330,59 +336,91 @@ export class ExportService {
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
       const char = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
+      hash = (hash << 5) - hash + char;
       hash = hash & hash; // Convert to 32-bit integer
     }
     return hash.toString(36);
   }
 
   static convertTripsToCSV(trips) {
-    if (!trips || trips.length === 0) return 'No trips data available';
-    
-    const headers = ['ID', 'Name', 'Description', 'Start Date', 'End Date', 'Location', 'Created By', 'Members Count', 'Photos Count'];
-    const rows = trips.map(trip => [
+    if (!trips || trips.length === 0) return "No trips data available";
+
+    const headers = [
+      "ID",
+      "Name",
+      "Description",
+      "Start Date",
+      "End Date",
+      "Location",
+      "Created By",
+      "Members Count",
+      "Photos Count",
+    ];
+    const rows = trips.map((trip) => [
       trip.id,
-      trip.name || '',
-      trip.description || '',
-      trip.startDate ? new Date(trip.startDate.seconds * 1000).toLocaleDateString() : '',
-      trip.endDate ? new Date(trip.endDate.seconds * 1000).toLocaleDateString() : '',
-      trip.location || '',
-      trip.createdBy || '',
+      trip.name || "",
+      trip.description || "",
+      trip.startDate
+        ? new Date(trip.startDate.seconds * 1000).toLocaleDateString()
+        : "",
+      trip.endDate
+        ? new Date(trip.endDate.seconds * 1000).toLocaleDateString()
+        : "",
+      trip.location || "",
+      trip.createdBy || "",
       trip.members?.length || 0,
-      trip.photos?.length || 0
+      trip.photos?.length || 0,
     ]);
-    
-    return [headers, ...rows].map(row => row.map(field => `"${field}"`).join(',')).join('\n');
+
+    return [headers, ...rows]
+      .map((row) => row.map((field) => `"${field}"`).join(","))
+      .join("\n");
   }
 
   static convertPhotosToCSV(photos) {
-    if (!photos || photos.length === 0) return 'No photos data available';
-    
-    const headers = ['ID', 'Filename', 'Upload Date', 'Trip ID', 'Uploaded By', 'File Size', 'Tags Count'];
-    const rows = photos.map(photo => [
+    if (!photos || photos.length === 0) return "No photos data available";
+
+    const headers = [
+      "ID",
+      "Filename",
+      "Upload Date",
+      "Trip ID",
+      "Uploaded By",
+      "File Size",
+      "Tags Count",
+    ];
+    const rows = photos.map((photo) => [
       photo.id,
-      photo.fileName || '',
-      photo.uploadedAt ? new Date(photo.uploadedAt.seconds * 1000).toLocaleDateString() : '',
-      photo.tripId || '',
-      photo.uploadedBy || '',
-      photo.fileSize || '',
-      photo.tags?.length || 0
+      photo.fileName || "",
+      photo.uploadedAt
+        ? new Date(photo.uploadedAt.seconds * 1000).toLocaleDateString()
+        : "",
+      photo.tripId || "",
+      photo.uploadedBy || "",
+      photo.fileSize || "",
+      photo.tags?.length || 0,
     ]);
-    
-    return [headers, ...rows].map(row => row.map(field => `"${field}"`).join(',')).join('\n');
+
+    return [headers, ...rows]
+      .map((row) => row.map((field) => `"${field}"`).join(","))
+      .join("\n");
   }
 
   static convertFriendsToCSV(friends) {
-    if (!friends || friends.length === 0) return 'No friends data available';
-    
-    const headers = ['ID', 'Display Name', 'Email', 'Friend Since'];
-    const rows = friends.map(friend => [
+    if (!friends || friends.length === 0) return "No friends data available";
+
+    const headers = ["ID", "Display Name", "Email", "Friend Since"];
+    const rows = friends.map((friend) => [
       friend.id,
-      friend.displayName || '',
-      friend.email || '',
-      friend.friendSince ? new Date(friend.friendSince.seconds * 1000).toLocaleDateString() : ''
+      friend.displayName || "",
+      friend.email || "",
+      friend.friendSince
+        ? new Date(friend.friendSince.seconds * 1000).toLocaleDateString()
+        : "",
     ]);
-    
-    return [headers, ...rows].map(row => row.map(field => `"${field}"`).join(',')).join('\n');
+
+    return [headers, ...rows]
+      .map((row) => row.map((field) => `"${field}"`).join(","))
+      .join("\n");
   }
 }

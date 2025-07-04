@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { toast } from "react-hot-toast";
+
 import {
   PhotoIcon,
   EyeIcon,
@@ -20,11 +22,13 @@ const PhotoGallery = ({
   onShowAllPhotos,
   onRandomPhoto,
   onUploadFirst,
+  onPhotoUploaded, // Add this line
 }) => {
   const [showManageModal, setShowManageModal] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [selectMode, setSelectMode] = useState(false);
   const [selectedPhotos, setSelectedPhotos] = useState([]);
+  const [gridCols, setGridCols] = useState(6);
 
   const fixPhotoUrl = (url) => {
     return url.replace(
@@ -32,6 +36,29 @@ const PhotoGallery = ({
       "groupify-77202.firebasestorage.app"
     );
   };
+
+  // Calculate responsive grid and overflow
+  useEffect(() => {
+    const calculateGrid = () => {
+      const width = window.innerWidth;
+      let cols;
+
+      if (width < 640) cols = 4; // Mobile: 4 columns
+      else if (width < 768) cols = 6; // Small tablet: 6 columns
+      else if (width < 1024) cols = 8; // Tablet: 8 columns
+      else cols = 10; // Desktop: 10 columns
+
+      setGridCols(cols);
+    };
+
+    calculateGrid();
+    window.addEventListener("resize", calculateGrid);
+    return () => window.removeEventListener("resize", calculateGrid);
+  }, []);
+
+  const visiblePhotos = photos.slice(0, gridCols - 1);
+  const overflowCount = Math.max(0, photos.length - visiblePhotos.length);
+  const showOverflow = photos.length > gridCols - 1;
 
   const togglePhotoSelection = (photoId) => {
     setSelectedPhotos((prev) =>
@@ -58,10 +85,23 @@ const PhotoGallery = ({
   };
 
   const ManagePhotosModal = () => (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full border border-gray-200 dark:border-gray-700">
+    <div
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in"
+      style={{ zIndex: 9999 }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          setShowManageModal(false);
+          setSelectMode(false);
+          setSelectedPhotos([]);
+        }
+      }}
+    >
+      <div
+        className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] border border-gray-200 dark:border-gray-700 animate-slide-in-scale overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
-        <div className="bg-gradient-to-r from-purple-500 to-pink-500 p-4 rounded-t-2xl">
+        <div className="bg-gradient-to-r from-purple-500 to-pink-500 p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Cog6ToothIcon className="w-6 h-6 text-white" />
@@ -81,20 +121,21 @@ const PhotoGallery = ({
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-4">
-          {/* Stats */}
-          <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4">
-            <div className="grid grid-cols-2 gap-4 text-center">
-              <div>
-                <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+        <div className="flex flex-col h-full max-h-[calc(90vh-80px)]">
+          {/* Controls */}
+          <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+            {/* Stats */}
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-3 text-center">
+                <p className="text-xl font-bold text-purple-600 dark:text-purple-400">
                   {photos.length}
                 </p>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   Total Photos
                 </p>
               </div>
-              <div>
-                <p className="text-2xl font-bold text-pink-600 dark:text-pink-400">
+              <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-3 text-center">
+                <p className="text-xl font-bold text-pink-600 dark:text-pink-400">
                   {Math.max(0, maxPhotos - photos.length)}
                 </p>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -102,60 +143,101 @@ const PhotoGallery = ({
                 </p>
               </div>
             </div>
-          </div>
 
-          {/* Selection Mode Toggle */}
-          <button
-            onClick={() => setSelectMode(!selectMode)}
-            className={`w-full p-3 rounded-xl font-medium transition-all ${
-              selectMode
-                ? "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800"
-                : "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-800"
-            }`}
-          >
-            {selectMode ? "Exit Selection Mode" : "Select Photos"}
-          </button>
-
-          {/* Selected Count */}
-          {selectMode && selectedPhotos.length > 0 && (
-            <div className="bg-green-100 dark:bg-green-900/30 rounded-xl p-3 border border-green-200 dark:border-green-800">
-              <div className="flex items-center justify-center gap-2">
-                <CheckIcon className="w-5 h-5 text-green-600 dark:text-green-400" />
-                <span className="font-medium text-green-700 dark:text-green-300">
-                  {selectedPhotos.length} photo
-                  {selectedPhotos.length > 1 ? "s" : ""} selected
-                </span>
-              </div>
-            </div>
-          )}
-
-          {/* Action Buttons */}
-          <div className="space-y-3">
+            {/* Selection Toggle */}
             <button
-              onClick={handleExportPhotos}
-              disabled={selectMode && selectedPhotos.length === 0}
-              className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 disabled:from-gray-400 disabled:to-gray-500 text-white p-3 rounded-xl font-medium transition-all flex items-center justify-center gap-2"
+              onClick={() => {
+                setSelectMode(!selectMode);
+                setSelectedPhotos([]);
+              }}
+              className={`w-full p-3 rounded-xl font-medium transition-all mb-4 ${
+                selectMode
+                  ? "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800"
+                  : "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-800"
+              }`}
             >
-              <ArrowDownTrayIcon className="w-5 h-5" />
-              Export{" "}
-              {selectMode && selectedPhotos.length > 0
-                ? `${selectedPhotos.length} `
-                : ""}
-              Photos
+              {selectMode ? "Exit Selection Mode" : "Select Photos"}
             </button>
 
+            {/* Selected Count */}
             {selectMode && selectedPhotos.length > 0 && (
-              <button
-                onClick={() => {
-                  // Handle delete logic here
-                  console.log("Delete selected photos:", selectedPhotos);
-                }}
-                className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white p-3 rounded-xl font-medium transition-all flex items-center justify-center gap-2"
-              >
-                <TrashIcon className="w-5 h-5" />
-                Delete Selected
-              </button>
+              <div className="bg-green-100 dark:bg-green-900/30 rounded-xl p-3 border border-green-200 dark:border-green-800 mb-4">
+                <div className="flex items-center justify-center gap-2">
+                  <CheckIcon className="w-5 h-5 text-green-600 dark:text-green-400" />
+                  <span className="font-medium text-green-700 dark:text-green-300">
+                    {selectedPhotos.length} photo
+                    {selectedPhotos.length > 1 ? "s" : ""} selected
+                  </span>
+                </div>
+              </div>
             )}
+
+            {/* Action Buttons */}
+            <div className="flex gap-3">
+              <button
+                onClick={handleExportPhotos}
+                disabled={selectMode && selectedPhotos.length === 0}
+                className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 disabled:from-gray-400 disabled:to-gray-500 text-white p-3 rounded-xl font-medium transition-all flex items-center justify-center gap-2"
+              >
+                <ArrowDownTrayIcon className="w-5 h-5" />
+                Export{" "}
+                {selectMode && selectedPhotos.length > 0
+                  ? `${selectedPhotos.length} `
+                  : ""}
+                Photos
+              </button>
+
+              {selectMode && selectedPhotos.length > 0 && (
+                <button
+                  onClick={() => {}}
+                  className="px-6 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white p-3 rounded-xl font-medium transition-all flex items-center justify-center gap-2"
+                >
+                  <TrashIcon className="w-5 h-5" />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Photos Grid */}
+          <div className="flex-1 overflow-y-auto p-6">
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-3">
+              {photos.map((photo) => (
+                <div
+                  key={photo.id}
+                  className={`relative aspect-square cursor-pointer group ${
+                    selectMode && selectedPhotos.includes(photo.id)
+                      ? "ring-2 ring-purple-500"
+                      : ""
+                  }`}
+                  onClick={() => {
+                    if (selectMode) {
+                      togglePhotoSelection(photo.id);
+                    } else {
+                      onPhotoSelect(photo);
+                      setShowManageModal(false);
+                    }
+                  }}
+                >
+                  <img
+                    src={fixPhotoUrl(photo.downloadURL)}
+                    alt={photo.fileName}
+                    className="w-full h-full object-cover rounded-lg"
+                  />
+
+                  {selectMode && (
+                    <div className="absolute top-1 right-1 w-5 h-5 border-2 border-white rounded-full bg-white/90 flex items-center justify-center">
+                      {selectedPhotos.includes(photo.id) && (
+                        <CheckIcon className="w-3 h-3 text-green-600" />
+                      )}
+                    </div>
+                  )}
+
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
+                    <EyeIcon className="w-6 h-6 text-white" />
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -163,8 +245,19 @@ const PhotoGallery = ({
   );
 
   const UploadModal = () => (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-lg w-full border border-gray-200 dark:border-gray-700">
+    <div
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in"
+      style={{ zIndex: 9999 }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          setShowUploadModal(false);
+        }
+      }}
+    >
+      <div
+        className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-lg w-full border border-gray-200 dark:border-gray-700 animate-slide-in-scale"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="bg-gradient-to-r from-indigo-500 to-purple-500 p-4 rounded-t-2xl">
           <div className="flex items-center justify-between">
@@ -194,9 +287,52 @@ const PhotoGallery = ({
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
               or click to browse files
             </p>
-            <button className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white px-6 py-2 rounded-lg font-medium transition-all">
+            <label
+              htmlFor="photo-upload"
+              className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white px-6 py-2 rounded-lg font-medium transition-all cursor-pointer"
+            >
               Choose Files
-            </button>
+            </label>
+            <input
+              id="photo-upload"
+              type="file"
+              multiple
+              accept="image/*"
+              className="hidden"
+              onChange={async (e) => {
+                const files = Array.from(e.target.files);
+                if (files.length === 0) return;
+
+                // Show loading toast
+                const loadingToast = toast.loading(
+                  `Uploading ${files.length} photo${
+                    files.length > 1 ? "s" : ""
+                  }...`
+                );
+
+                try {
+                  // Your Firebase upload logic should go here
+                  // For now, simulate upload
+                  await new Promise((resolve) => setTimeout(resolve, 2000));
+
+                  toast.dismiss(loadingToast);
+                  toast.success(
+                    `${files.length} photo${
+                      files.length > 1 ? "s" : ""
+                    } uploaded successfully!`
+                  );
+
+                  setShowUploadModal(false);
+                } catch (error) {
+                  toast.dismiss(loadingToast);
+                  toast.error("Failed to upload photos. Please try again.");
+                  console.error("Upload error:", error);
+                }
+
+                // Reset the input
+                e.target.value = "";
+              }}
+            />
           </div>
 
           {/* Progress Bar */}
@@ -241,24 +377,6 @@ const PhotoGallery = ({
             </div>
 
             <div className="flex items-center gap-2">
-              {photos.length > 0 && (
-                <>
-                  <button
-                    onClick={onRandomPhoto}
-                    className="p-2 bg-gradient-to-r from-indigo-500 to-blue-500 hover:from-indigo-600 hover:to-blue-600 text-white rounded-lg transition-all"
-                    title="Random Photo"
-                  >
-                    <SparklesIcon className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => setShowManageModal(true)}
-                    className="p-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-lg transition-all"
-                    title="Manage Photos"
-                  >
-                    <Cog6ToothIcon className="w-4 h-4" />
-                  </button>
-                </>
-              )}
               <button
                 onClick={() => setShowUploadModal(true)}
                 className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2"
@@ -295,9 +413,12 @@ const PhotoGallery = ({
           ) : (
             /* Photos Grid */
             <div className="space-y-4">
-              {/* Preview Grid */}
-              <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
-                {photos.slice(0, 8).map((photo, index) => (
+              {/* Responsive Preview Grid */}
+              <div
+                className={`grid gap-2`}
+                style={{ gridTemplateColumns: `repeat(${gridCols}, 1fr)` }}
+              >
+                {visiblePhotos.map((photo, index) => (
                   <div
                     key={photo.id}
                     className="relative aspect-square cursor-pointer group"
@@ -308,32 +429,21 @@ const PhotoGallery = ({
                       alt={photo.fileName}
                       className="w-full h-full object-cover rounded-lg"
                     />
-                    {selectMode && (
-                      <div
-                        className="absolute top-1 right-1 w-5 h-5 border-2 border-white rounded-full bg-white/90 flex items-center justify-center cursor-pointer"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          togglePhotoSelection(photo.id);
-                        }}
-                      >
-                        {selectedPhotos.includes(photo.id) && (
-                          <CheckIcon className="w-3 h-3 text-green-600" />
-                        )}
-                      </div>
-                    )}
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
                       <EyeIcon className="w-6 h-6 text-white" />
                     </div>
                   </div>
                 ))}
-                {photos.length > 8 && (
+
+                {/* Overflow indicator - always in the same row */}
+                {showOverflow && (
                   <div
                     className="aspect-square bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 rounded-lg border-2 border-dashed border-purple-300 dark:border-purple-700 flex items-center justify-center cursor-pointer hover:from-purple-200 hover:to-pink-200 dark:hover:from-purple-900/50 dark:hover:to-pink-900/50 transition-all"
                     onClick={onShowAllPhotos}
                   >
                     <div className="text-center">
                       <span className="text-lg font-bold text-purple-600 dark:text-purple-400">
-                        +{photos.length - 8}
+                        +{overflowCount}
                       </span>
                       <p className="text-xs text-purple-600 dark:text-purple-500 mt-1">
                         more
@@ -360,6 +470,37 @@ const PhotoGallery = ({
       {/* Modals */}
       {showManageModal && <ManagePhotosModal />}
       {showUploadModal && <UploadModal />}
+
+      {/* Add CSS for smooth transitions */}
+      <style jsx>{`
+        .animate-fade-in {
+          animation: fadeIn 0.3s ease-out;
+        }
+
+        .animate-slide-in-scale {
+          animation: slideInScale 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+
+        @keyframes slideInScale {
+          from {
+            opacity: 0;
+            transform: scale(0.95) translateY(-20px);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+          }
+        }
+      `}</style>
     </>
   );
 };

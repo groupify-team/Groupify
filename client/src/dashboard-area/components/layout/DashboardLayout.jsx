@@ -176,17 +176,14 @@ const DashboardLayout = ({ children }) => {
 
   // Handler functions
   const handleSettingsClick = () => {
-    console.log("🎯 Settings clicked!");
     setShowSettingsModal(true);
   };
 
   const handleLogoutClick = () => {
-    console.log("🎯 Logout clicked!");
     setShowLogoutModal(true);
   };
 
   const handleSidebarToggle = () => {
-    console.log("🎯 Sidebar toggle clicked!");
     if (layoutData?.sidebar?.toggle) {
       layoutData.sidebar.toggle();
     } else {
@@ -195,22 +192,18 @@ const DashboardLayout = ({ children }) => {
   };
 
   const closeSettingsModal = () => {
-    console.log("🎯 Closing settings modal");
     setShowSettingsModal(false);
   };
 
   const closeLogoutModal = () => {
-    console.log("🎯 Closing logout modal");
     setShowLogoutModal(false);
   };
 
   const handleLogoutConfirm = async () => {
     try {
-      console.log("🎯 Logging out user...");
       await logout();
       closeLogoutModal();
       navigate("/", { replace: true });
-      console.log("✅ User logged out successfully");
     } catch (error) {
       console.error("❌ Logout error:", error);
       showErrorMessage("Failed to logout. Please try again.");

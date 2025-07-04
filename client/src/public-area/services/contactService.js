@@ -17,8 +17,8 @@ export const contactService = {
     try {
       // Validate required fields
       const required = ["firstName", "lastName", "email", "subject", "message"];
-      const missing = required.filter(field => !messageData[field]?.trim());
-      
+      const missing = required.filter((field) => !messageData[field]?.trim());
+
       if (missing.length > 0) {
         return {
           success: false,
@@ -47,19 +47,14 @@ export const contactService = {
         source: "contact_form",
       };
 
-      console.log("Sending contact message:", { ...cleanedData, message: "[hidden]" });
-
       // Call Firebase function
       const sendContactEmail = httpsCallable(functions, "sendContactEmail");
       const result = await sendContactEmail(cleanedData);
-
-      console.log("Contact message sent successfully:", result.data);
 
       return {
         success: true,
         data: result.data,
       };
-
     } catch (error) {
       console.error("Contact service error:", error);
 
@@ -69,13 +64,15 @@ export const contactService = {
       if (error.code === "functions/internal") {
         errorMessage = "Server error. Please try again later.";
       } else if (error.code === "functions/invalid-argument") {
-        errorMessage = "Invalid information provided. Please check your details.";
+        errorMessage =
+          "Invalid information provided. Please check your details.";
       } else if (error.code === "functions/unauthenticated") {
         errorMessage = "Authentication required. Please refresh the page.";
       } else if (error.code === "functions/deadline-exceeded") {
         errorMessage = "Request timed out. Please try again.";
       } else if (error.code === "functions/unavailable") {
-        errorMessage = "Service temporarily unavailable. Please try again later.";
+        errorMessage =
+          "Service temporarily unavailable. Please try again later.";
       } else if (error.message) {
         errorMessage = error.message;
       }
@@ -126,7 +123,10 @@ export const contactService = {
           };
         }
 
-        const updatedSubscribers = [...existingSubscribers, subscriptionData.email];
+        const updatedSubscribers = [
+          ...existingSubscribers,
+          subscriptionData.email,
+        ];
         localStorage.setItem(
           "groupify_subscribers",
           JSON.stringify(updatedSubscribers)
@@ -147,7 +147,6 @@ export const contactService = {
           error: "Subscription failed. Please try again.",
         };
       }
-
     } catch (error) {
       console.error("Newsletter service error:", error);
       return {
@@ -174,7 +173,7 @@ export const contactService = {
       const existingFeedback = JSON.parse(
         localStorage.getItem("groupify_feedback") || "[]"
       );
-      
+
       existingFeedback.push(cleanedData);
       localStorage.setItem(
         "groupify_feedback",
@@ -189,7 +188,6 @@ export const contactService = {
         success: true,
         data: cleanedData,
       };
-
     } catch (error) {
       console.error("Feedback service error:", error);
       return {
@@ -216,7 +214,7 @@ export const contactService = {
    */
   sanitizeInput(input) {
     if (typeof input !== "string") return input;
-    
+
     return input
       .trim()
       .replace(/[<>]/g, "") // Remove potential HTML tags

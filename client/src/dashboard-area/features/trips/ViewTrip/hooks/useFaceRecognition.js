@@ -43,12 +43,10 @@ export const useFaceRecognition = (photos, currentUserId, isMember) => {
       // Check if profile exists in memory first
       if (hasFaceProfile(currentUserId)) {
         setHasProfile(true);
-        console.log("✅ Face profile already loaded in memory");
         return;
       }
 
       // Try to load from Firebase Storage automatically
-      console.log("🔍 Checking for stored face profile...");
       const storedProfile = await getFaceProfileFromStorage(currentUserId);
 
       if (
@@ -56,19 +54,15 @@ export const useFaceRecognition = (photos, currentUserId, isMember) => {
         storedProfile.images &&
         storedProfile.images.length > 0
       ) {
-        console.log("📥 Found stored face profile, loading automatically...");
-
         try {
           const imageUrls = storedProfile.images.map((img) => img.url);
           await createFaceProfile(currentUserId, imageUrls);
           setHasProfile(true);
-          console.log("✅ Face profile loaded automatically from storage");
         } catch (error) {
           console.error("❌ Failed to auto-load face profile:", error);
           setHasProfile(false);
         }
       } else {
-        console.log("ℹ️ No face profile found");
         setHasProfile(false);
       }
     } catch (error) {
@@ -192,8 +186,6 @@ export const useFaceRecognition = (photos, currentUserId, isMember) => {
     resetFaceRecognition();
 
     try {
-      console.log("🚀 Starting PROFILE-BASED face recognition...");
-
       const photoData = photos.map((photo) => ({
         id: photo.id,
         downloadURL: photo.downloadURL,
@@ -212,9 +204,7 @@ export const useFaceRecognition = (photos, currentUserId, isMember) => {
         setFilteredPhotos(matches);
         setFilterActive(true);
         toast.success(`Found ${matches.length} matching photos!`);
-        console.log(`✅ Found ${matches.length} matching photos`);
       } else {
-        console.log("ℹ️ No matching photos found");
         setFilteredPhotos([]);
         setFilterActive(true); // Still show the section but with "no matches" message
         toast.info("No matching photos found");
@@ -236,7 +226,6 @@ export const useFaceRecognition = (photos, currentUserId, isMember) => {
 
   // Cancel face recognition
   const handleCancelFaceRecognition = () => {
-    console.log("🛑 Cancelling face recognition...");
     cancelFaceRecognition();
 
     setTimeout(() => {

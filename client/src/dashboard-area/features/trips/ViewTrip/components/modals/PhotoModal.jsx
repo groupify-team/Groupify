@@ -45,7 +45,7 @@ const PhotoModal = ({ photo, photos, isOpen, onClose, onNext, onPrevious }) => {
 
   return (
     <div
-      className="fixed bg-black/95 backdrop-blur-lg flex items-center justify-center z-[99999]"
+      className="fixed bg-black/95 backdrop-blur-lg flex items-center justify-center z-[99999] transition-all duration-300 ease-in-out"
       style={{
         position: "fixed",
         top: "-10px",
@@ -166,6 +166,22 @@ const PhotoModal = ({ photo, photos, isOpen, onClose, onNext, onPrevious }) => {
           </div>
         </div>
       </div>
+      <style jsx>{`
+        .modal-enter {
+          animation: modalEnter 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes modalEnter {
+          from {
+            opacity: 0;
+            transform: scale(0.95);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+      `}</style>
     </div>
   );
 };

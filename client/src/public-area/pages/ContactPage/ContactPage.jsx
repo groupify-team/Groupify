@@ -49,7 +49,13 @@ const ContactMethods = ({ contactInfo }) => (
   </div>
 );
 
-const ContactForm = ({ formData, setFormData, handleSubmit, loading, categories }) => {
+const ContactForm = ({
+  formData,
+  setFormData,
+  handleSubmit,
+  loading,
+  categories,
+}) => {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -273,8 +279,8 @@ const ContactInfo = () => (
               Response Time
             </h4>
             <p className="text-gray-600 dark:text-gray-400 text-xs sm:text-sm leading-relaxed text-center sm:text-left">
-              We typically respond to all inquiries within 24 hours
-              during business days.
+              We typically respond to all inquiries within 24 hours during
+              business days.
             </p>
           </div>
         </div>
@@ -286,8 +292,7 @@ const ContactInfo = () => (
         Need immediate help?
       </h4>
       <p className="text-gray-600 dark:text-gray-400 mb-3 sm:mb-4 text-xs sm:text-sm">
-        Check out our help center for quick answers to common
-        questions.
+        Check out our help center for quick answers to common questions.
       </p>
       <Link
         to="/help"
@@ -299,12 +304,18 @@ const ContactInfo = () => (
   </div>
 );
 
-const ContactFormSection = ({ formData, setFormData, handleSubmit, loading, categories }) => (
+const ContactFormSection = ({
+  formData,
+  setFormData,
+  handleSubmit,
+  loading,
+  categories,
+}) => (
   <div className="py-12 sm:py-16">
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12">
         {/* Form */}
-        <ContactForm 
+        <ContactForm
           formData={formData}
           setFormData={setFormData}
           handleSubmit={handleSubmit}
@@ -335,8 +346,8 @@ const SuccessPage = ({ setSubmitted }) => (
           Message Sent Successfully!
         </h2>
         <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mb-4 sm:mb-6">
-          Thank you for reaching out! We've received your message and will
-          get back to you within 24 hours.
+          Thank you for reaching out! We've received your message and will get
+          back to you within 24 hours.
         </p>
 
         <div className="space-y-2 sm:space-y-3">
@@ -398,14 +409,9 @@ const ContactUs = () => {
     try {
       setLoading(true);
 
-      console.log("Attempting to send contact email with data:", formData);
-
       // Send email via Firebase Function
       const sendContactEmail = httpsCallable(functions, "sendContactEmail");
       const result = await sendContactEmail(formData);
-
-      console.log("Email sent successfully:", result);
-
       setSubmitted(true);
       toast.success("Message sent successfully!");
     } catch (error) {
@@ -484,7 +490,7 @@ const ContactUs = () => {
       <ContactMethods contactInfo={contactInfo} />
 
       {/* Contact Form Section */}
-      <ContactFormSection 
+      <ContactFormSection
         formData={formData}
         setFormData={setFormData}
         handleSubmit={handleSubmit}

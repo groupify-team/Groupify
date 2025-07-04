@@ -31,13 +31,6 @@ const DashboardSidebar = ({ sidebarOpen, onSidebarClose, onLogoutClick }) => {
   } = useDashboardLayout();
 
   const { userData, trips, pendingRequests, tripInvites } = useDashboardData();
-  console.log("🔍 Sidebar PROP sidebarOpen state:", sidebarOpen);
-  console.log("🔍 Sidebar sidebarOpen state:", sidebarOpen);
-  console.log(
-    "🎨 CSS classes being applied:",
-    sidebarOpen ? "translate-x-0" : "-translate-x-full"
-  );
-
   const {
     navigate: { toTrip: navigateToTrip },
   } = useDashboardNavigation();
@@ -56,7 +49,6 @@ const DashboardSidebar = ({ sidebarOpen, onSidebarClose, onLogoutClick }) => {
         <div className="flex items-center justify-between">
           <button
             onClick={() => {
-              console.log("🏠 Logo clicked - navigating to dashboard");
               navigate("/dashboard", { replace: true });
               if (isMobile) closeSidebar();
             }}
@@ -225,11 +217,6 @@ const DashboardSidebar = ({ sidebarOpen, onSidebarClose, onLogoutClick }) => {
                             <button
                               key={trip.id}
                               onClick={() => {
-                                console.log(
-                                  "🎯 Trip clicked:",
-                                  trip.id,
-                                  trip.name
-                                );
                                 // Use direct navigation instead of the hook function
                                 navigate(`/dashboard/trip/${trip.id}`, {
                                   replace: true,
@@ -276,7 +263,6 @@ const DashboardSidebar = ({ sidebarOpen, onSidebarClose, onLogoutClick }) => {
       <div className="p-4 border-t border-gray-200/50 dark:border-gray-700/50">
         <button
           onClick={() => {
-            console.log("🎯 Desktop logout clicked!");
             if (onLogoutClick) {
               onLogoutClick();
             }

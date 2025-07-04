@@ -414,7 +414,6 @@ const FaceRecognitionSection = ({
                   <button
                     onClick={() => {
                       // Handle delete logic here
-                      console.log("Delete selected photos:", selectedPhotos);
                     }}
                     className="px-6 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white p-3 rounded-xl font-medium transition-all flex items-center justify-center gap-2"
                   >

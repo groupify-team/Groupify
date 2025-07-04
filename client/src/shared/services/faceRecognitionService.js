@@ -23,8 +23,6 @@ class ModernFaceRecognitionService {
     if (this.isInitialized) return;
 
     try {
-      console.log("🔄 Loading face-api.js models...");
-
       // Try local models first, then fallback to CDN
       const MODEL_URLS = [
         "/models", // local backup
@@ -36,8 +34,6 @@ class ModernFaceRecognitionService {
 
       for (const MODEL_URL of MODEL_URLS) {
         try {
-          console.log(`🔍 Trying to load models from: ${MODEL_URL}`);
-
           await Promise.all([
             faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL), // Face detection
             faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL), // Facial landmarks
@@ -50,9 +46,6 @@ class ModernFaceRecognitionService {
               faceapi.nets.ageGenderNet.loadFromUri(MODEL_URL), // Age/gender (optional)
               faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL), // Expressions (optional)
             ]);
-            console.log(
-              "✅ All models (including optional) loaded successfully"
-            );
           } catch (optionalError) {
             console.warn(
               "⚠️ Optional models failed to load:",
@@ -61,9 +54,7 @@ class ModernFaceRecognitionService {
           }
 
           modelsLoaded = true;
-          console.log(
-            `✅ Face-api.js models loaded successfully from: ${MODEL_URL}`
-          );
+
           break;
         } catch (error) {
           lastError = error;
@@ -135,9 +126,6 @@ class ModernFaceRecognitionService {
         }
       }
 
-      console.log(
-        `🔍 Detected ${detections.length} faces, ${qualityFaces.length} high-quality`
-      );
       return qualityFaces;
     } catch (error) {
       console.error("❌ Face detection failed:", error);
@@ -194,11 +182,6 @@ class ModernFaceRecognitionService {
         )}`
       );
     } else {
-      console.log(
-        `✅ Face accepted: score=${score.toFixed(3)}, size=${faceSize.toFixed(
-          1
-        )}px, confidence=${detection.detection.score.toFixed(3)}`
-      );
     }
 
     return { isValid, score, metrics };
@@ -279,10 +262,6 @@ class ModernFaceRecognitionService {
       await this.initialize();
     }
 
-    console.log(
-      `🔍 Creating face profile for user ${userId} with ${imageFiles.length} images`
-    );
-
     try {
       // Clear existing profile
       this.deleteFaceProfile(userId);
@@ -318,12 +297,6 @@ class ModernFaceRecognitionService {
               sourceImage: imageUrls[i],
               imageIndex: i,
             });
-
-            console.log(
-              `✅ Profile image ${i + 1}: quality=${(
-                bestFace.quality * 100
-              ).toFixed(1)}%`
-            );
           } else {
             console.warn(`⚠️ No valid face found in image ${i + 1}`);
           }
@@ -380,15 +353,6 @@ class ModernFaceRecognitionService {
         });
       }
 
-      console.log(`🎯 Face profile created for ${userId}:`);
-      console.log(
-        `   Faces: ${allFaces.length} from ${imageUrls.length} images`
-      );
-      console.log(
-        `   Avg quality: ${(profile.metadata.averageQuality * 100).toFixed(1)}%`
-      );
-      console.log(`   Threshold: ${this.FACE_MATCHER_THRESHOLD}`);
-
       return profile;
     } catch (error) {
       this.deleteFaceProfile(userId);
@@ -400,7 +364,6 @@ class ModernFaceRecognitionService {
   // Enhanced photo filtering with proper face matching
   async filterPhotosByFaceProfile(photos, userId, onProgress = null) {
     if (!photos.length) {
-      console.log("❌ No photos to process");
       return [];
     }
 
@@ -414,11 +377,6 @@ class ModernFaceRecognitionService {
     const startTime = Date.now();
 
     try {
-      console.log(`🔍 Starting face recognition with face-api.js...`);
-      console.log(
-        `👤 Profile: ${userProfile.allFaces.length} faces, threshold: ${this.FACE_MATCHER_THRESHOLD}`
-      );
-
       if (onProgress) {
         onProgress({
           type: "initializing",
@@ -531,18 +489,8 @@ class ModernFaceRecognitionService {
                 });
               }
             } else {
-              console.log(
-                `❌ No match in ${photo.fileName}: best distance was ${Math.min(
-                  ...faces.map(
-                    (f) =>
-                      userProfile.faceMatcher.findBestMatch(f.descriptor)
-                        .distance
-                  )
-                ).toFixed(3)} (threshold: ${this.FACE_MATCHER_THRESHOLD})`
-              );
             }
           } else {
-            console.log(`❌ No faces detected in ${photo.fileName}`);
           }
         } catch (error) {
           if (error.message === "CANCELLED") throw error;
@@ -577,33 +525,11 @@ class ModernFaceRecognitionService {
         });
       }
 
-      console.log(`\n🎯 FACE-API.JS RECOGNITION RESULTS:`);
-      console.log(
-        `   Photos processed: ${photos.length} in ${processingTime}s`
-      );
-      console.log(`   Matches found: ${sortedMatches.length}`);
-      console.log(`   Threshold: ${this.FACE_MATCHER_THRESHOLD} (distance)`);
-      console.log(
-        `   Average confidence: ${
-          sortedMatches.length > 0
-            ? (
-                (sortedMatches.reduce(
-                  (sum, p) => sum + p.faceMatch.confidence,
-                  0
-                ) /
-                  sortedMatches.length) *
-                100
-              ).toFixed(1)
-            : 0
-        }%`
-      );
-
       return sortedMatches;
     } catch (error) {
       this.isProcessing = false;
 
       if (error.message === "CANCELLED") {
-        console.log("🛑 Face recognition cancelled by user");
         if (onProgress) {
           onProgress({
             type: "cancelled",
@@ -651,7 +577,6 @@ class ModernFaceRecognitionService {
     this.userFaceProfiles.clear();
     this.isProcessing = false;
     this.shouldCancel = false;
-    console.log("🧹 Face recognition service cleaned up");
   }
 
   // Add to window beforeunload for cleanup
@@ -685,7 +610,6 @@ class ModernFaceRecognitionService {
   }
 
   cancel() {
-    console.log("🛑 Face recognition cancellation requested");
     this.shouldCancel = true;
   }
 
@@ -735,20 +659,6 @@ class ModernFaceRecognitionService {
       const wouldMatch =
         bestMatch.distance <= this.FACE_MATCHER_THRESHOLD &&
         bestMatch.label !== "unknown";
-
-      console.log(`   Face ${index + 1}:`);
-      console.log(`     Quality: ${(face.quality * 100).toFixed(1)}%`);
-      console.log(`     Size: ${face.faceSize.toFixed(0)}px`);
-      console.log(
-        `     Detection confidence: ${(face.confidence * 100).toFixed(1)}%`
-      );
-      console.log(`     Best match distance: ${bestMatch.distance.toFixed(3)}`);
-      console.log(`     Confidence: ${(confidence * 100).toFixed(1)}%`);
-      console.log(
-        `     Would match: ${wouldMatch ? "✅ YES" : "❌ NO"} (threshold: ${
-          this.FACE_MATCHER_THRESHOLD
-        })`
-      );
 
       matches.push({
         face,
