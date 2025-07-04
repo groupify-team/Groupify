@@ -1,4 +1,6 @@
 ﻿import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+
 import {
   XMarkIcon,
   MapPinIcon,
@@ -33,6 +35,7 @@ const EditTripModal = ({
   const [showSuggestions, setShowSuggestions] = useState(false);
 
   const { currentUser } = useAuth();
+  const navigate = useNavigate();
 
   // Check if current user is admin
   const isAdmin =
@@ -138,45 +141,73 @@ const EditTripModal = ({
       setDeleting(true);
       setError(null);
 
-      toast.loading("Deleting trip... This may take a moment.", {
+      // Show centered loading toast
+      const loadingToast = toast.loading("Deleting trip...", {
         id: "deleting-trip",
+        position: "top-center",
         style: {
           background: "#FEF2F2",
           color: "#B91C1C",
           border: "1px solid #FECACA",
+          fontSize: "16px",
+          padding: "12px 20px",
+          borderRadius: "12px",
+          boxShadow: "0 10px 25px rgba(0,0,0,0.1)",
         },
       });
 
       // Delete the trip
       await deleteTrip(trip.id);
 
-      // Show sad success message
-      toast.dismiss("deleting-trip");
-      toast("Trip deleted permanently", {
-        icon: "🗑️",
+      // Show centered success message
+      toast.dismiss(loadingToast);
+      toast.success("Trip deleted successfully! Redirecting...", {
+        position: "top-center",
+        duration: 2000,
         style: {
-          background: "#FEF2F2",
-          color: "#B91C1C",
-          border: "1px solid #FECACA",
+          background: "#F0FDF4",
+          color: "#166534",
+          border: "1px solid #BBF7D0",
+          fontSize: "16px",
+          padding: "12px 20px",
+          borderRadius: "12px",
+          boxShadow: "0 10px 25px rgba(0,0,0,0.1)",
         },
-        duration: 3000,
       });
 
-      // Close modal with animation
+      // Close modal with fade out
       onClose();
 
-      // Smooth navigation back to dashboard
+      // Callback to parent
+      if (onTripDeleted) {
+        onTripDeleted(trip.id);
+      }
+
+      // Smooth navigation with delay
       setTimeout(() => {
         navigate("/dashboard", {
           replace: true,
-          state: { deletedTrip: trip.name },
+          state: {
+            deletedTrip: trip.name,
+            showMessage: "Trip deleted successfully",
+          },
         });
       }, 800);
     } catch (error) {
       console.error("Error deleting trip:", error);
       toast.dismiss("deleting-trip");
       setError("Failed to delete trip. Please try again.");
-      toast.error("Failed to delete trip. Please try again.");
+      toast.error("Failed to delete trip. Please try again.", {
+        position: "top-center",
+        style: {
+          background: "#FEF2F2",
+          color: "#B91C1C",
+          border: "1px solid #FECACA",
+          fontSize: "16px",
+          padding: "12px 20px",
+          borderRadius: "12px",
+        },
+      });
     } finally {
       setDeleting(false);
     }
