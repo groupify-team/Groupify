@@ -1,4 +1,4 @@
-﻿// useDashboardData.js - Fixed version with proper real-time updates
+// useDashboardData.js - FIXED VERSION (Proper Data Sharing)
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useAuth } from "@auth/contexts/AuthContext";
 import {
@@ -9,6 +9,8 @@ import {
   onSnapshot,
   query,
   where,
+  orderBy,
+  documentId,
 } from "firebase/firestore";
 import { db } from "@shared/services/firebase/config";
 import {
@@ -23,15 +25,33 @@ import {
 } from "@face-recognition/service/faceRecognitionService";
 import { ERROR_MESSAGES } from "@dashboard/utils/dashboardConstants";
 
+// Global state to share data between instances
+let globalLoadPromise = null;
+let globalUserId = null;
+let globalData = null;
+const globalSubscribers = new Set();
+
+// Helper to notify all subscribers
+const notifySubscribers = (data) => {
+  globalSubscribers.forEach(callback => {
+    try {
+      callback(data);
+    } catch (error) {
+      console.error("Error notifying subscriber:", error);
+    }
+  });
+};
+
 export const useDashboardData = () => {
   const { currentUser } = useAuth();
 
-  // ALL useRef hooks must be at the top, called unconditionally
+  // Refs
   const initialLoadDone = useRef(false);
   const unsubscribersRef = useRef([]);
   const loadingRef = useRef(false);
+  const subscriberCallbackRef = useRef(null);
 
-  // ALL useState hooks must be called unconditionally
+  // State
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [userData, setUserData] = useState(null);
@@ -44,6 +64,21 @@ export const useDashboardData = () => {
   const [isLoadingProfile, setIsLoadingProfile] = useState(false);
   const [showSuccess, setShowSuccess] = useState(null);
   const [showError, setShowError] = useState(null);
+
+  /**
+   * Update local state from global data
+   */
+  const updateFromGlobalData = useCallback((data) => {
+    if (!data) return;
+    
+    console.log("🔄 Updating from global data");
+    setUserData(data.userProfile);
+    setTrips(data.userTrips);
+    setTripInvites(data.pendingInvites);
+    setFriends(data.friendsData);
+    setPendingRequests(data.friendRequests);
+    setLoading(false);
+  }, []);
 
   /**
    * Load face profile data
@@ -67,10 +102,36 @@ export const useDashboardData = () => {
   }, [currentUser?.uid]);
 
   /**
-   * Load all dashboard data
+   * Load all dashboard data (with global deduplication and sharing)
    */
   const loadDashboardData = useCallback(async () => {
-    if (!currentUser?.uid || loadingRef.current) {
+    if (!currentUser?.uid) {
+      return;
+    }
+
+    // If we have global data for this user, use it immediately
+    if (globalData && globalUserId === currentUser.uid) {
+      console.log("✅ Using cached global data");
+      updateFromGlobalData(globalData);
+      loadFaceProfile();
+      return globalData;
+    }
+
+    // If already loading for this user, wait for it
+    if (globalLoadPromise && globalUserId === currentUser.uid) {
+      console.log("⏸️ Waiting for existing load operation...");
+      try {
+        const result = await globalLoadPromise;
+        updateFromGlobalData(result);
+        loadFaceProfile();
+        return result;
+      } catch (error) {
+        console.error("❌ Global load operation failed:", error);
+      }
+    }
+
+    // Prevent multiple simultaneous loads from same hook instance
+    if (loadingRef.current) {
       return;
     }
 
@@ -78,107 +139,94 @@ export const useDashboardData = () => {
       loadingRef.current = true;
       setLoading(true);
 
-      // Load data in parallel
-      const [userProfile, userFriends, friendRequests, invites] =
-        await Promise.all([
+      const startTime = performance.now();
+      console.log("🚀 Dashboard loading started...");
+
+      // Set global tracking
+      globalUserId = currentUser.uid;
+      
+      const loadOperation = async () => {
+        // Load data in parallel
+        const [userProfile, userTrips, pendingInvites] = await Promise.all([
           getUserProfile(currentUser.uid),
-          getFriends(currentUser.uid),
-          getPendingFriendRequests(currentUser.uid),
+          getUserTrips(currentUser.uid),
+          getPendingInvites(currentUser.uid)
         ]);
 
-      // Load trips with fallback approach
-      let userTrips = [];
+        console.log(`✅ Phase 1 completed in ${Math.round(performance.now() - startTime)}ms`);
+        console.log(`📈 Found ${userTrips.length} trips`);
 
-      try {
-        userTrips = await tripsService.getTrips(currentUser.uid);
-
-        if (userTrips.length === 0) {
-          const createdTripsQuery = query(
-            collection(db, "trips"),
-            where("createdBy", "==", currentUser.uid)
-          );
-
-          const memberTripsQuery = query(
-            collection(db, "trips"),
-            where("members", "array-contains", currentUser.uid)
-          );
-
-          const [createdSnapshot, memberSnapshot] = await Promise.all([
-            getDocs(createdTripsQuery),
-            getDocs(memberTripsQuery),
-          ]);
-
-          const foundTripIds = new Set();
-          const foundTrips = [];
-
-          createdSnapshot.forEach((doc) => {
-            const trip = { id: doc.id, ...doc.data() };
-            foundTrips.push(trip);
-            foundTripIds.add(doc.id);
-          });
-
-          memberSnapshot.forEach((doc) => {
-            if (!foundTripIds.has(doc.id)) {
-              const trip = { id: doc.id, ...doc.data() };
-              foundTrips.push(trip);
-              foundTripIds.add(doc.id);
-            }
-          });
-
-          userTrips = foundTrips;
-
-          if (foundTripIds.size > 0) {
-            try {
-              const { updateDoc } = await import("firebase/firestore");
-              const userRef = doc(db, "users", currentUser.uid);
-              await updateDoc(userRef, {
-                trips: Array.from(foundTripIds),
-                updatedAt: new Date().toISOString(),
-              });
-            } catch (updateError) {
-              console.warn(
-                "⚠️ Could not update user trips array:",
-                updateError
-              );
-            }
+        // Load friends
+        const friendIds = userProfile?.friends || [];
+        let friendsData = [];
+        let friendRequests = [];
+        
+        if (friendIds.length > 0) {
+          try {
+            [friendsData, friendRequests] = await Promise.all([
+              getFriends(currentUser.uid),
+              getPendingFriendRequests(currentUser.uid)
+            ]);
+          } catch (error) {
+            console.error("❌ Error loading friends:", error);
           }
         }
-      } catch (tripsError) {
-        console.error("❌ Error loading trips:", tripsError);
-        userTrips = [];
-      }
 
-      // Update states
-      setTrips(userTrips);
-      setUserData(userProfile);
-      setFriends(userFriends);
-      setPendingRequests(friendRequests);
-      setTripInvites(invites);
+        const totalTime = performance.now() - startTime;
+        console.log(`🎉 Dashboard loading completed in ${Math.round(totalTime)}ms`);
 
-      // Load face profile
+        const result = {
+          userProfile,
+          userTrips,
+          pendingInvites,
+          friendsData,
+          friendRequests
+        };
+
+        // Store globally and notify all subscribers
+        globalData = result;
+        notifySubscribers(result);
+
+        return result;
+      };
+
+      // Set global promise
+      globalLoadPromise = loadOperation();
+      const result = await globalLoadPromise;
+
+      // Update local state
+      updateFromGlobalData(result);
       loadFaceProfile();
 
-      // Mark initial load as done
       initialLoadDone.current = true;
+      
+      return result;
     } catch (error) {
       console.error("❌ Error loading dashboard data:", error);
       setError(ERROR_MESSAGES.loadingDashboard);
       showErrorMessage(ERROR_MESSAGES.loadingDashboard);
+      
+      // Clear global tracking on error
+      globalLoadPromise = null;
+      globalUserId = null;
+      globalData = null;
     } finally {
       setLoading(false);
       loadingRef.current = false;
     }
-  }, [currentUser?.uid, loadFaceProfile]);
+  }, [currentUser?.uid, loadFaceProfile, updateFromGlobalData]);
 
-  /**
-   * Refresh functions
-   */
+  // Refresh functions
   const refreshTrips = useCallback(async () => {
     if (!currentUser?.uid) return;
-
     try {
-      const updatedTrips = await tripsService.getTrips(currentUser.uid);
+      const updatedTrips = await getUserTrips(currentUser.uid);
       setTrips(updatedTrips);
+      
+      // Update global data
+      if (globalData) {
+        globalData.userTrips = updatedTrips;
+      }
     } catch (error) {
       console.error("❌ Error refreshing trips:", error);
     }
@@ -186,10 +234,14 @@ export const useDashboardData = () => {
 
   const refreshFriends = useCallback(async () => {
     if (!currentUser?.uid) return;
-
     try {
       const updatedFriends = await getFriends(currentUser.uid);
       setFriends(updatedFriends);
+      
+      // Update global data
+      if (globalData) {
+        globalData.friendsData = updatedFriends;
+      }
     } catch (error) {
       console.error("❌ Error refreshing friends:", error);
     }
@@ -197,18 +249,20 @@ export const useDashboardData = () => {
 
   const refreshPendingRequests = useCallback(async () => {
     if (!currentUser?.uid) return;
-
     try {
       const requests = await getPendingFriendRequests(currentUser.uid);
       setPendingRequests(requests || []);
+      
+      // Update global data
+      if (globalData) {
+        globalData.friendRequests = requests || [];
+      }
     } catch (error) {
       console.error("❌ Error refreshing pending requests:", error);
     }
   }, [currentUser?.uid]);
 
-  /**
-   * Message functions
-   */
+  // Message functions
   const showSuccessMessage = useCallback((message, duration = 3000) => {
     setShowSuccess(message);
     setTimeout(() => setShowSuccess(null), duration);
@@ -219,23 +273,24 @@ export const useDashboardData = () => {
     setTimeout(() => setShowError(null), duration);
   }, []);
 
-  /**
-   * State updater functions
-   */
+  // State updater functions
   const updateFaceProfile = useCallback((hasProfileData, photos = []) => {
     setHasProfile(hasProfileData);
     setProfilePhotos(photos);
   }, []);
 
   const addTrip = useCallback((newTrip) => {
+    console.log("➕ Adding trip:", newTrip);
     setTrips((prev) => [newTrip, ...prev]);
   }, []);
 
   const removeTrip = useCallback((tripId) => {
+    console.log("➖ Removing trip:", tripId);
     setTrips((prev) => prev.filter((trip) => trip.id !== tripId));
   }, []);
 
   const updateTrip = useCallback((tripId, updatedData) => {
+    console.log("✏️ Updating trip:", tripId, updatedData);
     setTrips((prev) =>
       prev.map((trip) =>
         trip.id === tripId ? { ...trip, ...updatedData } : trip
@@ -248,11 +303,7 @@ export const useDashboardData = () => {
   }, []);
 
   const removeFriend = useCallback((friendUid) => {
-    setFriends((prev) => {
-      const filtered = prev.filter((friend) => friend.uid !== friendUid);
-
-      return filtered;
-    });
+    setFriends((prev) => prev.filter((friend) => friend.uid !== friendUid));
   }, []);
 
   const addPendingRequest = useCallback((request) => {
@@ -260,13 +311,9 @@ export const useDashboardData = () => {
   }, []);
 
   const removePendingRequest = useCallback((requestId) => {
-    setPendingRequests((prev) => {
-      const filtered = prev.filter(
-        (req) => req.id !== requestId && req.from !== requestId
-      );
-
-      return filtered;
-    });
+    setPendingRequests((prev) =>
+      prev.filter((req) => req.id !== requestId && req.from !== requestId)
+    );
   }, []);
 
   const addTripInvite = useCallback((invite) => {
@@ -278,165 +325,59 @@ export const useDashboardData = () => {
   }, []);
 
   const manualRefresh = useCallback(() => {
+    console.log("🔄 Manual refresh triggered");
     initialLoadDone.current = false;
     loadingRef.current = false;
+    // Clear global state to force fresh load
+    globalLoadPromise = null;
+    globalUserId = null;
+    globalData = null;
     loadDashboardData();
   }, [loadDashboardData]);
 
-  // Set up real-time listeners ONLY ONCE per user
+  // Effect to handle global data sharing
   useEffect(() => {
-    if (!currentUser?.uid) return;
+    if (!currentUser?.uid) {
+      console.log("⏸️ No user, skipping dashboard load");
+      return;
+    }
 
-    let isMounted = true;
-    const currentUid = currentUser.uid; // Capture current UID
+    // Create subscriber callback
+    subscriberCallbackRef.current = updateFromGlobalData;
+    globalSubscribers.add(subscriberCallbackRef.current);
 
-    const setupListeners = async () => {
-      try {
-        // Clean up existing listeners first
-        unsubscribersRef.current.forEach((unsubscribe) => {
-          if (typeof unsubscribe === "function") {
-            unsubscribe();
-          }
-        });
-        unsubscribersRef.current = [];
-
-        // --- FRIENDS LISTENER ---
-        const userDocRef = doc(db, "users", currentUid);
-
-        const unsubscribeFriends = onSnapshot(userDocRef, async (docSnap) => {
-          if (!docSnap.exists() || !isMounted) return;
-
-          const data = docSnap.data();
-          const friendIds = [...new Set(data.friends || [])]; // Remove duplicates
-
-          const friendsData = [];
-
-          for (const fid of friendIds) {
-            if (!fid || typeof fid !== "string" || fid.trim() === "") {
-              continue;
-            }
-
-            try {
-              const friendRef = doc(db, "users", fid);
-              const friendSnap = await getDoc(friendRef);
-
-              if (friendSnap.exists()) {
-                const fData = friendSnap.data();
-                friendsData.push({
-                  uid: fid,
-                  displayName: fData.displayName || fData.email || fid,
-                  email: fData.email || "",
-                  photoURL: fData.photoURL || "",
-                });
-              }
-            } catch (err) {
-              console.error(`❌ Error fetching friend ${fid}:`, err);
-            }
-          }
-
-          // Remove duplicates in final data
-          const uniqueFriendsData = friendsData.filter(
-            (friend, index, self) =>
-              index === self.findIndex((f) => f.uid === friend.uid)
-          );
-
-          if (isMounted) {
-            setFriends(uniqueFriendsData);
-          }
-        });
-
-        // --- PENDING FRIEND REQUESTS LISTENER ---
-        const pendingRequestsQuery = query(
-          collection(db, "friendRequests"),
-          where("to", "==", currentUid),
-          where("status", "==", "pending")
-        );
-
-        const unsubscribePendingRequests = onSnapshot(
-          pendingRequestsQuery,
-          async (snapshot) => {
-            if (!isMounted) return;
-
-            const requests = [];
-
-            for (const docSnap of snapshot.docs) {
-              const data = docSnap.data();
-
-              if (data.from === currentUid) {
-                continue;
-              }
-
-              try {
-                const senderRef = doc(db, "users", data.from);
-                const senderSnap = await getDoc(senderRef);
-
-                if (senderSnap.exists()) {
-                  const requestData = {
-                    id: docSnap.id,
-                    from: data.from,
-                    displayName: senderSnap.data().displayName || "",
-                    email: senderSnap.data().email || "",
-                    photoURL: senderSnap.data().photoURL || null,
-                    createdAt: data.createdAt,
-                  };
-
-                  requests.push(requestData);
-                } else {
-                  console.warn(
-                    "⚠️ Sender document doesn't exist for:",
-                    data.from
-                  );
-                }
-              } catch (err) {
-                console.warn("⚠️ Error fetching sender:", data.from, err);
-              }
-            }
-
-            if (isMounted) {
-              setPendingRequests(requests);
-
-              // Show toast notification for new requests
-              if (requests.length > 0) {
-              }
-            }
-          },
-          (error) => {
-            console.error("❌ Error in friend requests listener:", error);
-          }
-        );
-
-        // Store unsubscribers
-        unsubscribersRef.current = [
-          unsubscribeFriends,
-          unsubscribePendingRequests,
-        ];
-      } catch (error) {
-        console.error("❌ Error setting up listeners:", error);
-      }
-    };
-
-    // Initial load and setup listeners
-    if (!initialLoadDone.current && !loadingRef.current) {
-      loadDashboardData().then(() => {
-        if (isMounted) {
-          setupListeners();
-        }
-      });
-    } else if (initialLoadDone.current) {
-      setupListeners();
+    // Load data if needed
+    if (!initialLoadDone.current || globalUserId !== currentUser.uid) {
+      console.log("🚀 Initializing dashboard for:", currentUser.uid);
+      loadDashboardData();
+    } else if (globalData && globalUserId === currentUser.uid) {
+      console.log("✅ Using existing global data");
+      updateFromGlobalData(globalData);
+      loadFaceProfile();
     }
 
     // Cleanup
     return () => {
-      isMounted = false;
+      console.log("🧹 Cleaning up dashboard listeners");
+      
+      // Remove from global subscribers
+      if (subscriberCallbackRef.current) {
+        globalSubscribers.delete(subscriberCallbackRef.current);
+      }
+      
+      // Cleanup local listeners
       unsubscribersRef.current.forEach((unsubscribe) => {
         if (typeof unsubscribe === "function") {
-          unsubscribe();
+          try {
+            unsubscribe();
+          } catch (error) {
+            console.warn("⚠️ Error unsubscribing:", error);
+          }
         }
       });
       unsubscribersRef.current = [];
     };
-  }, [currentUser?.uid]); // Only depend on currentUser.uid
+  }, [currentUser?.uid, loadDashboardData, updateFromGlobalData, loadFaceProfile]);
 
   return {
     // Data states
