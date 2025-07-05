@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { getAuth, getFirestore } from "@firebase-services/config";
+import { auth, db } from "@firebase-services/config";
 import { toast } from "react-hot-toast";
 import subscriptionService from "@shared/services/subscriptionService";
 
@@ -25,7 +25,6 @@ export function AuthProvider({ children }) {
 
     try {
       setPlanLoading(true);
-      const db = await getFirestore();
       const { doc, getDoc } = await import("firebase/firestore");
 
       // Get user profile from Firestore to check for plan info
@@ -114,7 +113,6 @@ export function AuthProvider({ children }) {
       }
 
       // Dynamic imports for auth functions
-      const auth = await getAuth();
       const { createUserWithEmailAndPassword, updateProfile, signOut } =
         await import("firebase/auth");
 
@@ -135,7 +133,6 @@ export function AuthProvider({ children }) {
 
       // Create user document with default plan
       try {
-        const db = await getFirestore();
         const { doc, setDoc } = await import("firebase/firestore");
 
         await setDoc(doc(db, "users", user.uid), {
@@ -201,12 +198,11 @@ export function AuthProvider({ children }) {
     try {
       console.log("Starting sign-in process for:", email);
 
-      const auth = await getAuth();
+      // Line deleted - just use imported 'auth' directly
       const { signInWithEmailAndPassword, signOut } = await import(
         "firebase/auth"
       );
 
-      // Try to sign in directly
       const userCredential = await signInWithEmailAndPassword(
         auth,
         email,
@@ -233,7 +229,6 @@ export function AuthProvider({ children }) {
   // Enhanced Google sign-in with plan initialization
   async function signInWithGoogle() {
     try {
-      const auth = await getAuth();
       const { GoogleAuthProvider, signInWithPopup } = await import(
         "firebase/auth"
       );
@@ -273,7 +268,6 @@ export function AuthProvider({ children }) {
       }
 
       // Check if user document exists, if not create it with free plan
-      const db = await getFirestore();
       const { doc, getDoc, setDoc } = await import("firebase/firestore");
 
       const userDoc = await getDoc(doc(db, "users", user.uid));
@@ -327,7 +321,6 @@ export function AuthProvider({ children }) {
       setUserPlan(null);
       subscriptionService.clearCache();
 
-      const auth = await getAuth();
       const { signOut } = await import("firebase/auth");
       return signOut(auth);
     } catch (error) {
@@ -415,7 +408,6 @@ export function AuthProvider({ children }) {
         throw new Error("No authenticated user");
       }
 
-      const db = await getFirestore();
       const { doc, setDoc } = await import("firebase/firestore");
 
       // Update Firestore
@@ -445,7 +437,6 @@ export function AuthProvider({ children }) {
     let unsubscribe;
 
     const setupAuthListener = async () => {
-      const auth = await getAuth();
       const { onAuthStateChanged, signOut } = await import("firebase/auth");
 
       unsubscribe = onAuthStateChanged(auth, async (user) => {

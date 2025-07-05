@@ -133,8 +133,8 @@ const DashboardSidebar = ({ sidebarOpen, onSidebarClose, onLogoutClick }) => {
             );
             const hasNotification = hasNotifications(
               item.id,
-              pendingRequests,
-              tripInvites
+              pendingRequests || [],
+              tripInvites || []
             );
 
             return (
