@@ -1,114 +1,104 @@
-/* ===== HIGH CONTRAST MODE STYLES ===== */
+/* ===== WCAG AAA COMPLIANT HIGH CONTRAST MODE ===== */
 
-/* Base high contrast styles */
+/* Base high contrast variables */
 .high-contrast-mode {
-  /* Enable high contrast filtering */
-  filter: contrast(150%);
+  --hc-text: #000000;
+  --hc-bg: #ffffff;
+  --hc-border: #000000;
+  --hc-link: #0000ee;
+  --hc-button-bg: #000000;
+  --hc-button-text: #ffffff;
+  --hc-focus: #ffff00;
 }
 
-/* Text elements in high contrast */
+/* Dark mode overrides */
+.high-contrast-mode.dark {
+  --hc-text: #ffffff;
+  --hc-bg: #000000;
+  --hc-border: #ffffff;
+  --hc-link: #4da6ff;
+  --hc-button-bg: #ffffff;
+  --hc-button-text: #000000;
+}
+
+/* Text elements - WCAG AAA 7:1 contrast */
 .high-contrast-mode * {
-  color: var(--contrast-text-primary, #000000) !important;
-}
-
-/* Specific text color overrides */
-.high-contrast-mode .text-gray-500,
-.high-contrast-mode .text-gray-400,
-.high-contrast-mode .text-gray-600,
-.high-contrast-mode .text-gray-300,
-.high-contrast-mode .text-gray-700 {
-  color: var(--contrast-text-primary, #000000) !important;
+  color: var(--hc-text) !important;
 }
 
 /* Background elements */
 .high-contrast-mode .bg-white,
 .high-contrast-mode .bg-gray-50,
-.high-contrast-mode .bg-gray-100 {
-  background-color: var(--contrast-bg-primary, #ffffff) !important;
-}
-
+.high-contrast-mode .bg-gray-100,
 .high-contrast-mode .bg-gray-200,
 .high-contrast-mode .bg-gray-300 {
-  background-color: var(--contrast-bg-secondary, #f5f5f5) !important;
+  background-color: var(--hc-bg) !important;
 }
 
-/* Tailwind class with fraction - needs special handling */
+/* Tailwind classes with fractions */
 .high-contrast-mode [class*="bg-gray-700/50"],
-.high-contrast-mode [class*="bg-gray-800/50"] {
-  background-color: var(--contrast-bg-secondary, #f5f5f5) !important;
+.high-contrast-mode [class*="bg-gray-800/50"],
+.high-contrast-mode [class*="bg-white/95"],
+.high-contrast-mode [class*="bg-gray-800/95"] {
+  background-color: var(--hc-bg) !important;
 }
 
-/* Border elements */
+/* Borders - minimum 2px for WCAG AAA */
 .high-contrast-mode .border,
 .high-contrast-mode .border-gray-200,
 .high-contrast-mode .border-gray-300,
 .high-contrast-mode .border-gray-400,
 .high-contrast-mode .border-gray-500 {
-  border-color: var(--contrast-border, #000000) !important;
+  border-color: var(--hc-border) !important;
   border-width: 2px !important;
 }
 
-/* Tailwind classes with fractions - needs special handling */
 .high-contrast-mode [class*="border-white/20"],
 .high-contrast-mode [class*="border-gray-700/50"] {
-  border-color: var(--contrast-border, #000000) !important;
+  border-color: var(--hc-border) !important;
   border-width: 2px !important;
 }
 
-/* Button elements */
-.high-contrast-mode button:not(.bg-indigo-600):not(.bg-indigo-700):not(.bg-green-600):not(.bg-red-600) {
-  background-color: var(--contrast-button-bg, #000000) !important;
-  color: var(--contrast-button-text, #ffffff) !important;
-  border: 2px solid var(--contrast-border, #000000) !important;
+/* Buttons - clear visual boundaries */
+.high-contrast-mode button {
+  background-color: var(--hc-button-bg) !important;
+  color: var(--hc-button-text) !important;
+  border: 2px solid var(--hc-border) !important;
+  min-height: 44px; /* WCAG touch target size */
 }
 
-/* Keep primary action buttons distinguishable */
+/* Keep primary buttons distinguishable */
 .high-contrast-mode .bg-indigo-600,
 .high-contrast-mode .bg-indigo-700 {
   background-color: #000080 !important;
   color: #ffffff !important;
-  border: 2px solid #000000 !important;
+  border: 2px solid var(--hc-border) !important;
 }
 
-/* Input elements */
+/* Form elements */
 .high-contrast-mode input,
 .high-contrast-mode textarea,
 .high-contrast-mode select {
-  background-color: var(--contrast-input-bg, #ffffff) !important;
-  color: var(--contrast-text-primary, #000000) !important;
-  border: 2px solid var(--contrast-input-border, #000000) !important;
+  background-color: var(--hc-bg) !important;
+  color: var(--hc-text) !important;
+  border: 2px solid var(--hc-border) !important;
+  min-height: 44px;
 }
 
-/* Link elements */
+/* Links - underlined and bold */
 .high-contrast-mode a {
-  color: var(--contrast-link, #0000ee) !important;
+  color: var(--hc-link) !important;
   text-decoration: underline !important;
   font-weight: bold !important;
 }
 
-.high-contrast-mode a:visited {
-  color: var(--contrast-link-visited, #551a8b) !important;
-}
-
-/* Enhanced focus indicators for high contrast */
+/* Focus indicators - WCAG AAA 3px minimum */
 .high-contrast-mode *:focus {
-  outline: 3px solid var(--contrast-focus-color, #ffff00) !important;
+  outline: 3px solid var(--hc-focus) !important;
   outline-offset: 2px !important;
 }
 
-/* Remove gradients and replace with solid colors */
-.high-contrast-mode .bg-gradient-to-r,
-.high-contrast-mode .bg-gradient-to-br,
-.high-contrast-mode .bg-gradient-to-l,
-.high-contrast-mode .bg-gradient-to-t,
-.high-contrast-mode .bg-gradient-to-b,
-.high-contrast-mode .from-indigo-600,
-.high-contrast-mode .to-purple-600 {
-  background: var(--contrast-button-bg, #000000) !important;
-  color: var(--contrast-button-text, #ffffff) !important;
-}
-
-/* Shadow removal for high contrast */
+/* Remove decorative elements */
 .high-contrast-mode .shadow,
 .high-contrast-mode .shadow-sm,
 .high-contrast-mode .shadow-md,
@@ -116,39 +106,33 @@
 .high-contrast-mode .shadow-xl,
 .high-contrast-mode .shadow-2xl {
   box-shadow: none !important;
-  border: 2px solid var(--contrast-border, #000000) !important;
+  border: 2px solid var(--hc-border) !important;
 }
 
-/* Remove backdrop blur effects */
+.high-contrast-mode .bg-gradient-to-r,
+.high-contrast-mode .bg-gradient-to-br,
+.high-contrast-mode .bg-gradient-to-l,
+.high-contrast-mode .bg-gradient-to-t,
+.high-contrast-mode .bg-gradient-to-b {
+  background: var(--hc-button-bg) !important;
+  color: var(--hc-button-text) !important;
+}
+
+/* Remove backdrop blur */
 .high-contrast-mode .backdrop-blur-sm,
 .high-contrast-mode .backdrop-blur-md {
   backdrop-filter: none !important;
 }
 
-/* Card backgrounds with fraction classes */
-.high-contrast-mode [class*="bg-white/95"],
-.high-contrast-mode [class*="bg-gray-800/95"] {
-  background-color: var(--contrast-bg-primary, #ffffff) !important;
-}
-
-/* Modal and dropdown backgrounds with fraction classes */
+/* Modal backgrounds */
 .high-contrast-mode [class*="bg-black/50"] {
-  background-color: rgba(0, 0, 0, 0.8) !important;
+  background-color: rgba(0, 0, 0, 0.9) !important;
 }
 
-/* Icon color adjustments */
-.high-contrast-mode svg {
-  color: var(--contrast-text-primary, #000000) !important;
-}
-
-/* Toggle switch styling in high contrast */
-.high-contrast-mode .bg-indigo-600 {
-  background-color: #000080 !important;
-}
-
+/* Toggle switches */
 .high-contrast-mode .bg-gray-200 {
-  background-color: #ffffff !important;
-  border: 2px solid #000000 !important;
+  background-color: var(--hc-bg) !important;
+  border: 2px solid var(--hc-border) !important;
 }
 
 /* ===== REDUCED MOTION STYLES ===== */
@@ -162,34 +146,22 @@
   scroll-behavior: auto !important;
 }
 
-/* Override specific animations */
 .reduce-motion .accessibility-modal {
   animation: none !important;
 }
 
-.reduce-motion .transform {
-  transition: none !important;
-}
-
 /* ===== FONT SIZE RESPONSIVE STYLES ===== */
 
-/* Font size adjustments are handled via JavaScript setting document.documentElement.style.fontSize */
-/* These styles ensure proper scaling of relative units */
-
 :root {
-  /* Default font size - will be overridden by JavaScript */
   font-size: 16px;
 }
 
-/* Ensure all text scales with root font size */
 .accessibility-modal * {
-  /* Use em units for better scaling */
   line-height: 1.5;
 }
 
 /* ===== SCROLLBAR STYLING ===== */
 
-/* Better scrollbar for the modal */
 .accessibility-modal .overflow-y-auto::-webkit-scrollbar {
   width: 6px;
 }
@@ -207,7 +179,6 @@
   background: rgba(156, 163, 175, 0.7);
 }
 
-/* Dark mode scrollbar */
 .dark .accessibility-modal .overflow-y-auto::-webkit-scrollbar-thumb {
   background: rgba(75, 85, 99, 0.5);
 }
@@ -216,91 +187,11 @@
   background: rgba(75, 85, 99, 0.7);
 }
 
-/* High contrast scrollbar */
 .high-contrast-mode .accessibility-modal .overflow-y-auto::-webkit-scrollbar-thumb {
-  background: var(--contrast-border, #000000);
+  background: var(--hc-border);
 }
 
 .high-contrast-mode .accessibility-modal .overflow-y-auto::-webkit-scrollbar-track {
-  background: var(--contrast-bg-primary, #ffffff);
-  border: 1px solid var(--contrast-border, #000000);
-}
-
-/* ===== DARK MODE HIGH CONTRAST OVERRIDES ===== */
-
-.high-contrast-mode.dark {
-  --contrast-text-primary: #ffffff;
-  --contrast-text-secondary: #ffffff;
-  --contrast-bg-primary: #000000;
-  --contrast-bg-secondary: #1a1a1a;
-  --contrast-border: #ffffff;
-  --contrast-link: #4da6ff;
-  --contrast-link-visited: #b366ff;
-  --contrast-button-bg: #ffffff;
-  --contrast-button-text: #000000;
-  --contrast-input-bg: #000000;
-  --contrast-input-border: #ffffff;
-  --contrast-focus-color: #ffff00;
-}
-
-/* Dark mode specific overrides */
-.high-contrast-mode.dark * {
-  color: var(--contrast-text-primary, #ffffff) !important;
-}
-
-.high-contrast-mode.dark .bg-white,
-.high-contrast-mode.dark .bg-gray-50,
-.high-contrast-mode.dark .bg-gray-100,
-.high-contrast-mode.dark .bg-gray-200,
-.high-contrast-mode.dark .bg-gray-300 {
-  background-color: var(--contrast-bg-primary, #000000) !important;
-}
-
-.high-contrast-mode.dark .bg-gray-700,
-.high-contrast-mode.dark .bg-gray-800,
-.high-contrast-mode.dark .bg-gray-900 {
-  background-color: var(--contrast-bg-secondary, #1a1a1a) !important;
-}
-
-/* ===== ACCESSIBILITY ENHANCEMENT UTILITIES ===== */
-
-/* Focus enhancement for all interactive elements */
-.high-contrast-mode button:focus,
-.high-contrast-mode input:focus,
-.high-contrast-mode select:focus,
-.high-contrast-mode textarea:focus,
-.high-contrast-mode a:focus {
-  outline: 3px solid var(--contrast-focus-color, #ffff00) !important;
-  outline-offset: 2px !important;
-  position: relative;
-  z-index: 1;
-}
-
-/* Enhanced button hover states in high contrast */
-.high-contrast-mode button:hover:not(:disabled) {
-  filter: brightness(1.2) !important;
-}
-
-/* Enhanced link hover states in high contrast */
-.high-contrast-mode a:hover {
-  text-decoration: underline !important;
-  text-decoration-thickness: 2px !important;
-}
-
-/* ===== PRINT STYLES FOR ACCESSIBILITY ===== */
-
-@media print {
-  .high-contrast-mode {
-    filter: none !important;
-  }
-  
-  .high-contrast-mode * {
-    color: #000000 !important;
-    background: #ffffff !important;
-  }
-  
-  .reduce-motion * {
-    animation: none !important;
-    transition: none !important;
-  }
+  background: var(--hc-bg);
+  border: 1px solid var(--hc-border);
 }

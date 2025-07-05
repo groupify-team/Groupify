@@ -87,10 +87,22 @@ const LanguageSettings = ({
         </div>
       </div>
 
-      {/* Language Coming Soon Modal */}
+      {/* Language Coming Soon Modal - FIXED: Proper positioning with higher z-index */}
       {showLanguageModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-60 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-gray-200 dark:border-gray-700">
+        <div 
+          className="fixed inset-0 z-[60] flex items-center justify-center p-4"
+          style={{ 
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.75)',
+            backdropFilter: 'blur(8px)',
+            zIndex: 60
+          }}
+        >
+          <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-gray-200 dark:border-gray-700 relative z-[61]">
             <div className="text-center">
               <div className="text-6xl mb-4">
                 {LANGUAGES.find((lang) => lang.code === pendingLanguage)?.flag || "🌐"}
