@@ -53,101 +53,100 @@ const PricingPage = () => {
     }
   }, []);
 
-  const pricingPlans = [
+    const pricingPlans = [
     {
-      name: "Free",
-      description: "Perfect for getting started with photo organization",
-      price: { monthly: 0, yearly: 0 },
-      badge: null,
-      features: [
-        "Up to 500 photos (2GB storage)",
+        name: "Free",
+        description: "Perfect for getting started with photo organization",
+        price: { monthly: 0, yearly: 0 },
+        badge: null,
+        features: [
+        "Up to 5 trips", // UPDATED to match CORE_LIMITS
+        "Up to 30 photos per trip", // UPDATED to match CORE_LIMITS  
+        "2GB total storage", // UPDATED to match CORE_LIMITS
+        "Up to 5 members per trip", // UPDATED to match CORE_LIMITS
         "Basic AI face recognition",
-        "2 trip albums",
-        "Share with up to 3 friends",
         "Mobile app access",
-        "Standard photo quality",
+        "Standard photo quality", 
         "Email support",
-      ],
-      limitations: [
-        "Limited storage space",
-        "Basic recognition accuracy",
+        ],
+        limitations: [
+        "Limited trips and photos",
+        "Basic recognition accuracy", 
         "No advanced features",
-      ],
-      cta: "Get Started Free",
-      popular: false,
-      color: "gray",
+        ],
+        cta: "Get Started Free",
+        popular: false,
+        color: "gray",
     },
     {
-      name: "Pro",
-      description: "Ideal for active travelers and photo enthusiasts",
-      price: { monthly: 9.99, yearly: 99.99 },
-      badge: "Most Popular",
-      features: [
-        "Up to 10,000 photos (50GB storage)",
+        name: "Premium", // CHANGED from "Pro" to match your CORE_LIMITS
+        description: "Ideal for active travelers and photo enthusiasts",
+        price: { monthly: 9.99, yearly: 99.99 },
+        badge: "Most Popular",
+        features: [
+        "Up to 50 trips", // UPDATED to match CORE_LIMITS
+        "Up to 200 photos per trip", // UPDATED to match CORE_LIMITS
+        "50GB total storage", // UPDATED to match CORE_LIMITS
+        "Up to 20 members per trip", // UPDATED to match CORE_LIMITS
         "Advanced AI face recognition",
-        "Unlimited trip albums",
-        "Share with up to 20 friends",
         "Mobile & desktop apps",
         "High-quality photo processing",
-        "Priority email support",
+        "Priority email support", 
         "Collaborative editing",
         "Advanced search filters",
         "Photo editing tools",
-      ],
-      limitations: [],
-      cta: "Start Pro Trial",
-      popular: true,
-      color: "indigo",
+        ],
+        limitations: [],
+        cta: "Start Premium Trial",
+        popular: true,
+        color: "indigo",
     },
     {
-      name: "Family",
-      description: "Perfect for families and large groups sharing memories",
-      price: { monthly: 19.99, yearly: 199.99 },
-      badge: "Best Value",
-      features: [
-        "Up to 50,000 photos (250GB storage)",
+        name: "Pro", // RENAMED from "Family" 
+        description: "Perfect for unlimited trips and maximum storage",
+        price: { monthly: 19.99, yearly: 199.99 },
+        badge: "Best Value",
+        features: [
+        "Unlimited trips", // UPDATED to match CORE_LIMITS
+        "Unlimited photos per trip", // UPDATED to match CORE_LIMITS  
+        "500GB total storage", // UPDATED to match CORE_LIMITS
+        "Unlimited members per trip", // UPDATED to match CORE_LIMITS
         "Premium AI face recognition",
-        "Unlimited trip albums",
-        "Share with unlimited friends",
         "All apps & platforms",
         "Original quality photos",
         "24/7 priority support",
-        "Family account management",
         "Advanced privacy controls",
-        "Custom photo books",
+        "Custom photo books", 
         "Professional photo prints",
         "Video storage & organization",
-      ],
-      limitations: [],
-      cta: "Start Family Plan",
-      popular: false,
-      color: "purple",
+        ],
+        limitations: [],
+        cta: "Start Pro Plan",
+        popular: false,
+        color: "purple",
     },
     {
-      name: "Enterprise",
-      description: "Custom solutions for businesses and organizations",
-      price: { monthly: "Custom", yearly: "Custom" },
-      badge: "Contact Sales",
-      features: [
-        "Unlimited photo storage",
-        "Enterprise-grade AI",
+        name: "Enterprise",
+        description: "Custom solutions for businesses and organizations", 
+        price: { monthly: "Custom", yearly: "Custom" },
+        badge: "Contact Sales",
+        features: [
+        "Everything in Pro",
         "Custom integrations",
-        "Dedicated account manager",
-        "All platforms & APIs",
+        "Dedicated account manager", 
         "White-label solutions",
-        "24/7 phone & email support",
         "Custom user permissions",
         "Advanced analytics",
         "GDPR & compliance tools",
         "Custom deployment options",
         "Training & onboarding",
-      ],
-      limitations: [],
-      cta: "Contact Sales",
-      popular: false,
-      color: "emerald",
+        ],
+        limitations: [],
+        cta: "Contact Sales",
+        popular: false,
+        color: "emerald",
     },
-  ];
+    ];
 
   const faqs = [
     {
