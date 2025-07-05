@@ -1,7 +1,13 @@
 // src/dashboard-area/components/modals/UsageModal.jsx - Professional usage tracking modal
 import React, { useState, useEffect } from "react";
-import { XMarkIcon, ChartBarIcon, PhotoIcon, FolderIcon, CloudIcon } from "@heroicons/react/24/outline";
-import subscriptionService from "../../../shared/services/subscriptionService";
+import {
+  XMarkIcon,
+  ChartBarIcon,
+  PhotoIcon,
+  FolderIcon,
+  CloudIcon,
+} from "@heroicons/react/24/outline";
+import subscriptionService from "@shared/services/subscriptionService";
 
 const UsageModal = ({ isOpen, onClose }) => {
   const [subscription, setSubscription] = useState(null);
@@ -11,10 +17,10 @@ const UsageModal = ({ isOpen, onClose }) => {
   useEffect(() => {
     if (isOpen) {
       loadUsageData();
-      
+
       // Subscribe to subscription updates
       const unsubscribe = subscriptionService.subscribe((event, data) => {
-        if (event === 'subscriptionUpdated' || event === 'usageUpdated') {
+        if (event === "subscriptionUpdated" || event === "usageUpdated") {
           loadUsageData();
         }
       });
@@ -30,7 +36,7 @@ const UsageModal = ({ isOpen, onClose }) => {
       setSubscription(subscriptionData);
       setUsage(subscriptionData.usage);
     } catch (error) {
-      console.error('Failed to load usage data:', error);
+      console.error("Failed to load usage data:", error);
     } finally {
       setLoading(false);
     }
@@ -48,7 +54,9 @@ const UsageModal = ({ isOpen, onClose }) => {
     return "bg-green-500";
   };
 
-  const recommendations = subscription ? subscriptionService.getUpgradeRecommendations() : [];
+  const recommendations = subscription
+    ? subscriptionService.getUpgradeRecommendations()
+    : [];
 
   if (!isOpen) return null;
 
@@ -84,7 +92,9 @@ const UsageModal = ({ isOpen, onClose }) => {
             <div className="flex items-center justify-center h-64">
               <div className="text-center">
                 <div className="w-12 h-12 border-4 border-indigo-200 dark:border-indigo-800 border-t-indigo-600 dark:border-t-indigo-400 rounded-full animate-spin mx-auto mb-4"></div>
-                <p className="text-gray-600 dark:text-gray-400">Loading usage data...</p>
+                <p className="text-gray-600 dark:text-gray-400">
+                  Loading usage data...
+                </p>
               </div>
             </div>
           ) : (
@@ -93,7 +103,9 @@ const UsageModal = ({ isOpen, onClose }) => {
               <div className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-xl p-6 border border-indigo-200/50 dark:border-indigo-800/50">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    Current Plan: {subscription?.plan?.charAt(0).toUpperCase() + subscription?.plan?.slice(1)}
+                    Current Plan:{" "}
+                    {subscription?.plan?.charAt(0).toUpperCase() +
+                      subscription?.plan?.slice(1)}
                   </h3>
                   {subscription?.isTrial && (
                     <span className="bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 px-3 py-1 rounded-full text-sm font-medium">
@@ -101,25 +113,36 @@ const UsageModal = ({ isOpen, onClose }) => {
                     </span>
                   )}
                 </div>
-                
+
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="text-center">
                     <p className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
-                      {subscription?.features?.storage || 'N/A'}
+                      {subscription?.features?.storage || "N/A"}
                     </p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Storage Limit</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Storage Limit
+                    </p>
                   </div>
                   <div className="text-center">
                     <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                      {subscription?.features?.photos === 'unlimited' ? '∞' : subscription?.features?.photos?.toLocaleString() || 'N/A'}
+                      {subscription?.features?.photos === "unlimited"
+                        ? "∞"
+                        : subscription?.features?.photos?.toLocaleString() ||
+                          "N/A"}
                     </p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Photo Limit</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Photo Limit
+                    </p>
                   </div>
                   <div className="text-center">
                     <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
-                      {subscription?.features?.sharing === 'unlimited' ? '∞' : subscription?.features?.sharing || 'N/A'}
+                      {subscription?.features?.sharing === "unlimited"
+                        ? "∞"
+                        : subscription?.features?.sharing || "N/A"}
                     </p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Sharing Limit</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Sharing Limit
+                    </p>
                   </div>
                 </div>
               </div>
@@ -137,22 +160,40 @@ const UsageModal = ({ isOpen, onClose }) => {
 
                   <div className="space-y-4">
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600 dark:text-gray-400">Used</span>
-                      <span className={`text-sm font-medium ${getUsageColor(usage?.storage?.percentage || 0)}`}>
-                        {usage?.storage?.usedFormatted || '0 B'} of {usage?.storage?.limitFormatted || 'N/A'}
+                      <span className="text-sm text-gray-600 dark:text-gray-400">
+                        Used
+                      </span>
+                      <span
+                        className={`text-sm font-medium ${getUsageColor(
+                          usage?.storage?.percentage || 0
+                        )}`}
+                      >
+                        {usage?.storage?.usedFormatted || "0 B"} of{" "}
+                        {usage?.storage?.limitFormatted || "N/A"}
                       </span>
                     </div>
 
                     <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
                       <div
-                        className={`h-3 rounded-full transition-all duration-500 ${getProgressBarColor(usage?.storage?.percentage || 0)}`}
-                        style={{ width: `${Math.min(usage?.storage?.percentage || 0, 100)}%` }}
+                        className={`h-3 rounded-full transition-all duration-500 ${getProgressBarColor(
+                          usage?.storage?.percentage || 0
+                        )}`}
+                        style={{
+                          width: `${Math.min(
+                            usage?.storage?.percentage || 0,
+                            100
+                          )}%`,
+                        }}
                       ></div>
                     </div>
 
                     <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
                       <span>0%</span>
-                      <span className={`font-medium ${getUsageColor(usage?.storage?.percentage || 0)}`}>
+                      <span
+                        className={`font-medium ${getUsageColor(
+                          usage?.storage?.percentage || 0
+                        )}`}
+                      >
                         {Math.round(usage?.storage?.percentage || 0)}%
                       </span>
                       <span>100%</span>
@@ -160,7 +201,8 @@ const UsageModal = ({ isOpen, onClose }) => {
 
                     <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                       <p className="text-sm text-gray-600 dark:text-gray-400">
-                        <strong>Remaining:</strong> {usage?.storage?.remainingFormatted || 'N/A'}
+                        <strong>Remaining:</strong>{" "}
+                        {usage?.storage?.remainingFormatted || "N/A"}
                       </p>
                     </div>
                   </div>
@@ -177,24 +219,44 @@ const UsageModal = ({ isOpen, onClose }) => {
 
                   <div className="space-y-4">
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600 dark:text-gray-400">Uploaded</span>
-                      <span className={`text-sm font-medium ${getUsageColor(usage?.photos?.percentage || 0)}`}>
-                        {usage?.photos?.used?.toLocaleString() || 0} of {usage?.photos?.limit === 'unlimited' ? '∞' : usage?.photos?.limit?.toLocaleString() || 'N/A'}
+                      <span className="text-sm text-gray-600 dark:text-gray-400">
+                        Uploaded
+                      </span>
+                      <span
+                        className={`text-sm font-medium ${getUsageColor(
+                          usage?.photos?.percentage || 0
+                        )}`}
+                      >
+                        {usage?.photos?.used?.toLocaleString() || 0} of{" "}
+                        {usage?.photos?.limit === "unlimited"
+                          ? "∞"
+                          : usage?.photos?.limit?.toLocaleString() || "N/A"}
                       </span>
                     </div>
 
-                    {usage?.photos?.limit !== 'unlimited' && (
+                    {usage?.photos?.limit !== "unlimited" && (
                       <>
                         <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
                           <div
-                            className={`h-3 rounded-full transition-all duration-500 ${getProgressBarColor(usage?.photos?.percentage || 0)}`}
-                            style={{ width: `${Math.min(usage?.photos?.percentage || 0, 100)}%` }}
+                            className={`h-3 rounded-full transition-all duration-500 ${getProgressBarColor(
+                              usage?.photos?.percentage || 0
+                            )}`}
+                            style={{
+                              width: `${Math.min(
+                                usage?.photos?.percentage || 0,
+                                100
+                              )}%`,
+                            }}
                           ></div>
                         </div>
 
                         <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
                           <span>0%</span>
-                          <span className={`font-medium ${getUsageColor(usage?.photos?.percentage || 0)}`}>
+                          <span
+                            className={`font-medium ${getUsageColor(
+                              usage?.photos?.percentage || 0
+                            )}`}
+                          >
                             {Math.round(usage?.photos?.percentage || 0)}%
                           </span>
                           <span>100%</span>
@@ -204,7 +266,12 @@ const UsageModal = ({ isOpen, onClose }) => {
 
                     <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                       <p className="text-sm text-gray-600 dark:text-gray-400">
-                        <strong>Remaining:</strong> {usage?.photos?.remaining === 'unlimited' ? '∞' : usage?.photos?.remaining?.toLocaleString() || 'N/A'} photos
+                        <strong>Remaining:</strong>{" "}
+                        {usage?.photos?.remaining === "unlimited"
+                          ? "∞"
+                          : usage?.photos?.remaining?.toLocaleString() ||
+                            "N/A"}{" "}
+                        photos
                       </p>
                     </div>
                   </div>
@@ -221,15 +288,24 @@ const UsageModal = ({ isOpen, onClose }) => {
 
                   <div className="space-y-4">
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600 dark:text-gray-400">Created</span>
+                      <span className="text-sm text-gray-600 dark:text-gray-400">
+                        Created
+                      </span>
                       <span className="text-sm font-medium text-purple-600 dark:text-purple-400">
-                        {usage?.albums?.used || 0} of {usage?.albums?.limit === 'unlimited' ? '∞' : usage?.albums?.limit || 'N/A'}
+                        {usage?.albums?.used || 0} of{" "}
+                        {usage?.albums?.limit === "unlimited"
+                          ? "∞"
+                          : usage?.albums?.limit || "N/A"}
                       </span>
                     </div>
 
                     <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                       <p className="text-sm text-gray-600 dark:text-gray-400">
-                        <strong>Available:</strong> {usage?.albums?.remaining === 'unlimited' ? '∞' : usage?.albums?.remaining || 'N/A'} albums
+                        <strong>Available:</strong>{" "}
+                        {usage?.albums?.remaining === "unlimited"
+                          ? "∞"
+                          : usage?.albums?.remaining || "N/A"}{" "}
+                        albums
                       </p>
                     </div>
                   </div>
@@ -243,37 +319,63 @@ const UsageModal = ({ isOpen, onClose }) => {
 
                   <div className="space-y-3">
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600 dark:text-gray-400">AI Recognition</span>
+                      <span className="text-sm text-gray-600 dark:text-gray-400">
+                        AI Recognition
+                      </span>
                       <span className="text-sm font-medium capitalize text-indigo-600 dark:text-indigo-400">
-                        {subscription?.features?.aiRecognition || 'N/A'}
+                        {subscription?.features?.aiRecognition || "N/A"}
                       </span>
                     </div>
 
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600 dark:text-gray-400">Support Level</span>
+                      <span className="text-sm text-gray-600 dark:text-gray-400">
+                        Support Level
+                      </span>
                       <span className="text-sm font-medium capitalize text-indigo-600 dark:text-indigo-400">
-                        {subscription?.features?.support || 'N/A'}
+                        {subscription?.features?.support || "N/A"}
                       </span>
                     </div>
 
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600 dark:text-gray-400">Photo Quality</span>
+                      <span className="text-sm text-gray-600 dark:text-gray-400">
+                        Photo Quality
+                      </span>
                       <span className="text-sm font-medium capitalize text-indigo-600 dark:text-indigo-400">
-                        {subscription?.features?.quality || 'N/A'}
+                        {subscription?.features?.quality || "N/A"}
                       </span>
                     </div>
 
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600 dark:text-gray-400">Photo Editing</span>
-                      <span className={`text-sm font-medium ${subscription?.features?.editing ? 'text-green-600 dark:text-green-400' : 'text-gray-400'}`}>
-                        {subscription?.features?.editing ? 'Available' : 'Not Available'}
+                      <span className="text-sm text-gray-600 dark:text-gray-400">
+                        Photo Editing
+                      </span>
+                      <span
+                        className={`text-sm font-medium ${
+                          subscription?.features?.editing
+                            ? "text-green-600 dark:text-green-400"
+                            : "text-gray-400"
+                        }`}
+                      >
+                        {subscription?.features?.editing
+                          ? "Available"
+                          : "Not Available"}
                       </span>
                     </div>
 
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600 dark:text-gray-400">Video Storage</span>
-                      <span className={`text-sm font-medium ${subscription?.features?.videos ? 'text-green-600 dark:text-green-400' : 'text-gray-400'}`}>
-                        {subscription?.features?.videos ? 'Available' : 'Not Available'}
+                      <span className="text-sm text-gray-600 dark:text-gray-400">
+                        Video Storage
+                      </span>
+                      <span
+                        className={`text-sm font-medium ${
+                          subscription?.features?.videos
+                            ? "text-green-600 dark:text-green-400"
+                            : "text-gray-400"
+                        }`}
+                      >
+                        {subscription?.features?.videos
+                          ? "Available"
+                          : "Not Available"}
                       </span>
                     </div>
                   </div>
@@ -284,39 +386,68 @@ const UsageModal = ({ isOpen, onClose }) => {
               {recommendations.length > 0 && (
                 <div className="bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 rounded-xl p-6 border border-yellow-200/50 dark:border-yellow-800/50">
                   <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                    <svg className="w-5 h-5 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.99-.833-2.76 0L4.054 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                    <svg
+                      className="w-5 h-5 text-yellow-600 dark:text-yellow-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.99-.833-2.76 0L4.054 16.5c-.77.833.192 2.5 1.732 2.5z"
+                      />
                     </svg>
                     Recommendations
                   </h4>
 
                   <div className="space-y-3">
                     {recommendations.map((rec, index) => (
-                      <div key={index} className={`p-4 rounded-lg border ${
-                        rec.urgency === 'high' 
-                          ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' 
-                          : 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800'
-                      }`}>
+                      <div
+                        key={index}
+                        className={`p-4 rounded-lg border ${
+                          rec.urgency === "high"
+                            ? "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800"
+                            : "bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800"
+                        }`}
+                      >
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
-                            <p className={`text-sm font-medium ${
-                              rec.urgency === 'high' 
-                                ? 'text-red-800 dark:text-red-200' 
-                                : 'text-yellow-800 dark:text-yellow-200'
-                            }`}>
+                            <p
+                              className={`text-sm font-medium ${
+                                rec.urgency === "high"
+                                  ? "text-red-800 dark:text-red-200"
+                                  : "text-yellow-800 dark:text-yellow-200"
+                              }`}
+                            >
                               {rec.message}
                             </p>
-                            <p className={`text-xs mt-1 ${
-                              rec.urgency === 'high' 
-                                ? 'text-red-600 dark:text-red-400' 
-                                : 'text-yellow-600 dark:text-yellow-400'
-                            }`}>
-                              {rec.urgency === 'high' ? 'Action required soon' : 'Consider upgrading'}
+                            <p
+                              className={`text-xs mt-1 ${
+                                rec.urgency === "high"
+                                  ? "text-red-600 dark:text-red-400"
+                                  : "text-yellow-600 dark:text-yellow-400"
+                              }`}
+                            >
+                              {rec.urgency === "high"
+                                ? "Action required soon"
+                                : "Consider upgrading"}
                             </p>
                           </div>
-                          {rec.urgency === 'high' && (
-                            <svg className="w-5 h-5 text-red-500 flex-shrink-0 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.99-.833-2.76 0L4.054 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                          {rec.urgency === "high" && (
+                            <svg
+                              className="w-5 h-5 text-red-500 flex-shrink-0 ml-2"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.99-.833-2.76 0L4.054 16.5c-.77.833.192 2.5 1.732 2.5z"
+                              />
                             </svg>
                           )}
                         </div>
@@ -335,7 +466,9 @@ const UsageModal = ({ isOpen, onClose }) => {
                 {usage?.photos?.used > 0 || usage?.storage?.used > 0 ? (
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600 dark:text-gray-400">Photos Uploaded</span>
+                      <span className="text-sm text-gray-600 dark:text-gray-400">
+                        Photos Uploaded
+                      </span>
                       <div className="flex items-center gap-2">
                         <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                         <span className="text-sm font-medium text-gray-900 dark:text-white">
@@ -345,7 +478,9 @@ const UsageModal = ({ isOpen, onClose }) => {
                     </div>
 
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600 dark:text-gray-400">Storage Used</span>
+                      <span className="text-sm text-gray-600 dark:text-gray-400">
+                        Storage Used
+                      </span>
                       <div className="flex items-center gap-2">
                         <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                         <span className="text-sm font-medium text-gray-900 dark:text-white">
@@ -355,7 +490,9 @@ const UsageModal = ({ isOpen, onClose }) => {
                     </div>
 
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600 dark:text-gray-400">Albums Created</span>
+                      <span className="text-sm text-gray-600 dark:text-gray-400">
+                        Albums Created
+                      </span>
                       <div className="flex items-center gap-2">
                         <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
                         <span className="text-sm font-medium text-gray-900 dark:text-white">
@@ -366,22 +503,37 @@ const UsageModal = ({ isOpen, onClose }) => {
 
                     <div className="mt-4 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg border border-blue-200/50 dark:border-blue-800/50">
                       <p className="text-sm text-blue-800 dark:text-blue-200">
-                        <strong>📊 Your Activity:</strong> You're currently using {Math.round(usage.storage.percentage || 0)}% of your storage and {Math.round(usage.photos.percentage || 0)}% of your photo limit.
+                        <strong>📊 Your Activity:</strong> You're currently
+                        using {Math.round(usage.storage.percentage || 0)}% of
+                        your storage and{" "}
+                        {Math.round(usage.photos.percentage || 0)}% of your
+                        photo limit.
                       </p>
                     </div>
                   </div>
                 ) : (
                   <div className="text-center py-8">
                     <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                      <svg
+                        className="w-8 h-8 text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                        />
                       </svg>
                     </div>
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
                       No Usage Data Yet
                     </h3>
                     <p className="text-gray-600 dark:text-gray-400">
-                      Start uploading photos and creating albums to see your usage statistics here.
+                      Start uploading photos and creating albums to see your
+                      usage statistics here.
                     </p>
                   </div>
                 )}
@@ -400,7 +552,7 @@ const UsageModal = ({ isOpen, onClose }) => {
               <button
                 onClick={() => {
                   subscriptionService.debug();
-                  console.log('Current usage:', usage);
+                  console.log("Current usage:", usage);
                 }}
                 className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 font-medium text-sm"
               >

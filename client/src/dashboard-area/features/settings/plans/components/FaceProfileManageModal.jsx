@@ -9,7 +9,7 @@ import {
   SparklesIcon,
   ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
-import { useAuth } from "../../../../auth-area/contexts/AuthContext";
+import { useAuth } from "@auth/contexts/AuthContext";
 import { toast } from "react-hot-toast";
 import {
   addPhotosToProfile,
@@ -18,9 +18,9 @@ import {
   deleteFaceProfile,
   getFaceProfile,
   getProfilePhotos,
-} from "../../../../shared/services/faceRecognitionService";
-import { deleteFaceProfileFromStorage } from "../../../../shared/services/firebase/faceProfiles";
-import { uploadPhoto } from "../../../../shared/services/firebase/storage";
+} from "@shared/services/faceRecognitionService";
+import { deleteFaceProfileFromStorage } from "@firebase-services/faceProfiles";
+import { uploadPhoto } from "@firebase-services/storage";
 
 const FaceProfileManageModal = ({ isOpen, onClose, onProfileUpdated }) => {
   const { currentUser } = useAuth();

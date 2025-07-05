@@ -1,4 +1,3 @@
-// src/dashboard-area/components/sections/SettingsSection.jsx - Enhanced settings section with professional subscription management
 import React, { useState } from "react";
 import {
   BellIcon,
@@ -7,21 +6,26 @@ import {
   TrashIcon,
   UserCircleIcon,
 } from "@heroicons/react/24/outline";
-import { useAuth } from "../../../auth-area/contexts/AuthContext";
-import { useDashboardLayout } from "../../hooks/useDashboardLayout";
-import { useDashboardData } from "../../hooks/useDashboardData";
-import { useSettings } from "../../features/settings/hooks/useSettings";
-import { useExportBackup } from "@/dashboard/features/settings/hooks/useExportBackup";
+
+import { useAuth } from "@auth/contexts/AuthContext";
+import { useDashboardLayout } from "@dashboard/hooks/useDashboardLayout";
+import { useDashboardData } from "@dashboard/hooks/useDashboardData";
+import { useSettings } from "@settings/hooks/useSettings";
+import { useExportBackup } from "@settings/hooks/useExportBackup";
+
 import SubscriptionCard from "../widgets/SubscriptionCard";
 import FaceProfileCard from "../widgets/FaceProfileCard";
 import QuickStatsCard from "../widgets/QuickStatsCard";
-import FaceProfileModal from "@face-recognition/components/FaceProfileModal";
-import FaceProfileManageModal from "@face-recognition/components/FaceProfileManageModal";
+
+import FaceProfileModal from "@settings/plans/components/FaceProfileModal";
+import FaceProfileManageModal from "@settings/plans/components/FaceProfileManageModal";
 import DeleteAccountModal from "@dashboard/components/modals/DeleteAccountModal";
-import EditProfileModal from "../../features/settings/components/EditProfileModal";
+import EditProfileModal from "@settings/header/components/modals/EditProfileModal";
+
 import UsageModal from "../modals/UsageModal";
 import BillingHistoryModal from "../modals/BillingHistoryModal";
 import PlanManagementModal from "../modals/PlanManagementModal";
+
 import {
   NOTIFICATION_SETTINGS,
   PRIVACY_SETTINGS,

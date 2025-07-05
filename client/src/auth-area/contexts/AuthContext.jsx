@@ -10,9 +10,9 @@ import {
   sendPasswordResetEmail,
 } from "firebase/auth";
 import { doc, setDoc, getDoc } from "firebase/firestore";
-import { auth, db } from "../../shared/services/firebase/config";
+import { auth, db } from "@firebase-services/config";
 import { toast } from "react-hot-toast";
-import subscriptionService from "../../shared/services/subscriptionService";
+import subscriptionService from "@shared/services/subscriptionService";
 
 const AuthContext = createContext();
 
@@ -36,11 +36,11 @@ export function AuthProvider({ children }) {
 
     try {
       setPlanLoading(true);
-      
+
       // Get user profile from Firestore to check for plan info
       const userDoc = await getDoc(doc(db, "users", user.uid));
       let firestorePlan = null;
-      
+
       if (userDoc.exists()) {
         const userData = userDoc.data();
         firestorePlan = userData.subscription || userData.plan;
@@ -51,45 +51,48 @@ export function AuthProvider({ children }) {
 
       // If user has plan data in Firestore, sync it with subscription service
       if (firestorePlan && firestorePlan !== currentSubscription.plan) {
-        console.log('Syncing plan data from Firestore:', firestorePlan);
-        
+        console.log("Syncing plan data from Firestore:", firestorePlan);
+
         const planUpdate = {
           plan: firestorePlan.plan || firestorePlan,
-          billing: firestorePlan.billing || 'monthly',
-          status: firestorePlan.status || 'active',
+          billing: firestorePlan.billing || "monthly",
+          status: firestorePlan.status || "active",
           purchaseDate: firestorePlan.purchaseDate || new Date().toISOString(),
           metadata: {
             ...firestorePlan.metadata,
             syncedFromFirestore: true,
-            syncedAt: new Date().toISOString()
-          }
+            syncedAt: new Date().toISOString(),
+          },
         };
 
-        currentSubscription = subscriptionService.updateSubscription(planUpdate);
+        currentSubscription =
+          subscriptionService.updateSubscription(planUpdate);
       }
 
       // Initialize usage tracking for new users
-      if (currentSubscription.plan === 'free' && !subscriptionService.getStoredUsage().initialized) {
+      if (
+        currentSubscription.plan === "free" &&
+        !subscriptionService.getStoredUsage().initialized
+      ) {
         subscriptionService.updateUsage({
           initialized: true,
           trips: 0,
           photos: 0,
           storage: 0,
-          albums: 0
+          albums: 0,
         });
       }
 
       setUserPlan(currentSubscription);
-      
+
       // Store user plan reference in context for quick access
-      console.log('User plan initialized:', {
+      console.log("User plan initialized:", {
         plan: currentSubscription.plan,
         status: currentSubscription.status,
-        features: currentSubscription.features
+        features: currentSubscription.features,
       });
-
     } catch (error) {
-      console.error('Error initializing user plan:', error);
+      console.error("Error initializing user plan:", error);
       // Fallback to default free plan
       const defaultPlan = subscriptionService.getDefaultSubscription();
       setUserPlan(defaultPlan);
@@ -154,16 +157,16 @@ export function AuthProvider({ children }) {
           joinedAt: new Date().toISOString(),
           // Initialize with free plan
           subscription: {
-            plan: 'free',
-            status: 'active',
-            createdAt: new Date().toISOString()
+            plan: "free",
+            status: "active",
+            createdAt: new Date().toISOString(),
           },
           usage: {
             trips: 0,
             photos: 0,
             storage: 0,
-            albums: 0
-          }
+            albums: 0,
+          },
         });
         console.log("User document created in Firestore with free plan");
       } catch (firestoreError) {
@@ -173,13 +176,13 @@ export function AuthProvider({ children }) {
 
       // Initialize subscription service for new user
       subscriptionService.updateSubscription({
-        plan: 'free',
-        status: 'active',
+        plan: "free",
+        status: "active",
         purchaseDate: new Date().toISOString(),
         metadata: {
-          signupMethod: 'email',
-          initializedAt: new Date().toISOString()
-        }
+          signupMethod: "email",
+          initializedAt: new Date().toISOString(),
+        },
       });
 
       // Sign out the user to prevent dashboard access before verification
@@ -222,7 +225,7 @@ export function AuthProvider({ children }) {
       }
 
       console.log("Sign-in successful for:", email);
-      
+
       // Plan initialization will happen in the auth state change listener
       return userCredential;
     } catch (error) {
@@ -285,27 +288,27 @@ export function AuthProvider({ children }) {
           joinedAt: new Date().toISOString(),
           // Initialize with free plan for new Google users
           subscription: {
-            plan: 'free',
-            status: 'active',
-            createdAt: new Date().toISOString()
+            plan: "free",
+            status: "active",
+            createdAt: new Date().toISOString(),
           },
           usage: {
             trips: 0,
             photos: 0,
             storage: 0,
-            albums: 0
-          }
+            albums: 0,
+          },
         });
 
         // Initialize subscription service for new Google user
         subscriptionService.updateSubscription({
-          plan: 'free',
-          status: 'active',
+          plan: "free",
+          status: "active",
           purchaseDate: new Date().toISOString(),
           metadata: {
-            signupMethod: 'google',
-            initializedAt: new Date().toISOString()
-          }
+            signupMethod: "google",
+            initializedAt: new Date().toISOString(),
+          },
         });
       }
 
@@ -320,10 +323,10 @@ export function AuthProvider({ children }) {
     try {
       // Clear subscription data on logout
       setUserPlan(null);
-      
+
       // Optional: Clear subscription service cache
       subscriptionService.clearCache();
-      
+
       return signOut(auth);
     } catch (error) {
       console.error("Logout error:", error);
@@ -409,22 +412,27 @@ export function AuthProvider({ children }) {
   async function updateUserPlan(planData) {
     try {
       if (!currentUser) {
-        throw new Error('No authenticated user');
+        throw new Error("No authenticated user");
       }
 
       // Update Firestore
-      await setDoc(doc(db, "users", currentUser.uid), {
-        subscription: planData,
-        updatedAt: new Date().toISOString()
-      }, { merge: true });
+      await setDoc(
+        doc(db, "users", currentUser.uid),
+        {
+          subscription: planData,
+          updatedAt: new Date().toISOString(),
+        },
+        { merge: true }
+      );
 
       // Update subscription service
-      const updatedSubscription = subscriptionService.updateSubscription(planData);
+      const updatedSubscription =
+        subscriptionService.updateSubscription(planData);
       setUserPlan(updatedSubscription);
 
       return updatedSubscription;
     } catch (error) {
-      console.error('Error updating user plan:', error);
+      console.error("Error updating user plan:", error);
       throw error;
     }
   }
@@ -476,8 +484,8 @@ export function AuthProvider({ children }) {
   // Subscribe to subscription service updates
   useEffect(() => {
     const unsubscribe = subscriptionService.subscribe((event, data) => {
-      if (event === 'subscriptionUpdated' && currentUser) {
-        console.log('Subscription updated via service:', data);
+      if (event === "subscriptionUpdated" && currentUser) {
+        console.log("Subscription updated via service:", data);
         setUserPlan(data);
       }
     });
@@ -497,13 +505,13 @@ export function AuthProvider({ children }) {
     checkEmailVerification,
     resendVerificationEmail,
     updateUserPlan,
-    
+
     // Plan-related helpers
-    isFreePlan: userPlan?.plan === 'free',
-    isPremiumPlan: userPlan?.plan === 'premium',
-    isProPlan: userPlan?.plan === 'pro',
+    isFreePlan: userPlan?.plan === "free",
+    isPremiumPlan: userPlan?.plan === "premium",
+    isProPlan: userPlan?.plan === "pro",
     planFeatures: userPlan?.features,
-    planUsage: userPlan?.usage
+    planUsage: userPlan?.usage,
   };
 
   return (

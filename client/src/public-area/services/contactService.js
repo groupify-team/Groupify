@@ -1,5 +1,5 @@
 import { httpsCallable } from "firebase/functions";
-import { functions } from "../../shared/services/firebase/config";
+import { functions } from "@firebase-services/config";
 
 export const contactService = {
   /**

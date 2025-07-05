@@ -1,11 +1,11 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useAuth } from "../../../../auth-area/contexts/AuthContext";
-import { createFaceProfile } from "../../../../shared/services/faceRecognitionService";
-import { saveFaceProfileToStorage } from "../../../../shared/services/firebase/faceProfiles";
+import { useAuth } from "@auth/contexts/AuthContext";
+import { createFaceProfile } from "@face-recognition/service/faceRecognitionService";
+import { saveFaceProfileToStorage } from "@firebase-services/faceProfiles";
 import { uploadBytes, getDownloadURL, ref } from "firebase/storage";
-import { storage } from "../../../../shared/services/firebase/config";
+import { storage } from "@shared/services/firebase/config";
 import SmartFaceScan from "./SmartFaceScan";
-import PhotoUpload from "../../photos/components/PhotoUpload";
+import PhotoUpload from "@photos/components/PhotoUpload";
 import {
   XMarkIcon,
   CameraIcon,
@@ -44,15 +44,14 @@ const FaceProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
 
   // Enhanced cleanup function with camera stop
   const cleanup = () => {
-    
     // Clean up SmartFaceScan component first (this should stop the camera)
     if (smartFaceScanRef.current && smartFaceScanRef.current.cleanup) {
       smartFaceScanRef.current.cleanup();
     }
-    
+
     // Also stop camera stream if active (backup cleanup)
     if (currentStream) {
-      currentStream.getTracks().forEach(track => {
+      currentStream.getTracks().forEach((track) => {
         track.stop();
       });
       setCurrentStream(null);
@@ -89,7 +88,7 @@ const FaceProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
     return () => {
       // Clean up camera stream
       if (currentStream) {
-        currentStream.getTracks().forEach(track => {
+        currentStream.getTracks().forEach((track) => {
           track.stop();
         });
       }
@@ -120,7 +119,7 @@ const FaceProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
 
   const removeUploadedPhoto = (index) => {
     setUploadedPhotos((prev) => prev.filter((_, i) => i !== index));
-    
+
     // If no photos left, go back to upload screen
     if (uploadedPhotos.length === 1) {
       setShowReview(false);
@@ -145,8 +144,10 @@ const FaceProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
       });
 
       // Create profile using face-api.js service with uploaded photo URLs
-      const imageData = uploadedPhotos.map(photo => ({ url: photo.downloadURL }));
-      
+      const imageData = uploadedPhotos.map((photo) => ({
+        url: photo.downloadURL,
+      }));
+
       const profile = await createFaceProfile(
         currentUser.uid,
         imageData,
@@ -160,7 +161,10 @@ const FaceProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
         images: uploadedPhotos.map((photo, index) => ({
           url: photo.downloadURL || photo.url || "",
           uploadedAt: photo.uploadedAt || new Date().toISOString(),
-          filename: photo.metadata?.originalName || photo.originalName || `upload_${index}.jpg`,
+          filename:
+            photo.metadata?.originalName ||
+            photo.originalName ||
+            `upload_${index}.jpg`,
           captureMethod: "upload",
           metadata: photo.metadata || {},
         })),
@@ -483,7 +487,8 @@ const FaceProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
                   Review Your Photos
                 </h3>
                 <p className="text-gray-600 dark:text-gray-400 mb-4">
-                  {uploadedPhotos.length} photos uploaded • Review before creating profile
+                  {uploadedPhotos.length} photos uploaded • Review before
+                  creating profile
                 </p>
               </div>
 
@@ -519,7 +524,9 @@ const FaceProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
                   </div>
                 </div>
                 <ul className="text-sm text-green-700 dark:text-green-300 space-y-1">
-                  <li>✓ {uploadedPhotos.length} photos uploaded (2-5 required)</li>
+                  <li>
+                    ✓ {uploadedPhotos.length} photos uploaded (2-5 required)
+                  </li>
                   <li>✓ All photos are high quality</li>
                   <li>✓ Face detection will be performed during setup</li>
                 </ul>

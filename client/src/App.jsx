@@ -10,7 +10,7 @@ import {
 
 // Updated imports for refactored auth structure
 import { AuthProvider, useAuth } from "@/auth-area/contexts/AuthContext";
-import { ThemeProvider } from "@/shared/contexts/ThemeContext";
+import { ThemeProvider } from "@shared/contexts/ThemeContext";
 import ProtectedRoute from "@/auth-area/components/ProtectedRoute";
 import CloudflareTurnstileGate from "@/shared/components/ui/CloudFlareTurnstileGate";
 

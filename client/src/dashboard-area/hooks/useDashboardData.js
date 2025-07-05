@@ -15,7 +15,7 @@ import {
   getFriends,
   getPendingFriendRequests,
   getUserProfile,
-} from "@shared/services/firebase/users";
+} from "@firebase-services/users";
 import {
   getUserTrips,
   getPendingInvites,

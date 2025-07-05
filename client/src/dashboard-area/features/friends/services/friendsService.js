@@ -14,8 +14,8 @@ import {
   arrayRemove,
   serverTimestamp 
 } from 'firebase/firestore';
-import { db } from '../../../../shared/services/firebase/config';
-import { PrivacyService } from '../../../../shared/services/privacyService';
+import { db } from '@firebase-services/config';
+import { PrivacyService } from '@shared/services/privacyService';
 
 export class FriendsService {
   /**

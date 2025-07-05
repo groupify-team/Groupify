@@ -10,7 +10,7 @@ import {
   ShieldCheckIcon,
 } from "@heroicons/react/24/outline";
 import { httpsCallable } from "firebase/functions";
-import { functions } from "../../../shared/services/firebase/config";
+import { functions } from "@firebase-services/config";
 
 // New modular components and hooks
 import AuthLayout from "../../components/layout/AuthLayout";

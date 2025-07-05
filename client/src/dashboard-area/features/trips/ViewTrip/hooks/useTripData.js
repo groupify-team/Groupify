@@ -6,7 +6,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { getTrip, updateTrip } from "@shared/services/firebase/trips";
 import { getTripPhotos } from "@shared/services/firebase/storage";
-import { getUserProfile } from "@shared/services/firebase/users";
+import { getUserProfile } from "@firebase-services/users";
 
 export const useTripData = (tripId, currentUserId) => {
   const [trip, setTrip] = useState(null);

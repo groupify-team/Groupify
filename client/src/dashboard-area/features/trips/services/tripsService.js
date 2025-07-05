@@ -13,7 +13,7 @@ import {
 } from "@shared/services/firebase/trips";
 
 import { getTripPhotos } from "@shared/services/firebase/storage";
-import { getUserProfile } from "@shared/services/firebase/users";
+import { getUserProfile } from "@firebase-services/users";
 import subscriptionService from "@shared/services/subscriptionService";
 
 export const tripsService = {
@@ -41,12 +41,12 @@ export const tripsService = {
       // Enhanced plan validation before creation
       const subscription = subscriptionService.getCurrentSubscription();
       const currentTripCount = await this.getUserTripCount(tripData.createdBy);
-      
+
       // Check plan limits using exact pricing page values
       const planFeatures = subscription.features;
       const tripLimit = planFeatures.trips;
-      
-      if (tripLimit !== 'unlimited' && currentTripCount >= tripLimit) {
+
+      if (tripLimit !== "unlimited" && currentTripCount >= tripLimit) {
         throw new Error(
           `Trip limit reached! Your ${subscription.plan} plan allows ${tripLimit} trips. You currently have ${currentTripCount} trips. Upgrade your plan to create more trips.`
         );
@@ -60,13 +60,13 @@ export const tripsService = {
         createdAt: new Date().toISOString(),
         planLimits: {
           photosPerTrip: planFeatures.photosPerTrip,
-          membersPerTrip: planFeatures.membersPerTrip
-        }
+          membersPerTrip: planFeatures.membersPerTrip,
+        },
       });
 
       // Update usage statistics
       subscriptionService.updateUsage({
-        trips: currentTripCount + 1
+        trips: currentTripCount + 1,
       });
 
       return newTrip;
@@ -80,7 +80,7 @@ export const tripsService = {
     try {
       return await updateTrip(tripId, {
         ...updates,
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
       });
     } catch (error) {
       console.error("Error updating trip:", error);
@@ -92,16 +92,16 @@ export const tripsService = {
     try {
       // Get trip data before deletion for usage tracking
       const trip = await getTrip(tripId);
-      
+
       await deleteTrip(tripId);
 
       // Update usage statistics
       const subscription = subscriptionService.getCurrentSubscription();
       const usage = subscription.usage;
-      
+
       subscriptionService.updateUsage({
         trips: Math.max(0, (usage.trips?.used || 0) - 1),
-        photos: Math.max(0, (usage.photos.used || 0) - (trip.photoCount || 0))
+        photos: Math.max(0, (usage.photos.used || 0) - (trip.photoCount || 0)),
       });
 
       return true;
@@ -130,14 +130,14 @@ export const tripsService = {
 
       // Check per-trip photo limit using exact pricing page values
       const photosPerTripLimit = subscription.features.photosPerTrip;
-      if (photosPerTripLimit !== 'unlimited') {
+      if (photosPerTripLimit !== "unlimited") {
         if (currentTripPhotoCount + newPhotoCount > photosPerTripLimit) {
           return {
             allowed: false,
             reason: `Trip photo limit reached (${photosPerTripLimit} photos per trip)`,
-            type: 'trip_photo_limit',
+            type: "trip_photo_limit",
             currentUsage: currentTripPhotoCount,
-            limit: photosPerTripLimit
+            limit: photosPerTripLimit,
           };
         }
       }
@@ -150,10 +150,10 @@ export const tripsService = {
           return {
             allowed: false,
             reason: `Storage limit exceeded (${storageFormatted} limit)`,
-            type: 'storage_limit',
+            type: "storage_limit",
             currentUsage: usage.storage.used,
             limit: storageLimit,
-            additionalNeeded: totalFileSize
+            additionalNeeded: totalFileSize,
           };
         }
       }
@@ -164,7 +164,7 @@ export const tripsService = {
       return {
         allowed: false,
         reason: "Failed to validate upload limits",
-        type: 'validation_error'
+        type: "validation_error",
       };
     }
   },
@@ -178,7 +178,7 @@ export const tripsService = {
       const memberLimit = subscription.features.membersPerTrip;
 
       // Check member limit using exact pricing page values
-      if (memberLimit !== 'unlimited' && currentMemberCount >= memberLimit) {
+      if (memberLimit !== "unlimited" && currentMemberCount >= memberLimit) {
         throw new Error(
           `Member limit reached! Your ${subscription.plan} plan allows ${memberLimit} members per trip.`
         );
@@ -214,7 +214,7 @@ export const tripsService = {
       const memberLimit = subscription.features.membersPerTrip;
 
       // Check if adding this member would exceed the limit
-      if (memberLimit !== 'unlimited' && currentMemberCount >= memberLimit) {
+      if (memberLimit !== "unlimited" && currentMemberCount >= memberLimit) {
         throw new Error(
           `Cannot send invite. Member limit reached! Your ${subscription.plan} plan allows ${memberLimit} members per trip.`
         );
@@ -234,7 +234,7 @@ export const tripsService = {
       const currentTripCount = await this.getUserTripCount(userId);
       const tripLimit = subscription.features.trips;
 
-      if (tripLimit === 'unlimited') {
+      if (tripLimit === "unlimited") {
         return true;
       }
 
@@ -257,42 +257,42 @@ export const tripsService = {
   // Plan-specific limit helpers - UPDATED to match exact pricing page
   getTripLimitForPlan(plan) {
     const limits = {
-      'free': 5,
-      'premium': 50,
-      'pro': 'unlimited',
-      'enterprise': 'unlimited'
+      free: 5,
+      premium: 50,
+      pro: "unlimited",
+      enterprise: "unlimited",
     };
-    return limits[plan] || limits['free'];
+    return limits[plan] || limits["free"];
   },
 
   getPhotoLimitForPlan(plan) {
     const limits = {
-      'free': 30,
-      'premium': 200, // Updated to match your pricing page
-      'pro': 'unlimited',
-      'enterprise': 'unlimited'
+      free: 30,
+      premium: 200, // Updated to match your pricing page
+      pro: "unlimited",
+      enterprise: "unlimited",
     };
-    return limits[plan] || limits['free'];
+    return limits[plan] || limits["free"];
   },
 
   getMemberLimitForPlan(plan) {
     const limits = {
-      'free': 5,
-      'premium': 20,
-      'pro': 'unlimited',
-      'enterprise': 'unlimited'
+      free: 5,
+      premium: 20,
+      pro: "unlimited",
+      enterprise: "unlimited",
     };
-    return limits[plan] || limits['free'];
+    return limits[plan] || limits["free"];
   },
 
   getStorageLimitForPlan(plan) {
     const limits = {
-      'free': 2 * 1024 * 1024 * 1024, // 2GB
-      'premium': 50 * 1024 * 1024 * 1024, // 50GB
-      'pro': 500 * 1024 * 1024 * 1024, // 500GB (NOT unlimited!)
-      'enterprise': Number.MAX_SAFE_INTEGER // Unlimited
+      free: 2 * 1024 * 1024 * 1024, // 2GB
+      premium: 50 * 1024 * 1024 * 1024, // 50GB
+      pro: 500 * 1024 * 1024 * 1024, // 500GB (NOT unlimited!)
+      enterprise: Number.MAX_SAFE_INTEGER, // Unlimited
     };
-    return limits[plan] || limits['free'];
+    return limits[plan] || limits["free"];
   },
 
   // Plan validation utilities
@@ -302,39 +302,41 @@ export const tripsService = {
       const trip = tripId ? await getTrip(tripId) : null;
 
       switch (action) {
-        case 'create_trip':
-          const currentTripCount = await this.getUserTripCount(additionalData.userId);
+        case "create_trip":
+          const currentTripCount = await this.getUserTripCount(
+            additionalData.userId
+          );
           const tripLimit = subscription.features.trips;
-          
-          if (tripLimit !== 'unlimited' && currentTripCount >= tripLimit) {
+
+          if (tripLimit !== "unlimited" && currentTripCount >= tripLimit) {
             return {
               allowed: false,
               reason: `Trip limit reached (${tripLimit} trips)`,
               upgradeRequired: true,
               currentUsage: currentTripCount,
-              limit: tripLimit
+              limit: tripLimit,
             };
           }
           break;
 
-        case 'upload_photos':
+        case "upload_photos":
           return await this.validatePhotoUpload(
             tripId,
             additionalData.newPhotoCount,
             additionalData.totalFileSize
           );
 
-        case 'invite_member':
+        case "invite_member":
           const currentMembers = trip?.members?.length || 0;
           const memberLimit = subscription.features.membersPerTrip;
-          
-          if (memberLimit !== 'unlimited' && currentMembers >= memberLimit) {
+
+          if (memberLimit !== "unlimited" && currentMembers >= memberLimit) {
             return {
               allowed: false,
               reason: `Member limit reached (${memberLimit} members per trip)`,
               upgradeRequired: true,
               currentUsage: currentMembers,
-              limit: memberLimit
+              limit: memberLimit,
             };
           }
           break;
@@ -349,7 +351,7 @@ export const tripsService = {
       return {
         allowed: false,
         reason: "Failed to validate action",
-        type: 'validation_error'
+        type: "validation_error",
       };
     }
   },
@@ -359,10 +361,11 @@ export const tripsService = {
     try {
       const trip = await getTrip(tripId);
       const newPhotoCount = Math.max(0, (trip.photoCount || 0) + increment);
-      
+
       await updateTrip(tripId, {
         photoCount: newPhotoCount,
-        lastPhotoUpload: increment > 0 ? new Date().toISOString() : trip.lastPhotoUpload
+        lastPhotoUpload:
+          increment > 0 ? new Date().toISOString() : trip.lastPhotoUpload,
       });
 
       return newPhotoCount;
@@ -384,20 +387,23 @@ export const tripsService = {
       for (const trip of trips) {
         const photos = await getTripPhotos(trip.id);
         totalPhotos += photos.length;
-        totalStorage += photos.reduce((sum, photo) => sum + (photo.size || 0), 0);
+        totalStorage += photos.reduce(
+          (sum, photo) => sum + (photo.size || 0),
+          0
+        );
       }
 
       // Update subscription service with real usage
       subscriptionService.updateUsage({
         trips: totalTrips,
         photos: totalPhotos,
-        storage: totalStorage
+        storage: totalStorage,
       });
 
       return {
         trips: totalTrips,
         photos: totalPhotos,
-        storage: totalStorage
+        storage: totalStorage,
       };
     } catch (error) {
       console.error("Error syncing usage:", error);
@@ -413,40 +419,44 @@ export const tripsService = {
 
     // Trip limit recommendations
     const tripLimit = subscription.features.trips;
-    if (tripLimit !== 'unlimited') {
+    if (tripLimit !== "unlimited") {
       const tripUsagePercent = ((usage.trips?.used || 0) / tripLimit) * 100;
       if (tripUsagePercent > 80) {
         recommendations.push({
-          type: 'trips',
-          urgency: tripUsagePercent > 95 ? 'high' : 'medium',
-          message: `You've used ${Math.round(tripUsagePercent)}% of your trip limit`,
+          type: "trips",
+          urgency: tripUsagePercent > 95 ? "high" : "medium",
+          message: `You've used ${Math.round(
+            tripUsagePercent
+          )}% of your trip limit`,
           currentPlan: plan,
-          suggestedPlan: plan === 'free' ? 'premium' : 'pro'
+          suggestedPlan: plan === "free" ? "premium" : "pro",
         });
       }
     }
 
     // Photo limit recommendations
     const photoLimit = subscription.features.photosPerTrip;
-    if (photoLimit !== 'unlimited') {
+    if (photoLimit !== "unlimited") {
       // This is per-trip, so we'd need to check individual trips
       recommendations.push({
-        type: 'photos',
-        urgency: 'medium',
+        type: "photos",
+        urgency: "medium",
         message: `Consider upgrading for more photos per trip (current limit: ${photoLimit})`,
         currentPlan: plan,
-        suggestedPlan: plan === 'free' ? 'premium' : 'pro'
+        suggestedPlan: plan === "free" ? "premium" : "pro",
       });
     }
 
     // Storage recommendations
     if (usage.storage.percentage > 80) {
       recommendations.push({
-        type: 'storage',
-        urgency: usage.storage.percentage > 95 ? 'high' : 'medium',
-        message: `You've used ${Math.round(usage.storage.percentage)}% of your storage`,
+        type: "storage",
+        urgency: usage.storage.percentage > 95 ? "high" : "medium",
+        message: `You've used ${Math.round(
+          usage.storage.percentage
+        )}% of your storage`,
         currentPlan: plan,
-        suggestedPlan: plan === 'free' ? 'premium' : 'pro'
+        suggestedPlan: plan === "free" ? "premium" : "pro",
       });
     }
 
@@ -463,25 +473,25 @@ export const tripsService = {
       trips: 5,
       photosPerTrip: 30,
       membersPerTrip: 5,
-      storage: 2 * 1024 * 1024 * 1024 // 2GB
+      storage: 2 * 1024 * 1024 * 1024, // 2GB
     },
     premium: {
       trips: 50,
-      photosPerTrip: 200, 
+      photosPerTrip: 200,
       membersPerTrip: 20,
-      storage: 50 * 1024 * 1024 * 1024 // 50GB
+      storage: 50 * 1024 * 1024 * 1024, // 50GB
     },
     pro: {
-      trips: 'unlimited',
-      photosPerTrip: 'unlimited',
-      membersPerTrip: 'unlimited',
-      storage: 500 * 1024 * 1024 * 1024 // 500GB
+      trips: "unlimited",
+      photosPerTrip: "unlimited",
+      membersPerTrip: "unlimited",
+      storage: 500 * 1024 * 1024 * 1024, // 500GB
     },
     enterprise: {
-      trips: 'unlimited',
-      photosPerTrip: 'unlimited',
-      membersPerTrip: 'unlimited',
-      storage: 'unlimited'
-    }
-  }
+      trips: "unlimited",
+      photosPerTrip: "unlimited",
+      membersPerTrip: "unlimited",
+      storage: "unlimited",
+    },
+  },
 };

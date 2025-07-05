@@ -11,7 +11,7 @@ import {
   CameraIcon,
 } from "@heroicons/react/24/outline";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../../../shared/services/firebase/config";
+import { auth } from "@firebase-services/config";
 
 // New modular components and hooks
 import AuthLayout from "../../components/layout/AuthLayout";
