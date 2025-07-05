@@ -13,9 +13,6 @@ import InvitePeopleCard from "./features/members/components/InvitePeopleCard";
 import UserProfileModal from "./features/members/components/UserProfileModal";
 import TripStatistics from "./features/statistics/components/TripStatistics";
 
-// ✅ REMOVE the immediate lazy import - we'll load it dynamically
-// const FaceRecognition = lazy(() => import("..."));
-
 // Modals
 import PhotoModal from "./components/PhotoModal";
 import AllPhotosModal from "./features/gallery/components/modals/AllPhotosModal";
@@ -23,7 +20,7 @@ import EditTripModal from "./features/header/hooks/EditTripModal";
 
 // Hooks
 import { useTripData } from "./hooks/useTripData";
-import { useFaceRecognition } from "./features/faceRecognition/hooks/useFaceRecognition";
+import { useLazyFaceRecognition } from "./features/faceRecognition/hooks/useLazyFaceRecognition";
 import { usePhotoOperations } from "./features/gallery/hooks/usePhotoOperations";
 import { useTripMembers } from "./features/members/hooks/useTripMembers";
 import { usePhotoModal } from "./features/gallery/hooks/usePhotoModal";
@@ -41,13 +38,6 @@ const TripDetailView = ({ tripId: propTripId }) => {
   const { currentUser } = useAuth();
   const userId = currentUser?.uid;
 
-  // ✅ State for dynamic face recognition loading
-  const [FaceRecognitionComponent, setFaceRecognitionComponent] =
-    useState(null);
-  const [isFaceRecognitionLoaded, setIsFaceRecognitionLoaded] = useState(false);
-  const [isLoadingFaceRecognition, setIsLoadingFaceRecognition] =
-    useState(false);
-
   // Core trip data and loading
   const {
     trip,
@@ -62,8 +52,11 @@ const TripDetailView = ({ tripId: propTripId }) => {
     setTripMembers,
   } = useTripData(tripId, currentUser?.uid);
 
-  // Face recognition functionality
+  // ✅ Use the separated lazy face recognition hook
   const {
+    FaceRecognitionComponent,
+    isFaceRecognitionLoaded,
+    isLoadingFaceRecognition,
     hasProfile,
     isLoadingProfile,
     isProcessingFaces,
@@ -71,76 +64,16 @@ const TripDetailView = ({ tripId: propTripId }) => {
     filteredPhotos,
     faceRecognitionProgress,
     canFilterByFace,
-    handleFindMyPhotos,
-    handleCancelFaceRecognition,
+    enhancedHandleFindMyPhotos,
+    enhancedHandleCancelFaceRecognition,
+    unloadFaceRecognition,
     setFilterActive,
     setFilteredPhotos,
-  } = useFaceRecognition(
+  } = useLazyFaceRecognition(
     photos,
     currentUser?.uid,
     trip?.members?.includes(currentUser?.uid)
   );
-
-  // ✅ Function to dynamically load face recognition
-  const loadFaceRecognition = async () => {
-    if (isFaceRecognitionLoaded) {
-      // Already loaded, just start the process
-      handleFindMyPhotos();
-      return;
-    }
-
-    setIsLoadingFaceRecognition(true);
-
-    try {
-      console.log("🔄 Loading Face Recognition component...");
-
-      // Dynamic import - only loads when user clicks "Find My Photos"
-      const FaceRecognitionModule = await import(
-        "@/dashboard-area/features/trips/ViewTrip/features/faceRecognition/components/FaceRecognition"
-      );
-
-      const LazyFaceRecognition = lazy(() =>
-        Promise.resolve(FaceRecognitionModule)
-      );
-
-      setFaceRecognitionComponent(() => LazyFaceRecognition);
-      setIsFaceRecognitionLoaded(true);
-
-      console.log("✅ Face Recognition component loaded!");
-
-      // Small delay to ensure component is ready, then start face recognition
-      setTimeout(() => {
-        handleFindMyPhotos();
-      }, 100);
-    } catch (error) {
-      console.error("❌ Failed to load Face Recognition component:", error);
-      toast.error("Failed to load face recognition. Please try again.");
-    } finally {
-      setIsLoadingFaceRecognition(false);
-    }
-  };
-
-  // ✅ Function to unload face recognition after completion
-  const unloadFaceRecognition = () => {
-    console.log("🗑️ Unloading Face Recognition component...");
-    setFaceRecognitionComponent(null);
-    setIsFaceRecognitionLoaded(false);
-    setFilterActive(false);
-    setFilteredPhotos([]);
-  };
-
-  // ✅ Enhanced face recognition handlers
-  const enhancedHandleFindMyPhotos = () => {
-    loadFaceRecognition();
-  };
-
-  const enhancedHandleCancelFaceRecognition = () => {
-    handleCancelFaceRecognition();
-    // Unload component after cancellation
-    setTimeout(() => {
-      unloadFaceRecognition();
-    }, 500);
-  };
 
   // Photo operations (upload, delete, select)
   const {
@@ -232,22 +165,6 @@ const TripDetailView = ({ tripId: propTripId }) => {
       });
     }, 100);
   };
-
-  // ✅ Listen for face recognition completion to auto-unload
-  React.useEffect(() => {
-    // When face recognition processing finishes and we have results
-    if (!isProcessingFaces && filterActive && isFaceRecognitionLoaded) {
-      // Auto-unload after 30 seconds of inactivity (optional)
-      const unloadTimer = setTimeout(() => {
-        if (!isProcessingFaces) {
-          console.log("⏱️ Auto-unloading Face Recognition after inactivity");
-          unloadFaceRecognition();
-        }
-      }, 30000); // 30 seconds
-
-      return () => clearTimeout(unloadTimer);
-    }
-  }, [isProcessingFaces, filterActive, isFaceRecognitionLoaded]);
 
   // Loading state
   if (loading) {
@@ -359,13 +276,13 @@ const TripDetailView = ({ tripId: propTripId }) => {
               mobileActiveTab === "trip" ? "block" : "hidden xl:block"
             }`}
           >
-            {/* Photo Upload Section - keeping existing code */}
+            {/* Photo Upload Section */}
             {showUploadForm && (
               <div
                 className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in"
                 onClick={() => setShowUploadForm(false)}
               >
-                {/* ... existing upload form code ... */}
+                {/* Upload form content would go here */}
               </div>
             )}
 
@@ -385,7 +302,7 @@ const TripDetailView = ({ tripId: propTripId }) => {
               onPhotoUploaded={handlePhotoUploaded}
             />
 
-            {/* ✅ Dynamic Face Recognition Section */}
+            {/* ✅ Dynamic Face Recognition Section - Only loads when needed */}
             {isFaceRecognitionLoaded && FaceRecognitionComponent ? (
               <Suspense
                 fallback={
@@ -630,7 +547,7 @@ const TripDetailView = ({ tripId: propTripId }) => {
             onPromoteToAdmin={handlePromoteToAdmin}
             onDemoteFromAdmin={handleDemoteFromAdmin}
             onRemoveFromTrip={handleRemoveFromTrip}
-            onInviteToTrip={handleInviteToTrip} // NEW - for inviting friends to trip
+            onInviteToTrip={handleInviteToTrip}
             onClose={() => setSelectedUser(null)}
             setSelectedUser={setSelectedUser}
           />

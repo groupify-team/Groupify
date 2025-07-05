@@ -18,7 +18,7 @@ import {
   deleteFaceProfile,
   getFaceProfile,
   getProfilePhotos,
-} from "@shared/services/faceRecognitionService";
+} from "@/dashboard-area/features/trips/ViewTrip/features/faceRecognition/service/faceRecognitionService";
 import { deleteFaceProfileFromStorage } from "@firebase-services/faceProfiles";
 import { uploadPhoto } from "@firebase-services/storage";
 

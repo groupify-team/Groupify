@@ -1,14 +1,10 @@
-// services/faceRecognitionService.js
-
-// ❌ REMOVED: import * as faceapi from "@vladmandic/face-api";
-
 class ModernFaceRecognitionService {
   constructor() {
     this.isInitialized = false;
     this.userFaceProfiles = new Map();
     this.isProcessing = false;
     this.shouldCancel = false;
-    this.faceapi = null; // ✅ Store dynamically loaded faceapi
+    this.faceapi = null; // Store dynamically loaded faceapi
     this.setupCleanup();
 
     // More lenient thresholds for better recall
@@ -734,17 +730,18 @@ class ModernFaceRecognitionService {
   }
 }
 
-// ✅ DON'T create instance immediately - export a factory function instead
+// DON'T create instance immediately - export a factory function instead
 let serviceInstance = null;
 
 const getFaceRecognitionService = () => {
+  // Only create when actually needed
   if (!serviceInstance) {
     serviceInstance = new ModernFaceRecognitionService();
   }
   return serviceInstance;
 };
 
-// ✅ Update all exports to use lazy service
+// Update all exports to use lazy service
 export const createFaceProfile = async (
   userId,
   faceImages,
