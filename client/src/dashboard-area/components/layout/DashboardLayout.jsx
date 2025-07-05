@@ -1,4 +1,4 @@
-// DashboardLayout.jsx - FIXED VERSION with proper layout for fixed header
+// DashboardLayout.jsx - OPTIMIZED VERSION with progressive loading
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@auth/contexts/AuthContext";
 import { useDashboardData } from "@dashboard/hooks/useDashboardData";
@@ -11,6 +11,7 @@ import DashboardSidebar from "@dashboard/components/layout/DashboardSidebar";
 import DashboardHeader from "@dashboard/components/layout/DashboardHeader";
 import MobileBottomNav from "@dashboard/components/layout/MobileBottomNav";
 import AccessibilityModal from "@/shared/components/accessibility/AccessibilityModal";
+import DashboardSkeleton from "./DashboardSkeleton"; // New skeleton component
 
 // Try to import new hooks and modals, fallback if they don't exist
 let useDashboardLayout, useDashboardModals, AddFriendModal, UserProfileModal;
@@ -205,7 +206,7 @@ const DashboardLayout = ({ children }) => {
       closeLogoutModal();
       navigate("/", { replace: true });
     } catch (error) {
-      console.error("? Logout error:", error);
+      console.error("❌ Logout error:", error);
       showErrorMessage("Failed to logout. Please try again.");
     }
   };
@@ -260,48 +261,81 @@ const DashboardLayout = ({ children }) => {
     }
   };
 
-  // Show loading screen while data is loading
+  // OPTIMIZED: Show layout immediately with skeleton loading instead of full-screen loader
   if (loading) {
     return (
-      <div className="min-h-screen w-full bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 flex flex-col items-center justify-center transition-all duration-500">
-        <div className="text-center">
-          {/* Site Logo */}
-          <div className="relative mb-8">
-            <img
-              src="/groupifyLogo.png"
-              alt="Groupify Logo"
-              className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 object-contain animate-pulse drop-shadow-2xl mx-auto"
-            />
-            {/* Glow Effect around logo */}
-            <div className="absolute inset-0 w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 bg-gradient-to-r from-indigo-600/20 to-purple-600/20 rounded-3xl blur-xl animate-pulse mx-auto"></div>
-          </div>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 flex w-full transition-colors duration-500">
+        {/* Sidebar */}
+        <div
+          className={`fixed inset-y-0 left-0 z-40 w-64 bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg shadow-xl border-r border-white/20 dark:border-gray-700/50 transition-transform duration-300 ease-in-out ${
+            sidebarOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
+        >
+          <DashboardSidebar
+            sidebarOpen={sidebarOpen}
+            onSidebarClose={() => {
+              if (layoutData?.sidebar?.close) {
+                layoutData.sidebar.close();
+              } else {
+                setLocalSidebarOpen(false);
+              }
+            }}
+            onLogoutClick={handleLogoutClick}
+          />
+        </div>
 
-          {/* Brand Name */}
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 bg-clip-text text-transparent mb-8 animate-pulse leading-relaxed pb-2">
-            Groupify
-          </h1>
+        {/* Mobile Overlay */}
+        {sidebarOpen && isMobile && (
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 z-30"
+            onClick={() => {
+              if (layoutData?.sidebar?.close) {
+                layoutData.sidebar.close();
+              } else {
+                setLocalSidebarOpen(false);
+              }
+            }}
+          />
+        )}
 
-          {/* Loading Spinner */}
-          <div className="w-16 h-16 border-4 border-purple-200 dark:border-purple-700 border-t-indigo-600 dark:border-t-indigo-400 rounded-full animate-spin mx-auto mb-6"></div>
+        {/* Main Content */}
+        <div
+          className="flex-1 flex flex-col transition-all duration-300 ease-in-out overflow-hidden"
+          style={{
+            marginLeft: !isMobile && sidebarOpen ? "256px" : "0px",
+            paddingTop: "56px", // Height of the header
+          }}
+        >
+          {/* Header */}
+          <DashboardHeader
+            onSettingsClick={handleSettingsClick}
+            onLogoutClick={handleLogoutClick}
+            onSidebarToggle={handleSidebarToggle}
+            sidebarOpen={sidebarOpen}
+            isMobile={isMobile}
+          />
 
-          {/* Loading Text */}
-          <p className="text-xl text-gray-800 dark:text-white font-medium mb-2">
-            Loading your dashboard...
-          </p>
+          {/* Main Content with Skeleton */}
+          <main className="flex-1 overflow-y-auto">
+            <div className="w-full px-2 sm:px-4 lg:px-8 max-w-full py-2 sm:py-4">
+              <DashboardSkeleton />
+            </div>
+          </main>
 
-          {/* Subtitle */}
-          <p className="text-sm text-gray-600 dark:text-gray-300">
-            Preparing your personalized experience
-          </p>
+          {/* Mobile Bottom Navigation */}
+          {isMobile && (
+            <div className="fixed bottom-0 left-0 right-0 z-40">
+              <MobileBottomNav />
+            </div>
+          )}
         </div>
       </div>
     );
   }
 
   return (
-    // ?? FIXED: Added proper layout structure with fixed header spacing
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 flex w-full transition-colors duration-500">
-      {/* ?? FIXED: Sidebar stays the same - already using 'fixed' positioning */}
+      {/* Sidebar */}
       <div
         className={`fixed inset-y-0 left-0 z-40 w-64 bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg shadow-xl border-r border-white/20 dark:border-gray-700/50 transition-transform duration-300 ease-in-out ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
@@ -334,16 +368,15 @@ const DashboardLayout = ({ children }) => {
         />
       )}
 
-      {/* ?? FIXED: Main Content with proper spacing for fixed header */}
+      {/* Main Content */}
       <div
         className="flex-1 flex flex-col transition-all duration-300 ease-in-out overflow-hidden"
         style={{
           marginLeft: !isMobile && sidebarOpen ? "256px" : "0px",
-          // ?? CRITICAL: Add top padding to account for fixed header
-          paddingTop: "56px", // Height of the header (14 * 4 = 56px for h-14)
+          paddingTop: "56px", // Height of the header
         }}
       >
-        {/* ?? FIXED: Header with proper fixed positioning */}
+        {/* Header */}
         <DashboardHeader
           onSettingsClick={handleSettingsClick}
           onLogoutClick={handleLogoutClick}
@@ -352,14 +385,14 @@ const DashboardLayout = ({ children }) => {
           isMobile={isMobile}
         />
 
-        {/* ?? FIXED: Main Content with proper spacing */}
+        {/* Main Content */}
         <main className="flex-1 overflow-y-auto">
           <div className="w-full px-2 sm:px-4 lg:px-8 max-w-full py-2 sm:py-4">
             {children}
           </div>
         </main>
 
-        {/* ?? FIXED: Mobile Bottom Navigation - already using 'fixed' positioning */}
+        {/* Mobile Bottom Navigation */}
         {isMobile && (
           <div className="fixed bottom-0 left-0 right-0 z-40">
             <MobileBottomNav />
@@ -369,7 +402,7 @@ const DashboardLayout = ({ children }) => {
 
       {/* MODALS */}
 
-      {/* Add Friend Modal - Only render if component exists */}
+      {/* Add Friend Modal */}
       {showAddFriendModal && AddFriendModal && (
         <AddFriendModal
           isOpen={showAddFriendModal}
@@ -381,7 +414,7 @@ const DashboardLayout = ({ children }) => {
         />
       )}
 
-      {/* User Profile Modal - Only render if component exists */}
+      {/* User Profile Modal */}
       {isUserProfileOpen && selectedUserProfile && UserProfileModal && (
         <UserProfileModal
           isOpen={isUserProfileOpen}
@@ -441,22 +474,6 @@ const DashboardLayout = ({ children }) => {
             </div>
           </div>
         </div>
-      )}
-
-      {/* Debug indicators for modal state */}
-      {process.env.NODE_ENV === "development" && (
-        <>
-          {showAddFriendModal && (
-            <div className="fixed bottom-4 right-4 bg-green-500 text-white p-2 rounded text-sm z-50">
-              ? AddFriend Modal is rendering!
-            </div>
-          )}
-          {isUserProfileOpen && (
-            <div className="fixed bottom-16 right-4 bg-blue-500 text-white p-2 rounded text-sm z-50">
-              ? UserProfile Modal is rendering!
-            </div>
-          )}
-        </>
       )}
     </div>
   );

@@ -109,10 +109,53 @@ const FaceProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
     }
   }, [isOpen]);
 
+  // Function to check if an image is a duplicate
+  const isDuplicate = (newPhoto, existingPhotos) => {
+    return existingPhotos.some(existingPhoto => {
+      // Compare by file size and name (basic check)
+      const sizeMatch = newPhoto.size === existingPhoto.size;
+      const nameMatch = newPhoto.originalName === existingPhoto.originalName;
+      
+      // Compare by download URL if available (for exact matches)
+      const urlMatch = newPhoto.downloadURL && existingPhoto.downloadURL && 
+                      newPhoto.downloadURL === existingPhoto.downloadURL;
+      
+      // If we have file objects, compare lastModified as additional check
+      const modifiedMatch = newPhoto.lastModified && existingPhoto.lastModified &&
+                           newPhoto.lastModified === existingPhoto.lastModified;
+      
+      // Consider it a duplicate if size + name match, or URL matches, or size + modified time match
+      return (sizeMatch && nameMatch) || urlMatch || (sizeMatch && modifiedMatch);
+    });
+  };
+
   // Handle photos uploaded via PhotoUpload component
   const handlePhotosUploaded = (photos) => {
-    setUploadedPhotos(photos);
-    setError("");
+    // Filter out duplicate photos
+    const newUniquePhotos = photos.filter(photo => {
+      if (isDuplicate(photo, uploadedPhotos)) {
+        // Show error for duplicate but don't stop the process
+        setError(prev => prev ? 
+          `${prev} • Duplicate image "${photo.originalName || 'Unknown'}" was skipped.` :
+          `Duplicate image "${photo.originalName || 'Unknown'}" was skipped.`
+        );
+        return false;
+      }
+      return true;
+    });
+
+    if (newUniquePhotos.length === 0) {
+      setError("All selected images are duplicates. Please choose different photos.");
+      return;
+    }
+
+    // Clear any previous errors if we have valid new photos
+    if (newUniquePhotos.length > 0 && newUniquePhotos.length === photos.length) {
+      setError("");
+    }
+
+    setUploadedPhotos(prev => [...prev, ...newUniquePhotos]); // Append new unique photos
+    
     // Show review screen after upload
     setShowReview(true);
   };
@@ -427,19 +470,37 @@ const FaceProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
                 Back to methods
               </button>
 
+              {/* Progress Indicator - Show when photos are uploaded */}
+              {uploadedPhotos.length > 0 && (
+                <div className="bg-blue-50/80 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
+                  <div className="flex items-center gap-3 mb-3">
+                    <InformationCircleIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                    <div className="text-sm font-semibold text-blue-800 dark:text-blue-400">
+                      Progress: {uploadedPhotos.length}/5 photos uploaded
+                    </div>
+                  </div>
+                  <p className="text-sm text-blue-700 dark:text-blue-300">
+                    {uploadedPhotos.length < 2 
+                      ? `Upload ${2 - uploadedPhotos.length} more photo${2 - uploadedPhotos.length === 1 ? '' : 's'} to create your profile`
+                      : `You can upload ${5 - uploadedPhotos.length} more photo${5 - uploadedPhotos.length === 1 ? '' : 's'} or create your profile now`
+                    }
+                  </p>
+                </div>
+              )}
+
               {/* PhotoUpload Component with constraints */}
               <PhotoUpload
                 tripId="face-profile" // Dummy tripId for face profile uploads
                 onPhotoUploaded={handlePhotosUploaded}
                 maxPhotos={5}
-                currentPhotoCount={0}
+                currentPhotoCount={uploadedPhotos.length} // Pass actual count, not 0
                 title="Upload Face Photos"
-                subtitle="Upload 2-5 clear photos of yourself for profile creation"
+                subtitle={`Upload ${uploadedPhotos.length > 0 ? `${5 - uploadedPhotos.length} more` : '2-5'} clear photos of yourself for profile creation`}
                 acceptedFormats="JPG, PNG"
                 maxFileSize="10MB"
                 showLimitWarning={true}
-                limitWarningText="Please upload between 2-5 high-quality photos of yourself for best recognition accuracy."
-                disabled={false}
+                limitWarningText={`Please upload ${uploadedPhotos.length === 0 ? 'between 2-5' : `${Math.max(0, 2 - uploadedPhotos.length)} more`} high-quality photos of yourself for best recognition accuracy.`}
+                disabled={uploadedPhotos.length >= 5} // Disable when max reached
               />
 
               {/* Tips Section */}
