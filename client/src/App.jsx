@@ -14,6 +14,9 @@ import { ThemeProvider } from "@/shared/contexts/ThemeContext";
 import ProtectedRoute from "@/auth-area/components/ProtectedRoute";
 import CloudflareTurnstileGate from "@/shared/components/ui/CloudFlareTurnstileGate";
 
+// ADD THIS IMPORT - GlobalAccessibilityProvider
+import GlobalAccessibilityProvider from "@/shared/components/accessibility/GlobalAccessibilityProvider";
+
 // Auth Area Components - Updated paths for refactored structure
 import SignInPage from "@/auth-area/pages/SignInPage/SignInPage";
 import SignUpPage from "@/auth-area/pages/SignUpPage/SignUpPage";
@@ -338,183 +341,187 @@ function App() {
   const AppContent = () => (
     <Router>
       <AuthProvider>
-        <FlowController>
-          {/* Global Toast Notifications */}
-          <Toaster
-            position="top-center"
-            toastOptions={{
-              duration: 3000,
-              className: "z-[70]",
-            }}
-          />
+        {/* 🎯 ADD GlobalAccessibilityProvider HERE - wraps everything inside AuthProvider */}
+        <GlobalAccessibilityProvider>
+          <FlowController>
+            {/* Global Toast Notifications */}
+            <Toaster
+              position="top-center"
+              toastOptions={{
+                duration: 3000,
+                className: "z-[70]",
+              }}
+            />
 
-          {/* Main App Layout */}
-          <div className="transition-all duration-500 ease-in-out">
-            <Routes>
-              {/* Public Routes */}
-              <Route
-                path="/"
-                element={
-                  <div className="page-enter">
-                    <HomePage />
-                  </div>
-                }
-              />
-
-              {/* Authentication Routes - Updated to use refactored components */}
-              <Route
-                path="/signin"
-                element={
-                  <div className="page-enter">
-                    <SignInPage />
-                  </div>
-                }
-              />
-              <Route
-                path="/signup"
-                element={
-                  <div className="page-enter">
-                    <SignUpPage />
-                  </div>
-                }
-              />
-              <Route
-                path="/confirm-email"
-                element={
-                  <div className="page-enter">
-                    <ConfirmEmailPage />
-                  </div>
-                }
-              />
-              <Route
-                path="/forgot-password"
-                element={
-                  <div className="page-enter">
-                    <ForgotPasswordPage />
-                  </div>
-                }
-              />
-              <Route
-                path="/reset-password"
-                element={
-                  <div className="page-enter">
-                    <ResetPasswordPage />
-                  </div>
-                }
-              />
-
-              {/* Legal & Info Pages */}
-              <Route
-                path="/terms"
-                element={
-                  <div className="page-enter">
-                    <TermsOfService />
-                  </div>
-                }
-              />
-              <Route
-                path="/privacy-policy"
-                element={
-                  <div className="page-enter">
-                    <PrivacyPolicy />
-                  </div>
-                }
-              />
-              <Route
-                path="/contact"
-                element={
-                  <div className="page-enter">
-                    <ContactUs />
-                  </div>
-                }
-              />
-              <Route path="/about" element={<AboutUs />} />
-              <Route path="/careers" element={<Careers />} />
-              <Route path="/help" element={<HelpCenter />} />
-              <Route path="/blog" element={<Blog />} />
-              <Route path="/features" element={<Features />} />
-              <Route path="/pricing" element={<Pricing />} />
-              <Route path="/status" element={<Status />} />
-              <Route path="/billing" element={<Billing />} />
-
-              {/* Protected Routes - Restored to Dashboard */}
-              <Route
-                path="/dashboard"
-                element={
-                  <ProtectedRoute>
-                    <div className="smooth-page-transition">
-                      <Dashboard />
-                    </div>
-                  </ProtectedRoute>
-                }
-              >
+            {/* Main App Layout */}
+            <div className="transition-all duration-500 ease-in-out">
+              <Routes>
+                {/* Public Routes */}
                 <Route
-                  index
+                  path="/"
                   element={
-                    <div className="animate-fade-in-smooth">
-                      <TripsSection />
+                    <div className="page-enter">
+                      <HomePage />
+                    </div>
+                  }
+                />
+
+                {/* Authentication Routes - Updated to use refactored components */}
+                <Route
+                  path="/signin"
+                  element={
+                    <div className="page-enter">
+                      <SignInPage />
                     </div>
                   }
                 />
                 <Route
-                  path="trips"
+                  path="/signup"
                   element={
-                    <div className="animate-fade-in-smooth">
-                      <TripsSection />
+                    <div className="page-enter">
+                      <SignUpPage />
                     </div>
                   }
                 />
                 <Route
-                  path="trip/:tripId"
+                  path="/confirm-email"
                   element={
-                    <div className="animate-fade-in-smooth">
-                      <TripDetailView />
+                    <div className="page-enter">
+                      <ConfirmEmailPage />
                     </div>
                   }
                 />
                 <Route
-                  path="friends"
+                  path="/forgot-password"
                   element={
-                    <div className="animate-fade-in-smooth">
-                      <FriendsSection />
+                    <div className="page-enter">
+                      <ForgotPasswordPage />
                     </div>
                   }
                 />
                 <Route
-                  path="settings"
+                  path="/reset-password"
                   element={
-                    <div className="animate-fade-in-smooth">
-                      <SettingsSection />
+                    <div className="page-enter">
+                      <ResetPasswordPage />
                     </div>
                   }
                 />
-              </Route>
 
-              {/* 404 Fallback */}
-              <Route
-                path="*"
-                element={
-                  <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900">
-                    <div className="text-center">
-                      <h1 className="text-4xl font-bold text-gray-800 dark:text-white mb-4">
-                        404
-                      </h1>
-                      <p className="text-gray-600 dark:text-gray-400 mb-8">
-                        Page not found
-                      </p>
-                      <a
-                        href="/"
-                        className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
-                      >
-                        Go Home
-                      </a>
+                {/* Legal & Info Pages */}
+                <Route
+                  path="/terms"
+                  element={
+                    <div className="page-enter">
+                      <TermsOfService />
                     </div>
-                  </div>
-                }
-              />
-            </Routes>
-          </div>
-        </FlowController>
+                  }
+                />
+                <Route
+                  path="/privacy-policy"
+                  element={
+                    <div className="page-enter">
+                      <PrivacyPolicy />
+                    </div>
+                  }
+                />
+                <Route
+                  path="/contact"
+                  element={
+                    <div className="page-enter">
+                      <ContactUs />
+                    </div>
+                  }
+                />
+                <Route path="/about" element={<AboutUs />} />
+                <Route path="/careers" element={<Careers />} />
+                <Route path="/help" element={<HelpCenter />} />
+                <Route path="/blog" element={<Blog />} />
+                <Route path="/features" element={<Features />} />
+                <Route path="/pricing" element={<Pricing />} />
+                <Route path="/status" element={<Status />} />
+                <Route path="/billing" element={<Billing />} />
+
+                {/* Protected Routes - Restored to Dashboard */}
+                <Route
+                  path="/dashboard"
+                  element={
+                    <ProtectedRoute>
+                      <div className="smooth-page-transition">
+                        <Dashboard />
+                      </div>
+                    </ProtectedRoute>
+                  }
+                >
+                  <Route
+                    index
+                    element={
+                      <div className="animate-fade-in-smooth">
+                        <TripsSection />
+                      </div>
+                    }
+                  />
+                  <Route
+                    path="trips"
+                    element={
+                      <div className="animate-fade-in-smooth">
+                        <TripsSection />
+                      </div>
+                    }
+                  />
+                  <Route
+                    path="trip/:tripId"
+                    element={
+                      <div className="animate-fade-in-smooth">
+                        <TripDetailView />
+                      </div>
+                    }
+                  />
+                  <Route
+                    path="friends"
+                    element={
+                      <div className="animate-fade-in-smooth">
+                        <FriendsSection />
+                      </div>
+                    }
+                  />
+                  <Route
+                    path="settings"
+                    element={
+                      <div className="animate-fade-in-smooth">
+                        <SettingsSection />
+                      </div>
+                    }
+                  />
+                </Route>
+
+                {/* 404 Fallback */}
+                <Route
+                  path="*"
+                  element={
+                    <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900">
+                      <div className="text-center">
+                        <h1 className="text-4xl font-bold text-gray-800 dark:text-white mb-4">
+                          404
+                        </h1>
+                        <p className="text-gray-600 dark:text-gray-400 mb-8">
+                          Page not found
+                        </p>
+                        <a
+                          href="/"
+                          className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+                        >
+                          Go Home
+                        </a>
+                      </div>
+                    </div>
+                  }
+                />
+              </Routes>
+            </div>
+          </FlowController>
+        </GlobalAccessibilityProvider>
+        {/* 🎯 GlobalAccessibilityProvider ends here */}
       </AuthProvider>
     </Router>
   );

@@ -10,7 +10,7 @@ import { useNavigate } from "react-router-dom";
 import DashboardSidebar from "@dashboard/components/layout/DashboardSidebar";
 import DashboardHeader from "@dashboard/components/layout/DashboardHeader";
 import MobileBottomNav from "@dashboard/components/layout/MobileBottomNav";
-import SettingsModal from "@dashboard/features/settings/components/SettingsModal";
+import AccessibilityModal from "@/shared/components/accessibility/AccessibilityModal";
 
 // Try to import new hooks and modals, fallback if they don't exist
 let useDashboardLayout, useDashboardModals, AddFriendModal, UserProfileModal;
@@ -402,7 +402,7 @@ const DashboardLayout = ({ children }) => {
 
       {/* Settings Modal */}
       {showSettingsModal && (
-        <SettingsModal
+        <AccessibilityModal
           isOpen={showSettingsModal}
           onClose={closeSettingsModal}
           theme={theme}
