@@ -16,6 +16,7 @@ import {
 import PublicFooter from "../../components/layout/PublicFooter";
 
 // Import components that provide functionality
+
 import AccessibilityModal from "@/shared/components/accessibility/AccessibilityModal";
 
 // Launch Animation Component (keep exactly as before)

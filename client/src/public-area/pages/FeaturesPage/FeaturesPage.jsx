@@ -3,7 +3,10 @@ import { Link } from "react-router-dom";
 import PublicLayout from "../../components/layout/PublicLayout";
 import HeroSection from "../../components/ui/HeroSection";
 import { usePublicNavigation } from "../../hooks/usePublicNavigation";
+import SettingsModal from "@dashboard/features/settings/components/modals/EditProfileModal";
+
 import AccessibilityModal from "@/shared/components/accessibility/AccessibilityModal";
+
 
 
 import {
@@ -61,7 +64,11 @@ const StatsSection = ({ stats, isLoaded }) => (
   </div>
 );
 
-const CategoryFilter = ({ featureCategories, activeCategory, setActiveCategory }) => (
+const CategoryFilter = ({
+  featureCategories,
+  activeCategory,
+  setActiveCategory,
+}) => (
   <div className="text-center mb-8 sm:mb-12">
     <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-6 sm:mb-8">
       Explore Our Features
@@ -157,7 +164,7 @@ const FeaturesGrid = ({ filteredFeatures, isLoaded }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
       {filteredFeatures.map((feature, index) => (
-        <FeatureCard 
+        <FeatureCard
           key={`${feature.category}-${index}`}
           feature={feature}
           index={index}
@@ -168,27 +175,24 @@ const FeaturesGrid = ({ filteredFeatures, isLoaded }) => {
   );
 };
 
-const FeaturesSection = ({ 
-  featureCategories, 
-  activeCategory, 
-  setActiveCategory, 
-  filteredFeatures, 
-  isLoaded 
+const FeaturesSection = ({
+  featureCategories,
+  activeCategory,
+  setActiveCategory,
+  filteredFeatures,
+  isLoaded,
 }) => (
   <div className="py-12 sm:py-16 md:py-20">
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       {/* Category Filter */}
-      <CategoryFilter 
+      <CategoryFilter
         featureCategories={featureCategories}
         activeCategory={activeCategory}
         setActiveCategory={setActiveCategory}
       />
 
       {/* Features Grid */}
-      <FeaturesGrid 
-        filteredFeatures={filteredFeatures}
-        isLoaded={isLoaded}
-      />
+      <FeaturesGrid filteredFeatures={filteredFeatures} isLoaded={isLoaded} />
     </div>
   </div>
 );
@@ -201,8 +205,8 @@ const ComingSoonSection = ({ comingSoonFeatures }) => (
           What's Coming Next
         </h2>
         <p className="text-base sm:text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-          We're constantly innovating to bring you the best photo
-          organization experience
+          We're constantly innovating to bring you the best photo organization
+          experience
         </p>
       </div>
 
@@ -240,8 +244,8 @@ const CallToActionSection = ({ handleGetStarted }) => (
         Ready to Experience These Features?
       </h2>
       <p className="text-base sm:text-lg md:text-xl text-indigo-100 mb-6 sm:mb-8 leading-relaxed max-w-2xl mx-auto">
-        Join thousands of users who are already organizing their photos
-        smarter with Groupify's powerful features.
+        Join thousands of users who are already organizing their photos smarter
+        with Groupify's powerful features.
       </p>
       <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
         <button
@@ -263,10 +267,10 @@ const CallToActionSection = ({ handleGetStarted }) => (
 );
 
 const Features = () => {
-  const { 
+  const {
     handleGetStarted,
-    headerProps,      // NEW: Contains onSettingsClick
-    settingsProps     // NEW: Contains all settings modal props
+    headerProps, // NEW: Contains onSettingsClick
+    settingsProps, // NEW: Contains all settings modal props
   } = usePublicNavigation();
   const [isLoaded, setIsLoaded] = useState(false);
   const [activeCategory, setActiveCategory] = useState("all");
@@ -607,7 +611,9 @@ const Features = () => {
       headerType="public"
       headerProps={headerProps}
       footerType="extended"
-      footerProps={{ customText: "© 2025 Groupify. Powerful features, simple experience." }}
+      footerProps={{
+        customText: "© 2025 Groupify. Powerful features, simple experience.",
+      }}
     >
       {/* Hero Section */}
       <HeroSection
@@ -626,7 +632,7 @@ const Features = () => {
       <StatsSection stats={stats} isLoaded={isLoaded} />
 
       {/* Features Section */}
-      <FeaturesSection 
+      <FeaturesSection
         featureCategories={featureCategories}
         activeCategory={activeCategory}
         setActiveCategory={setActiveCategory}
@@ -639,12 +645,12 @@ const Features = () => {
 
       {/* CTA Section */}
       <CallToActionSection handleGetStarted={handleGetStarted} />
-        
+
       {/* Settings Modal*/}
+
       <AccessibilityModal {...settingsProps} />
 
-    
-    </PublicLayout>
+        </PublicLayout>
   );
 };
 

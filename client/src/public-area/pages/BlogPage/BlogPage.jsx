@@ -23,8 +23,8 @@ import {
   TagIcon,
 } from "@heroicons/react/24/outline";
 import { toast } from "react-hot-toast";
-import AccessibilityModal from "@/shared/components/accessibility/AccessibilityModal";
 
+import AccessibilityModal from "@/shared/components/accessibility/AccessibilityModal";
 
 
 const toastOptions = {
@@ -37,11 +37,8 @@ const toastOptions = {
 
 const BlogPage = () => {
   const { currentUser } = useAuth();
-  const { 
-    handleGetStarted,
-    headerProps,
-    settingsProps 
-  } = usePublicNavigation();
+  const { handleGetStarted, headerProps, settingsProps } =
+    usePublicNavigation();
   const [posts, setPosts] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -51,7 +48,6 @@ const BlogPage = () => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [email, setEmail] = useState("");
   const [isSubscribing, setIsSubscribing] = useState(false);
-
 
   // Load posts from localStorage on component mount
   useEffect(() => {
@@ -246,12 +242,12 @@ const BlogPage = () => {
     </button>
   ) : null;
   const combinedHeaderProps = {
-  ...headerProps,
-  actions: headerActions
-};
+    ...headerProps,
+    actions: headerActions,
+  };
 
   return (
-    <PublicLayout 
+    <PublicLayout
       headerType="public"
       headerProps={combinedHeaderProps}
       footerType="simple"
@@ -270,7 +266,7 @@ const BlogPage = () => {
           {/* Blog Content */}
           <div className="lg:col-span-3 flex flex-col items-center lg:items-start">
             {/* Category Filter */}
-            <CategoryFilter 
+            <CategoryFilter
               categories={categories}
               selectedCategory={selectedCategory}
               setSelectedCategory={setSelectedCategory}
@@ -282,7 +278,7 @@ const BlogPage = () => {
             {featuredPosts.length > 0 &&
               selectedCategory === "all" &&
               searchQuery === "" && (
-                <FeaturedPosts 
+                <FeaturedPosts
                   posts={featuredPosts}
                   isLoaded={isLoaded}
                   onPostClick={setSelectedPost}
@@ -291,7 +287,7 @@ const BlogPage = () => {
               )}
 
             {/* All Posts */}
-            <PostsList 
+            <PostsList
               posts={filteredPosts}
               selectedCategory={selectedCategory}
               categories={categories}
@@ -303,7 +299,7 @@ const BlogPage = () => {
           </div>
 
           {/* Sidebar */}
-          <BlogSidebar 
+          <BlogSidebar
             recentPosts={recentPosts}
             posts={posts}
             searchQuery={searchQuery}
@@ -321,7 +317,7 @@ const BlogPage = () => {
 
       {/* Modals */}
       {showCreateModal && (
-        <CreatePostModal 
+        <CreatePostModal
           onClose={() => setShowCreateModal(false)}
           onSubmit={(newPost) => {
             setPosts((prev) => [newPost, ...prev]);
@@ -331,7 +327,7 @@ const BlogPage = () => {
           currentUser={currentUser}
         />
       )}
-      
+
       {selectedPost && (
         <PostDetailModal
           post={selectedPost}
@@ -345,12 +341,12 @@ const BlogPage = () => {
 };
 
 // Category Filter Component
-const CategoryFilter = ({ 
-  categories, 
-  selectedCategory, 
-  setSelectedCategory, 
-  setSearchQuery, 
-  setIsTagFiltered 
+const CategoryFilter = ({
+  categories,
+  selectedCategory,
+  setSelectedCategory,
+  setSearchQuery,
+  setIsTagFiltered,
 }) => (
   <div className="mb-6 sm:mb-8">
     <div className="flex flex-wrap gap-2 sm:gap-3 justify-center sm:justify-start">
@@ -386,9 +382,9 @@ const FeaturedPosts = ({ posts, isLoaded, onPostClick, onLike }) => (
     </h2>
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 justify-center md:justify-start">
       {posts.slice(0, 2).map((post) => (
-        <PostCard 
-          key={post.id} 
-          post={post} 
+        <PostCard
+          key={post.id}
+          post={post}
           isLoaded={isLoaded}
           onPostClick={onPostClick}
           onLike={onLike}
@@ -400,14 +396,14 @@ const FeaturedPosts = ({ posts, isLoaded, onPostClick, onLike }) => (
 );
 
 // Posts List Component
-const PostsList = ({ 
-  posts, 
-  selectedCategory, 
-  categories, 
-  isLoaded, 
-  searchQuery, 
-  onPostClick, 
-  onLike 
+const PostsList = ({
+  posts,
+  selectedCategory,
+  categories,
+  isLoaded,
+  searchQuery,
+  onPostClick,
+  onLike,
 }) => (
   <div className="w-full flex flex-col items-center lg:items-start">
     <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-4 sm:mb-6 text-center lg:text-left">
@@ -434,7 +430,7 @@ const PostsList = ({
     ) : (
       <div className="space-y-4 sm:space-y-6 flex flex-col items-center lg:items-stretch">
         {posts.map((post, index) => (
-          <PostCard 
+          <PostCard
             key={post.id}
             post={post}
             isLoaded={isLoaded}
@@ -450,29 +446,33 @@ const PostsList = ({
 );
 
 // Post Card Component
-const PostCard = ({ 
-  post, 
-  isLoaded, 
-  index = 0, 
-  onPostClick, 
-  onLike, 
-  featured = false, 
-  listView = false 
+const PostCard = ({
+  post,
+  isLoaded,
+  index = 0,
+  onPostClick,
+  onLike,
+  featured = false,
+  listView = false,
 }) => (
   <article
     className={`group bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-xl ${
-      listView ? '' : 'sm:rounded-2xl'
+      listView ? "" : "sm:rounded-2xl"
     } border border-white/20 dark:border-gray-700/50 overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer ${
-      listView ? 'max-w-2xl lg:max-w-none w-full' : ''
+      listView ? "max-w-2xl lg:max-w-none w-full" : ""
     } ${
       isLoaded
-        ? `opacity-100 translate-y-0 ${listView ? `delay-${index * 100}` : ''}`
+        ? `opacity-100 translate-y-0 ${listView ? `delay-${index * 100}` : ""}`
         : "opacity-0 translate-y-8"
     }`}
     onClick={() => onPostClick(post)}
   >
     <div className="p-4 sm:p-6">
-      <div className={listView ? "flex flex-col sm:flex-row sm:items-start gap-4" : ""}>
+      <div
+        className={
+          listView ? "flex flex-col sm:flex-row sm:items-start gap-4" : ""
+        }
+      >
         <div className="flex-1">
           <div className="flex items-start justify-between mb-3 sm:mb-4">
             <span className="px-2 py-1 sm:px-3 sm:py-1 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-full text-xs sm:text-sm font-medium capitalize">
@@ -485,17 +485,23 @@ const PostCard = ({
             )}
           </div>
 
-          <h3 className={`${
-            listView ? 'text-lg sm:text-xl' : 'text-lg sm:text-xl'
-          } font-bold text-gray-900 dark:text-white mb-2 sm:mb-3 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors ${
-            listView ? 'line-clamp-2 text-center lg:text-left' : 'line-clamp-2 text-center lg:text-left'
-          }`}>
+          <h3
+            className={`${
+              listView ? "text-lg sm:text-xl" : "text-lg sm:text-xl"
+            } font-bold text-gray-900 dark:text-white mb-2 sm:mb-3 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors ${
+              listView
+                ? "line-clamp-2 text-center lg:text-left"
+                : "line-clamp-2 text-center lg:text-left"
+            }`}
+          >
             {post.title}
           </h3>
 
-          <p className={`text-gray-600 dark:text-gray-400 mb-3 sm:mb-4 text-sm sm:text-base ${
-            listView ? 'line-clamp-2' : 'line-clamp-3'
-          }`}>
+          <p
+            className={`text-gray-600 dark:text-gray-400 mb-3 sm:mb-4 text-sm sm:text-base ${
+              listView ? "line-clamp-2" : "line-clamp-3"
+            }`}
+          >
             {post.excerpt}
           </p>
 
@@ -539,7 +545,11 @@ const PostCard = ({
             </div>
 
             {post.tags && post.tags.length > 0 && (
-              <div className={`${listView ? 'hidden sm:flex' : 'flex'} items-center`}>
+              <div
+                className={`${
+                  listView ? "hidden sm:flex" : "flex"
+                } items-center`}
+              >
                 <TagIcon className="w-4 h-4 text-gray-400 mr-1" />
                 <span className="text-xs text-gray-500 dark:text-gray-400">
                   {post.tags.slice(0, 2).join(", ")}
@@ -554,18 +564,18 @@ const PostCard = ({
 );
 
 // Blog Sidebar Component
-const BlogSidebar = ({ 
-  recentPosts, 
-  posts, 
-  searchQuery, 
-  isTagFiltered, 
-  onPostClick, 
-  onTagClick, 
+const BlogSidebar = ({
+  recentPosts,
+  posts,
+  searchQuery,
+  isTagFiltered,
+  onPostClick,
+  onTagClick,
   onClearTagFilter,
   email,
   setEmail,
   isSubscribing,
-  onEmailSubscription
+  onEmailSubscription,
 }) => (
   <div className="lg:col-span-1 flex flex-col items-center lg:items-start">
     <div className="sticky top-8 space-y-6">

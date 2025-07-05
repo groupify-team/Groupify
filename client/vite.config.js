@@ -15,16 +15,12 @@ export default defineConfig({
       "@shared": path.resolve(__dirname, "./src/shared"),
       "@tests": path.resolve(__dirname, "./src/tests"),
 
-      // Updated aliases for new folder structure
+      // Area-level
       "@auth": path.resolve(__dirname, "./src/auth-area"),
       "@dashboard": path.resolve(__dirname, "./src/dashboard-area"),
       "@public": path.resolve(__dirname, "./src/public-area"),
 
-      // Keep feature-specific aliases for dashboard features
-      "@face-recognition": path.resolve(
-        __dirname,
-        "./src/dashboard-area/features/face-recognition"
-      ),
+      // Feature-level (dashboard)
       "@friends": path.resolve(
         __dirname,
         "./src/dashboard-area/features/friends"
@@ -41,6 +37,16 @@ export default defineConfig({
       "@notifications": path.resolve(
         __dirname,
         "./src/dashboard-area/features/notifications"
+      ),
+
+      // Deep feature (face recognition inside ViewTrip)
+      "@face-recognition": path.resolve(
+        __dirname,
+        "./src/dashboard-area/features/trips/ViewTrip/features/faceRecognition"
+      ),
+      "@trip-view": path.resolve(
+        __dirname,
+        "./src/dashboard-area/features/trips/ViewTrip"
       ),
     },
   },

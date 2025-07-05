@@ -40,7 +40,7 @@ import Status from "./public-area/pages/StatusPage/StatusPage";
 import Billing from "./public-area/pages/BillingPage/BillingPage";
 
 // Dashboard Area Components - Temporarily disabled
-import Dashboard from "@/dashboard-area/pages/DashboardPage/DashboardPage";
+import Dashboard from "@/dashboard-area/pages/DashboardPage";
 import DashboardLayout from "@/dashboard-area/components/layout/DashboardLayout";
 import TripsSection from "@/dashboard-area/components/sections/TripsSection";
 import TripDetailView from "@/dashboard-area/features/trips/ViewTrip/TripDetailView";
