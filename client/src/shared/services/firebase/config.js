@@ -1,4 +1,8 @@
 ﻿import { initializeApp } from "firebase/app";
+import { getAuth } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
+import { getFunctions } from "firebase/functions";
 
 // Validate required environment variables
 const requiredEnvVars = [
@@ -39,79 +43,9 @@ try {
   throw error;
 }
 
-// ✅ LAZY-LOADED SERVICES - Only create when needed
-let _auth = null;
-let _db = null;
-let _storage = null;
-let _functions = null;
-
-export const getAuth = async () => {
-  if (!_auth) {
-    const { getAuth: initAuth } = await import("firebase/auth");
-    _auth = initAuth(app);
-  }
-  return _auth;
-};
-
-export const getFirestore = async () => {
-  if (!_db) {
-    const { getFirestore: initFirestore } = await import("firebase/firestore");
-    _db = initFirestore(app);
-  }
-  return _db;
-};
-
-export const getStorage = async () => {
-  if (!_storage) {
-    const { getStorage: initStorage } = await import("firebase/storage");
-    _storage = initStorage(app);
-  }
-  return _storage;
-};
-
-export const getFunctions = async () => {
-  if (!_functions) {
-    const { getFunctions: initFunctions } = await import("firebase/functions");
-    _functions = initFunctions(app);
-  }
-  return _functions;
-};
-
-// Legacy exports for backward compatibility (these will throw helpful errors)
-export const auth = new Proxy(
-  {},
-  {
-    get() {
-      throw new Error("Use getAuth() instead of direct auth import");
-    },
-  }
-);
-
-export const db = new Proxy(
-  {},
-  {
-    get() {
-      throw new Error("Use getFirestore() instead of direct db import");
-    },
-  }
-);
-
-export const storage = new Proxy(
-  {},
-  {
-    get() {
-      throw new Error("Use getStorage() instead of direct storage import");
-    },
-  }
-);
-
-export const functions = new Proxy(
-  {},
-  {
-    get() {
-      throw new Error("Use getFunctions() instead of direct functions import");
-    },
-  }
-);
+export const auth = getAuth(app);
+export const db = getFirestore(app);
+export const storage = getStorage(app);
+export const functions = getFunctions(app);
 
 export default app;
