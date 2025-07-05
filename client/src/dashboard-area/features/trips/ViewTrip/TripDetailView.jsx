@@ -1,4 +1,4 @@
-﻿import React, { useState } from "react";
+﻿import React, { useState, lazy, Suspense } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 
@@ -8,11 +8,17 @@ import { useAuth } from "@/auth-area/contexts/AuthContext";
 // Components
 import TripHeader from "./features/header/components/TripHeader";
 import PhotoGallery from "./features/gallery/components/PhotoGallery";
-import FaceRecognition from "./features/faceRecognition/components/FaceRecognition";
 import TripMembersCard from "./features/members/components/TripMembersCard";
 import InvitePeopleCard from "./features/members/components/InvitePeopleCard";
 import UserProfileModal from "./features/members/components/UserProfileModal";
 import TripStatistics from "./features/statistics/components/TripStatistics";
+
+// Lazy-loaded components for performance
+const FaceRecognition = lazy(() =>
+  import(
+    "@/dashboard-area/features/trips/ViewTrip/features/faceRecognition/components/FaceRecognition"
+  )
+);
 
 // Modals
 import PhotoModal from "./components/PhotoModal";
@@ -469,19 +475,21 @@ const TripDetailView = ({ tripId: propTripId }) => {
             />
 
             {/* Face Recognition Section */}
-            <FaceRecognition
-              canFilterByFace={canFilterByFace}
-              hasProfile={hasProfile}
-              isLoadingProfile={isLoadingProfile}
-              isProcessingFaces={isProcessingFaces}
-              filterActive={filterActive}
-              filteredPhotos={filteredPhotos}
-              faceRecognitionProgress={faceRecognitionProgress}
-              onFindMyPhotos={handleFindMyPhotos}
-              onCancelProcessing={handleCancelFaceRecognition}
-              onNavigateToProfile={handleNavigateToProfile}
-              onPhotoSelect={setSelectedPhoto}
-            />
+            <Suspense fallback={<div>Loading face recognition...</div>}>
+              <FaceRecognition
+                canFilterByFace={canFilterByFace}
+                hasProfile={hasProfile}
+                isLoadingProfile={isLoadingProfile}
+                isProcessingFaces={isProcessingFaces}
+                filterActive={filterActive}
+                filteredPhotos={filteredPhotos}
+                faceRecognitionProgress={faceRecognitionProgress}
+                onFindMyPhotos={handleFindMyPhotos}
+                onCancelProcessing={handleCancelFaceRecognition}
+                onNavigateToProfile={handleNavigateToProfile}
+                onPhotoSelect={setSelectedPhoto}
+              />
+            </Suspense>
 
             {/* ADD THIS - Trip Statistics */}
             <TripStatistics
