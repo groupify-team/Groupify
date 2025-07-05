@@ -11,6 +11,9 @@ import {
   ClockIcon,
   ExclamationTriangleIcon,
   CheckCircleIcon,
+  StarIcon,
+  UserGroupIcon,
+  BuildingOfficeIcon,
 } from "@heroicons/react/24/outline";
 
 const SubscriptionCard = ({
@@ -130,15 +133,15 @@ const SubscriptionCard = ({
   const getPlanIcon = (plan) => {
     switch (plan) {
       case "free":
-        return "??";
+        return <CreditCardIcon className="w-6 h-6 text-white" />;
       case "pro":
-        return "?";
+        return <StarIcon className="w-6 h-6 text-white" />;
       case "family":
-        return "???????????";
+        return <UserGroupIcon className="w-6 h-6 text-white" />;
       case "enterprise":
-        return "??";
+        return <BuildingOfficeIcon className="w-6 h-6 text-white" />;
       default:
-        return "??";
+        return <CreditCardIcon className="w-6 h-6 text-white" />;
     }
   };
 
@@ -179,9 +182,7 @@ const SubscriptionCard = ({
                 subscription?.plan
               )} rounded-xl flex items-center justify-center shadow-lg`}
             >
-              <span className="text-white font-bold text-lg sm:text-xl">
-                {getPlanIcon(subscription?.plan)}
-              </span>
+              {getPlanIcon(subscription?.plan)}
             </div>
             <div>
               <div className="flex items-center gap-2">
@@ -190,12 +191,12 @@ const SubscriptionCard = ({
                 </h3>
                 {subscription?.isTrial && (
                   <span className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs px-2 py-1 rounded-full font-bold">
-                    ? TRIAL
+                    TRIAL
                   </span>
                 )}
                 {subscription?.plan !== "free" && !subscription?.isTrial && (
-                  <span className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs px-2 py-1 rounded-full font-bold">
-                    ? PREMIUM
+                  <span className="bg-gradient-to-r from-emerald-400 to-green-500 text-white text-xs px-2 py-1 rounded-full font-bold">
+                    PREMIUM
                   </span>
                 )}
               </div>
@@ -236,7 +237,7 @@ const SubscriptionCard = ({
           <div className="bg-white/50 dark:bg-gray-700/30 rounded-lg p-3 sm:p-4 text-center">
             <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-800 dark:text-white">
               {subscription?.features?.photos === "unlimited"
-                ? "8"
+                ? "∞"
                 : subscription?.features?.photos?.toLocaleString() || "N/A"}
             </p>
             <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
@@ -261,7 +262,7 @@ const SubscriptionCard = ({
                 ? `${subscription.trialDaysRemaining}d`
                 : subscription?.daysRemaining
                 ? `${subscription.daysRemaining}d`
-                : "8"}
+                : "Free"}
             </p>
             <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
               {subscription?.isTrial
@@ -308,7 +309,7 @@ const SubscriptionCard = ({
         {subscription?.isTrial && (
           <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
             <p className="text-sm text-blue-800 dark:text-blue-200">
-              <strong>?? Trial Active:</strong> You have{" "}
+              <strong>🔄 Trial Active:</strong> You have{" "}
               {subscription.trialDaysRemaining} days left in your free trial.
               You'll be charged ${subscription.price} on{" "}
               {new Date(subscription.nextBillingDate).toLocaleDateString()}.
@@ -319,7 +320,7 @@ const SubscriptionCard = ({
         {subscription?.cancelAtPeriodEnd && (
           <div className="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
             <p className="text-sm text-yellow-800 dark:text-yellow-200">
-              <strong>? Cancellation Scheduled:</strong> Your subscription will
+              <strong>⚠️ Cancellation Scheduled:</strong> Your subscription will
               be cancelled on{" "}
               {new Date(subscription.nextBillingDate).toLocaleDateString()}. You
               can reactivate anytime before then.
@@ -346,7 +347,7 @@ const SubscriptionCard = ({
                       : "text-yellow-800 dark:text-yellow-200"
                   }`}
                 >
-                  {rec.urgency === "high" ? "??" : "??"} {rec.message}
+                  {rec.urgency === "high" ? "⚠️" : "💡"} {rec.message}
                 </p>
               </div>
             ))}
@@ -360,7 +361,7 @@ const SubscriptionCard = ({
               onClick={handleUpgrade}
               className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-4 sm:px-6 py-3 sm:py-4 rounded-xl font-semibold text-sm sm:text-base transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
             >
-              Upgrade to Pro - Get 20x More Storage ??
+              Upgrade to Pro - Get 20x More Storage 🚀
             </button>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -415,7 +416,7 @@ const SubscriptionCard = ({
       {subscription?.plan === "free" && (
         <div className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-xl p-4 sm:p-6 border border-indigo-200/50 dark:border-indigo-800/50">
           <h4 className="text-lg font-bold text-gray-800 dark:text-white mb-4 text-center">
-            See What You're Missing ??
+            See What You're Missing 🌟
           </h4>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
@@ -424,7 +425,7 @@ const SubscriptionCard = ({
               <div className="flex justify-between items-start mb-4">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
-                    <span className="text-white font-bold text-lg">?</span>
+                    <StarIcon className="w-6 h-6 text-white" />
                   </div>
                   <div>
                     <h3 className="text-lg font-bold text-gray-800 dark:text-white">
@@ -466,19 +467,19 @@ const SubscriptionCard = ({
 
               <ul className="space-y-2 text-sm mb-4">
                 <li className="flex items-center gap-2">
-                  <span className="text-green-500">?</span>
+                  <span className="text-green-500">✓</span>
                   <span className="text-gray-700 dark:text-gray-300">
                     Advanced AI recognition
                   </span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="text-green-500">?</span>
+                  <span className="text-green-500">✓</span>
                   <span className="text-gray-700 dark:text-gray-300">
                     Unlimited albums
                   </span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="text-green-500">?</span>
+                  <span className="text-green-500">✓</span>
                   <span className="text-gray-700 dark:text-gray-300">
                     Priority support
                   </span>
@@ -491,9 +492,7 @@ const SubscriptionCard = ({
               <div className="flex justify-between items-start mb-4">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center shadow-lg">
-                    <span className="text-white font-bold text-lg">
-                      ???????????
-                    </span>
+                    <UserGroupIcon className="w-6 h-6 text-white" />
                   </div>
                   <div>
                     <h3 className="text-lg font-bold text-gray-800 dark:text-white">
@@ -535,19 +534,19 @@ const SubscriptionCard = ({
 
               <ul className="space-y-2 text-sm mb-4">
                 <li className="flex items-center gap-2">
-                  <span className="text-green-500">?</span>
+                  <span className="text-green-500">✓</span>
                   <span className="text-gray-700 dark:text-gray-300">
                     Premium AI recognition
                   </span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="text-green-500">?</span>
+                  <span className="text-green-500">✓</span>
                   <span className="text-gray-700 dark:text-gray-300">
                     Unlimited sharing
                   </span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="text-green-500">?</span>
+                  <span className="text-green-500">✓</span>
                   <span className="text-gray-700 dark:text-gray-300">
                     Family management
                   </span>
@@ -590,21 +589,21 @@ const SubscriptionCard = ({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
             <div className="flex items-center gap-2 text-green-700 dark:text-green-300">
-              <span className="text-green-500">?</span>
+              <span className="text-green-500">✓</span>
               <span>
                 AI Recognition: {subscription.features?.aiRecognition}
               </span>
             </div>
             <div className="flex items-center gap-2 text-green-700 dark:text-green-300">
-              <span className="text-green-500">?</span>
+              <span className="text-green-500">✓</span>
               <span>Support: {subscription.features?.support}</span>
             </div>
             <div className="flex items-center gap-2 text-green-700 dark:text-green-300">
-              <span className="text-green-500">?</span>
+              <span className="text-green-500">✓</span>
               <span>Quality: {subscription.features?.quality}</span>
             </div>
             <div className="flex items-center gap-2 text-green-700 dark:text-green-300">
-              <span className="text-green-500">?</span>
+              <span className="text-green-500">✓</span>
               <span>
                 Sharing:{" "}
                 {subscription.features?.sharing === "unlimited"
@@ -614,13 +613,13 @@ const SubscriptionCard = ({
             </div>
             {subscription.features?.editing && (
               <div className="flex items-center gap-2 text-green-700 dark:text-green-300">
-                <span className="text-green-500">?</span>
+                <span className="text-green-500">✓</span>
                 <span>Photo Editing Tools</span>
               </div>
             )}
             {subscription.features?.videos && (
               <div className="flex items-center gap-2 text-green-700 dark:text-green-300">
-                <span className="text-green-500">?</span>
+                <span className="text-green-500">✓</span>
                 <span>Video Storage</span>
               </div>
             )}
@@ -628,7 +627,7 @@ const SubscriptionCard = ({
 
           <div className="mt-4 p-3 bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-lg">
             <p className="text-sm text-green-800 dark:text-green-200 text-center">
-              ?? Thank you for being a premium subscriber! Enjoying your extra
+              🎉 Thank you for being a premium subscriber! Enjoying your extra
               features and storage.
             </p>
           </div>
