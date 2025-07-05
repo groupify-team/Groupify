@@ -16,7 +16,7 @@ import {
   sendFriendRequest,
   removeFriend,
   getFriends,
-} from "@shared/services/firebase/users";
+} from "@firebase-services/users";
 import toast from "react-hot-toast";
 
 // Direct imports - like it was working before
@@ -267,9 +267,7 @@ const FriendsSection = () => {
 
   const handleCancelRequest = async (targetUid) => {
     try {
-      const { cancelFriendRequest } = await import(
-        "@shared/services/firebase/users"
-      );
+      const { cancelFriendRequest } = await import("@firebase-services/users");
       await cancelFriendRequest(currentUser.uid, targetUid);
       setShowUserProfileModal(false);
       setSelectedUser(null);

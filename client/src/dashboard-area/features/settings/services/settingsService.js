@@ -1,6 +1,6 @@
 // dashboard-area/features/settings/services/settingsService.js
 import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
-import { db } from "../../../../shared/services/firebase/config";
+import { db } from "@shared/services/firebase/config";
 import { DEFAULT_USER_SETTINGS } from "../../../utils/dashboardConstants";
 
 export class SettingsService {

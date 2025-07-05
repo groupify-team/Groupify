@@ -1,8 +1,8 @@
-﻿// DashboardLayout.jsx - FIXED VERSION with proper layout for fixed header
+// DashboardLayout.jsx - FIXED VERSION with proper layout for fixed header
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@auth/contexts/AuthContext";
 import { useDashboardData } from "@dashboard/hooks/useDashboardData";
-import { useTheme } from "@/shared/contexts/ThemeContext";
+import { useTheme } from "@shared/contexts/ThemeContext";
 import { useClickOutside } from "@/shared/hooks/useClickOutside";
 import { useNavigate } from "react-router-dom";
 
@@ -205,7 +205,7 @@ const DashboardLayout = ({ children }) => {
       closeLogoutModal();
       navigate("/", { replace: true });
     } catch (error) {
-      console.error("❌ Logout error:", error);
+      console.error("? Logout error:", error);
       showErrorMessage("Failed to logout. Please try again.");
     }
   };
@@ -213,9 +213,7 @@ const DashboardLayout = ({ children }) => {
   // Friend operation handlers
   const handleAddFriendDirect = async (targetUid) => {
     try {
-      const { sendFriendRequest } = await import(
-        "@shared/services/firebase/users"
-      );
+      const { sendFriendRequest } = await import("@firebase-services/users");
       await sendFriendRequest(currentUser.uid, targetUid);
       showSuccessMessage("Friend request sent!");
       closeAddFriendModal();
@@ -236,7 +234,7 @@ const DashboardLayout = ({ children }) => {
   const handleRemoveFriend = async (friendUid) => {
     try {
       const { removeFriend: removeFriendService } = await import(
-        "@shared/services/firebase/users"
+        "@firebase-services/users"
       );
       await removeFriendService(currentUser.uid, friendUid);
       removeFriend(friendUid);
@@ -251,9 +249,7 @@ const DashboardLayout = ({ children }) => {
 
   const handleCancelRequest = async (targetUid) => {
     try {
-      const { cancelFriendRequest } = await import(
-        "@shared/services/firebase/users"
-      );
+      const { cancelFriendRequest } = await import("@firebase-services/users");
       await cancelFriendRequest(currentUser.uid, targetUid);
       removePendingRequest(targetUid);
       showSuccessMessage("Friend request cancelled");
@@ -303,9 +299,9 @@ const DashboardLayout = ({ children }) => {
   }
 
   return (
-    // 🔥 FIXED: Added proper layout structure with fixed header spacing
+    // ?? FIXED: Added proper layout structure with fixed header spacing
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 flex w-full transition-colors duration-500">
-      {/* 🔥 FIXED: Sidebar stays the same - already using 'fixed' positioning */}
+      {/* ?? FIXED: Sidebar stays the same - already using 'fixed' positioning */}
       <div
         className={`fixed inset-y-0 left-0 z-40 w-64 bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg shadow-xl border-r border-white/20 dark:border-gray-700/50 transition-transform duration-300 ease-in-out ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
@@ -338,16 +334,16 @@ const DashboardLayout = ({ children }) => {
         />
       )}
 
-      {/* 🔥 FIXED: Main Content with proper spacing for fixed header */}
+      {/* ?? FIXED: Main Content with proper spacing for fixed header */}
       <div
         className="flex-1 flex flex-col transition-all duration-300 ease-in-out overflow-hidden"
         style={{
           marginLeft: !isMobile && sidebarOpen ? "256px" : "0px",
-          // 🔥 CRITICAL: Add top padding to account for fixed header
+          // ?? CRITICAL: Add top padding to account for fixed header
           paddingTop: "56px", // Height of the header (14 * 4 = 56px for h-14)
         }}
       >
-        {/* 🔥 FIXED: Header with proper fixed positioning */}
+        {/* ?? FIXED: Header with proper fixed positioning */}
         <DashboardHeader
           onSettingsClick={handleSettingsClick}
           onLogoutClick={handleLogoutClick}
@@ -356,14 +352,14 @@ const DashboardLayout = ({ children }) => {
           isMobile={isMobile}
         />
 
-        {/* 🔥 FIXED: Main Content with proper spacing */}
+        {/* ?? FIXED: Main Content with proper spacing */}
         <main className="flex-1 overflow-y-auto">
           <div className="w-full px-2 sm:px-4 lg:px-8 max-w-full py-2 sm:py-4">
             {children}
           </div>
         </main>
 
-        {/* 🔥 FIXED: Mobile Bottom Navigation - already using 'fixed' positioning */}
+        {/* ?? FIXED: Mobile Bottom Navigation - already using 'fixed' positioning */}
         {isMobile && (
           <div className="fixed bottom-0 left-0 right-0 z-40">
             <MobileBottomNav />
@@ -452,12 +448,12 @@ const DashboardLayout = ({ children }) => {
         <>
           {showAddFriendModal && (
             <div className="fixed bottom-4 right-4 bg-green-500 text-white p-2 rounded text-sm z-50">
-              ✅ AddFriend Modal is rendering!
+              ? AddFriend Modal is rendering!
             </div>
           )}
           {isUserProfileOpen && (
             <div className="fixed bottom-16 right-4 bg-blue-500 text-white p-2 rounded text-sm z-50">
-              ✅ UserProfile Modal is rendering!
+              ? UserProfile Modal is rendering!
             </div>
           )}
         </>

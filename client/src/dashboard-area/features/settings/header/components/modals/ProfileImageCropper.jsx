@@ -1,8 +1,12 @@
-import React, { useState, useCallback } from 'react';
-import Cropper from 'react-easy-crop';
-import Slider from '@mui/material/Slider';
-import { XMarkIcon, CheckIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
-import getCroppedImg from '../../../../shared/utils/cropImage'; 
+import React, { useState, useCallback } from "react";
+import Cropper from "react-easy-crop";
+import Slider from "@mui/material/Slider";
+import {
+  XMarkIcon,
+  CheckIcon,
+  ArrowPathIcon,
+} from "@heroicons/react/24/outline";
+import getCroppedImg from "@settings/header/hooks/cropImage";
 
 const ProfileImageCropper = ({ imageSrc, onCropComplete, onCancel }) => {
   const [crop, setCrop] = useState({ x: 0, y: 0 });
@@ -19,13 +23,17 @@ const ProfileImageCropper = ({ imageSrc, onCropComplete, onCancel }) => {
   // Called when user clicks "Save" button
   const handleSaveClick = async () => {
     if (!croppedPixels) return;
-    
+
     setIsProcessing(true);
     try {
-      const { blob, fileUrl } = await getCroppedImg(imageSrc, croppedPixels, rotation);
+      const { blob, fileUrl } = await getCroppedImg(
+        imageSrc,
+        croppedPixels,
+        rotation
+      );
       onCropComplete(blob, fileUrl); // Send back both blob and preview URL
     } catch (error) {
-      console.error('❌ Failed to crop image:', error);
+      console.error("❌ Failed to crop image:", error);
     } finally {
       setIsProcessing(false);
     }
@@ -78,11 +86,11 @@ const ProfileImageCropper = ({ imageSrc, onCropComplete, onCancel }) => {
               onCropComplete={handleCropAreaChange}
               style={{
                 containerStyle: {
-                  borderRadius: '1rem',
+                  borderRadius: "1rem",
                 },
                 cropAreaStyle: {
-                  border: '3px solid rgba(99, 102, 241, 0.8)',
-                  boxShadow: '0 0 20px rgba(99, 102, 241, 0.3)',
+                  border: "3px solid rgba(99, 102, 241, 0.8)",
+                  boxShadow: "0 0 20px rgba(99, 102, 241, 0.3)",
                 },
               }}
             />
@@ -108,24 +116,24 @@ const ProfileImageCropper = ({ imageSrc, onCropComplete, onCancel }) => {
                   step={0.1}
                   onChange={(e, newZoom) => setZoom(newZoom)}
                   sx={{
-                    color: '#6366f1',
+                    color: "#6366f1",
                     height: 6,
-                    '& .MuiSlider-track': {
-                      border: 'none',
-                      background: 'linear-gradient(90deg, #6366f1, #8b5cf6)',
+                    "& .MuiSlider-track": {
+                      border: "none",
+                      background: "linear-gradient(90deg, #6366f1, #8b5cf6)",
                     },
-                    '& .MuiSlider-rail': {
-                      backgroundColor: '#e5e7eb',
+                    "& .MuiSlider-rail": {
+                      backgroundColor: "#e5e7eb",
                       opacity: 1,
                     },
-                    '& .MuiSlider-thumb': {
+                    "& .MuiSlider-thumb": {
                       height: 20,
                       width: 20,
-                      backgroundColor: '#fff',
-                      border: '3px solid #6366f1',
-                      boxShadow: '0 4px 12px rgba(99, 102, 241, 0.3)',
-                      '&:focus, &:hover, &.Mui-active, &.Mui-focusVisible': {
-                        boxShadow: '0 4px 20px rgba(99, 102, 241, 0.5)',
+                      backgroundColor: "#fff",
+                      border: "3px solid #6366f1",
+                      boxShadow: "0 4px 12px rgba(99, 102, 241, 0.3)",
+                      "&:focus, &:hover, &.Mui-active, &.Mui-focusVisible": {
+                        boxShadow: "0 4px 20px rgba(99, 102, 241, 0.5)",
                       },
                     },
                   }}
@@ -151,24 +159,24 @@ const ProfileImageCropper = ({ imageSrc, onCropComplete, onCancel }) => {
                   step={1}
                   onChange={(e, newRotation) => setRotation(newRotation)}
                   sx={{
-                    color: '#8b5cf6',
+                    color: "#8b5cf6",
                     height: 6,
-                    '& .MuiSlider-track': {
-                      border: 'none',
-                      background: 'linear-gradient(90deg, #8b5cf6, #ec4899)',
+                    "& .MuiSlider-track": {
+                      border: "none",
+                      background: "linear-gradient(90deg, #8b5cf6, #ec4899)",
                     },
-                    '& .MuiSlider-rail': {
-                      backgroundColor: '#e5e7eb',
+                    "& .MuiSlider-rail": {
+                      backgroundColor: "#e5e7eb",
                       opacity: 1,
                     },
-                    '& .MuiSlider-thumb': {
+                    "& .MuiSlider-thumb": {
                       height: 20,
                       width: 20,
-                      backgroundColor: '#fff',
-                      border: '3px solid #8b5cf6',
-                      boxShadow: '0 4px 12px rgba(139, 92, 246, 0.3)',
-                      '&:focus, &:hover, &.Mui-active, &.Mui-focusVisible': {
-                        boxShadow: '0 4px 20px rgba(139, 92, 246, 0.5)',
+                      backgroundColor: "#fff",
+                      border: "3px solid #8b5cf6",
+                      boxShadow: "0 4px 12px rgba(139, 92, 246, 0.3)",
+                      "&:focus, &:hover, &.Mui-active, &.Mui-focusVisible": {
+                        boxShadow: "0 4px 20px rgba(139, 92, 246, 0.5)",
                       },
                     },
                   }}
@@ -199,7 +207,7 @@ const ProfileImageCropper = ({ imageSrc, onCropComplete, onCancel }) => {
               >
                 Cancel
               </button>
-              
+
               {/* Save button */}
               <button
                 onClick={handleSaveClick}

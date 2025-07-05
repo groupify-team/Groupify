@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../../auth-area/contexts/AuthContext.jsx";
-import { useTheme } from "../../../shared/contexts/ThemeContext";
+import { useTheme } from "@shared/contexts/ThemeContext";
 import {
   CameraIcon,
   CogIcon,

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { useAuth } from "../../../../auth-area/contexts/AuthContext";
-import { uploadPhoto } from "../../../../shared/services/firebase/storage";
-import { storage } from "../../../../shared/services/firebase/config";
+import { useAuth } from "@auth/contexts/AuthContext";
+import { uploadPhoto } from "@firebase-services/storage";
+import { storage } from "@shared/services/firebase/config";
 import { usePlanLimits } from "../../../../shared/hooks/usePlanLimits";
 import {
   PhotoIcon,
@@ -47,7 +47,7 @@ const PhotoUpload = ({
     isFreePlan,
     isPremiumPlan,
     isProPlan,
-    loading: planLoading
+    loading: planLoading,
   } = usePlanLimits();
 
   const usageInfo = getUsageInfo();
@@ -60,30 +60,40 @@ const PhotoUpload = ({
         photosPerTrip: maxPhotos === Infinity ? 30 : maxPhotos, // Default free limit
         totalPhotos: Infinity,
         storage: 2 * 1024 * 1024 * 1024, // 2GB default
-        remainingSlots: Math.max(0, 30 - currentPhotoCount)
+        remainingSlots: Math.max(0, 30 - currentPhotoCount),
       };
     }
 
-    const photosPerTrip = planFeatures.photosPerTrip === 'unlimited' ? Infinity : planFeatures.photosPerTrip;
-    const totalPhotos = planFeatures.photos === 'unlimited' ? Infinity : planFeatures.photos;
+    const photosPerTrip =
+      planFeatures.photosPerTrip === "unlimited"
+        ? Infinity
+        : planFeatures.photosPerTrip;
+    const totalPhotos =
+      planFeatures.photos === "unlimited" ? Infinity : planFeatures.photos;
     const storage = planFeatures.storageBytes;
 
     // Calculate remaining slots based on the most restrictive limit
     let remainingSlots = Infinity;
-    
+
     if (photosPerTrip !== Infinity) {
-      remainingSlots = Math.min(remainingSlots, Math.max(0, photosPerTrip - currentPhotoCount));
+      remainingSlots = Math.min(
+        remainingSlots,
+        Math.max(0, photosPerTrip - currentPhotoCount)
+      );
     }
-    
+
     if (totalPhotos !== Infinity && usageInfo) {
-      remainingSlots = Math.min(remainingSlots, Math.max(0, totalPhotos - usageInfo.photos.used));
+      remainingSlots = Math.min(
+        remainingSlots,
+        Math.max(0, totalPhotos - usageInfo.photos.used)
+      );
     }
 
     return {
       photosPerTrip,
       totalPhotos,
       storage,
-      remainingSlots: remainingSlots === Infinity ? Infinity : remainingSlots
+      remainingSlots: remainingSlots === Infinity ? Infinity : remainingSlots,
     };
   };
 
@@ -102,38 +112,41 @@ const PhotoUpload = ({
   const checkPlanLimits = () => {
     if (!selectedFiles.length) return;
 
-    const totalFileSize = selectedFiles.reduce((sum, file) => sum + file.size, 0);
-    
+    const totalFileSize = selectedFiles.reduce(
+      (sum, file) => sum + file.size,
+      0
+    );
+
     // Check photo count limits
-    const photoCheck = canPerformAction('upload_photos', {
+    const photoCheck = canPerformAction("upload_photos", {
       tripPhotoCount: currentPhotoCount,
-      newPhotoCount: selectedFiles.length
+      newPhotoCount: selectedFiles.length,
     });
 
     if (!photoCheck.allowed) {
       setPlanWarning({
-        type: 'photos',
+        type: "photos",
         message: photoCheck.reason,
         upgradeRequired: photoCheck.upgradeRequired,
         currentUsage: photoCheck.currentUsage,
-        limit: photoCheck.limit
+        limit: photoCheck.limit,
       });
       return;
     }
 
     // Check storage limits
-    const storageCheck = canPerformAction('upload_storage', {
-      fileSize: totalFileSize
+    const storageCheck = canPerformAction("upload_storage", {
+      fileSize: totalFileSize,
     });
 
     if (!storageCheck.allowed) {
       setPlanWarning({
-        type: 'storage',
+        type: "storage",
         message: storageCheck.reason,
         upgradeRequired: storageCheck.upgradeRequired,
         currentUsage: storageCheck.currentUsage,
         limit: storageCheck.limit,
-        additionalNeeded: storageCheck.additionalNeeded
+        additionalNeeded: storageCheck.additionalNeeded,
       });
       return;
     }
@@ -152,15 +165,22 @@ const PhotoUpload = ({
     let warningMessage = null;
 
     // Limit files to remaining slots if there's a limit
-    if (limits.remainingSlots !== Infinity && processedFiles.length > limits.remainingSlots) {
+    if (
+      limits.remainingSlots !== Infinity &&
+      processedFiles.length > limits.remainingSlots
+    ) {
       processedFiles = processedFiles.slice(0, limits.remainingSlots);
       warningMessage = `Only ${limits.remainingSlots} more photos can be uploaded. Selected first ${limits.remainingSlots} files.`;
     }
 
     // Check file size limits
-    const oversizedFiles = processedFiles.filter(file => file.size > 10 * 1024 * 1024); // 10MB
+    const oversizedFiles = processedFiles.filter(
+      (file) => file.size > 10 * 1024 * 1024
+    ); // 10MB
     if (oversizedFiles.length > 0) {
-      processedFiles = processedFiles.filter(file => file.size <= 10 * 1024 * 1024);
+      processedFiles = processedFiles.filter(
+        (file) => file.size <= 10 * 1024 * 1024
+      );
       warningMessage = `${oversizedFiles.length} file(s) exceeded 10MB limit and were removed.`;
     }
 
@@ -212,15 +232,20 @@ const PhotoUpload = ({
     }
 
     // Final plan limit enforcement
-    if (!enforceLimit('upload_photos', {
-      tripPhotoCount: currentPhotoCount,
-      newPhotoCount: selectedFiles.length
-    })) {
+    if (
+      !enforceLimit("upload_photos", {
+        tripPhotoCount: currentPhotoCount,
+        newPhotoCount: selectedFiles.length,
+      })
+    ) {
       return;
     }
 
-    const totalFileSize = selectedFiles.reduce((sum, file) => sum + file.size, 0);
-    if (!enforceLimit('upload_storage', { fileSize: totalFileSize })) {
+    const totalFileSize = selectedFiles.reduce(
+      (sum, file) => sum + file.size,
+      0
+    );
+    if (!enforceLimit("upload_storage", { fileSize: totalFileSize })) {
       return;
     }
 
@@ -268,7 +293,7 @@ const PhotoUpload = ({
       if (uploadedPhotos.length > 0) {
         updateUsage({
           photos: (usageInfo?.photos.used || 0) + uploadedPhotos.length,
-          storage: (usageInfo?.storage.used || 0) + totalStorageUsed
+          storage: (usageInfo?.storage.used || 0) + totalStorageUsed,
         });
       }
 
@@ -323,19 +348,21 @@ const PhotoUpload = ({
           {/* Plan Badge and Upgrade Button */}
           {!planLoading && (
             <div className="flex items-center gap-2">
-              <div className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium ${
-                isFreePlan 
-                  ? 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
-                  : isPremiumPlan
-                  ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
-                  : 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400'
-              }`}>
+              <div
+                className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium ${
+                  isFreePlan
+                    ? "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
+                    : isPremiumPlan
+                    ? "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
+                    : "bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400"
+                }`}
+              >
                 <StarIcon className="w-3 h-3" />
-                {isFreePlan && 'Free'}
-                {isPremiumPlan && 'Premium'}
-                {isProPlan && 'Pro'}
+                {isFreePlan && "Free"}
+                {isPremiumPlan && "Premium"}
+                {isProPlan && "Pro"}
               </div>
-              
+
               {(isFreePlan || isPremiumPlan) && (
                 <button
                   onClick={handleUpgradeClick}
@@ -353,10 +380,12 @@ const PhotoUpload = ({
         {usageInfo && !planLoading && (
           <div className="mb-4 sm:mb-6 space-y-3">
             {/* Photos Progress */}
-            {planFeatures?.photos !== 'unlimited' && (
+            {planFeatures?.photos !== "unlimited" && (
               <div className="space-y-1">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-gray-600 dark:text-gray-400">Total Photos</span>
+                  <span className="text-gray-600 dark:text-gray-400">
+                    Total Photos
+                  </span>
                   <span className="font-medium text-gray-700 dark:text-gray-300">
                     {usageInfo.photos.used}/{planFeatures?.photos || 0}
                   </span>
@@ -365,12 +394,14 @@ const PhotoUpload = ({
                   <div
                     className={`h-1.5 rounded-full transition-all duration-300 ${
                       usageInfo.photos.percentage > 90
-                        ? 'bg-red-500'
+                        ? "bg-red-500"
                         : usageInfo.photos.percentage > 75
-                        ? 'bg-yellow-500'
-                        : 'bg-green-500'
+                        ? "bg-yellow-500"
+                        : "bg-green-500"
                     }`}
-                    style={{ width: `${Math.min(usageInfo.photos.percentage, 100)}%` }}
+                    style={{
+                      width: `${Math.min(usageInfo.photos.percentage, 100)}%`,
+                    }}
                   />
                 </div>
               </div>
@@ -380,31 +411,38 @@ const PhotoUpload = ({
             {planFeatures?.storageBytes !== Number.MAX_SAFE_INTEGER && (
               <div className="space-y-1">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-gray-600 dark:text-gray-400">Storage Used</span>
+                  <span className="text-gray-600 dark:text-gray-400">
+                    Storage Used
+                  </span>
                   <span className="font-medium text-gray-700 dark:text-gray-300">
-                    {usageInfo.storage.usedFormatted}/{usageInfo.storage.limitFormatted}
+                    {usageInfo.storage.usedFormatted}/
+                    {usageInfo.storage.limitFormatted}
                   </span>
                 </div>
                 <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
                   <div
                     className={`h-1.5 rounded-full transition-all duration-300 ${
                       usageInfo.storage.percentage > 90
-                        ? 'bg-red-500'
+                        ? "bg-red-500"
                         : usageInfo.storage.percentage > 75
-                        ? 'bg-yellow-500'
-                        : 'bg-green-500'
+                        ? "bg-yellow-500"
+                        : "bg-green-500"
                     }`}
-                    style={{ width: `${Math.min(usageInfo.storage.percentage, 100)}%` }}
+                    style={{
+                      width: `${Math.min(usageInfo.storage.percentage, 100)}%`,
+                    }}
                   />
                 </div>
               </div>
             )}
 
             {/* Trip Photos Progress */}
-            {planFeatures?.photosPerTrip !== 'unlimited' && (
+            {planFeatures?.photosPerTrip !== "unlimited" && (
               <div className="space-y-1">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-gray-600 dark:text-gray-400">Trip Photos</span>
+                  <span className="text-gray-600 dark:text-gray-400">
+                    Trip Photos
+                  </span>
                   <span className="font-medium text-gray-700 dark:text-gray-300">
                     {currentPhotoCount}/{planFeatures?.photosPerTrip || 0}
                   </span>
@@ -412,14 +450,22 @@ const PhotoUpload = ({
                 <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
                   <div
                     className={`h-1.5 rounded-full transition-all duration-300 ${
-                      (currentPhotoCount / (planFeatures?.photosPerTrip || 1)) > 0.9
-                        ? 'bg-red-500'
-                        : (currentPhotoCount / (planFeatures?.photosPerTrip || 1)) > 0.75
-                        ? 'bg-yellow-500'
-                        : 'bg-green-500'
+                      currentPhotoCount / (planFeatures?.photosPerTrip || 1) >
+                      0.9
+                        ? "bg-red-500"
+                        : currentPhotoCount /
+                            (planFeatures?.photosPerTrip || 1) >
+                          0.75
+                        ? "bg-yellow-500"
+                        : "bg-green-500"
                     }`}
-                    style={{ 
-                      width: `${Math.min((currentPhotoCount / (planFeatures?.photosPerTrip || 1)) * 100, 100)}%` 
+                    style={{
+                      width: `${Math.min(
+                        (currentPhotoCount /
+                          (planFeatures?.photosPerTrip || 1)) *
+                          100,
+                        100
+                      )}%`,
                     }}
                   />
                 </div>
@@ -484,7 +530,9 @@ const PhotoUpload = ({
                 : isAtLimit || planWarning
                 ? "border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 opacity-60"
                 : "border-gray-300 dark:border-gray-600 hover:border-indigo-400 dark:hover:border-indigo-500"
-            } ${uploading || isAtLimit || planWarning ? "pointer-events-none" : ""}`}
+            } ${
+              uploading || isAtLimit || planWarning ? "pointer-events-none" : ""
+            }`}
             onDragEnter={handleDrag}
             onDragLeave={handleDrag}
             onDragOver={handleDrag}
@@ -503,34 +551,39 @@ const PhotoUpload = ({
             <div className="flex items-center gap-4 sm:gap-6">
               {/* Icon Section */}
               <div className="flex-shrink-0">
-                <div className={`w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl flex items-center justify-center ${
-                  isAtLimit || planWarning
-                    ? 'bg-gray-200 dark:bg-gray-700'
-                    : 'bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/30 dark:to-purple-900/30'
-                }`}>
-                  <CloudArrowUpIcon className={`w-6 h-6 sm:w-8 sm:h-8 ${
+                <div
+                  className={`w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl flex items-center justify-center ${
                     isAtLimit || planWarning
-                      ? 'text-gray-400 dark:text-gray-500'
-                      : 'text-indigo-600 dark:text-indigo-400'
-                  }`} />
+                      ? "bg-gray-200 dark:bg-gray-700"
+                      : "bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/30 dark:to-purple-900/30"
+                  }`}
+                >
+                  <CloudArrowUpIcon
+                    className={`w-6 h-6 sm:w-8 sm:h-8 ${
+                      isAtLimit || planWarning
+                        ? "text-gray-400 dark:text-gray-500"
+                        : "text-indigo-600 dark:text-indigo-400"
+                    }`}
+                  />
                 </div>
               </div>
 
               {/* Content Section */}
               <div className="flex-1 min-w-0">
-                <h4 className={`text-base sm:text-lg font-semibold mb-1 sm:mb-2 ${
-                  isAtLimit || planWarning
-                    ? 'text-gray-500 dark:text-gray-400'
-                    : 'text-gray-900 dark:text-white'
-                }`}>
-                  {dragActive 
-                    ? "Drop photos here" 
-                    : isAtLimit 
-                    ? "Upload limit reached" 
+                <h4
+                  className={`text-base sm:text-lg font-semibold mb-1 sm:mb-2 ${
+                    isAtLimit || planWarning
+                      ? "text-gray-500 dark:text-gray-400"
+                      : "text-gray-900 dark:text-white"
+                  }`}
+                >
+                  {dragActive
+                    ? "Drop photos here"
+                    : isAtLimit
+                    ? "Upload limit reached"
                     : planWarning
                     ? "Plan limit reached"
-                    : "Drag & drop photos"
-                  }
+                    : "Drag & drop photos"}
                 </h4>
 
                 {!isAtLimit && !planWarning && (
@@ -566,12 +619,13 @@ const PhotoUpload = ({
           {selectedFiles.length > 0 && (
             <div className="mt-2 sm:mt-3 text-xs sm:text-sm text-gray-600 dark:text-gray-400 bg-gray-50/50 dark:bg-gray-700/30 px-3 py-2 rounded-lg sm:rounded-xl">
               <span className="font-medium text-indigo-600 dark:text-indigo-400">
-                {selectedFiles.length} file{selectedFiles.length !== 1 ? "s" : ""}{" "}
-                selected
+                {selectedFiles.length} file
+                {selectedFiles.length !== 1 ? "s" : ""} selected
               </span>
               {limits.remainingSlots !== Infinity && (
                 <span className="ml-2">
-                  ({Math.max(0, limits.remainingSlots - selectedFiles.length)} slots will remain)
+                  ({Math.max(0, limits.remainingSlots - selectedFiles.length)}{" "}
+                  slots will remain)
                 </span>
               )}
             </div>
@@ -655,7 +709,8 @@ const PhotoUpload = ({
           ) : (
             <>
               <CloudArrowUpIcon className="w-4 h-4 sm:w-5 sm:h-5" />
-              Upload {selectedFiles.length > 0 ? `${selectedFiles.length} ` : ""}
+              Upload{" "}
+              {selectedFiles.length > 0 ? `${selectedFiles.length} ` : ""}
               Photo{selectedFiles.length !== 1 ? "s" : ""}
             </>
           )}
@@ -717,7 +772,7 @@ const PhotoUpload = ({
                 onClick={() => {
                   setShowUpgradeModal(false);
                   // Navigate to upgrade page
-                  console.log('Navigate to upgrade page');
+                  console.log("Navigate to upgrade page");
                 }}
                 className="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white py-3 px-4 rounded-xl font-medium transition-all"
               >

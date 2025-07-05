@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
 import { updateDoc, doc, getDoc } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { auth, db, storage } from "../../../../shared/services/firebase/config";
+import { auth, db, storage } from "@shared/services/firebase/config";
 import { updateEmail, updatePassword, updateProfile } from "firebase/auth";
 import ProfileImageCropper from "./ProfileImageCropper";
-import { useAuth } from "../../../../auth-area/contexts/AuthContext";
-import { useTheme } from "../../../../shared/contexts/ThemeContext";
+import { useAuth } from "@auth/contexts/AuthContext";
+import { useTheme } from "@shared/contexts/ThemeContext";
 import {
   CameraIcon,
   PlusIcon,

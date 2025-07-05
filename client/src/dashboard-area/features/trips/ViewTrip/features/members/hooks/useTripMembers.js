@@ -20,7 +20,7 @@ import {
   getUserProfile,
   sendFriendRequest,
   removeFriend,
-} from "@shared/services/firebase/users";
+} from "@firebase-services/users";
 
 export const useTripMembers = (currentUserId, trip, setTrip) => {
   const [friends, setFriends] = useState([]);

@@ -15,7 +15,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { toast } from "react-hot-toast";
 import { httpsCallable } from "firebase/functions";
-import { functions } from "../../../shared/services/firebase/config";
+import { functions } from "@firebase-services/config";
 
 // Extract components for better organization
 const ContactMethods = ({ contactInfo }) => (

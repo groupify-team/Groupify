@@ -3,11 +3,7 @@ import { Link } from "react-router-dom";
 import PublicLayout from "../../components/layout/PublicLayout";
 import HeroSection from "../../components/ui/HeroSection";
 import { usePublicNavigation } from "../../hooks/usePublicNavigation";
-import SettingsModal from "@dashboard/features/settings/components/modals/EditProfileModal";
-
 import AccessibilityModal from "@/shared/components/accessibility/AccessibilityModal";
-
-
 
 import {
   SparklesIcon,
@@ -649,8 +645,7 @@ const Features = () => {
       {/* Settings Modal*/}
 
       <AccessibilityModal {...settingsProps} />
-
-        </PublicLayout>
+    </PublicLayout>
   );
 };
 

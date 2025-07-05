@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '../../../../auth-area/contexts/AuthContext';
-import { FriendsService } from '../services/friendsService';
+import { useState, useEffect, useCallback } from "react";
+import { useAuth } from "@auth/contexts/AuthContext";
+import { FriendsService } from "../services/friendsService";
 
 export const useFriendRequests = () => {
   const { currentUser } = useAuth();
@@ -16,10 +16,12 @@ export const useFriendRequests = () => {
     try {
       setLoading(true);
       setError(null);
-      const pendingRequests = await FriendsService.getPendingRequests(currentUser.uid);
+      const pendingRequests = await FriendsService.getPendingRequests(
+        currentUser.uid
+      );
       setRequests(pendingRequests);
     } catch (err) {
-      console.error('Error loading friend requests:', err);
+      console.error("Error loading friend requests:", err);
       setError(err.message);
       setRequests({ sent: [], received: [] });
     } finally {
@@ -28,104 +30,119 @@ export const useFriendRequests = () => {
   }, [currentUser?.uid]);
 
   // Send friend request
-  const sendFriendRequest = useCallback(async (toUserId) => {
-    if (!currentUser?.uid) return false;
+  const sendFriendRequest = useCallback(
+    async (toUserId) => {
+      if (!currentUser?.uid) return false;
 
-    try {
-      setActionLoading(true);
-      setError(null);
-      
-      const requestId = await FriendsService.sendFriendRequest(currentUser.uid, toUserId);
-      
-      // Refresh requests to show the new one
-      await loadRequests();
-      return requestId;
-    } catch (err) {
-      console.error('Error sending friend request:', err);
-      setError(err.message);
-      return false;
-    } finally {
-      setActionLoading(false);
-    }
-  }, [currentUser?.uid, loadRequests]);
+      try {
+        setActionLoading(true);
+        setError(null);
+
+        const requestId = await FriendsService.sendFriendRequest(
+          currentUser.uid,
+          toUserId
+        );
+
+        // Refresh requests to show the new one
+        await loadRequests();
+        return requestId;
+      } catch (err) {
+        console.error("Error sending friend request:", err);
+        setError(err.message);
+        return false;
+      } finally {
+        setActionLoading(false);
+      }
+    },
+    [currentUser?.uid, loadRequests]
+  );
 
   // Accept friend request
-  const acceptFriendRequest = useCallback(async (requestId) => {
-    if (!currentUser?.uid) return false;
+  const acceptFriendRequest = useCallback(
+    async (requestId) => {
+      if (!currentUser?.uid) return false;
 
-    try {
-      setActionLoading(true);
-      setError(null);
-      
-      await FriendsService.acceptFriendRequest(requestId, currentUser.uid);
-      
-      // Update local state
-      setRequests(prev => ({
-        ...prev,
-        received: prev.received.filter(req => req.id !== requestId),
-      }));
-      
-      return true;
-    } catch (err) {
-      console.error('Error accepting friend request:', err);
-      setError(err.message);
-      return false;
-    } finally {
-      setActionLoading(false);
-    }
-  }, [currentUser?.uid]);
+      try {
+        setActionLoading(true);
+        setError(null);
+
+        await FriendsService.acceptFriendRequest(requestId, currentUser.uid);
+
+        // Update local state
+        setRequests((prev) => ({
+          ...prev,
+          received: prev.received.filter((req) => req.id !== requestId),
+        }));
+
+        return true;
+      } catch (err) {
+        console.error("Error accepting friend request:", err);
+        setError(err.message);
+        return false;
+      } finally {
+        setActionLoading(false);
+      }
+    },
+    [currentUser?.uid]
+  );
 
   // Decline friend request
-  const declineFriendRequest = useCallback(async (requestId) => {
-    if (!currentUser?.uid) return false;
+  const declineFriendRequest = useCallback(
+    async (requestId) => {
+      if (!currentUser?.uid) return false;
 
-    try {
-      setActionLoading(true);
-      setError(null);
-      
-      await FriendsService.declineFriendRequest(requestId, currentUser.uid);
-      
-      // Update local state
-      setRequests(prev => ({
-        ...prev,
-        received: prev.received.filter(req => req.id !== requestId),
-      }));
-      
-      return true;
-    } catch (err) {
-      console.error('Error declining friend request:', err);
-      setError(err.message);
-      return false;
-    } finally {
-      setActionLoading(false);
-    }
-  }, [currentUser?.uid]);
+      try {
+        setActionLoading(true);
+        setError(null);
+
+        await FriendsService.declineFriendRequest(requestId, currentUser.uid);
+
+        // Update local state
+        setRequests((prev) => ({
+          ...prev,
+          received: prev.received.filter((req) => req.id !== requestId),
+        }));
+
+        return true;
+      } catch (err) {
+        console.error("Error declining friend request:", err);
+        setError(err.message);
+        return false;
+      } finally {
+        setActionLoading(false);
+      }
+    },
+    [currentUser?.uid]
+  );
 
   // Cancel sent request
-  const cancelFriendRequest = useCallback(async (requestId) => {
-    if (!currentUser?.uid) return false;
+  const cancelFriendRequest = useCallback(
+    async (requestId) => {
+      if (!currentUser?.uid) return false;
 
-    try {
-      setActionLoading(true);
-      setError(null);
-      
-      await FriendsService.declineFriendRequest(requestId, currentUser.uid);
-      
-      // Update local state
-      setRequests(prev => ({
-        ...prev,
-        sent: prev.sent.filter(req => req.id !== requestId),
-      }));
-      
-      return true;
-    } catch (err) {
-      console.error('Error canceling friend request:', err);
-      setError(err.message);
-      return false;
-    } finally {
-      setActionLoading(false);
-    }
-  }, [currentUser?.uid]);
+      try {
+        setActionLoading(true);
+        setError(null);
+
+        await FriendsService.declineFriendRequest(requestId, currentUser.uid);
+
+        // Update local state
+        setRequests((prev) => ({
+          ...prev,
+          sent: prev.sent.filter((req) => req.id !== requestId),
+        }));
+
+        return true;
+      } catch (err) {
+        console.error("Error canceling friend request:", err);
+        setError(err.message);
+        return false;
+      } finally {
+        setActionLoading(false);
+      }
+    },
+    [currentUser?.uid]
+  );
 
   // Get counts
   const getCounts = useCallback(() => {

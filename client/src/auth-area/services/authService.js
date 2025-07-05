@@ -9,7 +9,7 @@ import {
 } from "firebase/auth";
 import { doc, setDoc, getDoc } from "firebase/firestore";
 import { httpsCallable } from "firebase/functions";
-import { auth, db, functions } from "../../shared/services/firebase/config";
+import { auth, db, functions } from "@firebase-services/config";
 
 export const authService = {
   // Sign up with email and password

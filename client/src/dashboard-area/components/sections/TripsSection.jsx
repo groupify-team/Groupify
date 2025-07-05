@@ -1,4 +1,4 @@
-﻿// TripsSection.jsx - Trips management section
+// TripsSection.jsx - Trips management section
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useClickOutside } from "@/shared/hooks/useClickOutside";
@@ -43,7 +43,7 @@ import {
   MAX_TRIPS_PER_USER,
   acceptTripInvite,
   declineTripInvite,
-} from "@/shared/services/firebase/trips";
+} from "@firebase-services/trips";
 
 const TripsSection = () => {
   const { currentUser } = useAuth();

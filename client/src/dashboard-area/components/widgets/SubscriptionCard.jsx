@@ -1,7 +1,7 @@
-﻿// src/dashboard-area/components/widgets/SubscriptionCard.jsx - Enhanced subscription management widget
+// src/dashboard-area/components/widgets/SubscriptionCard.jsx - Enhanced subscription management widget
 import React, { useState, useEffect } from "react";
-import subscriptionService from "../../../shared/services/subscriptionService";
-import navigationService from "../../../shared/services/navigationService";
+import subscriptionService from "@shared/services/subscriptionService";
+import navigationService from "@shared/services/navigationService";
 import { useNavigate } from "react-router-dom";
 import {
   CreditCardIcon,
@@ -10,7 +10,7 @@ import {
   ArrowTrendingUpIcon,
   ClockIcon,
   ExclamationTriangleIcon,
-  CheckCircleIcon
+  CheckCircleIcon,
 } from "@heroicons/react/24/outline";
 
 const SubscriptionCard = ({
@@ -24,10 +24,14 @@ const SubscriptionCard = ({
 
   useEffect(() => {
     loadSubscriptionData();
-    
+
     // Subscribe to subscription updates
     const unsubscribe = subscriptionService.subscribe((event, data) => {
-      if (event === 'subscriptionUpdated' || event === 'subscriptionCancelled' || event === 'subscriptionReactivated') {
+      if (
+        event === "subscriptionUpdated" ||
+        event === "subscriptionCancelled" ||
+        event === "subscriptionReactivated"
+      ) {
         loadSubscriptionData();
       }
     });
@@ -40,7 +44,7 @@ const SubscriptionCard = ({
       const subscriptionData = subscriptionService.getCurrentSubscription();
       setSubscription(subscriptionData);
     } catch (error) {
-      console.error('Failed to load subscription data:', error);
+      console.error("Failed to load subscription data:", error);
     } finally {
       setLoading(false);
     }
@@ -49,59 +53,59 @@ const SubscriptionCard = ({
   const handleUpgrade = () => {
     // Set navigation context for returning to settings
     navigationService.setContext({
-      origin: 'dashboard-settings',
-      returnPath: '/dashboard?section=settings',
-      section: 'settings',
-      metadata: { action: 'upgrade', currentPlan: subscription.plan }
+      origin: "dashboard-settings",
+      returnPath: "/dashboard?section=settings",
+      section: "settings",
+      metadata: { action: "upgrade", currentPlan: subscription.plan },
     });
 
     // Navigate to pricing
     navigationService.navigateToPricing(navigate, {
-      from: 'dashboard-settings'
+      from: "dashboard-settings",
     });
   };
 
   const handleBillingManagement = () => {
     // Set navigation context for returning to settings
     navigationService.setContext({
-      origin: 'dashboard-settings', 
-      returnPath: '/dashboard?section=settings',
-      section: 'settings',
-      metadata: { action: 'billing', currentPlan: subscription.plan }
+      origin: "dashboard-settings",
+      returnPath: "/dashboard?section=settings",
+      section: "settings",
+      metadata: { action: "billing", currentPlan: subscription.plan },
     });
 
     // Navigate to billing
     navigationService.navigateToBilling(navigate, {
       plan: subscription.plan,
       billing: subscription.billing,
-      from: 'dashboard-settings'
+      from: "dashboard-settings",
     });
   };
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'active':
-        return 'text-green-600 dark:text-green-400';
-      case 'trial':
-        return 'text-blue-600 dark:text-blue-400';
-      case 'cancel_at_period_end':
-        return 'text-yellow-600 dark:text-yellow-400';
-      case 'expired':
-        return 'text-red-600 dark:text-red-400';
+      case "active":
+        return "text-green-600 dark:text-green-400";
+      case "trial":
+        return "text-blue-600 dark:text-blue-400";
+      case "cancel_at_period_end":
+        return "text-yellow-600 dark:text-yellow-400";
+      case "expired":
+        return "text-red-600 dark:text-red-400";
       default:
-        return 'text-gray-600 dark:text-gray-400';
+        return "text-gray-600 dark:text-gray-400";
     }
   };
 
   const getStatusIcon = (status) => {
     switch (status) {
-      case 'active':
+      case "active":
         return <CheckCircleIcon className="w-4 h-4 text-green-500" />;
-      case 'trial':
+      case "trial":
         return <ClockIcon className="w-4 h-4 text-blue-500" />;
-      case 'cancel_at_period_end':
+      case "cancel_at_period_end":
         return <ExclamationTriangleIcon className="w-4 h-4 text-yellow-500" />;
-      case 'expired':
+      case "expired":
         return <ExclamationTriangleIcon className="w-4 h-4 text-red-500" />;
       default:
         return <div className="w-4 h-4 bg-gray-300 rounded-full"></div>;
@@ -110,35 +114,37 @@ const SubscriptionCard = ({
 
   const getPlanGradient = (plan) => {
     switch (plan) {
-      case 'free':
-        return 'from-gray-500 to-gray-600';
-      case 'pro':
-        return 'from-blue-500 to-indigo-600';
-      case 'family':
-        return 'from-purple-500 to-pink-600';
-      case 'enterprise':
-        return 'from-emerald-500 to-teal-600';
+      case "free":
+        return "from-gray-500 to-gray-600";
+      case "pro":
+        return "from-blue-500 to-indigo-600";
+      case "family":
+        return "from-purple-500 to-pink-600";
+      case "enterprise":
+        return "from-emerald-500 to-teal-600";
       default:
-        return 'from-gray-500 to-gray-600';
+        return "from-gray-500 to-gray-600";
     }
   };
 
   const getPlanIcon = (plan) => {
     switch (plan) {
-      case 'free':
-        return '🆓';
-      case 'pro':
-        return '⭐';
-      case 'family':
-        return '👨‍👩‍👧‍👦';
-      case 'enterprise':
-        return '🏢';
+      case "free":
+        return "??";
+      case "pro":
+        return "?";
+      case "family":
+        return "???????????";
+      case "enterprise":
+        return "??";
       default:
-        return '📦';
+        return "??";
     }
   };
 
-  const recommendations = subscription ? subscriptionService.getUpgradeRecommendations() : [];
+  const recommendations = subscription
+    ? subscriptionService.getUpgradeRecommendations()
+    : [];
 
   if (loading) {
     return (
@@ -168,7 +174,11 @@ const SubscriptionCard = ({
         {/* Plan Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4 sm:mb-6">
           <div className="flex items-center gap-3 sm:gap-4">
-            <div className={`w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br ${getPlanGradient(subscription?.plan)} rounded-xl flex items-center justify-center shadow-lg`}>
+            <div
+              className={`w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br ${getPlanGradient(
+                subscription?.plan
+              )} rounded-xl flex items-center justify-center shadow-lg`}
+            >
               <span className="text-white font-bold text-lg sm:text-xl">
                 {getPlanIcon(subscription?.plan)}
               </span>
@@ -180,20 +190,19 @@ const SubscriptionCard = ({
                 </h3>
                 {subscription?.isTrial && (
                   <span className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs px-2 py-1 rounded-full font-bold">
-                    ⏰ TRIAL
+                    ? TRIAL
                   </span>
                 )}
-                {subscription?.plan !== 'free' && !subscription?.isTrial && (
+                {subscription?.plan !== "free" && !subscription?.isTrial && (
                   <span className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs px-2 py-1 rounded-full font-bold">
-                    ⭐ PREMIUM
+                    ? PREMIUM
                   </span>
                 )}
               </div>
               <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
-                {subscription?.plan === 'free' 
-                  ? "Perfect for getting started" 
-                  : "Premium features unlocked"
-                }
+                {subscription?.plan === "free"
+                  ? "Perfect for getting started"
+                  : "Premium features unlocked"}
               </p>
             </div>
           </div>
@@ -201,8 +210,12 @@ const SubscriptionCard = ({
           {/* Status Badge */}
           <div className="flex items-center gap-2">
             {getStatusIcon(subscription?.status)}
-            <span className={`text-sm font-medium ${getStatusColor(subscription?.status)} capitalize`}>
-              {subscription?.status?.replace('_', ' ')}
+            <span
+              className={`text-sm font-medium ${getStatusColor(
+                subscription?.status
+              )} capitalize`}
+            >
+              {subscription?.status?.replace("_", " ")}
             </span>
           </div>
         </div>
@@ -212,7 +225,7 @@ const SubscriptionCard = ({
           {/* Storage */}
           <div className="bg-white/50 dark:bg-gray-700/30 rounded-lg p-3 sm:p-4 text-center">
             <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-800 dark:text-white">
-              {subscription?.features?.storage || 'N/A'}
+              {subscription?.features?.storage || "N/A"}
             </p>
             <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
               Storage
@@ -222,7 +235,9 @@ const SubscriptionCard = ({
           {/* Photos */}
           <div className="bg-white/50 dark:bg-gray-700/30 rounded-lg p-3 sm:p-4 text-center">
             <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-800 dark:text-white">
-              {subscription?.features?.photos === 'unlimited' ? '∞' : subscription?.features?.photos?.toLocaleString() || 'N/A'}
+              {subscription?.features?.photos === "unlimited"
+                ? "8"
+                : subscription?.features?.photos?.toLocaleString() || "N/A"}
             </p>
             <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
               Photos
@@ -235,22 +250,25 @@ const SubscriptionCard = ({
               ${subscription?.price || 0}
             </p>
             <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-              {subscription?.billing === 'yearly' ? 'Per Year' : 'Per Month'}
+              {subscription?.billing === "yearly" ? "Per Year" : "Per Month"}
             </p>
           </div>
 
           {/* Next Billing */}
           <div className="bg-white/50 dark:bg-gray-700/30 rounded-lg p-3 sm:p-4 text-center">
             <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-800 dark:text-white">
-              {subscription?.isTrial 
+              {subscription?.isTrial
                 ? `${subscription.trialDaysRemaining}d`
-                : subscription?.daysRemaining 
+                : subscription?.daysRemaining
                 ? `${subscription.daysRemaining}d`
-                : '∞'
-              }
+                : "8"}
             </p>
             <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-              {subscription?.isTrial ? 'Trial Left' : subscription?.plan === 'free' ? 'Free' : 'Days Left'}
+              {subscription?.isTrial
+                ? "Trial Left"
+                : subscription?.plan === "free"
+                ? "Free"
+                : "Days Left"}
             </p>
           </div>
         </div>
@@ -262,20 +280,27 @@ const SubscriptionCard = ({
               Storage Usage
             </span>
             <span className="text-sm text-gray-600 dark:text-gray-400">
-              {subscription?.usage?.storage?.usedFormatted || '0 B'} of {subscription?.usage?.storage?.limitFormatted || 'N/A'}
+              {subscription?.usage?.storage?.usedFormatted || "0 B"} of{" "}
+              {subscription?.usage?.storage?.limitFormatted || "N/A"}
             </span>
           </div>
           <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
             <div
               className="h-2 rounded-full transition-all duration-500 bg-gradient-to-r from-indigo-500 to-purple-600"
-              style={{ width: `${Math.min(subscription?.usage?.storage?.percentage || 0, 100)}%` }}
+              style={{
+                width: `${Math.min(
+                  subscription?.usage?.storage?.percentage || 0,
+                  100
+                )}%`,
+              }}
             ></div>
           </div>
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-            {subscription?.usage?.storage?.remaining === 'unlimited' 
-              ? 'Unlimited remaining' 
-              : `${subscription?.usage?.storage?.remainingFormatted || '0 B'} remaining`
-            }
+            {subscription?.usage?.storage?.remaining === "unlimited"
+              ? "Unlimited remaining"
+              : `${
+                  subscription?.usage?.storage?.remainingFormatted || "0 B"
+                } remaining`}
           </p>
         </div>
 
@@ -283,8 +308,10 @@ const SubscriptionCard = ({
         {subscription?.isTrial && (
           <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
             <p className="text-sm text-blue-800 dark:text-blue-200">
-              <strong>🎉 Trial Active:</strong> You have {subscription.trialDaysRemaining} days left in your free trial. 
-              You'll be charged ${subscription.price} on {new Date(subscription.nextBillingDate).toLocaleDateString()}.
+              <strong>?? Trial Active:</strong> You have{" "}
+              {subscription.trialDaysRemaining} days left in your free trial.
+              You'll be charged ${subscription.price} on{" "}
+              {new Date(subscription.nextBillingDate).toLocaleDateString()}.
             </p>
           </div>
         )}
@@ -292,8 +319,10 @@ const SubscriptionCard = ({
         {subscription?.cancelAtPeriodEnd && (
           <div className="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
             <p className="text-sm text-yellow-800 dark:text-yellow-200">
-              <strong>⏰ Cancellation Scheduled:</strong> Your subscription will be cancelled on{' '}
-              {new Date(subscription.nextBillingDate).toLocaleDateString()}. You can reactivate anytime before then.
+              <strong>? Cancellation Scheduled:</strong> Your subscription will
+              be cancelled on{" "}
+              {new Date(subscription.nextBillingDate).toLocaleDateString()}. You
+              can reactivate anytime before then.
             </p>
           </div>
         )}
@@ -302,17 +331,22 @@ const SubscriptionCard = ({
         {recommendations.length > 0 && (
           <div className="mb-4 space-y-2">
             {recommendations.map((rec, index) => (
-              <div key={index} className={`p-3 rounded-lg border ${
-                rec.urgency === 'high' 
-                  ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' 
-                  : 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800'
-              }`}>
-                <p className={`text-sm font-medium ${
-                  rec.urgency === 'high' 
-                    ? 'text-red-800 dark:text-red-200' 
-                    : 'text-yellow-800 dark:text-yellow-200'
-                }`}>
-                  {rec.urgency === 'high' ? '🚨' : '💡'} {rec.message}
+              <div
+                key={index}
+                className={`p-3 rounded-lg border ${
+                  rec.urgency === "high"
+                    ? "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800"
+                    : "bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800"
+                }`}
+              >
+                <p
+                  className={`text-sm font-medium ${
+                    rec.urgency === "high"
+                      ? "text-red-800 dark:text-red-200"
+                      : "text-yellow-800 dark:text-yellow-200"
+                  }`}
+                >
+                  {rec.urgency === "high" ? "??" : "??"} {rec.message}
                 </p>
               </div>
             ))}
@@ -321,12 +355,12 @@ const SubscriptionCard = ({
 
         {/* Action Buttons */}
         <div className="space-y-3">
-          {subscription?.plan === 'free' ? (
+          {subscription?.plan === "free" ? (
             <button
               onClick={handleUpgrade}
               className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-4 sm:px-6 py-3 sm:py-4 rounded-xl font-semibold text-sm sm:text-base transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
             >
-              Upgrade to Pro - Get 20x More Storage 🚀
+              Upgrade to Pro - Get 20x More Storage ??
             </button>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -365,22 +399,23 @@ const SubscriptionCard = ({
           </div>
 
           {/* Cancel Plan Button for Paid Plans */}
-          {subscription?.plan !== 'free' && !subscription?.cancelAtPeriodEnd && (
-            <button
-              onClick={onOpenCancelPlan}
-              className="w-full text-xs text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 py-2 font-medium transition-colors"
-            >
-              Cancel Plan
-            </button>
-          )}
+          {subscription?.plan !== "free" &&
+            !subscription?.cancelAtPeriodEnd && (
+              <button
+                onClick={onOpenCancelPlan}
+                className="w-full text-xs text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 py-2 font-medium transition-colors"
+              >
+                Cancel Plan
+              </button>
+            )}
         </div>
       </div>
 
       {/* Quick Plan Comparison - Only show for free users */}
-      {subscription?.plan === 'free' && (
+      {subscription?.plan === "free" && (
         <div className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-xl p-4 sm:p-6 border border-indigo-200/50 dark:border-indigo-800/50">
           <h4 className="text-lg font-bold text-gray-800 dark:text-white mb-4 text-center">
-            See What You're Missing 👀
+            See What You're Missing ??
           </h4>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
@@ -389,7 +424,7 @@ const SubscriptionCard = ({
               <div className="flex justify-between items-start mb-4">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
-                    <span className="text-white font-bold text-lg">⭐</span>
+                    <span className="text-white font-bold text-lg">?</span>
                   </div>
                   <div>
                     <h3 className="text-lg font-bold text-gray-800 dark:text-white">
@@ -431,19 +466,19 @@ const SubscriptionCard = ({
 
               <ul className="space-y-2 text-sm mb-4">
                 <li className="flex items-center gap-2">
-                  <span className="text-green-500">✓</span>
+                  <span className="text-green-500">?</span>
                   <span className="text-gray-700 dark:text-gray-300">
                     Advanced AI recognition
                   </span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="text-green-500">✓</span>
+                  <span className="text-green-500">?</span>
                   <span className="text-gray-700 dark:text-gray-300">
                     Unlimited albums
                   </span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="text-green-500">✓</span>
+                  <span className="text-green-500">?</span>
                   <span className="text-gray-700 dark:text-gray-300">
                     Priority support
                   </span>
@@ -456,7 +491,9 @@ const SubscriptionCard = ({
               <div className="flex justify-between items-start mb-4">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center shadow-lg">
-                    <span className="text-white font-bold text-lg">👨‍👩‍👧‍👦</span>
+                    <span className="text-white font-bold text-lg">
+                      ???????????
+                    </span>
                   </div>
                   <div>
                     <h3 className="text-lg font-bold text-gray-800 dark:text-white">
@@ -498,19 +535,19 @@ const SubscriptionCard = ({
 
               <ul className="space-y-2 text-sm mb-4">
                 <li className="flex items-center gap-2">
-                  <span className="text-green-500">✓</span>
+                  <span className="text-green-500">?</span>
                   <span className="text-gray-700 dark:text-gray-300">
                     Premium AI recognition
                   </span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="text-green-500">✓</span>
+                  <span className="text-green-500">?</span>
                   <span className="text-gray-700 dark:text-gray-300">
                     Unlimited sharing
                   </span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="text-green-500">✓</span>
+                  <span className="text-green-500">?</span>
                   <span className="text-gray-700 dark:text-gray-300">
                     Family management
                   </span>
@@ -544,7 +581,7 @@ const SubscriptionCard = ({
       )}
 
       {/* Plan Benefits for Paid Users */}
-      {subscription?.plan !== 'free' && (
+      {subscription?.plan !== "free" && (
         <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl p-4 sm:p-6 border border-green-200/50 dark:border-green-800/50">
           <h4 className="text-lg font-bold text-gray-800 dark:text-white mb-4 text-center flex items-center justify-center gap-2">
             <CheckCircleIcon className="w-5 h-5 text-green-600 dark:text-green-400" />
@@ -553,30 +590,37 @@ const SubscriptionCard = ({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
             <div className="flex items-center gap-2 text-green-700 dark:text-green-300">
-              <span className="text-green-500">✓</span>
-              <span>AI Recognition: {subscription.features?.aiRecognition}</span>
+              <span className="text-green-500">?</span>
+              <span>
+                AI Recognition: {subscription.features?.aiRecognition}
+              </span>
             </div>
             <div className="flex items-center gap-2 text-green-700 dark:text-green-300">
-              <span className="text-green-500">✓</span>
+              <span className="text-green-500">?</span>
               <span>Support: {subscription.features?.support}</span>
             </div>
             <div className="flex items-center gap-2 text-green-700 dark:text-green-300">
-              <span className="text-green-500">✓</span>
+              <span className="text-green-500">?</span>
               <span>Quality: {subscription.features?.quality}</span>
             </div>
             <div className="flex items-center gap-2 text-green-700 dark:text-green-300">
-              <span className="text-green-500">✓</span>
-              <span>Sharing: {subscription.features?.sharing === 'unlimited' ? 'Unlimited' : `Up to ${subscription.features?.sharing}`}</span>
+              <span className="text-green-500">?</span>
+              <span>
+                Sharing:{" "}
+                {subscription.features?.sharing === "unlimited"
+                  ? "Unlimited"
+                  : `Up to ${subscription.features?.sharing}`}
+              </span>
             </div>
             {subscription.features?.editing && (
               <div className="flex items-center gap-2 text-green-700 dark:text-green-300">
-                <span className="text-green-500">✓</span>
+                <span className="text-green-500">?</span>
                 <span>Photo Editing Tools</span>
               </div>
             )}
             {subscription.features?.videos && (
               <div className="flex items-center gap-2 text-green-700 dark:text-green-300">
-                <span className="text-green-500">✓</span>
+                <span className="text-green-500">?</span>
                 <span>Video Storage</span>
               </div>
             )}
@@ -584,7 +628,8 @@ const SubscriptionCard = ({
 
           <div className="mt-4 p-3 bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-lg">
             <p className="text-sm text-green-800 dark:text-green-200 text-center">
-              🎉 Thank you for being a premium subscriber! Enjoying your extra features and storage.
+              ?? Thank you for being a premium subscriber! Enjoying your extra
+              features and storage.
             </p>
           </div>
         </div>

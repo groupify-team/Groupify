@@ -1,6 +1,6 @@
 ﻿import React, { useState } from "react";
 import { useAuth } from "@auth/contexts/AuthContext";
-import { findUsersByEmail } from "@shared/services/firebase/users";
+import { findUsersByEmail } from "@firebase-services/users";
 import { useFriendSearch, useFriendRequests } from "../hooks/index";
 
 import {

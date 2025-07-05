@@ -7,7 +7,7 @@ global.TextEncoder = TextEncoder;
 global.TextDecoder = TextDecoder;
 
 // Mock Firebase
-jest.mock('../shared/services/firebase/config.js', () => ({
+jest.mock('@firebase-services/config.js', () => ({
   db: {},
   auth: {},
   storage: {},

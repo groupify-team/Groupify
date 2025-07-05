@@ -3,7 +3,7 @@ import {
   acceptFriendRequest,
   rejectFriendRequest,
   getPendingFriendRequests,
-} from "@shared/services/firebase/users";
+} from "@firebase-services/users";
 
 const FriendRequestsModal = ({ currentUserId, onClose }) => {
   const [requests, setRequests] = useState([]);

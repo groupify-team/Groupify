@@ -10,7 +10,7 @@ import { useDashboardData } from "../../hooks/useDashboardData";
 import {
   acceptFriendRequest,
   rejectFriendRequest,
-} from "@shared/services/firebase/users";
+} from "@firebase-services/users";
 import {
   acceptTripInvite,
   declineTripInvite,

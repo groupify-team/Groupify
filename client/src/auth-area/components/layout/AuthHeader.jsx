@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { useTheme } from "../../../shared/contexts/ThemeContext";
+import { useTheme } from "@shared/contexts/ThemeContext";
 import { CameraIcon, SunIcon, MoonIcon, ArrowLeftIcon } from "@heroicons/react/24/outline";
 
 const AuthHeader = ({ 

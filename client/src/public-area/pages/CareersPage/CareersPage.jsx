@@ -369,7 +369,7 @@ const ApplicationModal = ({ job, onClose }) => {
       // Call Firebase function with improved error handling
       const { httpsCallable } = await import("firebase/functions");
       const { functions } = await import(
-        "../../../shared/services/firebase/config"
+        "@firebase-services/config"
       );
 
       const sendJobApplication = httpsCallable(
