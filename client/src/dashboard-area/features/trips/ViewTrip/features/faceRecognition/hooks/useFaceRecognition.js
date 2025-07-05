@@ -240,19 +240,6 @@ export const useFaceRecognition = (photos, currentUserId, isMember) => {
     }, 500);
   };
 
-  // Auto-load face profile on component mount
-  useEffect(() => {
-    let isMounted = true;
-
-    if (currentUserId && isMounted) {
-      loadUserFaceProfile();
-    }
-
-    return () => {
-      isMounted = false;
-    };
-  }, [currentUserId]);
-
   return {
     hasProfile,
     isLoadingProfile,
