@@ -23,7 +23,7 @@ import {
   TagIcon,
 } from "@heroicons/react/24/outline";
 import { toast } from "react-hot-toast";
-import SettingsModal from "../../../dashboard-area/features/settings/components/SettingsModal";
+import AccessibilityModal from "@/shared/components/accessibility/AccessibilityModal";
 
 
 
@@ -339,7 +339,7 @@ const BlogPage = () => {
           onLike={handleLike}
         />
       )}
-      <SettingsModal {...settingsProps} />
+      <AccessibilityModal {...settingsProps} />
     </PublicLayout>
   );
 };

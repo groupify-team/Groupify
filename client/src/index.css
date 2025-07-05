@@ -1,6 +1,11 @@
+@import './shared/components/accessibility/styles/accessibility.css';
+
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+
 
 /* ========================================
    GLOBAL BASE STYLES
