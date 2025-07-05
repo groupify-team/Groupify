@@ -1,5 +1,4 @@
-﻿// services/tripsService.js - UPDATED to match exact pricing page limits
-import {
+﻿import {
   getTrip,
   createTrip,
   updateTrip,
@@ -194,6 +193,9 @@ export const tripsService = {
   async getTripMembers(memberIds) {
     try {
       if (!memberIds || memberIds.length === 0) return [];
+
+      // Lazy load the function
+      const { getUserProfile } = await import("@firebase-services/users");
 
       const memberProfiles = await Promise.all(
         memberIds.map((uid) => getUserProfile(uid))

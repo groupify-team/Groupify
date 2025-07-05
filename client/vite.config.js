@@ -4,7 +4,7 @@ import { visualizer } from "rollup-plugin-visualizer";
 import path from "path";
 
 export default defineConfig({
-  plugins: [react(), visualizer({ open: true })],
+  plugins: [react()],
   resolve: {
     alias: {
       // Root-level aliases
@@ -106,25 +106,47 @@ export default defineConfig({
     },
   },
 
-  // Optional: Build optimizations
+  // ✅ OPTIMIZED BUILD CONFIGURATION
   build: {
+    target: "es2020", // Enable modern JS features for better tree-shaking
+
     rollupOptions: {
       output: {
         manualChunks: {
-          // Separate vendor chunks
-          vendor: ["react", "react-dom"],
+          // Core chunks only
+          vendor: ["react", "react-dom", "react-router-dom"],
           firebase: [
             "firebase/app",
             "firebase/auth",
             "firebase/firestore",
             "firebase/storage",
           ],
-          // Area-based chunks
-          auth: ["./src/auth-area"],
-          dashboard: ["./src/dashboard-area"],
-          public: ["./src/public-area"],
+          ui: ["@heroicons/react", "lucide-react", "@mui/material"],
+          utils: ["uuid", "clsx", "date-fns"],
         },
       },
     },
+
+    chunkSizeWarningLimit: 500,
+    sourcemap: false,
+    minify: "esbuild",
+  },
+
+  // ✅ OPTIMIZED DEPENDENCIES
+  optimizeDeps: {
+    include: [
+      "react",
+      "react-dom",
+      "react-router-dom",
+      "firebase/app",
+      "@heroicons/react",
+      "react-hot-toast",
+    ],
+  },
+
+  // ✅ DEVELOPMENT OPTIMIZATIONS
+  esbuild: {
+    target: "es2020",
+    logOverride: { "this-is-undefined-in-esm": "silent" },
   },
 });
