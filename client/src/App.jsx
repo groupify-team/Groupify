@@ -16,8 +16,32 @@ import CloudflareTurnstileGate from "@/shared/components/ui/CloudFlareTurnstileG
 import GlobalAccessibilityProvider from "@/shared/components/accessibility/GlobalAccessibilityProvider";
 import LaunchAnimation from "@/auth-area/components/ui/LaunchAnimation";
 
+
 // Toast notifications (small, needed globally)
 import { Toaster } from "react-hot-toast";
+
+// Public Area Pages
+import HomePage from "./public-area/pages/HomePage/HomePage";
+import TermsOfService from "./public-area/pages/TermsOfServicePage/TermsOfServicePage";
+import PrivacyPolicy from "./public-area/pages/PrivacyPolicyPage/PrivacyPolicyPage";
+import ContactUs from "./public-area/pages/ContactPage/ContactPage";
+import AboutUs from "./public-area/pages/AboutPage/AboutPage";
+import HelpCenter from "./public-area/pages/HelpCenterPage/HelpCenterPage";
+import Careers from "./public-area/pages/CareersPage/CareersPage";
+import Blog from "./public-area/pages/BlogPage/BlogPage";
+import Features from "./public-area/pages/FeaturesPage/FeaturesPage";
+import Pricing from "./public-area/pages/PricingPage/PricingPage";
+import Status from "./public-area/pages/StatusPage/StatusPage";
+import Billing from "./public-area/pages/BillingPage/BillingPage";
+
+// Dashboard Area Components - Temporarily disabled
+import Dashboard from "@/dashboard-area/pages/DashboardPage";
+import DashboardLayout from "@/dashboard-area/components/layout/DashboardLayout";
+import TripsSection from "@/dashboard-area/components/sections/TripsSection";
+import TripDetailView from "@/dashboard-area/features/trips/ViewTrip/TripDetailView";
+import SettingsSection from "@/dashboard-area/features/settings/components/sections/SettingsSection";
+import FriendsSection from "@/dashboard-area/components/sections/FriendsSection";
+
 
 // ===============================================
 // LAZY LOADED COMPONENTS - This is the key optimization!

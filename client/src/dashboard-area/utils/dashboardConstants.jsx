@@ -1,17 +1,13 @@
 ﻿// Dashboard Constants and Configuration
 import {
   ArrowRightOnRectangleIcon,
-  BellIcon,
-  CameraIcon,
   CheckCircleIcon,
   ChevronDownIcon,
   ChevronRightIcon,
   Cog6ToothIcon,
   ExclamationTriangleIcon,
-  MagnifyingGlassIcon,
   MapIcon,
   PlusIcon,
-  UserCircleIcon,
   UserGroupIcon,
   UserPlusIcon,
   XCircleIcon,
@@ -92,126 +88,6 @@ export const PLAN_CONFIGS = {
   },
 };
 
-// Streamlined notification settings - only core app features
-export const NOTIFICATION_SETTINGS = [
-  {
-    id: "emailNotifications",
-    label: "Email Notifications",
-    description: "Receive important updates via email",
-    icon: (
-      <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center shadow-sm">
-        <svg
-          className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white"
-          fill="currentColor"
-          viewBox="0 0 20 20"
-        >
-          <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
-          <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
-        </svg>
-      </div>
-    ),
-    defaultChecked: true,
-  },
-  {
-    id: "tripUpdates",
-    label: "Trip Updates",
-    description: "Get notified about trip activities and changes",
-    icon: (
-      <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center shadow-sm">
-        <MapIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white" />
-      </div>
-    ),
-    defaultChecked: true,
-  },
-  {
-    id: "photoRecognition",
-    label: "Photo Recognition",
-    description: "Notifications when you're tagged in photos",
-    icon: (
-      <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg flex items-center justify-center shadow-sm">
-        <CameraIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white" />
-      </div>
-    ),
-    defaultChecked: true,
-  },
-];
-
-// Streamlined privacy settings - core privacy controls
-export const PRIVACY_SETTINGS = [
-  {
-    id: "publicProfile",
-    label: "Public Profile",
-    description: "Allow others to find and view your profile",
-    icon: (
-      <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg flex items-center justify-center shadow-sm">
-        <UserCircleIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white" />
-      </div>
-    ),
-    defaultChecked: true,
-  },
-  {
-    id: "faceRecognition",
-    label: "Face Recognition",
-    description: "Enable face detection and tagging in photos",
-    icon: (
-      <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-r from-pink-500 to-rose-500 rounded-lg flex items-center justify-center shadow-sm">
-        <svg
-          className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white"
-          fill="currentColor"
-          viewBox="0 0 20 20"
-        >
-          <path
-            fillRule="evenodd"
-            d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zm4.261 4.26l1.514 1.515a2.003 2.003 0 012.45 2.45l1.514 1.514a4 4 0 00-5.478-5.478z"
-            clipRule="evenodd"
-          />
-          <path d="M12.454 16.697L9.75 13.992a4 4 0 01-3.742-3.741L2.335 6.578A9.98 9.98 0 00.458 10c1.274 4.057 5.065 7 9.542 7 .847 0 1.669-.105 2.454-.303z" />
-        </svg>
-      </div>
-    ),
-    defaultChecked: false, // Privacy-first approach
-  },
-  {
-    id: "searchVisibility",
-    label: "Search Visibility",
-    description: "Allow others to find you in search results",
-    icon: (
-      <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-lg flex items-center justify-center shadow-sm">
-        <MagnifyingGlassIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white" />
-      </div>
-    ),
-    defaultChecked: true,
-  },
-];
-
-// Settings sections configuration
-export const SETTINGS_SECTIONS = {
-  NOTIFICATIONS: "notifications",
-  PRIVACY: "privacy",
-  ACCOUNT: "account",
-  FACE_PROFILE: "faceProfile",
-  SUBSCRIPTION: "subscription",
-  DATA: "data",
-};
-
-// Default settings object for new users
-export const DEFAULT_USER_SETTINGS = {
-  notifications: {
-    emailNotifications: true,
-    tripUpdates: true,
-    photoRecognition: true,
-  },
-  privacy: {
-    publicProfile: true,
-    faceRecognition: false,
-    searchVisibility: true,
-  },
-  preferences: {
-    theme: "system",
-    language: "en",
-  },
-};
-
 // Responsive Breakpoints
 export const BREAKPOINTS = {
   mobile: 768,
@@ -238,37 +114,24 @@ export const ANIMATIONS = {
   dropdown: 700,
 };
 
-// Toast Messages
+// Toast Messages (Dashboard-specific, settings toasts moved to settingsConstants)
 export const TOAST_MESSAGES = {
   tripCreated: "Trip created successfully!",
   friendRequestSent: "Friend request sent successfully!",
   friendRequestAccepted: "Friend request accepted",
   friendRequestDeclined: "Friend request declined",
-  profileDeleted: "🗑️ Face profile deleted successfully",
-  accountDeleted: "Account deleted successfully. Goodbye!",
-  planCanceled:
-    "Plan canceled successfully! You've been downgraded to the free plan.",
   tripInviteAccepted: "Trip invitation accepted",
   tripInviteDeclined: "Trip invitation declined",
-  settingsUpdated: "Settings updated successfully!",
-  settingsError: "Failed to update settings. Please try again.",
 };
 
-// Error Messages
+// Error Messages (Dashboard-specific, settings errors moved to settingsConstants)
 export const ERROR_MESSAGES = {
   loadingDashboard: "Failed to load dashboard data",
   sendingFriendRequest: "Failed to send friend request",
   acceptingFriendRequest: "Failed to accept friend request",
   decliningFriendRequest: "Failed to decline friend request",
-  deletingAccount:
-    "Failed to delete account. Please try again or contact support.",
   tripLimitReached: (current, max) =>
     `Trip limit reached! You can only create ${max} trips. You currently have ${current} trips.`,
-  confirmDelete: "Please type 'DELETE' to confirm",
-  requiresRecentLogin:
-    "For security reasons, please log out and log back in, then try deleting your account again.",
-  loadingSettings: "Failed to load settings",
-  updatingSettings: "Failed to update settings",
 };
 
 // User Menu Items (Mobile)
