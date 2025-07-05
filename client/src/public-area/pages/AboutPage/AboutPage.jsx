@@ -6,7 +6,7 @@ import PublicLayout from "../../components/layout/PublicLayout";
 import HeroSection from "../../components/ui/HeroSection";
 import { FeatureGrid } from "../../components/ui/FeatureCard";
 import { usePublicNavigation } from "../../hooks/usePublicNavigation";
-import SettingsModal from "../../../dashboard-area/features/settings/components/SettingsModal";
+import SettingsModal from "@dashboard/features/settings/components/modals/EditProfileModal";
 
 // Icons
 import {
@@ -27,7 +27,8 @@ import ofirprofile from "../../../assets/ofirprofile.jpg";
 import adirprofile from "../../../assets/adirprofile.jpg";
 
 const AboutPage = () => {
-  const { handleGetStarted, headerProps, settingsProps } = usePublicNavigation();
+  const { handleGetStarted, headerProps, settingsProps } =
+    usePublicNavigation();
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
@@ -73,28 +74,32 @@ const AboutPage = () => {
       id: 1,
       icon: HeartIcon,
       title: "Privacy First",
-      description: "Your memories are personal. We build with privacy and security at the core of everything we do.",
+      description:
+        "Your memories are personal. We build with privacy and security at the core of everything we do.",
       variant: "simple",
     },
     {
       id: 2,
       icon: SparklesIcon,
       title: "Innovation",
-      description: "We leverage cutting-edge AI technology to create magical experiences that make organizing photos effortless.",
+      description:
+        "We leverage cutting-edge AI technology to create magical experiences that make organizing photos effortless.",
       variant: "simple",
     },
     {
       id: 3,
       icon: UsersIcon,
       title: "Community",
-      description: "Photos are meant to be shared. We build tools that bring people together through shared memories.",
+      description:
+        "Photos are meant to be shared. We build tools that bring people together through shared memories.",
       variant: "simple",
     },
     {
       id: 4,
       icon: LightBulbIcon,
       title: "Simplicity",
-      description: "Complex technology should feel simple. We design intuitive experiences that anyone can use.",
+      description:
+        "Complex technology should feel simple. We design intuitive experiences that anyone can use.",
       variant: "simple",
     },
   ];
@@ -104,22 +109,26 @@ const AboutPage = () => {
     {
       year: "2023",
       title: "The Idea",
-      description: "Frustrated by disorganized travel photos, Ofir and Adir decide to solve this problem for everyone.",
+      description:
+        "Frustrated by disorganized travel photos, Ofir and Adir decide to solve this problem for everyone.",
     },
     {
       year: "2024",
       title: "First Product",
-      description: "Launch of Groupify with basic AI face recognition and photo organization features.",
+      description:
+        "Launch of Groupify with basic AI face recognition and photo organization features.",
     },
     {
       year: "2024",
       title: "Growing Community",
-      description: "Reached 10,000+ active users organizing millions of photos and sharing countless memories.",
+      description:
+        "Reached 10,000+ active users organizing millions of photos and sharing countless memories.",
     },
     {
       year: "2025",
       title: "The Future",
-      description: "Expanding globally with advanced AI features and enhanced collaboration tools.",
+      description:
+        "Expanding globally with advanced AI features and enhanced collaboration tools.",
     },
   ];
 
@@ -128,15 +137,15 @@ const AboutPage = () => {
       headerType="public"
       headerProps={headerProps}
       footerType="default"
-      footerProps={{ 
-        customText: "© 2025 Groupify. Built with ❤️ by Ofir & Adir." 
+      footerProps={{
+        customText: "© 2025 Groupify. Built with ❤️ by Ofir & Adir.",
       }}
     >
       {/* Hero Section */}
       <HeroSection
-        badge={{ 
-          icon: RocketLaunchIcon, 
-          text: "Our Story" 
+        badge={{
+          icon: RocketLaunchIcon,
+          text: "Our Story",
         }}
         title="About Groupify"
         description="We're on a mission to help people organize and share their most precious memories through the power of AI and beautiful design."
@@ -353,7 +362,7 @@ const AboutPage = () => {
             </p>
           </div>
 
-          <FeatureGrid 
+          <FeatureGrid
             features={values}
             columns={4}
             variant="simple"

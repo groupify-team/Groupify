@@ -23,7 +23,7 @@ import {
 import {
   hasFaceProfile,
   getProfilePhotos,
-} from "@shared/services/faceRecognitionService";
+} from "@face-recognition/service/faceRecognitionService";
 import { ERROR_MESSAGES } from "@dashboard/utils/dashboardConstants";
 
 export const useDashboardData = () => {

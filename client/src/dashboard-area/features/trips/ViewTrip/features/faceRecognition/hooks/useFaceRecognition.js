@@ -11,7 +11,7 @@ import {
   cancelFaceRecognition,
   resetFaceRecognition,
   createFaceProfile,
-} from "@shared/services/faceRecognitionService";
+} from "@face-recognition/service/faceRecognitionService";
 import { getFaceProfileFromStorage } from "@shared/services/firebase/faceProfiles";
 
 export const useFaceRecognition = (photos, currentUserId, isMember) => {

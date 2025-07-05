@@ -16,7 +16,7 @@ import {
 import PublicFooter from "../../components/layout/PublicFooter";
 
 // Import components that provide functionality
-import SettingsModal from "../../../dashboard-area/features/settings/components/SettingsModal";
+import SettingsModal from "@dashboard/features/settings/components/modals/EditProfileModal";
 
 // Launch Animation Component (keep exactly as before)
 const LaunchAnimation = ({ onAnimationComplete }) => {
