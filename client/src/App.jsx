@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -8,22 +8,17 @@ import {
   useNavigate,
 } from "react-router-dom";
 
-// Updated imports for refactored auth structure
+// Keep core providers and auth components as regular imports (they're needed immediately)
 import { AuthProvider, useAuth } from "@/auth-area/contexts/AuthContext";
 import { ThemeProvider } from "@shared/contexts/ThemeContext";
 import ProtectedRoute from "@/auth-area/components/ProtectedRoute";
 import CloudflareTurnstileGate from "@/shared/components/ui/CloudFlareTurnstileGate";
-
-// ADD THIS IMPORT - GlobalAccessibilityProvider
 import GlobalAccessibilityProvider from "@/shared/components/accessibility/GlobalAccessibilityProvider";
-
-// Auth Area Components - Updated paths for refactored structure
-import SignInPage from "@/auth-area/pages/SignInPage/SignInPage";
-import SignUpPage from "@/auth-area/pages/SignUpPage/SignUpPage";
-import ConfirmEmailPage from "@/auth-area/pages/ConfirmEmailPage/ConfirmEmailPage";
-import ForgotPasswordPage from "@/auth-area/pages/ForgotPasswordPage/ForgotPasswordPage";
-import ResetPasswordPage from "@/auth-area/pages/ResetPasswordPage/ResetPasswordPage";
 import LaunchAnimation from "@/auth-area/components/ui/LaunchAnimation";
+
+
+// Toast notifications (small, needed globally)
+import { Toaster } from "react-hot-toast";
 
 // Public Area Pages
 import HomePage from "./public-area/pages/HomePage/HomePage";
@@ -47,10 +42,103 @@ import TripDetailView from "@/dashboard-area/features/trips/ViewTrip/TripDetailV
 import SettingsSection from "@/dashboard-area/features/settings/components/sections/SettingsSection";
 import FriendsSection from "@/dashboard-area/components/sections/FriendsSection";
 
-// Toast notifications
-import { Toaster } from "react-hot-toast";
 
-// Dashboard Placeholder Component
+// ===============================================
+// LAZY LOADED COMPONENTS - This is the key optimization!
+// ===============================================
+
+// Auth Area Components - Convert to lazy loading
+const SignInPage = React.lazy(() =>
+  import("@/auth-area/pages/SignInPage/SignInPage")
+);
+const SignUpPage = React.lazy(() =>
+  import("@/auth-area/pages/SignUpPage/SignUpPage")
+);
+const ConfirmEmailPage = React.lazy(() =>
+  import("@/auth-area/pages/ConfirmEmailPage/ConfirmEmailPage")
+);
+const ForgotPasswordPage = React.lazy(() =>
+  import("@/auth-area/pages/ForgotPasswordPage/ForgotPasswordPage")
+);
+const ResetPasswordPage = React.lazy(() =>
+  import("@/auth-area/pages/ResetPasswordPage/ResetPasswordPage")
+);
+
+// Public Area Pages - Convert to lazy loading
+const HomePage = React.lazy(() =>
+  import("./public-area/pages/HomePage/HomePage")
+);
+const TermsOfService = React.lazy(() =>
+  import("./public-area/pages/TermsOfServicePage/TermsOfServicePage")
+);
+const PrivacyPolicy = React.lazy(() =>
+  import("./public-area/pages/PrivacyPolicyPage/PrivacyPolicyPage")
+);
+const ContactUs = React.lazy(() =>
+  import("./public-area/pages/ContactPage/ContactPage")
+);
+const AboutUs = React.lazy(() =>
+  import("./public-area/pages/AboutPage/AboutPage")
+);
+const HelpCenter = React.lazy(() =>
+  import("./public-area/pages/HelpCenterPage/HelpCenterPage")
+);
+const Careers = React.lazy(() =>
+  import("./public-area/pages/CareersPage/CareersPage")
+);
+const Blog = React.lazy(() => import("./public-area/pages/BlogPage/BlogPage"));
+const Features = React.lazy(() =>
+  import("./public-area/pages/FeaturesPage/FeaturesPage")
+);
+const Pricing = React.lazy(() =>
+  import("./public-area/pages/PricingPage/PricingPage")
+);
+const Status = React.lazy(() =>
+  import("./public-area/pages/StatusPage/StatusPage")
+);
+const Billing = React.lazy(() =>
+  import("./public-area/pages/BillingPage/BillingPage")
+);
+
+// Dashboard Area Components - Convert to lazy loading
+const Dashboard = React.lazy(() =>
+  import("@/dashboard-area/pages/DashboardPage")
+);
+const TripsSection = React.lazy(() =>
+  import("@/dashboard-area/components/sections/TripsSection")
+);
+const TripDetailView = React.lazy(() =>
+  import("@/dashboard-area/features/trips/ViewTrip/TripDetailView")
+);
+const SettingsSection = React.lazy(() =>
+  import("@/dashboard-area/components/sections/SettingsSection")
+);
+const FriendsSection = React.lazy(() =>
+  import("@/dashboard-area/components/sections/FriendsSection")
+);
+
+// ===============================================
+// LOADING COMPONENT - Reusable loading spinner
+// ===============================================
+const PageLoadingSpinner = ({ message = "Loading..." }) => (
+  <div className="min-h-screen w-full bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 flex items-center justify-center transition-all duration-500">
+    <div className="text-center">
+      <div className="w-16 h-16 border-4 border-purple-200 dark:border-purple-700 border-t-indigo-600 dark:border-t-indigo-400 rounded-full animate-spin mx-auto mb-4"></div>
+      <p className="text-xl text-gray-800 dark:text-white font-medium">
+        {message}
+      </p>
+    </div>
+  </div>
+);
+
+// ===============================================
+// SUSPENSE WRAPPER - Wraps lazy components with loading
+// ===============================================
+const SuspenseWrapper = ({ children, fallback }) => (
+  <Suspense fallback={fallback || <PageLoadingSpinner />}>{children}</Suspense>
+);
+
+// Dashboard Placeholder Component (keep as regular component since it's small)
 const DashboardPlaceholder = () => {
   const navigate = useNavigate();
   const { logout } = useAuth();
@@ -96,7 +184,7 @@ const DashboardPlaceholder = () => {
   );
 };
 
-// Updated FlowController component with improved Turnstile logic
+// FlowController component (unchanged - keeping your logic intact)
 const FlowController = ({ children }) => {
   const { currentUser, loading: authLoading } = useAuth();
   const location = useLocation();
@@ -315,16 +403,7 @@ const FlowController = ({ children }) => {
 
   // Show loading while determining flow
   if (authLoading || (!flowReady && !showLaunchAnimation)) {
-    return (
-      <div className="min-h-screen w-full bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 flex items-center justify-center transition-all duration-500">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-purple-200 dark:border-purple-700 border-t-indigo-600 dark:border-t-indigo-400 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-xl text-gray-800 dark:text-white font-medium">
-            Loading...
-          </p>
-        </div>
-      </div>
-    );
+    return <PageLoadingSpinner message="Loading..." />;
   }
 
   // Show launch animation
@@ -341,7 +420,6 @@ function App() {
   const AppContent = () => (
     <Router>
       <AuthProvider>
-        {/* 🎯 ADD GlobalAccessibilityProvider HERE - wraps everything inside AuthProvider */}
         <GlobalAccessibilityProvider>
           <FlowController>
             {/* Global Toast Notifications */}
@@ -356,141 +434,243 @@ function App() {
             {/* Main App Layout */}
             <div className="transition-all duration-500 ease-in-out">
               <Routes>
-                {/* Public Routes */}
+                {/* Public Routes - Now with Suspense wrapper */}
                 <Route
                   path="/"
                   element={
-                    <div className="page-enter">
-                      <HomePage />
-                    </div>
+                    <SuspenseWrapper
+                      fallback={
+                        <PageLoadingSpinner message="Loading homepage..." />
+                      }
+                    >
+                      <div className="page-enter">
+                        <HomePage />
+                      </div>
+                    </SuspenseWrapper>
                   }
                 />
 
-                {/* Authentication Routes - Updated to use refactored components */}
+                {/* Authentication Routes - Now with Suspense wrapper */}
                 <Route
                   path="/signin"
                   element={
-                    <div className="page-enter">
-                      <SignInPage />
-                    </div>
+                    <SuspenseWrapper
+                      fallback={
+                        <PageLoadingSpinner message="Loading sign in..." />
+                      }
+                    >
+                      <div className="page-enter">
+                        <SignInPage />
+                      </div>
+                    </SuspenseWrapper>
                   }
                 />
                 <Route
                   path="/signup"
                   element={
-                    <div className="page-enter">
-                      <SignUpPage />
-                    </div>
+                    <SuspenseWrapper
+                      fallback={
+                        <PageLoadingSpinner message="Loading sign up..." />
+                      }
+                    >
+                      <div className="page-enter">
+                        <SignUpPage />
+                      </div>
+                    </SuspenseWrapper>
                   }
                 />
                 <Route
                   path="/confirm-email"
                   element={
-                    <div className="page-enter">
-                      <ConfirmEmailPage />
-                    </div>
+                    <SuspenseWrapper>
+                      <div className="page-enter">
+                        <ConfirmEmailPage />
+                      </div>
+                    </SuspenseWrapper>
                   }
                 />
                 <Route
                   path="/forgot-password"
                   element={
-                    <div className="page-enter">
-                      <ForgotPasswordPage />
-                    </div>
+                    <SuspenseWrapper>
+                      <div className="page-enter">
+                        <ForgotPasswordPage />
+                      </div>
+                    </SuspenseWrapper>
                   }
                 />
                 <Route
                   path="/reset-password"
                   element={
-                    <div className="page-enter">
-                      <ResetPasswordPage />
-                    </div>
+                    <SuspenseWrapper>
+                      <div className="page-enter">
+                        <ResetPasswordPage />
+                      </div>
+                    </SuspenseWrapper>
                   }
                 />
 
-                {/* Legal & Info Pages */}
+                {/* Legal & Info Pages - Now with Suspense wrapper */}
                 <Route
                   path="/terms"
                   element={
-                    <div className="page-enter">
-                      <TermsOfService />
-                    </div>
+                    <SuspenseWrapper>
+                      <div className="page-enter">
+                        <TermsOfService />
+                      </div>
+                    </SuspenseWrapper>
                   }
                 />
                 <Route
                   path="/privacy-policy"
                   element={
-                    <div className="page-enter">
-                      <PrivacyPolicy />
-                    </div>
+                    <SuspenseWrapper>
+                      <div className="page-enter">
+                        <PrivacyPolicy />
+                      </div>
+                    </SuspenseWrapper>
                   }
                 />
                 <Route
                   path="/contact"
                   element={
-                    <div className="page-enter">
-                      <ContactUs />
-                    </div>
+                    <SuspenseWrapper>
+                      <div className="page-enter">
+                        <ContactUs />
+                      </div>
+                    </SuspenseWrapper>
                   }
                 />
-                <Route path="/about" element={<AboutUs />} />
-                <Route path="/careers" element={<Careers />} />
-                <Route path="/help" element={<HelpCenter />} />
-                <Route path="/blog" element={<Blog />} />
-                <Route path="/features" element={<Features />} />
-                <Route path="/pricing" element={<Pricing />} />
-                <Route path="/status" element={<Status />} />
-                <Route path="/billing" element={<Billing />} />
+                <Route
+                  path="/about"
+                  element={
+                    <SuspenseWrapper>
+                      <AboutUs />
+                    </SuspenseWrapper>
+                  }
+                />
+                <Route
+                  path="/careers"
+                  element={
+                    <SuspenseWrapper>
+                      <Careers />
+                    </SuspenseWrapper>
+                  }
+                />
+                <Route
+                  path="/help"
+                  element={
+                    <SuspenseWrapper>
+                      <HelpCenter />
+                    </SuspenseWrapper>
+                  }
+                />
+                <Route
+                  path="/blog"
+                  element={
+                    <SuspenseWrapper>
+                      <Blog />
+                    </SuspenseWrapper>
+                  }
+                />
+                <Route
+                  path="/features"
+                  element={
+                    <SuspenseWrapper>
+                      <Features />
+                    </SuspenseWrapper>
+                  }
+                />
+                <Route
+                  path="/pricing"
+                  element={
+                    <SuspenseWrapper>
+                      <Pricing />
+                    </SuspenseWrapper>
+                  }
+                />
+                <Route
+                  path="/status"
+                  element={
+                    <SuspenseWrapper>
+                      <Status />
+                    </SuspenseWrapper>
+                  }
+                />
+                <Route
+                  path="/billing"
+                  element={
+                    <SuspenseWrapper>
+                      <Billing />
+                    </SuspenseWrapper>
+                  }
+                />
 
-                {/* Protected Routes - Restored to Dashboard */}
+                {/* Protected Routes - Now with Suspense wrapper */}
                 <Route
                   path="/dashboard"
                   element={
                     <ProtectedRoute>
-                      <div className="smooth-page-transition">
-                        <Dashboard />
-                      </div>
+                      <SuspenseWrapper
+                        fallback={
+                          <PageLoadingSpinner message="Loading dashboard..." />
+                        }
+                      >
+                        <div className="smooth-page-transition">
+                          <Dashboard />
+                        </div>
+                      </SuspenseWrapper>
                     </ProtectedRoute>
                   }
                 >
                   <Route
                     index
                     element={
-                      <div className="animate-fade-in-smooth">
-                        <TripsSection />
-                      </div>
+                      <SuspenseWrapper>
+                        <div className="animate-fade-in-smooth">
+                          <TripsSection />
+                        </div>
+                      </SuspenseWrapper>
                     }
                   />
                   <Route
                     path="trips"
                     element={
-                      <div className="animate-fade-in-smooth">
-                        <TripsSection />
-                      </div>
+                      <SuspenseWrapper>
+                        <div className="animate-fade-in-smooth">
+                          <TripsSection />
+                        </div>
+                      </SuspenseWrapper>
                     }
                   />
                   <Route
                     path="trip/:tripId"
                     element={
-                      <div className="animate-fade-in-smooth">
-                        <TripDetailView />
-                      </div>
+                      <SuspenseWrapper>
+                        <div className="animate-fade-in-smooth">
+                          <TripDetailView />
+                        </div>
+                      </SuspenseWrapper>
                     }
                   />
                   <Route
                     path="friends"
                     element={
-                      <div className="animate-fade-in-smooth">
-                        <FriendsSection />
-                      </div>
+                      <SuspenseWrapper>
+                        <div className="animate-fade-in-smooth">
+                          <FriendsSection />
+                        </div>
+                      </SuspenseWrapper>
                     }
                   />
                   <Route
                     path="settings"
                     element={
-                      <div className="animate-fade-in-smooth">
-                        <SettingsSection />
-                      </div>
+                      <SuspenseWrapper>
+                        <div className="animate-fade-in-smooth">
+                          <SettingsSection />
+                        </div>
+                      </SuspenseWrapper>
                     }
                   />
                 </Route>
@@ -521,7 +701,6 @@ function App() {
             </div>
           </FlowController>
         </GlobalAccessibilityProvider>
-        {/* 🎯 GlobalAccessibilityProvider ends here */}
       </AuthProvider>
     </Router>
   );
