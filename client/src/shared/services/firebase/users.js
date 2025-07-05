@@ -11,7 +11,7 @@ import {
   arrayUnion,
   arrayRemove,
 } from "firebase/firestore";
-import { db } from "./config";
+import { getFirestore } from "./config";
 
 // Create or update user profile in Firestore
 export const createUserProfile = async (uid, userData) => {
