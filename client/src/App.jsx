@@ -44,7 +44,7 @@ import Dashboard from "@/dashboard-area/pages/DashboardPage";
 import DashboardLayout from "@/dashboard-area/components/layout/DashboardLayout";
 import TripsSection from "@/dashboard-area/components/sections/TripsSection";
 import TripDetailView from "@/dashboard-area/features/trips/ViewTrip/TripDetailView";
-import SettingsSection from "@/dashboard-area/components/sections/SettingsSection";
+import SettingsSection from "@/dashboard-area/features/settings/components/sections/SettingsSection";
 import FriendsSection from "@/dashboard-area/components/sections/FriendsSection";
 
 // Toast notifications

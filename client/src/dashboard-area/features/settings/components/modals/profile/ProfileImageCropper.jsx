@@ -6,7 +6,7 @@ import {
   CheckIcon,
   ArrowPathIcon,
 } from "@heroicons/react/24/outline";
-import getCroppedImg from "@settings/header/hooks/cropImage";
+import getCroppedImg from "../../../hooks/cropImage";
 
 const ProfileImageCropper = ({ imageSrc, onCropComplete, onCancel }) => {
   const [crop, setCrop] = useState({ x: 0, y: 0 });
