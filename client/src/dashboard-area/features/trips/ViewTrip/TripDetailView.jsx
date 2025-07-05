@@ -1,4 +1,6 @@
-﻿import React, { useState, lazy, Suspense } from "react";
+﻿// 🎯 First, make sure your imports in TripDetailView.jsx include these:
+
+import React, { useState, lazy, Suspense } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 
@@ -12,6 +14,9 @@ import TripMembersCard from "./features/members/components/TripMembersCard";
 import InvitePeopleCard from "./features/members/components/InvitePeopleCard";
 import UserProfileModal from "./features/members/components/UserProfileModal";
 import TripStatistics from "./features/statistics/components/TripStatistics";
+import FaceRecognitionCard from "./features/faceRecognition/components/FaceRecognitionCard";
+import FaceRecognitionModal from "./features/faceRecognition/components/FaceRecognitionModal";
+import FaceRecognitionResults from "./features/faceRecognition/components/FaceRecognitionResults";
 
 // Modals
 import PhotoModal from "./components/PhotoModal";
@@ -20,10 +25,10 @@ import EditTripModal from "./features/header/hooks/EditTripModal";
 
 // Hooks
 import { useTripData } from "./hooks/useTripData";
-import { useLazyFaceRecognition } from "./features/faceRecognition/hooks/useLazyFaceRecognition";
 import { usePhotoOperations } from "./features/gallery/hooks/usePhotoOperations";
 import { useTripMembers } from "./features/members/hooks/useTripMembers";
 import { usePhotoModal } from "./features/gallery/hooks/usePhotoModal";
+import { useFaceRecognition } from "./features/faceRecognition/hooks/useFaceRecognition";
 
 // Utils
 import {
@@ -52,11 +57,8 @@ const TripDetailView = ({ tripId: propTripId }) => {
     setTripMembers,
   } = useTripData(tripId, currentUser?.uid);
 
-  // ✅ Use the separated lazy face recognition hook
+  // 🎯 FIXED: Use the separated lazy face recognition hook with proper error handling
   const {
-    FaceRecognitionComponent,
-    isFaceRecognitionLoaded,
-    isLoadingFaceRecognition,
     hasProfile,
     isLoadingProfile,
     isProcessingFaces,
@@ -64,18 +66,24 @@ const TripDetailView = ({ tripId: propTripId }) => {
     filteredPhotos,
     faceRecognitionProgress,
     canFilterByFace,
+    showScanModal,
+    showResultsModal,
+    setShowScanModal,
+    setShowResultsModal,
     enhancedHandleFindMyPhotos,
     enhancedHandleCancelFaceRecognition,
-    unloadFaceRecognition,
+    handleStartFaceRecognition,
+    handleNavigateToProfile,
     setFilterActive,
     setFilteredPhotos,
-  } = useLazyFaceRecognition(
-    photos,
+    handleFindMyPhotos,
+  } = useFaceRecognition(
+    photos || [],
     currentUser?.uid,
-    trip?.members?.includes(currentUser?.uid)
+    trip?.members?.includes(currentUser?.uid) || false
   );
 
-  // Photo operations (upload, delete, select)
+  // Rest of your existing hooks...
   const {
     selectMode,
     selectedPhotos,
@@ -103,7 +111,6 @@ const TripDetailView = ({ tripId: propTripId }) => {
     filterActive
   );
 
-  // Trip members management
   const {
     friends,
     selectedUser,
@@ -124,7 +131,6 @@ const TripDetailView = ({ tripId: propTripId }) => {
     handleRemoveFromTrip,
   } = useTripMembers(currentUser?.uid, trip, setTrip);
 
-  // Photo modal navigation
   const {
     selectedPhoto,
     mobileActiveTab,
@@ -140,13 +146,19 @@ const TripDetailView = ({ tripId: propTripId }) => {
   const [showEditModal, setShowEditModal] = React.useState(false);
 
   // Helper functions
-  const photoLimitStatus = getPhotoLimitStatus(photos.length);
-  const remainingPhotoSlots = getRemainingPhotoSlots(photos.length);
+  const photoLimitStatus = getPhotoLimitStatus(photos?.length || 0);
+  const remainingPhotoSlots = getRemainingPhotoSlots(photos?.length || 0);
 
-  const [modalSource, setModalSource] = useState(null); // 'gallery' or 'allPhotos'
+  const [modalSource, setModalSource] = useState(null);
 
-  const handleNavigateToProfile = () => {
-    navigate("/dashboard?section=faceprofile");
+  // 🎯 SAFE: Navigate to profile handler
+  const handleNavigateToProfileSafe = () => {
+    try {
+      navigate("/dashboard?section=faceprofile");
+    } catch (error) {
+      console.error("Navigation error:", error);
+      toast.error("Unable to navigate to profile");
+    }
   };
 
   const handleTripUpdated = (updatedTrip) => {
@@ -223,8 +235,8 @@ const TripDetailView = ({ tripId: propTripId }) => {
         {/* Trip Header */}
         <TripHeader
           trip={trip}
-          photos={photos}
-          tripMembers={tripMembers}
+          photos={photos || []}
+          tripMembers={tripMembers || []}
           isAdmin={isAdmin}
           showUploadForm={showUploadForm}
           photoLimitStatus={photoLimitStatus}
@@ -288,8 +300,8 @@ const TripDetailView = ({ tripId: propTripId }) => {
 
             {/* Photo Gallery */}
             <PhotoGallery
-              photos={photos}
-              tripMembers={tripMembers}
+              photos={photos || []}
+              tripMembers={tripMembers || []}
               tripId={tripId}
               maxPhotos={100}
               onPhotoSelect={(photo) => {
@@ -297,155 +309,49 @@ const TripDetailView = ({ tripId: propTripId }) => {
                 setModalSource("gallery");
               }}
               onShowAllPhotos={() => setShowAllPhotosModal(true)}
-              onRandomPhoto={() => selectRandomPhoto(photos)}
+              onRandomPhoto={() => selectRandomPhoto(photos || [])}
               onUploadFirst={() => setShowUploadForm(true)}
               onPhotoUploaded={handlePhotoUploaded}
             />
 
-            {/* ✅ Dynamic Face Recognition Section - Only loads when needed */}
-            {isFaceRecognitionLoaded && FaceRecognitionComponent ? (
-              <Suspense
-                fallback={
-                  <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-xl shadow-lg border border-white/20 dark:border-gray-700/50 p-8">
-                    <div className="text-center">
-                      <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
-                      <p className="text-gray-600 dark:text-gray-400">
-                        Loading face recognition...
-                      </p>
-                    </div>
-                  </div>
-                }
-              >
-                <FaceRecognitionComponent
-                  canFilterByFace={canFilterByFace}
-                  hasProfile={hasProfile}
-                  isLoadingProfile={isLoadingProfile}
-                  isProcessingFaces={isProcessingFaces}
-                  filterActive={filterActive}
-                  filteredPhotos={filteredPhotos}
-                  faceRecognitionProgress={faceRecognitionProgress}
-                  onFindMyPhotos={enhancedHandleFindMyPhotos}
-                  onCancelProcessing={enhancedHandleCancelFaceRecognition}
-                  onNavigateToProfile={handleNavigateToProfile}
-                  onPhotoSelect={setSelectedPhoto}
-                />
-              </Suspense>
-            ) : (
-              /* ✅ Face Recognition Placeholder - Shows "Find My Photos" button */
-              <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-xl shadow-lg border border-white/20 dark:border-gray-700/50 overflow-hidden">
-                {/* Header */}
-                <div className="bg-gradient-to-r from-blue-500/10 to-cyan-500/10 dark:from-blue-900/30 dark:to-cyan-900/30 p-4 border-b border-blue-200/30 dark:border-blue-800/30">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center shadow-lg">
-                        <svg
-                          className="w-5 h-5 text-white"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                          />
-                        </svg>
-                      </div>
-                      <div>
-                        <h2 className="text-lg font-bold text-gray-800 dark:text-white">
-                          Photos With Me
-                        </h2>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          AI-powered face detection
-                        </p>
-                      </div>
-                    </div>
+            {/* 🎯 ENHANCED Face Recognition Section with Error Boundary */}
+            <div className="face-recognition-wrapper">
+              <FaceRecognitionCard
+                hasProfile={hasProfile}
+                isLoadingProfile={isLoadingProfile}
+                isLoadingFaceRecognition={isProcessingFaces}
+                filterActive={filterActive}
+                filteredPhotos={filteredPhotos}
+                onFindMyPhotos={enhancedHandleFindMyPhotos}
+                onPhotoSelect={setSelectedPhoto}
+                onViewAllResults={() => setShowResultsModal(true)}
+              />
 
-                    <button
-                      onClick={enhancedHandleFindMyPhotos}
-                      disabled={isLoadingProfile || isLoadingFaceRecognition}
-                      className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 disabled:from-gray-400 disabled:to-gray-500 text-white px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2"
-                    >
-                      {isLoadingFaceRecognition ? (
-                        <>
-                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                          Loading...
-                        </>
-                      ) : (
-                        <>
-                          <svg
-                            className="w-4 h-4"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                            />
-                          </svg>
-                          Find My Photos
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </div>
+              <FaceRecognitionModal
+                isOpen={showScanModal}
+                hasProfile={hasProfile}
+                isProcessingFaces={isProcessingFaces}
+                faceRecognitionProgress={faceRecognitionProgress}
+                onClose={() => setShowScanModal(false)}
+                onStartFaceRecognition={handleFindMyPhotos}
+                onCancelProcessing={enhancedHandleCancelFaceRecognition}
+                onNavigateToProfile={handleNavigateToProfile}
+              />
 
-                {/* Content */}
-                <div className="p-4">
-                  <div className="text-center py-8">
-                    <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-cyan-100 dark:from-blue-900/30 dark:to-cyan-900/30 rounded-xl flex items-center justify-center mx-auto mb-4">
-                      <svg
-                        className="w-8 h-8 text-blue-500 dark:text-blue-400"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
-                        />
-                      </svg>
-                    </div>
-                    <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                      {hasProfile
-                        ? "Ready to find your photos!"
-                        : "Setup your face profile"}
-                    </h3>
-                    <p className="text-gray-500 dark:text-gray-400 text-sm mb-4 max-w-sm mx-auto">
-                      {hasProfile
-                        ? "Use AI face recognition to automatically identify photos containing you."
-                        : "Create a face profile in your Dashboard to enable photo detection."}
-                    </p>
-                    <div
-                      className={`inline-flex items-center gap-2 px-3 py-2 rounded-full text-sm font-medium ${
-                        hasProfile
-                          ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800"
-                          : "bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-800"
-                      }`}
-                    >
-                      <div
-                        className={`w-2 h-2 rounded-full ${
-                          hasProfile ? "bg-green-500" : "bg-orange-500"
-                        } ${hasProfile ? "animate-pulse" : ""}`}
-                      ></div>
-                      {hasProfile ? "Profile Ready" : "No Profile"}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
+              <FaceRecognitionResults
+                isOpen={showResultsModal}
+                filteredPhotos={filteredPhotos}
+                onClose={() => setShowResultsModal(false)}
+                onPhotoSelect={setSelectedPhoto}
+                onRescan={enhancedHandleFindMyPhotos}
+              />
+            </div>
 
             {/* Trip Statistics */}
             <TripStatistics
               trip={trip}
-              photos={photos}
-              tripMembers={tripMembers}
+              photos={photos || []}
+              tripMembers={tripMembers || []}
             />
           </div>
 
@@ -457,7 +363,7 @@ const TripDetailView = ({ tripId: propTripId }) => {
           >
             {/* Trip Members */}
             <TripMembersCard
-              tripMembers={tripMembers}
+              tripMembers={tripMembers || []}
               trip={trip}
               currentUserId={currentUser?.uid}
               onMemberClick={(member) =>
@@ -469,7 +375,7 @@ const TripDetailView = ({ tripId: propTripId }) => {
             <InvitePeopleCard
               currentUser={currentUser}
               tripId={tripId}
-              tripMembers={trip.members}
+              tripMembers={trip?.members || []}
               onFriendClick={(friend) => {
                 setSelectedUser({
                   ...friend,
@@ -481,12 +387,11 @@ const TripDetailView = ({ tripId: propTripId }) => {
           </div>
         </div>
 
-        {/* Modals */}
-
+        {/* Rest of your modals remain the same... */}
         {/* Photo Modal */}
         <PhotoModal
           photo={selectedPhoto}
-          photos={photos}
+          photos={photos || []}
           isOpen={!!selectedPhoto}
           onClose={() => {
             setSelectedPhoto(null);
@@ -495,14 +400,14 @@ const TripDetailView = ({ tripId: propTripId }) => {
             }
             setModalSource(null);
           }}
-          onNext={() => navigateToNext(photos)}
-          onPrevious={() => navigateToPrevious(photos)}
+          onNext={() => navigateToNext(photos || [])}
+          onPrevious={() => navigateToPrevious(photos || [])}
         />
 
         {/* All Photos Modal */}
         <AllPhotosModal
           isOpen={showAllPhotosModal}
-          photos={photos}
+          photos={photos || []}
           tripId={tripId}
           maxPhotos={100}
           isAdmin={isAdmin}
@@ -532,16 +437,14 @@ const TripDetailView = ({ tripId: propTripId }) => {
             user={selectedUser}
             currentUserId={currentUser?.uid}
             context="trip"
-            // Friendship props
             isFriend={selectedUser.__isFriend || false}
             isPending={selectedUser.__isPending || false}
             onAddFriend={handleAddFriend}
             onRemoveFriend={handleRemoveFriend}
             onCancelRequest={handleCancelFriendRequest}
-            // Trip props
             trip={trip}
             setTrip={setTrip}
-            tripMembers={tripMembers}
+            tripMembers={tripMembers || []}
             setTripMembers={setTripMembers}
             isAdmin={isAdmin}
             onPromoteToAdmin={handlePromoteToAdmin}
