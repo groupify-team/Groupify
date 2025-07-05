@@ -11,7 +11,7 @@ import {
   cancelFaceRecognition,
   resetFaceRecognition,
   createFaceProfile,
-} from "@face-recognition/service/faceRecognitionService";
+} from "../service/faceRecognitionService";
 import { getFaceProfileFromStorage } from "@shared/services/firebase/faceProfiles";
 
 export const useFaceRecognition = (photos, currentUserId, isMember) => {
@@ -20,6 +20,9 @@ export const useFaceRecognition = (photos, currentUserId, isMember) => {
   const [isProcessingFaces, setIsProcessingFaces] = useState(false);
   const [filterActive, setFilterActive] = useState(false);
   const [filteredPhotos, setFilteredPhotos] = useState([]);
+  const [showScanModal, setShowScanModal] = useState(false);
+  const [showResultsModal, setShowResultsModal] = useState(false);
+
   const [faceRecognitionProgress, setFaceRecognitionProgress] = useState({
     current: 0,
     total: 0,
@@ -105,6 +108,9 @@ export const useFaceRecognition = (photos, currentUserId, isMember) => {
             currentPhoto: progressData.currentPhoto,
             estimatedTimeRemaining: progressData.estimatedTimeRemaining,
             phase: `${progressData.phase} (${progressData.current}/${progressData.total})`,
+            percentage: Math.round(
+              (progressData.current / progressData.total) * 100
+            ),
           };
 
         case "match_found":
@@ -158,6 +164,10 @@ export const useFaceRecognition = (photos, currentUserId, isMember) => {
           return newProgress;
       }
     });
+  };
+
+  const enhancedHandleFindMyPhotos = () => {
+    setShowScanModal(true);
   };
 
   // Face recognition function
@@ -240,19 +250,6 @@ export const useFaceRecognition = (photos, currentUserId, isMember) => {
     }, 500);
   };
 
-  // Auto-load face profile on component mount
-  useEffect(() => {
-    let isMounted = true;
-
-    if (currentUserId && isMounted) {
-      loadUserFaceProfile();
-    }
-
-    return () => {
-      isMounted = false;
-    };
-  }, [currentUserId]);
-
   return {
     hasProfile,
     isLoadingProfile,
@@ -266,5 +263,13 @@ export const useFaceRecognition = (photos, currentUserId, isMember) => {
     setFilterActive,
     setFilteredPhotos,
     loadUserFaceProfile,
+    showScanModal,
+    showResultsModal,
+    setShowScanModal,
+    setShowResultsModal,
+    enhancedHandleFindMyPhotos,
+    enhancedHandleCancelFaceRecognition: handleCancelFaceRecognition,
+    handleStartFaceRecognition: handleFindMyPhotos,
+    handleNavigateToProfile: () => setShowScanModal(false),
   };
 };

@@ -1,12 +1,10 @@
-// services/faceRecognitionService.js
-import * as faceapi from "@vladmandic/face-api";
-
 class ModernFaceRecognitionService {
   constructor() {
     this.isInitialized = false;
     this.userFaceProfiles = new Map();
     this.isProcessing = false;
     this.shouldCancel = false;
+    this.faceapi = null; // Store dynamically loaded faceapi
     this.setupCleanup();
 
     // More lenient thresholds for better recall
@@ -15,15 +13,39 @@ class ModernFaceRecognitionService {
     this.MIN_DETECTION_CONFIDENCE = 0.5; // Reduced from 0.7 (more lenient)
     this.MAX_FACES_PER_IMAGE = 15; // Increased from 10
     this.MIN_QUALITY_THRESHOLD = 0.4; // New: minimum quality to accept faces
-    this.FACE_MATCHER_THRESHOLD = 0.5;
   }
 
-  // Initialize face-api.js models
+  // ✅ Load face-api.js ONLY when needed
+  async loadFaceAPI() {
+    if (this.faceapi) return this.faceapi;
+
+    console.log("🔄 Loading face-api.js library...");
+
+    try {
+      // Dynamic import - only loads when called
+      const faceapiModule = await import("@vladmandic/face-api");
+      this.faceapi = faceapiModule;
+
+      console.log("✅ Face-api.js loaded successfully");
+      return this.faceapi;
+    } catch (error) {
+      console.error("❌ Failed to load face-api.js:", error);
+      throw new Error(
+        "Failed to load face recognition library. Please check your internet connection."
+      );
+    }
+  }
+
+  // ✅ Initialize models ONLY when needed
   async initialize() {
     if (this.isInitialized) return;
 
+    // Load the library first
+    const faceapi = await this.loadFaceAPI();
+
     try {
-      // Try local models first, then fallback to CDN
+      console.log("🔄 Loading AI models...");
+
       const MODEL_URLS = [
         "/models", // local backup
         "https://cdn.jsdelivr.net/npm/@vladmandic/face-api@latest/model", // Working CDN
@@ -34,27 +56,19 @@ class ModernFaceRecognitionService {
 
       for (const MODEL_URL of MODEL_URLS) {
         try {
+          // Load only essential models first
           await Promise.all([
             faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL), // Face detection
             faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL), // Facial landmarks
             faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL), // Face recognition (128D descriptors)
           ]);
 
-          // Optional models - don't fail if these don't load
-          try {
-            await Promise.all([
-              faceapi.nets.ageGenderNet.loadFromUri(MODEL_URL), // Age/gender (optional)
-              faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL), // Expressions (optional)
-            ]);
-          } catch (optionalError) {
-            console.warn(
-              "⚠️ Optional models failed to load:",
-              optionalError.message
-            );
-          }
+          console.log("✅ Essential models loaded from:", MODEL_URL);
+
+          // Load optional models in background (non-blocking)
+          this.loadOptionalModels(MODEL_URL, faceapi);
 
           modelsLoaded = true;
-
           break;
         } catch (error) {
           lastError = error;
@@ -71,11 +85,25 @@ class ModernFaceRecognitionService {
       }
 
       this.isInitialized = true;
+      console.log("✅ Face recognition initialized");
     } catch (error) {
       console.error("❌ Failed to initialize face-api.js:", error);
       throw new Error(
         "Failed to load face recognition models. Please check model files."
       );
+    }
+  }
+
+  // ✅ Load optional models in background
+  async loadOptionalModels(MODEL_URL, faceapi) {
+    try {
+      await Promise.all([
+        faceapi.nets.ageGenderNet.loadFromUri(MODEL_URL), // Age/gender (optional)
+        faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL), // Expressions (optional)
+      ]);
+      console.log("✅ Optional models loaded");
+    } catch (error) {
+      console.warn("⚠️ Optional models failed to load:", error.message);
     }
   }
 
@@ -87,10 +115,10 @@ class ModernFaceRecognitionService {
 
     try {
       // Detect faces with landmarks and descriptors
-      const detections = await faceapi
+      const detections = await this.faceapi
         .detectAllFaces(
           imageElement,
-          new faceapi.SsdMobilenetv1Options({
+          new this.faceapi.SsdMobilenetv1Options({
             minConfidence: this.MIN_DETECTION_CONFIDENCE,
           })
         )
@@ -181,7 +209,6 @@ class ModernFaceRecognitionService {
           3
         )}`
       );
-    } else {
     }
 
     return { isValid, score, metrics };
@@ -313,13 +340,14 @@ class ModernFaceRecognitionService {
 
       // Create labeled face descriptors for face-api.js
       const labeledDescriptors = allFaces.map((face, index) => {
-        return new faceapi.LabeledFaceDescriptors(`${userId}_face_${index}`, [
-          face.descriptor,
-        ]);
+        return new this.faceapi.LabeledFaceDescriptors(
+          `${userId}_face_${index}`,
+          [face.descriptor]
+        );
       });
 
       // Create face matcher with optimized threshold
-      const faceMatcher = new faceapi.FaceMatcher(
+      const faceMatcher = new this.faceapi.FaceMatcher(
         labeledDescriptors,
         this.FACE_MATCHER_THRESHOLD
       );
@@ -488,9 +516,7 @@ class ModernFaceRecognitionService {
                   distance: bestMatchForPhoto.faceMatch.distance,
                 });
               }
-            } else {
             }
-          } else {
           }
         } catch (error) {
           if (error.message === "CANCELLED") throw error;
@@ -704,20 +730,25 @@ class ModernFaceRecognitionService {
   }
 }
 
-// Create service instance
-const faceRecognitionService = new ModernFaceRecognitionService();
+// DON'T create instance immediately - export a factory function instead
+let serviceInstance = null;
 
-// Export the same API for compatibility
+const getFaceRecognitionService = () => {
+  // Only create when actually needed
+  if (!serviceInstance) {
+    serviceInstance = new ModernFaceRecognitionService();
+  }
+  return serviceInstance;
+};
+
+// Update all exports to use lazy service
 export const createFaceProfile = async (
   userId,
   faceImages,
   onProgress = null
 ) => {
-  return await faceRecognitionService.createFaceProfile(
-    userId,
-    faceImages,
-    onProgress
-  );
+  const service = getFaceRecognitionService();
+  return await service.createFaceProfile(userId, faceImages, onProgress);
 };
 
 export const filterPhotosByFaceProfile = async (
@@ -725,49 +756,55 @@ export const filterPhotosByFaceProfile = async (
   userId,
   onProgress = null
 ) => {
-  return await faceRecognitionService.filterPhotosByFaceProfile(
-    photos,
-    userId,
-    onProgress
-  );
+  const service = getFaceRecognitionService();
+  return await service.filterPhotosByFaceProfile(photos, userId, onProgress);
 };
 
 export const hasFaceProfile = (userId) => {
-  return faceRecognitionService.hasFaceProfile(userId);
+  if (!serviceInstance) return false; // Don't create service just to check
+  return serviceInstance.hasFaceProfile(userId);
 };
 
 export const getFaceProfile = (userId) => {
-  return faceRecognitionService.getFaceProfile(userId);
+  if (!serviceInstance) return null;
+  return serviceInstance.getFaceProfile(userId);
 };
 
 export const deleteFaceProfile = (userId) => {
-  return faceRecognitionService.deleteFaceProfile(userId);
+  if (!serviceInstance) return false;
+  return serviceInstance.deleteFaceProfile(userId);
 };
 
 export const cancelFaceRecognition = () => {
-  faceRecognitionService.cancel();
+  if (!serviceInstance) return;
+  serviceInstance.cancel();
 };
 
 export const resetFaceRecognition = () => {
-  faceRecognitionService.reset();
+  if (!serviceInstance) return;
+  serviceInstance.reset();
 };
 
 export const getFaceRecognitionStatus = () => {
-  return faceRecognitionService.getStatus();
+  if (!serviceInstance) return { isInitialized: false, isProcessing: false };
+  return serviceInstance.getStatus();
 };
 
 // Diagnostic function for troubleshooting
 export const analyzePhoto = async (photoUrl, userId) => {
-  return await faceRecognitionService.analyzePhoto(photoUrl, userId);
+  const service = getFaceRecognitionService();
+  return await service.analyzePhoto(photoUrl, userId);
 };
 
 // Threshold adjustment functions
 export const setMatchingThreshold = (threshold) => {
-  faceRecognitionService.FACE_MATCHER_THRESHOLD = threshold;
+  const service = getFaceRecognitionService();
+  service.FACE_MATCHER_THRESHOLD = threshold;
 };
 
 export const setQualityThreshold = (threshold) => {
-  faceRecognitionService.MIN_QUALITY_THRESHOLD = threshold;
+  const service = getFaceRecognitionService();
+  service.MIN_QUALITY_THRESHOLD = threshold;
 };
 
 // Additional exports for backward compatibility
@@ -776,7 +813,8 @@ export const addPhotosToProfile = async (
   newImages,
   onProgress = null
 ) => {
-  const existingProfile = faceRecognitionService.getFaceProfile(userId);
+  const service = getFaceRecognitionService();
+  const existingProfile = service.getFaceProfile(userId);
   if (!existingProfile) {
     throw new Error("No existing face profile found. Create a profile first.");
   }
@@ -789,7 +827,7 @@ export const addPhotosToProfile = async (
   const allImages = [...existingImageUrls, ...newImageUrls];
 
   // Recreate profile with all images
-  return await faceRecognitionService.createFaceProfile(
+  return await service.createFaceProfile(
     userId,
     allImages.map((url) => ({ url })),
     onProgress
@@ -797,7 +835,8 @@ export const addPhotosToProfile = async (
 };
 
 export const removePhotosFromProfile = async (userId, imageUrlsToRemove) => {
-  const existingProfile = faceRecognitionService.getFaceProfile(userId);
+  const service = getFaceRecognitionService();
+  const existingProfile = service.getFaceProfile(userId);
   if (!existingProfile) {
     throw new Error("No face profile found for user");
   }
@@ -813,14 +852,15 @@ export const removePhotosFromProfile = async (userId, imageUrlsToRemove) => {
   }
 
   // Recreate profile with remaining images
-  return await faceRecognitionService.createFaceProfile(
+  return await service.createFaceProfile(
     userId,
     remainingUrls.map((url) => ({ url }))
   );
 };
 
 export const getProfilePhotos = (userId) => {
-  const profile = faceRecognitionService.getFaceProfile(userId);
+  if (!serviceInstance) return [];
+  const profile = serviceInstance.getFaceProfile(userId);
   if (!profile) return [];
 
   return profile.allFaces.map((face, index) => ({
@@ -839,7 +879,8 @@ export const getProfilePhotos = (userId) => {
 };
 
 export const optimizeProfile = (userId, minQuality = 0.75) => {
-  const profile = faceRecognitionService.getFaceProfile(userId);
+  const service = getFaceRecognitionService();
+  const profile = service.getFaceProfile(userId);
   if (!profile) {
     throw new Error("No face profile found for user");
   }
@@ -855,7 +896,7 @@ export const optimizeProfile = (userId, minQuality = 0.75) => {
     );
     return profile;
   }
-  return faceRecognitionService.createFaceProfile(
+  return service.createFaceProfile(
     userId,
     highQualityImages.map((url) => ({ url }))
   );
@@ -867,15 +908,17 @@ export const filterPhotosByFace = async (
   userPhotoURL,
   onProgress = null
 ) => {
+  const service = getFaceRecognitionService();
+
   // Initialize the service if needed
-  if (!faceRecognitionService.isInitialized) {
-    await faceRecognitionService.initialize();
+  if (!service.isInitialized) {
+    await service.initialize();
   }
 
   try {
     // Load the user's reference image
-    const img = await faceRecognitionService.loadImageFromUrl(userPhotoURL);
-    const userFaces = await faceRecognitionService.detectFacesWithQuality(img);
+    const img = await service.loadImageFromUrl(userPhotoURL);
+    const userFaces = await service.detectFacesWithQuality(img);
 
     if (!userFaces || userFaces.length === 0) {
       throw new Error("Could not detect face in user photo");
@@ -889,13 +932,13 @@ export const filterPhotosByFace = async (
     const tempProfile = {
       userId: "temp_user",
       allFaces: [bestUserFace],
-      faceMatcher: new faceapi.FaceMatcher(
+      faceMatcher: new service.faceapi.FaceMatcher(
         [
-          new faceapi.LabeledFaceDescriptors("temp_user", [
+          new service.faceapi.LabeledFaceDescriptors("temp_user", [
             bestUserFace.descriptor,
           ]),
         ],
-        faceRecognitionService.FACE_MATCHER_THRESHOLD
+        service.FACE_MATCHER_THRESHOLD
       ),
       createdAt: Date.now(),
       metadata: {
@@ -903,22 +946,22 @@ export const filterPhotosByFace = async (
         facesDetected: 1,
         averageQuality: bestUserFace.quality,
         bestQuality: bestUserFace.quality,
-        threshold: faceRecognitionService.FACE_MATCHER_THRESHOLD,
+        threshold: service.FACE_MATCHER_THRESHOLD,
         engine: "face-api.js",
       },
     };
 
-    faceRecognitionService.userFaceProfiles.set("temp_user", tempProfile);
+    service.userFaceProfiles.set("temp_user", tempProfile);
 
     try {
-      const results = await faceRecognitionService.filterPhotosByFaceProfile(
+      const results = await service.filterPhotosByFaceProfile(
         photos,
         "temp_user",
         onProgress
       );
       return results;
     } finally {
-      faceRecognitionService.userFaceProfiles.delete("temp_user");
+      service.userFaceProfiles.delete("temp_user");
     }
   } catch (error) {
     console.error("❌ Legacy face recognition failed:", error);
@@ -926,4 +969,4 @@ export const filterPhotosByFace = async (
   }
 };
 
-export default faceRecognitionService;
+export default getFaceRecognitionService;
