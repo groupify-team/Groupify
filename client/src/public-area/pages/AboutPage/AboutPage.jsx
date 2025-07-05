@@ -6,7 +6,7 @@ import PublicLayout from "../../components/layout/PublicLayout";
 import HeroSection from "../../components/ui/HeroSection";
 import { FeatureGrid } from "../../components/ui/FeatureCard";
 import { usePublicNavigation } from "../../hooks/usePublicNavigation";
-import SettingsModal from "@dashboard/features/settings/components/modals/EditProfileModal";
+import AccessibilityModal from "@/shared/components/accessibility/AccessibilityModal";
 
 // Icons
 import {
@@ -451,7 +451,7 @@ const AboutPage = () => {
           </div>
         </div>
       </div>
-      <SettingsModal {...settingsProps} />
+      <AccessibilityModal {...settingsProps} />
     </PublicLayout>
   );
 };

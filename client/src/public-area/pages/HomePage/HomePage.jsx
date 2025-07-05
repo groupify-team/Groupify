@@ -16,7 +16,8 @@ import {
 import PublicFooter from "../../components/layout/PublicFooter";
 
 // Import components that provide functionality
-import SettingsModal from "@dashboard/features/settings/components/modals/EditProfileModal";
+
+import AccessibilityModal from "@/shared/components/accessibility/AccessibilityModal";
 
 // Launch Animation Component (keep exactly as before)
 const LaunchAnimation = ({ onAnimationComplete }) => {
@@ -574,7 +575,7 @@ const HomePage = () => {
       <PublicFooter />
 
       {/* Settings Modal - Contains accessibility settings including dark mode toggle */}
-      <SettingsModal
+      <AccessibilityModal
         isOpen={showSettings}
         onClose={() => setShowSettings(false)}
         theme={theme}
