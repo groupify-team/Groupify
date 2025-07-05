@@ -29,7 +29,6 @@ import FilterDropdown from "@/dashboard-area/components/ui/FilterDropdown";
 // Trip Components
 import TripCard from "@/dashboard-area/features/trips/components/TripCard";
 import CreateTripModal from "@/dashboard-area/features/trips/components/CreateTripModal";
-import TripInvitationsNotification from "@/dashboard-area/features/trips/components/TripInvitationsNotification";
 
 // Utils
 import {
@@ -173,8 +172,6 @@ const TripsSection = () => {
           </button>
         )}
       </div>
-
-      <TripInvitationsNotification currentUser={currentUser} />
 
       {/* Mobile Tab Switcher */}
       {isMobile && (
