@@ -1,7 +1,8 @@
-// TripsSection.jsx - Trips management section
+// TripsSection.jsx - Clean Production Version
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useClickOutside } from "@/shared/hooks/useClickOutside";
+
 // Icons
 import {
   BellIcon,
@@ -49,6 +50,7 @@ const TripsSection = () => {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
 
+  // Layout state and actions
   const {
     layout: { isMobile },
     tabs: { tripsActiveTab },
@@ -62,6 +64,7 @@ const TripsSection = () => {
     dropdownActions: { toggleFilterDropdown, closeFilterDropdown },
   } = useDashboardLayout();
 
+  // Dashboard data and actions
   const {
     trips,
     tripInvites,
@@ -69,15 +72,24 @@ const TripsSection = () => {
     removeTripInvite,
     showSuccessMessage,
     showErrorMessage,
+    loading,
   } = useDashboardData();
 
+  // Modal state
   const {
     createTrip: { open: openCreateTripModal },
   } = useDashboardModals();
 
-  const filteredTrips = filterTrips(trips, searchTerm, dateFilter);
+  // Local state
   const [showCreateModal, setShowCreateModal] = useState(false);
+  
+  // Filtered trips based on search and date filters
+  const filteredTrips = filterTrips(trips, searchTerm, dateFilter);
+  
+  // Click outside ref for filter dropdown
   const filterDropdownRef = useClickOutside(() => closeFilterDropdown());
+
+  // Event handlers
   const handleCreateTrip = async () => {
     try {
       const canCreate = await canUserCreateTrip(currentUser.uid);
@@ -135,6 +147,36 @@ const TripsSection = () => {
       navigate(`/dashboard/trip/${tripId}`);
     }, 150);
   };
+
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="space-y-3 sm:space-y-6">
+        {/* Header Skeleton */}
+        <div className="flex justify-between items-start gap-2 sm:gap-4">
+          <div className="flex-1 min-w-0">
+            <div className="h-6 sm:h-8 lg:h-10 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse w-48"></div>
+            <div className="h-3 sm:h-4 bg-gray-200 dark:bg-gray-700 rounded mt-1 animate-pulse w-64"></div>
+          </div>
+          <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse w-32"></div>
+        </div>
+
+        {/* Content Skeleton */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <div
+              key={i}
+              className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-2xl shadow-lg border border-white/20 dark:border-gray-700/50 p-4"
+            >
+              <div className="h-32 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse mb-4"></div>
+              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mb-2"></div>
+              <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-2/3"></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-3 sm:space-y-6">
