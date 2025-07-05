@@ -14,7 +14,7 @@ import {
   EmailAuthProvider,
 } from "firebase/auth";
 import { ref, deleteObject, listAll } from "firebase/storage";
-import { db, storage } from "../../../../shared/services/firebase/config";
+import { db, storage } from "@firebase-services/config";
 
 export class DeleteAccountService {
   /**
@@ -73,7 +73,9 @@ export class DeleteAccountService {
   static async createFinalExport(userId) {
     try {
       // Import ExportService dynamically to avoid circular dependencies
-      const { ExportService } = await import("../../../../shared/services/exportService");
+      const { ExportService } = await import(
+        "../../../../shared/services/exportService"
+      );
       return await ExportService.exportUserData(userId);
     } catch (error) {
       console.warn("Could not create final export:", error);

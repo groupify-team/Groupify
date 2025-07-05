@@ -1,29 +1,351 @@
 ﻿import {
-  getTrip,
-  createTrip,
-  updateTrip,
-  deleteTrip,
-  addTripMember,
-  sendTripInvite,
-  canUserCreateTrip,
-  getUserTripCount,
-  MAX_TRIPS_PER_USER,
-  MAX_PHOTOS_PER_TRIP,
-} from "@shared/services/firebase/trips";
-
+  collection,
+  addDoc,
+  doc,
+  getDoc,
+  setDoc,
+  updateDoc,
+  deleteDoc,
+  query,
+  where,
+  getDocs,
+  arrayUnion,
+  serverTimestamp,
+} from "firebase/firestore";
+import { ref, listAll, deleteObject } from "firebase/storage";
+import { db, storage } from "@firebase-services/config";
+import {
+  addUserToTrip,
+  removeUserFromTrip,
+  removeTripFromAllUsers,
+  getUserTripsWithValidation,
+  getUserProfile,
+} from "@firebase-services/users";
 import { getTripPhotos } from "@shared/services/firebase/storage";
-import { getUserProfile } from "@firebase-services/users";
 import subscriptionService from "@shared/services/subscriptionService";
 
+// Constants
+const MAX_TRIPS_PER_USER = 5;
+const MAX_PHOTOS_PER_TRIP = 30;
+
+// Core trip functions (moved from trips.js)
+export const getUserTripCount = async (userId) => {
+  try {
+    const q = query(collection(db, "trips"), where("createdBy", "==", userId));
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.size;
+  } catch (error) {
+    console.error("Error getting user trip count:", error);
+    throw error;
+  }
+};
+
+export const canUserCreateTrip = async (userId) => {
+  try {
+    const tripCount = await getUserTripCount(userId);
+    return tripCount < MAX_TRIPS_PER_USER;
+  } catch (error) {
+    console.error("Error checking trip creation permission:", error);
+    return false;
+  }
+};
+
+export const getTripPhotoCount = async (tripId) => {
+  try {
+    const q = query(
+      collection(db, "tripPhotos"),
+      where("tripId", "==", tripId)
+    );
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.size;
+  } catch (error) {
+    console.error("Error getting trip photo count:", error);
+    return 0;
+  }
+};
+
+export const canTripAcceptMorePhotos = async (tripId, additionalPhotos = 1) => {
+  try {
+    const currentPhotoCount = await getTripPhotoCount(tripId);
+    return currentPhotoCount + additionalPhotos <= MAX_PHOTOS_PER_TRIP;
+  } catch (error) {
+    console.error("Error checking photo limit:", error);
+    return false;
+  }
+};
+
+export const createTrip = async (tripData) => {
+  try {
+    const tripRef = doc(collection(db, "trips"));
+    const tripId = tripRef.id;
+
+    const newTrip = {
+      ...tripData,
+      id: tripId,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      photoCount: 0,
+      members: [tripData.createdBy],
+      admins: [tripData.createdBy],
+    };
+
+    await setDoc(tripRef, newTrip);
+    await addUserToTrip(tripData.createdBy, tripId);
+
+    return newTrip;
+  } catch (error) {
+    console.error("❌ Error creating trip:", error);
+    throw error;
+  }
+};
+
+export const getTrip = async (tripId) => {
+  try {
+    const tripDoc = await getDoc(doc(db, "trips", tripId));
+
+    if (!tripDoc.exists()) {
+      throw new Error("Trip not found");
+    }
+
+    return {
+      id: tripDoc.id,
+      ...tripDoc.data(),
+    };
+  } catch (error) {
+    console.error("Error getting trip:", error);
+    throw error;
+  }
+};
+
+export const updateTrip = async (tripId, updates) => {
+  try {
+    await updateDoc(doc(db, "trips", tripId), {
+      ...updates,
+      updatedAt: new Date().toISOString(),
+    });
+
+    return {
+      id: tripId,
+      ...updates,
+    };
+  } catch (error) {
+    console.error("Error updating trip:", error);
+    throw error;
+  }
+};
+
+export const deleteTrip = async (tripId) => {
+  try {
+    await removeTripFromAllUsers(tripId);
+
+    const tripPhotosQuery = query(
+      collection(db, "tripPhotos"),
+      where("tripId", "==", tripId)
+    );
+    const tripPhotosSnapshot = await getDocs(tripPhotosQuery);
+
+    const deletePhotoPromises = tripPhotosSnapshot.docs.map((photoDoc) =>
+      deleteDoc(photoDoc.ref)
+    );
+
+    await Promise.all(deletePhotoPromises);
+
+    try {
+      const tripPhotosRef = ref(storage, `trip_photos/${tripId}/`);
+      const photosList = await listAll(tripPhotosRef);
+
+      if (photosList.items.length > 0) {
+        const deleteStoragePromises = photosList.items.map((photoRef) =>
+          deleteObject(photoRef)
+        );
+
+        await Promise.all(deleteStoragePromises);
+      }
+    } catch (storageError) {
+      console.warn("⚠️ Error deleting trip photos from Storage:", storageError);
+    }
+
+    const invitesQuery = query(
+      collection(db, "tripInvites"),
+      where("tripId", "==", tripId)
+    );
+    const invitesSnapshot = await getDocs(invitesQuery);
+
+    const deleteInvitePromises = invitesSnapshot.docs.map((inviteDoc) =>
+      deleteDoc(inviteDoc.ref)
+    );
+
+    await Promise.all(deleteInvitePromises);
+
+    const tripRef = doc(db, "trips", tripId);
+    await deleteDoc(tripRef);
+  } catch (error) {
+    console.error("❌ Error deleting trip:", error);
+    throw error;
+  }
+};
+
+export const getUserTrips = async (uid) => {
+  try {
+    const trips = await getUserTripsWithValidation(uid);
+
+    trips.sort((a, b) => {
+      const dateA = new Date(a.createdAt || 0);
+      const dateB = new Date(b.createdAt || 0);
+      return dateB - dateA;
+    });
+
+    return trips;
+  } catch (error) {
+    console.error("❌ Error getting user trips:", error);
+    throw error;
+  }
+};
+
+export const addTripMember = async (tripId, userId) => {
+  try {
+    const tripDoc = await getDoc(doc(db, "trips", tripId));
+
+    if (!tripDoc.exists()) {
+      throw new Error("Trip not found");
+    }
+
+    const tripData = tripDoc.data();
+    const members = tripData.members || [];
+
+    if (!members.includes(userId)) {
+      members.push(userId);
+      await updateDoc(doc(db, "trips", tripId), {
+        members,
+        updatedAt: new Date().toISOString(),
+      });
+    }
+
+    return {
+      id: tripId,
+      ...tripData,
+      members,
+    };
+  } catch (error) {
+    console.error("Error adding trip member:", error);
+    throw error;
+  }
+};
+
+export const inviteUserToTripByUid = async (tripId, userId) => {
+  try {
+    const tripRef = doc(db, "trips", tripId);
+    await updateDoc(tripRef, {
+      members: arrayUnion(userId),
+    });
+  } catch (error) {
+    console.error("❌ Error inviting user:", error);
+    throw error;
+  }
+};
+
+export const sendTripInvite = async (tripId, inviterUid, inviteeUid) => {
+  const inviteData = {
+    tripId,
+    inviterUid,
+    inviteeUid,
+    status: "pending",
+    createdAt: serverTimestamp(),
+  };
+
+  await addDoc(collection(db, "tripInvites"), inviteData);
+};
+
+export const getPendingInvites = async (uid) => {
+  const q = query(
+    collection(db, "tripInvites"),
+    where("inviteeUid", "==", uid),
+    where("status", "==", "pending")
+  );
+
+  const snapshot = await getDocs(q);
+  const invites = [];
+
+  for (const docSnap of snapshot.docs) {
+    const invite = docSnap.data();
+
+    let tripName = invite.tripId;
+    let inviterName = invite.inviterUid;
+
+    try {
+      const tripRef = doc(db, "trips", invite.tripId);
+      const tripSnap = await getDoc(tripRef);
+      if (tripSnap.exists()) {
+        tripName = tripSnap.data().name?.trim() || tripName;
+      }
+    } catch (e) {
+      console.warn("⚠️ Failed to fetch trip name:", invite.tripId);
+    }
+
+    try {
+      const inviterRef = doc(db, "users", invite.inviterUid);
+      const inviterSnap = await getDoc(inviterRef);
+      if (inviterSnap.exists()) {
+        inviterName = inviterSnap.data().displayName || inviterName;
+      }
+    } catch (e) {
+      console.warn("⚠️ Failed to fetch inviter:", invite.inviterUid);
+    }
+
+    invites.push({
+      id: docSnap.id,
+      ...invite,
+      tripName,
+      inviterName,
+    });
+  }
+
+  return invites;
+};
+
+export const acceptTripInvite = async (inviteId, userId) => {
+  const inviteRef = doc(db, "tripInvites", inviteId);
+  const inviteSnap = await getDoc(inviteRef);
+  if (!inviteSnap.exists()) throw new Error("Invite not found");
+
+  const { tripId } = inviteSnap.data();
+  const tripRef = doc(db, "trips", tripId);
+
+  await updateDoc(tripRef, {
+    members: arrayUnion(userId),
+  });
+
+  await deleteDoc(inviteRef);
+};
+
+export const declineTripInvite = async (inviteId) => {
+  await updateDoc(doc(db, "tripInvites", inviteId), {
+    status: "declined",
+  });
+};
+
+// Enhanced service object with plan validation
 export const tripsService = {
   // Trip CRUD operations with enhanced plan validation
   async getTrips(userId) {
     try {
-      return await getAllUserTrips(userId);
+      return await getUserTrips(userId);
     } catch (error) {
       console.error("Error fetching trips:", error);
       throw error;
     }
+  },
+
+  async acceptTripInvite(inviteId, userId) {
+    return await acceptTripInvite(inviteId, userId);
+  },
+
+  async declineTripInvite(inviteId) {
+    return await declineTripInvite(inviteId);
+  },
+
+  async getPendingInvites(userId) {
+    return await getPendingInvites(userId);
   },
 
   async getTripById(tripId) {
@@ -37,11 +359,9 @@ export const tripsService = {
 
   async createTrip(tripData) {
     try {
-      // Enhanced plan validation before creation
       const subscription = subscriptionService.getCurrentSubscription();
       const currentTripCount = await this.getUserTripCount(tripData.createdBy);
 
-      // Check plan limits using exact pricing page values
       const planFeatures = subscription.features;
       const tripLimit = planFeatures.trips;
 
@@ -51,10 +371,8 @@ export const tripsService = {
         );
       }
 
-      // Create the trip
       const newTrip = await createTrip({
         ...tripData,
-        // Add plan-specific metadata
         planAtCreation: subscription.plan,
         createdAt: new Date().toISOString(),
         planLimits: {
@@ -63,7 +381,6 @@ export const tripsService = {
         },
       });
 
-      // Update usage statistics
       subscriptionService.updateUsage({
         trips: currentTripCount + 1,
       });
@@ -89,12 +406,9 @@ export const tripsService = {
 
   async deleteTrip(tripId) {
     try {
-      // Get trip data before deletion for usage tracking
       const trip = await getTrip(tripId);
-
       await deleteTrip(tripId);
 
-      // Update usage statistics
       const subscription = subscriptionService.getCurrentSubscription();
       const usage = subscription.usage;
 
@@ -110,7 +424,6 @@ export const tripsService = {
     }
   },
 
-  // Trip photos with plan validation
   async getTripPhotos(tripId) {
     try {
       return await getTripPhotos(tripId);
@@ -127,7 +440,6 @@ export const tripsService = {
       const currentTripPhotoCount = trip.photoCount || 0;
       const usage = subscription.usage;
 
-      // Check per-trip photo limit using exact pricing page values
       const photosPerTripLimit = subscription.features.photosPerTrip;
       if (photosPerTripLimit !== "unlimited") {
         if (currentTripPhotoCount + newPhotoCount > photosPerTripLimit) {
@@ -141,7 +453,6 @@ export const tripsService = {
         }
       }
 
-      // Check storage limit using exact pricing page values
       const storageLimit = subscription.features.storageBytes;
       if (storageLimit !== Number.MAX_SAFE_INTEGER) {
         if (usage.storage.used + totalFileSize > storageLimit) {
@@ -168,7 +479,6 @@ export const tripsService = {
     }
   },
 
-  // Trip members with plan validation
   async addTripMember(tripId, userId) {
     try {
       const subscription = subscriptionService.getCurrentSubscription();
@@ -176,7 +486,6 @@ export const tripsService = {
       const currentMemberCount = trip.members?.length || 0;
       const memberLimit = subscription.features.membersPerTrip;
 
-      // Check member limit using exact pricing page values
       if (memberLimit !== "unlimited" && currentMemberCount >= memberLimit) {
         throw new Error(
           `Member limit reached! Your ${subscription.plan} plan allows ${memberLimit} members per trip.`
@@ -194,9 +503,6 @@ export const tripsService = {
     try {
       if (!memberIds || memberIds.length === 0) return [];
 
-      // Lazy load the function
-      const { getUserProfile } = await import("@firebase-services/users");
-
       const memberProfiles = await Promise.all(
         memberIds.map((uid) => getUserProfile(uid))
       );
@@ -207,7 +513,6 @@ export const tripsService = {
     }
   },
 
-  // Trip invitations with plan validation
   async sendTripInvite(tripId, inviterUid, inviteeUid) {
     try {
       const subscription = subscriptionService.getCurrentSubscription();
@@ -215,7 +520,6 @@ export const tripsService = {
       const currentMemberCount = trip.members?.length || 0;
       const memberLimit = subscription.features.membersPerTrip;
 
-      // Check if adding this member would exceed the limit
       if (memberLimit !== "unlimited" && currentMemberCount >= memberLimit) {
         throw new Error(
           `Cannot send invite. Member limit reached! Your ${subscription.plan} plan allows ${memberLimit} members per trip.`
@@ -229,7 +533,6 @@ export const tripsService = {
     }
   },
 
-  // Enhanced trip validation with plan integration
   async canUserCreateTrip(userId) {
     try {
       const subscription = subscriptionService.getCurrentSubscription();
@@ -256,7 +559,6 @@ export const tripsService = {
     }
   },
 
-  // Plan-specific limit helpers - UPDATED to match exact pricing page
   getTripLimitForPlan(plan) {
     const limits = {
       free: 5,
@@ -270,7 +572,7 @@ export const tripsService = {
   getPhotoLimitForPlan(plan) {
     const limits = {
       free: 30,
-      premium: 200, // Updated to match your pricing page
+      premium: 200,
       pro: "unlimited",
       enterprise: "unlimited",
     };
@@ -289,15 +591,14 @@ export const tripsService = {
 
   getStorageLimitForPlan(plan) {
     const limits = {
-      free: 2 * 1024 * 1024 * 1024, // 2GB
-      premium: 50 * 1024 * 1024 * 1024, // 50GB
-      pro: 500 * 1024 * 1024 * 1024, // 500GB (NOT unlimited!)
-      enterprise: Number.MAX_SAFE_INTEGER, // Unlimited
+      free: 2 * 1024 * 1024 * 1024,
+      premium: 50 * 1024 * 1024 * 1024,
+      pro: 500 * 1024 * 1024 * 1024,
+      enterprise: Number.MAX_SAFE_INTEGER,
     };
     return limits[plan] || limits["free"];
   },
 
-  // Plan validation utilities
   async validateTripAction(action, tripId, additionalData = {}) {
     try {
       const subscription = subscriptionService.getCurrentSubscription();
@@ -358,7 +659,6 @@ export const tripsService = {
     }
   },
 
-  // Enhanced usage tracking
   async updateTripPhotoCount(tripId, increment = 1) {
     try {
       const trip = await getTrip(tripId);
@@ -379,13 +679,11 @@ export const tripsService = {
 
   async syncUsageWithSubscriptionService(userId) {
     try {
-      // Get actual usage from trips and photos
       const trips = await this.getTrips(userId);
       const totalTrips = trips.length;
       let totalPhotos = 0;
       let totalStorage = 0;
 
-      // Calculate totals from all trips
       for (const trip of trips) {
         const photos = await getTripPhotos(trip.id);
         totalPhotos += photos.length;
@@ -395,7 +693,6 @@ export const tripsService = {
         );
       }
 
-      // Update subscription service with real usage
       subscriptionService.updateUsage({
         trips: totalTrips,
         photos: totalPhotos,
@@ -413,13 +710,11 @@ export const tripsService = {
     }
   },
 
-  // Get plan upgrade recommendations based on usage
   getUpgradeRecommendations(subscription) {
     const recommendations = [];
     const usage = subscription.usage;
     const plan = subscription.plan;
 
-    // Trip limit recommendations
     const tripLimit = subscription.features.trips;
     if (tripLimit !== "unlimited") {
       const tripUsagePercent = ((usage.trips?.used || 0) / tripLimit) * 100;
@@ -436,10 +731,8 @@ export const tripsService = {
       }
     }
 
-    // Photo limit recommendations
     const photoLimit = subscription.features.photosPerTrip;
     if (photoLimit !== "unlimited") {
-      // This is per-trip, so we'd need to check individual trips
       recommendations.push({
         type: "photos",
         urgency: "medium",
@@ -449,7 +742,6 @@ export const tripsService = {
       });
     }
 
-    // Storage recommendations
     if (usage.storage.percentage > 80) {
       recommendations.push({
         type: "storage",
@@ -465,29 +757,27 @@ export const tripsService = {
     return recommendations;
   },
 
-  // Legacy constants for backward compatibility
   MAX_TRIPS_PER_USER,
   MAX_PHOTOS_PER_TRIP,
 
-  // Enhanced constants based on plans - UPDATED to match pricing page
   PLAN_LIMITS: {
     free: {
       trips: 5,
       photosPerTrip: 30,
       membersPerTrip: 5,
-      storage: 2 * 1024 * 1024 * 1024, // 2GB
+      storage: 2 * 1024 * 1024 * 1024,
     },
     premium: {
       trips: 50,
       photosPerTrip: 200,
       membersPerTrip: 20,
-      storage: 50 * 1024 * 1024 * 1024, // 50GB
+      storage: 50 * 1024 * 1024 * 1024,
     },
     pro: {
       trips: "unlimited",
       photosPerTrip: "unlimited",
       membersPerTrip: "unlimited",
-      storage: 500 * 1024 * 1024 * 1024, // 500GB
+      storage: 500 * 1024 * 1024 * 1024,
     },
     enterprise: {
       trips: "unlimited",
@@ -497,3 +787,6 @@ export const tripsService = {
     },
   },
 };
+
+// Export individual functions for backward compatibility
+export { MAX_TRIPS_PER_USER, MAX_PHOTOS_PER_TRIP };

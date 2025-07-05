@@ -16,10 +16,7 @@ import {
   getPendingFriendRequests,
   getUserProfile,
 } from "@firebase-services/users";
-import {
-  getUserTrips,
-  getPendingInvites,
-} from "@shared/services/firebase/trips";
+import { tripsService } from "@trips/services/tripsService";
 import {
   hasFaceProfile,
   getProfilePhotos,
@@ -87,14 +84,13 @@ export const useDashboardData = () => {
           getUserProfile(currentUser.uid),
           getFriends(currentUser.uid),
           getPendingFriendRequests(currentUser.uid),
-          getPendingInvites(currentUser.uid),
         ]);
 
       // Load trips with fallback approach
       let userTrips = [];
 
       try {
-        userTrips = await getUserTrips(currentUser.uid);
+        userTrips = await tripsService.getTrips(currentUser.uid);
 
         if (userTrips.length === 0) {
           const createdTripsQuery = query(
@@ -181,7 +177,7 @@ export const useDashboardData = () => {
     if (!currentUser?.uid) return;
 
     try {
-      const updatedTrips = await getUserTrips(currentUser.uid);
+      const updatedTrips = await tripsService.getTrips(currentUser.uid);
       setTrips(updatedTrips);
     } catch (error) {
       console.error("❌ Error refreshing trips:", error);

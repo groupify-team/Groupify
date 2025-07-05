@@ -87,7 +87,7 @@ const TripDetailView = React.lazy(() =>
   import("@/dashboard-area/features/trips/ViewTrip/TripDetailView")
 );
 const SettingsSection = React.lazy(() =>
-  import("@/dashboard-area/components/sections/SettingsSection")
+  import("@settings/components/sections/SettingsSection")
 );
 const FriendsSection = React.lazy(() =>
   import("@/dashboard-area/components/sections/FriendsSection")

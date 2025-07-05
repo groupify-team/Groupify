@@ -1,5 +1,6 @@
 import { doc, setDoc, getDoc, deleteDoc } from "firebase/firestore";
-import { getFirestore } from "./config";
+import { db } from "./firebase/config";
+
 /**
  * Save face profile metadata to Firestore
  * @param {string} userId - User ID
