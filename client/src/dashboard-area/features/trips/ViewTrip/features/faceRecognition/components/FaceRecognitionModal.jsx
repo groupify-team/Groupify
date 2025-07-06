@@ -59,54 +59,40 @@ const FaceRecognitionModal = ({
       }
     }, [percentage]);
 
-    const radius = 56;
-    const circumference = radius * 2 * Math.PI;
-
     return (
       <div className="relative w-36 h-36">
-        {/* Constant spinning background circle */}
-        <svg
-          className="absolute inset-0 w-36 h-36 animate-spin"
-          style={{ animationDuration: "3s" }}
-        >
+        {/* Constant spinning circle around the percentage */}
+        <svg className="absolute inset-0 w-36 h-36">
           <circle
             cx="72"
             cy="72"
-            r={radius}
-            stroke="url(#constantGradient)"
-            strokeWidth="3"
+            r="60"
+            stroke="url(#spinningGradient)"
+            strokeWidth="4"
             fill="transparent"
-            strokeDasharray="20 10"
-            opacity="0.3"
+            strokeDasharray="15 10"
+            className="animate-spin"
+            style={{
+              animationDuration: "2s",
+              transformOrigin: "center",
+            }}
           />
           <defs>
             <linearGradient
-              id="constantGradient"
+              id="spinningGradient"
               x1="0%"
               y1="0%"
               x2="100%"
               y2="100%"
             >
               <stop offset="0%" stopColor="#3B82F6" />
+              <stop offset="50%" stopColor="#06B6D4" />
               <stop offset="100%" stopColor="#10B981" />
             </linearGradient>
           </defs>
         </svg>
 
-        {/* Static progress ring */}
-        <svg className="w-36 h-36 transform -rotate-90">
-          <circle
-            cx="72"
-            cy="72"
-            r={radius}
-            stroke="currentColor"
-            strokeWidth="6"
-            fill="transparent"
-            className="text-gray-200 dark:text-gray-700"
-          />
-        </svg>
-
-        {/* Animated percentage text */}
+        {/* Animated percentage text in center */}
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="text-center">
             <div className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-emerald-600 bg-clip-text text-transparent transition-all duration-500">
@@ -308,26 +294,25 @@ const FaceRecognitionModal = ({
                 </div>
               </div>
 
-              {/* Real-time match counter */}
-              {faceRecognitionProgress?.matches &&
-                faceRecognitionProgress.matches.length > 0 && (
-                  <div className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/30 dark:to-teal-900/30 rounded-lg p-3 border border-emerald-200/30 dark:border-emerald-800/30 animate-pulse">
-                    <div className="text-center">
-                      <div className="flex items-center justify-center gap-2 mb-2">
-                        <p className="text-emerald-700 dark:text-emerald-300 text-sm font-medium">
-                          Matches Found
-                        </p>
-                        <div className="w-2 h-2 bg-emerald-500 rounded-full animate-ping"></div>
-                      </div>
-                      <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
-                        {faceRecognitionProgress.matches.length}
-                      </div>
-                      <div className="text-xs text-emerald-600 dark:text-emerald-400">
-                        photos found so far
-                      </div>
-                    </div>
+              {/* Real-time match counter - Always visible */}
+              <div className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/30 dark:to-teal-900/30 rounded-lg p-3 border border-emerald-200/30 dark:border-emerald-800/30">
+                <div className="text-center">
+                  <div className="flex items-center justify-center gap-2 mb-2">
+                    <p className="text-emerald-700 dark:text-emerald-300 text-sm font-medium">
+                      Matches Found
+                    </p>
+                    {(faceRecognitionProgress?.matches?.length || 0) > 0 && (
+                      <div className="w-2 h-2 bg-emerald-500 rounded-full animate-ping"></div>
+                    )}
                   </div>
-                )}
+                  <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+                    {faceRecognitionProgress?.matches?.length || 0}
+                  </div>
+                  <div className="text-xs text-emerald-600 dark:text-emerald-400">
+                    photos found so far
+                  </div>
+                </div>
+              </div>
 
               <button
                 onClick={onCancelProcessing}

@@ -14,7 +14,7 @@ import {
 } from "../service/faceRecognitionService";
 import { getFaceProfileFromStorage } from "@shared/services/firebase/faceProfiles";
 
-export const useFaceRecognition = (photos, currentUserId, isMember) => {
+export const useFaceRecognition = (photos, currentUserId, isMember, tripId) => {
   const [hasProfile, setHasProfile] = useState(false);
   const [isLoadingProfile, setIsLoadingProfile] = useState(false);
   const [isProcessingFaces, setIsProcessingFaces] = useState(false);
@@ -22,6 +22,7 @@ export const useFaceRecognition = (photos, currentUserId, isMember) => {
   const [filteredPhotos, setFilteredPhotos] = useState([]);
   const [showScanModal, setShowScanModal] = useState(false);
   const [showResultsModal, setShowResultsModal] = useState(false);
+  const [persistedResults, setPersistedResults] = useState(null);
 
   const [faceRecognitionProgress, setFaceRecognitionProgress] = useState({
     current: 0,
@@ -36,6 +37,46 @@ export const useFaceRecognition = (photos, currentUserId, isMember) => {
   });
 
   const canFilterByFace = isMember && currentUserId;
+
+  const saveResultsToStorage = (results, tripId) => {
+    try {
+      const dataToSave = {
+        results,
+        tripId,
+        timestamp: Date.now(),
+        userId: currentUserId,
+      };
+      localStorage.setItem(
+        `faceRecognition_${tripId}_${currentUserId}`,
+        JSON.stringify(dataToSave)
+      );
+    } catch (error) {
+      console.error("Failed to save results:", error);
+    }
+  };
+
+  const loadResultsFromStorage = (tripId) => {
+    try {
+      const saved = localStorage.getItem(
+        `faceRecognition_${tripId}_${currentUserId}`
+      );
+      if (saved) {
+        const data = JSON.parse(saved);
+        // Check if results are less than 24 hours old
+        const isRecent = Date.now() - data.timestamp < 24 * 60 * 60 * 1000;
+        if (
+          isRecent &&
+          data.tripId === tripId &&
+          data.userId === currentUserId
+        ) {
+          return data.results;
+        }
+      }
+    } catch (error) {
+      console.error("Failed to load results:", error);
+    }
+    return null;
+  };
 
   useEffect(() => {
     if (currentUserId && canFilterByFace) {
@@ -220,19 +261,16 @@ export const useFaceRecognition = (photos, currentUserId, isMember) => {
       if (matches.length > 0) {
         setFilteredPhotos(matches);
         setFilterActive(true);
+        saveResultsToStorage(matches, tripId);
         toast.success(`Found ${matches.length} matching photos!`);
-        setTimeout(() => {
-          setShowScanModal(false);
-          setShowResultsModal(true);
-        }, 1500);
+        setShowScanModal(false);
+        setTimeout(() => setShowResultsModal(true), 300);
       } else {
         setFilteredPhotos([]);
         setFilterActive(true);
         toast.info("No matching photos found");
-        setTimeout(() => {
-          setShowScanModal(false);
-          setShowResultsModal(true);
-        }, 1500);
+        setShowScanModal(false);
+        setTimeout(() => setShowResultsModal(true), 300);
       }
     } catch (error) {
       console.error("❌ Face recognition error:", error);

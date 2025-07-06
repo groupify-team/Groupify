@@ -80,7 +80,8 @@ const TripDetailView = ({ tripId: propTripId }) => {
   } = useFaceRecognition(
     photos || [],
     currentUser?.uid,
-    trip?.members?.includes(currentUser?.uid) || false
+    trip?.members?.includes(currentUser?.uid) || false,
+    tripId
   );
 
   // Rest of your existing hooks...
