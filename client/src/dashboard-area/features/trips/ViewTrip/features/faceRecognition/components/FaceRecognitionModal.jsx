@@ -45,27 +45,56 @@ const FaceRecognitionModal = ({
     return `~${minutes}m ${remainingSeconds}s remaining`;
   };
 
-  // Enhanced circular progress with smooth animation
   const CircularProgress = ({ percentage }) => {
     const [animatedPercentage, setAnimatedPercentage] = useState(0);
-    <CircularProgress percentage={faceRecognitionProgress?.percentage || 0} />;
 
     useEffect(() => {
-      const timer = setTimeout(() => {
-        setAnimatedPercentage(percentage);
-      }, 100);
-      return () => clearTimeout(timer);
+      if (percentage > animatedPercentage) {
+        const timer = setTimeout(() => {
+          setAnimatedPercentage(percentage);
+        }, 100);
+        return () => clearTimeout(timer);
+      } else if (percentage === 0) {
+        setAnimatedPercentage(0);
+      }
     }, [percentage]);
 
     const radius = 56;
     const circumference = radius * 2 * Math.PI;
-    const strokeDasharray = `${circumference} ${circumference}`;
-    const strokeDashoffset =
-      circumference - (animatedPercentage / 100) * circumference;
 
     return (
       <div className="relative w-36 h-36">
-        <svg className="transform -rotate-90 w-36 h-36">
+        {/* Constant spinning background circle */}
+        <svg
+          className="absolute inset-0 w-36 h-36 animate-spin"
+          style={{ animationDuration: "3s" }}
+        >
+          <circle
+            cx="72"
+            cy="72"
+            r={radius}
+            stroke="url(#constantGradient)"
+            strokeWidth="3"
+            fill="transparent"
+            strokeDasharray="20 10"
+            opacity="0.3"
+          />
+          <defs>
+            <linearGradient
+              id="constantGradient"
+              x1="0%"
+              y1="0%"
+              x2="100%"
+              y2="100%"
+            >
+              <stop offset="0%" stopColor="#3B82F6" />
+              <stop offset="100%" stopColor="#10B981" />
+            </linearGradient>
+          </defs>
+        </svg>
+
+        {/* Static progress ring */}
+        <svg className="w-36 h-36 transform -rotate-90">
           <circle
             cx="72"
             cy="72"
@@ -75,39 +104,12 @@ const FaceRecognitionModal = ({
             fill="transparent"
             className="text-gray-200 dark:text-gray-700"
           />
-          <circle
-            cx="72"
-            cy="72"
-            r={radius}
-            stroke="url(#progressGradient)"
-            strokeWidth="6"
-            fill="transparent"
-            strokeDasharray={strokeDasharray}
-            strokeDashoffset={strokeDashoffset}
-            strokeLinecap="round"
-            className="transition-all duration-1000 ease-out"
-            style={{
-              filter: "drop-shadow(0 0 8px rgba(59, 130, 246, 0.4))",
-            }}
-          />
-          <defs>
-            <linearGradient
-              id="progressGradient"
-              x1="0%"
-              y1="0%"
-              x2="100%"
-              y2="100%"
-            >
-              <stop offset="0%" stopColor="#3B82F6" />
-              <stop offset="50%" stopColor="#06B6D4" />
-              <stop offset="100%" stopColor="#10B981" />
-            </linearGradient>
-          </defs>
         </svg>
 
+        {/* Animated percentage text */}
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="text-center">
-            <div className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-emerald-600 bg-clip-text text-transparent">
+            <div className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-emerald-600 bg-clip-text text-transparent transition-all duration-500">
               {animatedPercentage}%
             </div>
             <div className="text-xs text-gray-500 dark:text-gray-400 font-medium">
@@ -115,8 +117,6 @@ const FaceRecognitionModal = ({
             </div>
           </div>
         </div>
-
-        <div className="absolute inset-2 rounded-full border-2 border-blue-400/20 animate-pulse"></div>
       </div>
     );
   };
