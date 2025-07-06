@@ -3,7 +3,7 @@
  * Handles face profile loading, photo matching, and recognition progress tracking
  */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { toast } from "react-hot-toast";
 import {
   filterPhotosByFaceProfile,
@@ -85,7 +85,8 @@ export const useFaceRecognition = (photos, currentUserId, isMember, tripId) => {
   }, [currentUserId, canFilterByFace]);
 
   // Load user face profile
-  const loadUserFaceProfile = async () => {
+  // Load user face profile
+  const loadUserFaceProfile = useCallback(async () => {
     if (!currentUserId) return;
 
     setIsLoadingProfile(true);
@@ -121,7 +122,7 @@ export const useFaceRecognition = (photos, currentUserId, isMember, tripId) => {
     } finally {
       setIsLoadingProfile(false);
     }
-  };
+  }, [currentUserId]);
 
   // Enhanced progress handler with real-time updates
   const handleFaceRecognitionProgress = (progressData) => {
@@ -303,6 +304,19 @@ export const useFaceRecognition = (photos, currentUserId, isMember, tripId) => {
     }, 500);
   };
 
+  const handleClearScan = () => {
+    setFilterActive(false);
+    setFilteredPhotos([]);
+    setShowResultsModal(false);
+    setShowScanModal(false);
+    // Clear saved results from localStorage
+    try {
+      localStorage.removeItem(`faceRecognition_${tripId}_${currentUserId}`);
+    } catch (error) {
+      console.error("Failed to clear saved results:", error);
+    }
+  };
+
   return {
     hasProfile,
     isLoadingProfile,
@@ -328,11 +342,6 @@ export const useFaceRecognition = (photos, currentUserId, isMember, tripId) => {
       setShowResultsModal(false);
       setTimeout(() => setShowScanModal(true), 300);
     },
-    handleClearScan: () => {
-      setFilterActive(false);
-      setFilteredPhotos([]);
-      setShowResultsModal(false);
-      setShowScanModal(false);
-    },
+    handleClearScan,
   };
 };
