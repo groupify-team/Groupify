@@ -19,10 +19,6 @@ import LaunchAnimation from "@/auth-area/components/ui/LaunchAnimation";
 // Toast notifications
 import { Toaster } from "react-hot-toast";
 
-// ===============================================
-// LAZY LOADED COMPONENTS WITH BETTER CHUNKING
-// ===============================================
-
 // Auth Area Components
 const SignInPage = React.lazy(() =>
   import("@/auth-area/pages/SignInPage/SignInPage")
@@ -80,8 +76,6 @@ const Billing = React.lazy(() =>
 const Dashboard = React.lazy(() =>
   import("@/dashboard-area/pages/DashboardPage")
 );
-
-// Split dashboard sections into separate chunks for better loading
 const TripsSection = React.lazy(() =>
   import("@/dashboard-area/components/sections/TripsSection")
 );
@@ -95,11 +89,6 @@ const FriendsSection = React.lazy(() =>
   import("@/dashboard-area/components/sections/FriendsSection")
 );
 
-// ===============================================
-// OPTIMIZED LOADING COMPONENTS
-// ===============================================
-
-// Lightweight skeleton loader instead of heavy spinner
 const DashboardSkeleton = memo(() => (
   <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
     <div className="animate-pulse">
@@ -110,23 +99,29 @@ const DashboardSkeleton = memo(() => (
           <div className="h-8 w-8 bg-gray-300 dark:bg-gray-600 rounded-full"></div>
         </div>
       </div>
-      
+
       {/* Content skeleton */}
       <div className="flex">
         {/* Sidebar skeleton */}
         <div className="hidden md:block w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 min-h-screen">
           <div className="p-6 space-y-4">
             {[...Array(5)].map((_, i) => (
-              <div key={i} className="h-10 bg-gray-300 dark:bg-gray-600 rounded"></div>
+              <div
+                key={i}
+                className="h-10 bg-gray-300 dark:bg-gray-600 rounded"
+              ></div>
             ))}
           </div>
         </div>
-        
+
         {/* Main content skeleton */}
         <div className="flex-1 p-6">
           <div className="space-y-6">
             {[...Array(3)].map((_, i) => (
-              <div key={i} className="h-32 bg-gray-300 dark:bg-gray-600 rounded-lg"></div>
+              <div
+                key={i}
+                className="h-32 bg-gray-300 dark:bg-gray-600 rounded-lg"
+              ></div>
             ))}
           </div>
         </div>
@@ -146,22 +141,16 @@ const PageLoadingSpinner = memo(({ message = "Loading..." }) => (
   </div>
 ));
 
-// ===============================================
-// OPTIMIZED SUSPENSE WRAPPER
-// ===============================================
 const SuspenseWrapper = memo(({ children, fallback, useSkeleton = false }) => (
-  <Suspense 
+  <Suspense
     fallback={
-      useSkeleton ? <DashboardSkeleton /> : (fallback || <PageLoadingSpinner />)
+      useSkeleton ? <DashboardSkeleton /> : fallback || <PageLoadingSpinner />
     }
   >
     {children}
   </Suspense>
 ));
 
-// ===============================================
-// OPTIMIZED FLOW CONTROLLER
-// ===============================================
 const FlowController = memo(({ children }) => {
   const { currentUser, loading: authLoading } = useAuth();
   const location = useLocation();
@@ -172,12 +161,12 @@ const FlowController = memo(({ children }) => {
   const [showTurnstile, setShowTurnstile] = useState(false);
 
   useEffect(() => {
-    // Don't do anything while auth is still loading
     if (authLoading) return;
 
     const determineFlow = () => {
       const currentPath = location.pathname;
-      const turnstileVerifiedSession = sessionStorage.getItem("turnstile_verified");
+      const turnstileVerifiedSession =
+        sessionStorage.getItem("turnstile_verified");
       const turnstileTimestamp = sessionStorage.getItem("turnstile_timestamp");
       const lastPageLoad = sessionStorage.getItem("last_page_load");
       const currentTime = Date.now();
@@ -192,7 +181,8 @@ const FlowController = memo(({ children }) => {
         ? currentTime - parseInt(lastPageLoad) > 4 * 60 * 60 * 1000
         : false;
 
-      const shouldShowTurnstile = isFirstVisit || isExpiredSession || isLongAbsence;
+      const shouldShowTurnstile =
+        isFirstVisit || isExpiredSession || isLongAbsence;
 
       // === TURNSTILE VERIFICATION CHECK ===
       if (shouldShowTurnstile) {
@@ -204,7 +194,6 @@ const FlowController = memo(({ children }) => {
         setShowTurnstile(false);
       }
 
-      // === AUTHENTICATION-BASED ROUTING ===
       if (
         currentUser &&
         ["/signin", "/signup", "/forgot-password", "/reset-password"].includes(
@@ -224,7 +213,7 @@ const FlowController = memo(({ children }) => {
         currentUser &&
         ![
           "/signin",
-          "/signup", 
+          "/signup",
           "/forgot-password",
           "/reset-password",
           "/",
@@ -247,7 +236,7 @@ const FlowController = memo(({ children }) => {
         [
           "/signin",
           "/signup",
-          "/forgot-password", 
+          "/forgot-password",
           "/reset-password",
           "/terms",
           "/privacy-policy",
@@ -273,7 +262,7 @@ const FlowController = memo(({ children }) => {
           "/signin",
           "/signup",
           "/forgot-password",
-          "/reset-password", 
+          "/reset-password",
           "/terms",
           "/privacy-policy",
           "/contact",
@@ -346,9 +335,6 @@ const FlowController = memo(({ children }) => {
   return children;
 });
 
-// ===============================================
-// MAIN APP COMPONENT WITH OPTIMIZATIONS
-// ===============================================
 function App() {
   const AppContent = memo(() => (
     <Router>

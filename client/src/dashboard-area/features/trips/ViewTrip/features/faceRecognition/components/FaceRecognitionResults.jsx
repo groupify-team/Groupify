@@ -52,37 +52,34 @@ const FaceRecognitionResults = ({
 
   const handleExportPhotos = async (photosToExport) => {
     try {
-      if (photosToExport.length === 1) {
-        const photo = photosToExport[0];
+      for (let i = 0; i < photosToExport.length; i++) {
+        const photo = photosToExport[i];
+
+        // Create a proper download link
+        const response = await fetch(fixPhotoUrl(photo.downloadURL));
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+
         const link = document.createElement("a");
-        link.href = fixPhotoUrl(photo.downloadURL);
+        link.href = url;
         link.download = photo.fileName || `photo_${photo.id}.jpg`;
-        link.target = "_blank";
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-      } else {
-        const downloadData = photosToExport.map((photo) => ({
-          url: fixPhotoUrl(photo.downloadURL),
-          filename: photo.fileName || `photo_${photo.id}.jpg`,
-        }));
-        downloadData.forEach((item, index) => {
-          setTimeout(() => {
-            const link = document.createElement("a");
-            link.href = item.url;
-            link.download = item.filename;
-            link.target = "_blank";
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-          }, index * 500); // Delay to avoid browser blocking
-        });
+
+        // Clean up the blob URL
+        window.URL.revokeObjectURL(url);
+
+        // Add delay between downloads to prevent browser blocking
+        if (i < photosToExport.length - 1) {
+          await new Promise((resolve) => setTimeout(resolve, 500));
+        }
       }
 
       toast.success(
-        `Downloading ${photosToExport.length} photo${
+        `Downloaded ${photosToExport.length} photo${
           photosToExport.length > 1 ? "s" : ""
-        }...`
+        }!`
       );
     } catch (error) {
       console.error("Export failed:", error);
@@ -92,18 +89,49 @@ const FaceRecognitionResults = ({
 
   const handleExportAsZip = async (photosToExport) => {
     try {
-      toast.info(
-        `Preparing ${photosToExport.length} photos for ZIP download...`
+      // Import JSZip dynamically
+      const JSZip = (await import("jszip")).default;
+
+      toast.success(
+        `Creating ZIP file with ${photosToExport.length} photos...`
       );
-      setTimeout(() => {
-        handleExportPhotos(photosToExport);
-        toast.success(
-          "Note: Individual downloads used (ZIP feature coming soon!)"
-        );
-      }, 1000);
+
+      const zip = new JSZip();
+
+      // Download all photos as blobs and add to ZIP
+      for (let i = 0; i < photosToExport.length; i++) {
+        const photo = photosToExport[i];
+        try {
+          const response = await fetch(fixPhotoUrl(photo.downloadURL));
+          const blob = await response.blob();
+          const fileName = photo.fileName || `photo_${photo.id}.jpg`;
+          zip.file(fileName, blob);
+        } catch (error) {
+          console.warn(`Failed to add ${photo.fileName} to ZIP:`, error);
+        }
+      }
+
+      // Generate ZIP file
+      const zipBlob = await zip.generateAsync({ type: "blob" });
+
+      // Download the ZIP
+      const url = window.URL.createObjectURL(zipBlob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `face_recognition_photos_${Date.now()}.zip`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast.success(
+        `ZIP file downloaded with ${photosToExport.length} photos!`
+      );
     } catch (error) {
       console.error("ZIP export failed:", error);
-      toast.error("Failed to create ZIP file");
+      // Fallback to individual downloads
+      toast.error("ZIP creation failed, downloading individually...");
+      await handleExportPhotos(photosToExport);
     }
   };
 
@@ -440,8 +468,8 @@ const FaceRecognitionResults = ({
 
       {/* Export Options Modal */}
       {showExportOptions && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[70]">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-md w-full shadow-2xl border border-gray-200 dark:border-gray-700">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[70] animate-fade-in">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-md w-full shadow-2xl border border-gray-200 dark:border-gray-700 animate-scale-in transform transition-all duration-300">
             <div className="p-6">
               <div className="text-center">
                 <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mx-auto mb-4">

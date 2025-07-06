@@ -15,6 +15,7 @@ const FaceRecognitionCard = ({
   onPhotoSelect,
   onViewAllResults,
   onClearScan,
+  lastScanInfo,
 }) => {
   const [showClearConfirm, setShowClearConfirm] = useState(false);
 
@@ -42,6 +43,16 @@ const FaceRecognitionCard = ({
                 {filterActive
                   ? `${filteredPhotos.length} photos found`
                   : "AI-powered face detection"}
+                {lastScanInfo && filterActive && (
+                  <span className="text-xs text-gray-500 dark:text-gray-500 ml-2">
+                    • Last scan:{" "}
+                    {new Date(lastScanInfo.date).toLocaleDateString()} at{" "}
+                    {new Date(lastScanInfo.date).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </span>
+                )}
               </p>
             </div>
           </div>
@@ -161,8 +172,8 @@ const FaceRecognitionCard = ({
 
       {/* Clear Confirmation Modal */}
       {showClearConfirm && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[60]">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-sm w-full shadow-2xl border border-gray-200 dark:border-gray-700">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[60] animate-fade-in">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-sm w-full shadow-2xl border border-gray-200 dark:border-gray-700 animate-scale-in">
             <div className="p-6">
               <div className="text-center">
                 <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -207,6 +218,35 @@ const FaceRecognitionCard = ({
               </div>
             </div>
           </div>
+
+          {/* CSS Animations */}
+          <style>
+            {`
+        @keyframes animate-fade-in {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+
+        @keyframes animate-scale-in {
+          from {
+            opacity: 0;
+            transform: scale(0.9) translateY(-20px);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+          }
+        }
+
+        .animate-fade-in {
+          animation: animate-fade-in 0.3s ease-out;
+        }
+
+        .animate-scale-in {
+          animation: animate-scale-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+      `}
+          </style>
         </div>
       )}
     </div>

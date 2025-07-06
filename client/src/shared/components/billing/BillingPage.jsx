@@ -50,7 +50,8 @@ const BillingPage = () => {
   // Get plan and billing cycle from URL
   const urlParams = new URLSearchParams(location.search);
   const selectedPlan = urlParams.get("plan") || "pro";
-  const billingCycle = urlParams.get("billing") || urlParams.get("cycle") || "monthly";
+  const billingCycle =
+    urlParams.get("billing") || urlParams.get("cycle") || "monthly";
 
   // Plan details with both monthly and yearly pricing
   const planDetails = {
@@ -111,7 +112,7 @@ const BillingPage = () => {
     // Get navigation context and subscription data
     const context = navigationService.getContext();
     const subscription = subscriptionService.getCurrentSubscription();
-    
+
     setNavigationContext(context);
     setCurrentSubscription(subscription);
 
@@ -120,21 +121,26 @@ const BillingPage = () => {
 
     // Log navigation context for debugging
     if (context) {
-      console.log("🧭 Billing page loaded with context:", context);
     }
   }, [currentUser, navigate]);
 
   // Check for plan conflicts
-  const hasConflict = currentSubscription && currentSubscription.plan === selectedPlan;
-  const needsToCancelFirst = currentSubscription && 
-    currentSubscription.plan !== "free" && 
+  const hasConflict =
+    currentSubscription && currentSubscription.plan === selectedPlan;
+  const needsToCancelFirst =
+    currentSubscription &&
+    currentSubscription.plan !== "free" &&
     currentSubscription.plan !== selectedPlan;
 
   // Card validation functions
   const getCardType = (number) => {
     const cleaned = number.replace(/\s+/g, "").replace(/[^0-9]/gi, "");
     if (/^4[0-9]{0,15}$/.test(cleaned)) return "visa";
-    if (/^5[1-5][0-9]{0,14}$/.test(cleaned) || /^2[2-7][0-9]{0,14}$/.test(cleaned)) return "mastercard";
+    if (
+      /^5[1-5][0-9]{0,14}$/.test(cleaned) ||
+      /^2[2-7][0-9]{0,14}$/.test(cleaned)
+    )
+      return "mastercard";
     if (/^3[47][0-9]{0,13}$/.test(cleaned)) return "amex";
     if (/^6[0-9]{0,15}$/.test(cleaned)) return "discover";
     return null;
@@ -168,13 +174,16 @@ const BillingPage = () => {
   const validateCVV = (cvv, cardType) => {
     const expectedLength = cardType === "amex" ? 4 : 3;
     if (cvv.length !== expectedLength) {
-      return `CVV must be ${expectedLength} digits for ${cardType?.toUpperCase() || "this card"}`;
+      return `CVV must be ${expectedLength} digits for ${
+        cardType?.toUpperCase() || "this card"
+      }`;
     }
     return null;
   };
 
   const validateNameOnCard = (name) => {
-    if (!/^[a-zA-Z\s]+$/.test(name)) return "Name can only contain letters and spaces";
+    if (!/^[a-zA-Z\s]+$/.test(name))
+      return "Name can only contain letters and spaces";
     if (name.trim().length < 2) return "Name must be at least 2 characters";
     return null;
   };
@@ -308,7 +317,7 @@ const BillingPage = () => {
         plan: selectedPlan.toLowerCase(),
         billing: billingCycle,
         price: currentPrice.price,
-        purchaseDate: new Date().toISOString()
+        purchaseDate: new Date().toISOString(),
       });
 
       setPaymentStatus("success");
@@ -323,20 +332,20 @@ const BillingPage = () => {
 
   // Handle back navigation
   const handleBackNavigation = () => {
-    navigationService.navigateBack(navigate, { 
-      fallbackPath: "/pricing" 
+    navigationService.navigateBack(navigate, {
+      fallbackPath: "/pricing",
     });
   };
 
   // Handle successful payment completion
   const handlePaymentSuccess = () => {
     setShowPaymentModal(false);
-    
+
     // Use navigation service to return to origin
     navigationService.handleSubscriptionSuccess(navigate, {
       plan: currentPlan.name,
-      action: 'subscription',
-      message: `Successfully subscribed to ${currentPlan.name} plan!`
+      action: "subscription",
+      message: `Successfully subscribed to ${currentPlan.name} plan!`,
     });
   };
 
@@ -345,11 +354,11 @@ const BillingPage = () => {
   }
 
   return (
-    <PublicLayout 
+    <PublicLayout
       headerType="public"
       footerType="simple"
       footerProps={{
-        customText: "© 2025 Groupify. Secure payments, powerful features."
+        customText: "© 2025 Groupify. Secure payments, powerful features.",
       }}
     >
       {/* Navigation Breadcrumb */}
@@ -361,7 +370,10 @@ const BillingPage = () => {
               className="inline-flex items-center text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
             >
               <ArrowLeftIcon className="w-4 h-4 mr-2" />
-              Back to {navigationContext.origin === 'dashboard-settings' ? 'Settings' : 'Previous Page'}
+              Back to{" "}
+              {navigationContext.origin === "dashboard-settings"
+                ? "Settings"
+                : "Previous Page"}
             </button>
           </div>
         </div>
@@ -375,14 +387,14 @@ const BillingPage = () => {
         primaryCTA={{
           text: "Back to Pricing",
           action: handleBackNavigation,
-          variant: "secondary"
+          variant: "secondary",
         }}
       />
 
       {/* Main Content */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         {/* Plan Conflict Messages */}
-        <ConflictMessages 
+        <ConflictMessages
           hasConflict={hasConflict}
           needsToCancelFirst={needsToCancelFirst}
           currentPlan={currentPlan}
@@ -435,7 +447,7 @@ const BillingPage = () => {
       </div>
 
       {/* Modals */}
-      <PaymentModal 
+      <PaymentModal
         showPaymentModal={showPaymentModal}
         paymentStatus={paymentStatus}
         paymentProgress={paymentProgress}
@@ -446,18 +458,18 @@ const BillingPage = () => {
         setPaymentProgress={setPaymentProgress}
       />
 
-      <InfoModal 
+      <InfoModal
         showInfoModal={showInfoModal}
         setShowInfoModal={setShowInfoModal}
       />
 
-      <PayPalModal 
+      <PayPalModal
         showPayPalModal={showPayPalModal}
         setShowPayPalModal={setShowPayPalModal}
         setPaymentMethod={setPaymentMethod}
       />
 
-      <ApplePayModal 
+      <ApplePayModal
         showApplePayModal={showApplePayModal}
         setShowApplePayModal={setShowApplePayModal}
         setPaymentMethod={setPaymentMethod}
@@ -467,7 +479,12 @@ const BillingPage = () => {
 };
 
 // Conflict Messages Component
-const ConflictMessages = ({ hasConflict, needsToCancelFirst, currentPlan, currentSubscription }) => {
+const ConflictMessages = ({
+  hasConflict,
+  needsToCancelFirst,
+  currentPlan,
+  currentSubscription,
+}) => {
   if (hasConflict) {
     return (
       <div className="mb-6 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl p-4">
@@ -478,7 +495,8 @@ const ConflictMessages = ({ hasConflict, needsToCancelFirst, currentPlan, curren
               You already have this plan
             </h3>
             <p className="text-sm text-yellow-700 dark:text-yellow-300">
-              You already have the {currentPlan.name} plan. Check your settings for current subscription details.
+              You already have the {currentPlan.name} plan. Check your settings
+              for current subscription details.
             </p>
           </div>
         </div>
@@ -496,7 +514,9 @@ const ConflictMessages = ({ hasConflict, needsToCancelFirst, currentPlan, curren
               Cancel your current plan first
             </h3>
             <p className="text-sm text-orange-700 dark:text-orange-300">
-              Please cancel your current {currentSubscription?.plan} plan before purchasing another one. You can do this from your dashboard settings.
+              Please cancel your current {currentSubscription?.plan} plan before
+              purchasing another one. You can do this from your dashboard
+              settings.
             </p>
           </div>
         </div>
@@ -520,7 +540,9 @@ const CardLogo = ({ type, active }) => {
           className={`${baseClasses} ${activeClasses} bg-blue-600 rounded flex items-center justify-center px-1`}
           style={logoStyle}
         >
-          <span className="text-white font-bold text-xs tracking-wider">VISA</span>
+          <span className="text-white font-bold text-xs tracking-wider">
+            VISA
+          </span>
         </div>
       );
     case "mastercard":
@@ -555,7 +577,9 @@ const CardLogo = ({ type, active }) => {
       );
     default:
       return (
-        <div className={`${baseClasses} ${activeClasses} bg-gray-400 text-white rounded flex items-center justify-center`}>
+        <div
+          className={`${baseClasses} ${activeClasses} bg-gray-400 text-white rounded flex items-center justify-center`}
+        >
           <CreditCardIcon className="w-4 h-4" />
         </div>
       );
@@ -584,7 +608,7 @@ const PaymentForm = ({
   needsToCancelFirst,
   currentPlan,
   cardType,
-  handleSubmit
+  handleSubmit,
 }) => (
   <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-2xl border border-white/20 dark:border-gray-700/50 p-6 sm:p-8">
     <div className="flex items-center justify-between mb-6">
@@ -636,7 +660,11 @@ const PaymentForm = ({
           className="p-3 sm:p-4 rounded-xl border-2 border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 transition-all"
         >
           <div className="w-5 h-5 sm:w-6 sm:h-6 mx-auto mb-1 sm:mb-2 bg-blue-600 rounded text-white text-xs flex items-center justify-center font-bold">
-            <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="currentColor" viewBox="0 0 24 24">
+            <svg
+              className="w-3 h-3 sm:w-4 sm:h-4"
+              fill="currentColor"
+              viewBox="0 0 24 24"
+            >
               <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106zm14.146-14.42a3.35 3.35 0 0 0-.34-.77c-.58-1.08-1.74-1.79-3.65-1.79H12.18c-.45 0-.83.32-.92.76L9.53 13.7c-.08.46.24.88.72.88h2.19c3.42 0 5.93-1.39 6.69-5.40.23-1.21.13-2.23-.3-3.06z" />
             </svg>
           </div>
@@ -651,7 +679,11 @@ const PaymentForm = ({
           className="p-3 sm:p-4 rounded-xl border-2 border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 transition-all"
         >
           <div className="w-5 h-5 sm:w-6 sm:h-6 mx-auto mb-1 sm:mb-2 bg-black rounded text-white text-xs flex items-center justify-center font-bold">
-            <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="currentColor" viewBox="0 0 24 24">
+            <svg
+              className="w-3 h-3 sm:w-4 sm:h-4"
+              fill="currentColor"
+              viewBox="0 0 24 24"
+            >
               <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
             </svg>
           </div>
@@ -685,7 +717,10 @@ const PaymentForm = ({
               />
               <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex space-x-1">
                 <CardLogo type="visa" active={cardType === "visa"} />
-                <CardLogo type="mastercard" active={cardType === "mastercard"} />
+                <CardLogo
+                  type="mastercard"
+                  active={cardType === "mastercard"}
+                />
                 <CardLogo type="amex" active={cardType === "amex"} />
                 <CardLogo type="discover" active={cardType === "discover"} />
               </div>
@@ -810,7 +845,14 @@ const PaymentForm = ({
 );
 
 // Order Summary Component
-const OrderSummary = ({ currentPlan, billingCycle, currentPrice, isYearly, navigationContext, handleBackNavigation }) => (
+const OrderSummary = ({
+  currentPlan,
+  billingCycle,
+  currentPrice,
+  isYearly,
+  navigationContext,
+  handleBackNavigation,
+}) => (
   <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-2xl border border-white/20 dark:border-gray-700/50 p-6 sm:p-8 sticky top-8">
     <div className="flex items-center justify-between mb-6">
       <h3 className="text-xl font-bold text-gray-900 dark:text-white">
@@ -820,8 +862,18 @@ const OrderSummary = ({ currentPlan, billingCycle, currentPrice, isYearly, navig
         onClick={handleBackNavigation}
         className="inline-flex items-center px-3 py-1.5 text-sm bg-indigo-100 dark:bg-indigo-900/30 hover:bg-indigo-200 dark:hover:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 rounded-lg transition-colors gap-1"
       >
-        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+        <svg
+          className="w-3 h-3"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
+          />
         </svg>
         Change
       </button>
@@ -904,7 +956,8 @@ const OrderSummary = ({ currentPlan, billingCycle, currentPrice, isYearly, navig
           {isYearly ? "Yearly price" : "Monthly price"}
         </span>
         <span className="text-gray-900 dark:text-white">
-          ${currentPrice.price}{isYearly ? "/year" : "/month"}
+          ${currentPrice.price}
+          {isYearly ? "/year" : "/month"}
         </span>
       </div>
 
@@ -939,7 +992,9 @@ const OrderSummary = ({ currentPlan, billingCycle, currentPrice, isYearly, navig
 
       <div className="flex justify-between items-center mb-4">
         <span className="text-gray-600 dark:text-gray-400">14-day trial</span>
-        <span className="text-green-600 dark:text-green-400 font-medium">FREE</span>
+        <span className="text-green-600 dark:text-green-400 font-medium">
+          FREE
+        </span>
       </div>
 
       <div className="flex justify-between items-center text-lg font-bold">
@@ -949,7 +1004,8 @@ const OrderSummary = ({ currentPlan, billingCycle, currentPrice, isYearly, navig
 
       <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
         You'll be charged ${currentPrice.price}
-        {isYearly ? " annually" : " monthly"} after your 14-day trial ends. Cancel anytime.
+        {isYearly ? " annually" : " monthly"} after your 14-day trial ends.
+        Cancel anytime.
       </p>
     </div>
   </div>
@@ -978,7 +1034,8 @@ const DevelopmentNotice = () => (
             Development Mode
           </p>
           <p className="text-sm text-yellow-700 dark:text-yellow-300 mt-1">
-            Payment processing is currently in development. No charges will be made at this time.
+            Payment processing is currently in development. No charges will be
+            made at this time.
           </p>
         </div>
       </div>
@@ -987,15 +1044,15 @@ const DevelopmentNotice = () => (
 );
 
 // Payment Modal Component
-const PaymentModal = ({ 
-  showPaymentModal, 
-  paymentStatus, 
-  paymentProgress, 
-  currentPlan, 
-  setShowPaymentModal, 
+const PaymentModal = ({
+  showPaymentModal,
+  paymentStatus,
+  paymentProgress,
+  currentPlan,
+  setShowPaymentModal,
   handlePaymentSuccess,
-  setPaymentStatus, 
-  setPaymentProgress 
+  setPaymentStatus,
+  setPaymentProgress,
 }) => {
   if (!showPaymentModal) return null;
 
@@ -1047,7 +1104,8 @@ const PaymentModal = ({
               Payment Successful! 🎉
             </h3>
             <p className="text-gray-600 dark:text-gray-400 mb-6">
-              Welcome to {currentPlan.name}! Your subscription is now active and you have access to all premium features.
+              Welcome to {currentPlan.name}! Your subscription is now active and
+              you have access to all premium features.
             </p>
 
             <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-4 mb-6">
@@ -1057,7 +1115,8 @@ const PaymentModal = ({
                 </span>
               </div>
               <p className="text-sm text-green-600 dark:text-green-400">
-                {currentPlan.storage} storage • Up to {currentPlan.photos} photos
+                {currentPlan.storage} storage • Up to {currentPlan.photos}{" "}
+                photos
               </p>
             </div>
 
@@ -1083,12 +1142,14 @@ const PaymentModal = ({
               Payment Failed
             </h3>
             <p className="text-gray-600 dark:text-gray-400 mb-6">
-              We couldn't process your payment. Please check your payment details and try again.
+              We couldn't process your payment. Please check your payment
+              details and try again.
             </p>
 
             <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4 mb-6">
               <p className="text-sm text-red-600 dark:text-red-400">
-                Common issues: Incorrect card details, insufficient funds, or card restrictions for online purchases.
+                Common issues: Incorrect card details, insufficient funds, or
+                card restrictions for online purchases.
               </p>
             </div>
 
@@ -1119,8 +1180,18 @@ const InfoModal = ({ showInfoModal, setShowInfoModal }) => {
         <div className="sticky top-0 bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-t-2xl border-b border-gray-200 dark:border-gray-600 p-4 sm:p-6 flex items-center justify-center z-10">
           <div className="flex items-center gap-3 mr-12">
             <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
-              <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <svg
+                className="w-5 h-5 text-blue-600 dark:text-blue-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
               </svg>
             </div>
             <h3 className="text-xl font-bold text-gray-900 dark:text-white">
@@ -1144,11 +1215,14 @@ const InfoModal = ({ showInfoModal, setShowInfoModal }) => {
                   Card Number
                 </h4>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                  Enter the 16-digit number on the front of your card (15 digits for Amex)
+                  Enter the 16-digit number on the front of your card (15 digits
+                  for Amex)
                 </p>
                 <div className="bg-white dark:bg-gray-800 rounded border p-2 text-xs font-mono">
                   <div className="text-gray-500">Example:</div>
-                  <div className="text-gray-900 dark:text-white">4532 1234 5678 9012</div>
+                  <div className="text-gray-900 dark:text-white">
+                    4532 1234 5678 9012
+                  </div>
                 </div>
               </div>
 
@@ -1178,7 +1252,9 @@ const InfoModal = ({ showInfoModal, setShowInfoModal }) => {
                 </p>
                 <div className="bg-white dark:bg-gray-800 rounded border p-2 text-xs font-mono">
                   <div className="text-gray-500">Example:</div>
-                  <div className="text-gray-900 dark:text-white">123 (or 1234 for Amex)</div>
+                  <div className="text-gray-900 dark:text-white">
+                    123 (or 1234 for Amex)
+                  </div>
                 </div>
               </div>
 
@@ -1188,7 +1264,8 @@ const InfoModal = ({ showInfoModal, setShowInfoModal }) => {
                   Name on Card
                 </h4>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                  Enter the exact name printed on your card (letters and spaces only)
+                  Enter the exact name printed on your card (letters and spaces
+                  only)
                 </p>
                 <div className="bg-white dark:bg-gray-800 rounded border p-2 text-xs font-mono">
                   <div className="text-gray-500">Example:</div>
@@ -1211,7 +1288,11 @@ const InfoModal = ({ showInfoModal, setShowInfoModal }) => {
 };
 
 // PayPal Modal Component
-const PayPalModal = ({ showPayPalModal, setShowPayPalModal, setPaymentMethod }) => {
+const PayPalModal = ({
+  showPayPalModal,
+  setShowPayPalModal,
+  setPaymentMethod,
+}) => {
   if (!showPayPalModal) return null;
 
   return (
@@ -1219,7 +1300,11 @@ const PayPalModal = ({ showPayPalModal, setShowPayPalModal, setPaymentMethod }) 
       <div className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-2xl shadow-2xl max-w-md w-full p-6 border border-white/20 dark:border-gray-700/50 animate-in fade-in zoom-in duration-300">
         <div className="text-center">
           <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-blue-600 dark:text-blue-400" fill="currentColor" viewBox="0 0 24 24">
+            <svg
+              className="w-8 h-8 text-blue-600 dark:text-blue-400"
+              fill="currentColor"
+              viewBox="0 0 24 24"
+            >
               <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106zm14.146-14.42a3.35 3.35 0 0 0-.34-.77c-.58-1.08-1.74-1.79-3.65-1.79H12.18c-.45 0-.83.32-.92.76L9.53 13.7c-.08.46.24.88.72.88h2.19c3.42 0 5.93-1.39 6.69-5.40.23-1.21.13-2.23-.3-3.06z" />
             </svg>
           </div>
@@ -1228,12 +1313,14 @@ const PayPalModal = ({ showPayPalModal, setShowPayPalModal, setPaymentMethod }) 
             PayPal Coming Soon! 🚀
           </h3>
           <p className="text-gray-600 dark:text-gray-400 mb-6 leading-relaxed">
-            We're working hard to bring you PayPal integration. For now, please use a credit or debit card to complete your purchase securely.
+            We're working hard to bring you PayPal integration. For now, please
+            use a credit or debit card to complete your purchase securely.
           </p>
 
           <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
             <p className="text-sm text-blue-800 dark:text-blue-200">
-              <strong>💳 Available now:</strong> All major credit and debit cards are accepted and processed securely.
+              <strong>💳 Available now:</strong> All major credit and debit
+              cards are accepted and processed securely.
             </p>
           </div>
 
@@ -1261,7 +1348,11 @@ const PayPalModal = ({ showPayPalModal, setShowPayPalModal, setPaymentMethod }) 
 };
 
 // Apple Pay Modal Component
-const ApplePayModal = ({ showApplePayModal, setShowApplePayModal, setPaymentMethod }) => {
+const ApplePayModal = ({
+  showApplePayModal,
+  setShowApplePayModal,
+  setPaymentMethod,
+}) => {
   if (!showApplePayModal) return null;
 
   return (
@@ -1269,7 +1360,11 @@ const ApplePayModal = ({ showApplePayModal, setShowApplePayModal, setPaymentMeth
       <div className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-2xl shadow-2xl max-w-md w-full p-6 border border-white/20 dark:border-gray-700/50 animate-in fade-in zoom-in duration-300">
         <div className="text-center">
           <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-gray-600 dark:text-gray-400" fill="currentColor" viewBox="0 0 24 24">
+            <svg
+              className="w-8 h-8 text-gray-600 dark:text-gray-400"
+              fill="currentColor"
+              viewBox="0 0 24 24"
+            >
               <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
             </svg>
           </div>
@@ -1278,12 +1373,14 @@ const ApplePayModal = ({ showApplePayModal, setShowApplePayModal, setPaymentMeth
             Apple Pay Coming Soon! 🍎
           </h3>
           <p className="text-gray-600 dark:text-gray-400 mb-6 leading-relaxed">
-            We're excited to bring you Apple Pay integration soon! For now, please use a credit or debit card for a quick and secure checkout.
+            We're excited to bring you Apple Pay integration soon! For now,
+            please use a credit or debit card for a quick and secure checkout.
           </p>
 
           <div className="bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg p-4 mb-6">
             <p className="text-sm text-gray-700 dark:text-gray-300">
-              <strong>🔒 Secure payment:</strong> All transactions are encrypted and protected with industry-standard security.
+              <strong>🔒 Secure payment:</strong> All transactions are encrypted
+              and protected with industry-standard security.
             </p>
           </div>
 
