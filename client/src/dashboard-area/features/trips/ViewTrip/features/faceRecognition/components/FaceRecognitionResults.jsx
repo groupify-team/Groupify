@@ -6,6 +6,7 @@ import {
   ArrowDownTrayIcon,
   MagnifyingGlassIcon,
 } from "@heroicons/react/24/outline";
+import JSZip from "jszip";
 
 const FaceRecognitionResults = ({
   isOpen,
@@ -111,10 +112,45 @@ const FaceRecognitionResults = ({
               </div>
 
               <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                // 🔥 REPLACE the export button section:
                 <button
                   onClick={() => {
-                    // Handle export logic here if needed
-                    alert("Export feature coming soon!");
+                    // 🔥 ADD REAL EXPORT FUNCTIONALITY
+                    const downloadPhotos = async () => {
+                      try {
+                        const zip = new JSZip(); // You'll need to install jszip: npm install jszip
+
+                        for (let i = 0; i < filteredPhotos.length; i++) {
+                          const photo = filteredPhotos[i];
+                          const response = await fetch(
+                            fixPhotoUrl(photo.downloadURL)
+                          );
+                          const blob = await response.blob();
+                          zip.file(`photo_${i + 1}_${photo.fileName}`, blob);
+                        }
+
+                        const content = await zip.generateAsync({
+                          type: "blob",
+                        });
+                        const url = window.URL.createObjectURL(content);
+                        const link = document.createElement("a");
+                        link.href = url;
+                        link.download = `my_photos_${
+                          new Date().toISOString().split("T")[0]
+                        }.zip`;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        window.URL.revokeObjectURL(url);
+
+                        toast.success("Photos exported successfully!");
+                      } catch (error) {
+                        console.error("Export failed:", error);
+                        toast.error("Failed to export photos");
+                      }
+                    };
+
+                    downloadPhotos();
                   }}
                   className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white p-3 rounded-xl font-medium transition-all flex items-center justify-center gap-2"
                 >

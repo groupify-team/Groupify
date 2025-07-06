@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Suspense, memo } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -8,7 +8,7 @@ import {
   useNavigate,
 } from "react-router-dom";
 
-// Keep core providers and auth components as regular imports
+// Keep core providers and auth components as regular imports (they're needed immediately)
 import { AuthProvider, useAuth } from "@/auth-area/contexts/AuthContext";
 import { ThemeProvider } from "@shared/contexts/ThemeContext";
 import ProtectedRoute from "@/auth-area/components/ProtectedRoute";
@@ -365,7 +365,7 @@ function App() {
 
             <div className="transition-all duration-500 ease-in-out">
               <Routes>
-                {/* Public Routes */}
+                {/* Public Routes - Now with Suspense wrapper */}
                 <Route
                   path="/"
                   element={
@@ -429,7 +429,7 @@ function App() {
                   }
                 />
 
-                {/* Legal & Info Pages */}
+                {/* Legal & Info Pages - Now with Suspense wrapper */}
                 <Route
                   path="/terms"
                   element={

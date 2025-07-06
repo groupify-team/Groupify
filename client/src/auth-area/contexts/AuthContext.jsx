@@ -106,7 +106,7 @@ export function AuthProvider({ children }) {
   const checkEmailVerification = useCallback(async (email) => {
     try {
       console.log("Checking email verification for:", email);
-      return { verified: true }; // Let Firebase Auth handle verification
+      return { verified: true };
     } catch (error) {
       console.error("Error checking email verification:", error);
       return {
@@ -121,10 +121,13 @@ export function AuthProvider({ children }) {
     try {
       console.log("Starting signup process for:", email);
 
-      // Validate inputs
       if (!email || !password || !displayName) {
         throw new Error("Email, password, and name are required");
       }
+
+      // Dynamic imports for auth functions
+      const { createUserWithEmailAndPassword, updateProfile, signOut } =
+        await import("firebase/auth");
 
       // Create user account
       const userCredential = await createUserWithEmailAndPassword(
@@ -143,6 +146,8 @@ export function AuthProvider({ children }) {
 
       // Create user document with default plan
       try {
+        const { doc, setDoc } = await import("firebase/firestore");
+
         await setDoc(doc(db, "users", user.uid), {
           uid: user.uid,
           email: email,
@@ -155,7 +160,6 @@ export function AuthProvider({ children }) {
           bio: "",
           location: "",
           joinedAt: new Date().toISOString(),
-          // Initialize with free plan
           subscription: {
             plan: 'free',
             status: 'active',
@@ -171,7 +175,6 @@ export function AuthProvider({ children }) {
         console.log("User document created in Firestore with free plan");
       } catch (firestoreError) {
         console.warn("Failed to save user data to Firestore:", firestoreError);
-        // Don't fail the signup if Firestore fails
       }
 
       // Initialize subscription service for new user
@@ -207,7 +210,11 @@ export function AuthProvider({ children }) {
     try {
       console.log("Starting sign-in process for:", email);
 
-      // Try to sign in directly - Firebase Auth will handle email verification
+      // Line deleted - just use imported 'auth' directly
+      const { signInWithEmailAndPassword, signOut } = await import(
+        "firebase/auth"
+      );
+
       const userCredential = await signInWithEmailAndPassword(
         auth,
         email,
@@ -217,7 +224,7 @@ export function AuthProvider({ children }) {
 
       // Check if email is verified in Firebase Auth
       if (!user.emailVerified) {
-        await signOut(auth); // Sign out if not verified
+        await signOut(auth);
         throw new Error(
           "Please verify your email before signing in. Check your inbox!"
         );
@@ -236,10 +243,15 @@ export function AuthProvider({ children }) {
   const signInWithGoogle = useCallback(async () => {
     const provider = new GoogleAuthProvider();
     try {
+      const { GoogleAuthProvider, signInWithPopup } = await import(
+        "firebase/auth"
+      );
+
+      const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
 
-      // Call enableGoogleAuth function using fetch
+      // Call enableGoogleAuth function
       try {
         const response = await fetch(
           "https://us-central1-groupify-77202.cloudfunctions.net/enableGoogleAuth",
@@ -270,21 +282,22 @@ export function AuthProvider({ children }) {
       }
 
       // Check if user document exists, if not create it with free plan
+      const { doc, getDoc, setDoc } = await import("firebase/firestore");
+
       const userDoc = await getDoc(doc(db, "users", user.uid));
       if (!userDoc.exists()) {
         await setDoc(doc(db, "users", user.uid), {
           uid: user.uid,
           email: user.email,
           displayName: user.displayName,
-          gender: "other", // Default for Google sign-in
+          gender: "other",
           createdAt: new Date().toISOString(),
-          emailVerified: true, // Google accounts are pre-verified
+          emailVerified: true,
           friends: [],
           profilePicture: user.photoURL,
           bio: "",
           location: "",
           joinedAt: new Date().toISOString(),
-          // Initialize with free plan for new Google users
           subscription: {
             plan: 'free',
             status: 'active',
@@ -319,7 +332,6 @@ export function AuthProvider({ children }) {
 
   const logout = useCallback(async () => {
     try {
-      // Clear subscription data on logout
       setUserPlan(null);
       
       // Optional: Clear subscription service cache
@@ -411,6 +423,8 @@ export function AuthProvider({ children }) {
         throw new Error('No authenticated user');
       }
 
+      const { doc, setDoc } = await import("firebase/firestore");
+
       // Update Firestore
       await setDoc(doc(db, "users", currentUser.uid), {
         subscription: planData,
@@ -439,37 +453,52 @@ export function AuthProvider({ children }) {
         timestamp: new Date().toISOString()
       });
 
-      if (user) {
-        // For Google users, allow immediate access
-        if (user.providerData[0]?.providerId === "google.com") {
-          console.log("Google user signed in:", user.email);
-          setCurrentUser(user);
-          await initializeUserPlan(user);
-        } else if (user.emailVerified) {
-          // Email/password user with verified email
-          console.log("Verified email/password user signed in:", user.email);
-          setCurrentUser(user);
-          await initializeUserPlan(user);
-        } else {
-          // Email/password user without verification - sign them out immediately
-          console.log(
-            "Email/password user detected, signing out for verification"
-          );
+    const setupAuthListener = async () => {
+      const { onAuthStateChanged, signOut } = await import("firebase/auth");
 
-          // Set currentUser to null FIRST to prevent dashboard flash
+      unsubscribe = onAuthStateChanged(auth, async (user) => {
+        console.log("Auth state changed:", user?.email || "No user");
+
+        if (user) {
+          // For Google users, allow immediate access
+          if (user.providerData[0]?.providerId === "google.com") {
+            console.log("Google user signed in:", user.email);
+            setCurrentUser(user);
+            await initializeUserPlan(user);
+          } else if (user.emailVerified) {
+            // Email/password user with verified email
+            console.log("Verified email/password user signed in:", user.email);
+            setCurrentUser(user);
+            await initializeUserPlan(user);
+          } else {
+            // Email/password user without verification
+            console.log(
+              "Email/password user detected, signing out for verification"
+            );
+
+            setCurrentUser(null);
+            setUserPlan(null);
+
+            try {
+              await signOut(auth);
+            } catch (signOutError) {
+              console.error("Error signing out unverified user:", signOutError);
+            }
+          }
+        } else {
           setCurrentUser(null);
           setUserPlan(null);
-
-          // Then sign them out
-          try {
-            await signOut(auth);
-          } catch (signOutError) {
-            console.error("Error signing out unverified user:", signOutError);
-          }
         }
-      } else {
-        setCurrentUser(null);
-        setUserPlan(null);
+
+        setLoading(false);
+      });
+    };
+
+    setupAuthListener();
+
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
       }
 
       // Only set loading to false after the first auth state change

@@ -44,7 +44,7 @@ import {
   MAX_TRIPS_PER_USER,
   acceptTripInvite,
   declineTripInvite,
-} from "@firebase-services/trips";
+} from "@trips/services/tripsService";
 
 const TripsSection = () => {
   const { currentUser } = useAuth();
@@ -75,7 +75,6 @@ const TripsSection = () => {
     loading,
   } = useDashboardData();
 
-  // Modal state
   const {
     createTrip: { open: openCreateTripModal },
   } = useDashboardModals();
@@ -206,10 +205,10 @@ const TripsSection = () => {
           >
             <PlusIcon className="w-4 h-4 sm:w-5 sm:h-5" />
             <span className="hidden sm:inline">
-              Create Trip ({trips.length}/{MAX_TRIPS_PER_USER})
+              Create Trip ({trips?.length || 0}/{MAX_TRIPS_PER_USER})
             </span>
             <span className="sm:hidden">
-              Create ({trips.length}/{MAX_TRIPS_PER_USER})
+              Create ({trips?.length || 0}/{MAX_TRIPS_PER_USER})
             </span>
           </button>
         )}
@@ -229,14 +228,14 @@ const TripsSection = () => {
                 id: "trips",
                 label: "Trips",
                 icon: MapIcon,
-                badge: trips.length,
+                badge: trips?.length || 0,
                 badgeColor: "indigo",
               },
               {
                 id: "invitations",
                 label: "Invites",
                 icon: BellIcon,
-                badge: tripInvites.length,
+                badge: tripInvites?.length || 0,
                 badgeColor: "red",
               },
             ]}
@@ -251,9 +250,9 @@ const TripsSection = () => {
             <h2 className="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
               <MapIcon className="w-6 h-6 text-purple-600 dark:text-purple-400" />
               Trip Invitations
-              {tripInvites.length > 0 && (
+              {(tripInvites?.length || 0) > 0 && (
                 <span className="bg-red-500 text-white text-sm px-2 py-1 rounded-full">
-                  {tripInvites.length}
+                  {tripInvites?.length || 0}
                 </span>
               )}
             </h2>
@@ -275,7 +274,7 @@ const TripsSection = () => {
             }`}
           >
             <div className="p-6">
-              {tripInvites.length === 0 ? (
+              {(tripInvites?.length || 0) === 0 ? (
                 <div className="text-center py-4">
                   <p className="text-gray-500 dark:text-gray-400 text-sm">
                     No pending trip invitations
@@ -363,7 +362,7 @@ const TripsSection = () => {
         {!isMobile || tripsActiveTab === "trips" ? (
           /* Trips Grid */
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-3 gap-3 sm:gap-4 lg:gap-5 xl:gap-6 transition-all duration-300">
-            {filteredTrips.length === 0 ? (
+            {(filteredTrips?.length || 0) === 0 ? (
               <div className="col-span-full text-center py-16 animate-fade-in">
                 <div className="w-24 h-24 bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/30 dark:to-purple-900/30 rounded-2xl flex items-center justify-center mx-auto mb-6">
                   <MapIcon className="w-12 h-12 text-indigo-500 dark:text-indigo-400" />
@@ -405,7 +404,7 @@ const TripsSection = () => {
         ) : (
           /* Mobile Trip Invitations */
           <div className="space-y-4">
-            {tripInvites.length === 0 ? (
+            {(tripInvites?.length || 0) === 0 ? (
               <div className="text-center py-16">
                 <div className="w-24 h-24 bg-gradient-to-br from-purple-100 to-indigo-100 dark:from-purple-900/30 dark:to-indigo-900/30 rounded-2xl flex items-center justify-center mx-auto mb-6">
                   <BellIcon className="w-12 h-12 text-purple-500 dark:text-purple-400" />

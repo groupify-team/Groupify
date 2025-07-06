@@ -19,10 +19,7 @@ import {
   getPendingFriendRequests,
   getUserProfile,
 } from "@firebase-services/users";
-import {
-  getUserTrips,
-  getPendingInvites,
-} from "@shared/services/firebase/trips";
+import { tripsService } from "@trips/services/tripsService";
 import {
   hasFaceProfile,
   getProfilePhotos,
@@ -252,7 +249,6 @@ export const useDashboardData = () => {
     if (!currentUser?.uid) return;
     try {
       const updatedTrips = await getUserTrips(currentUser.uid);
-      console.log("🔄 Refreshed trips:", updatedTrips.length);
       setTrips(updatedTrips);
       
       // Update global data

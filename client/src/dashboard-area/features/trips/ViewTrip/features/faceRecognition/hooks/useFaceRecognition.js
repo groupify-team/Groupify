@@ -76,31 +76,45 @@ export const useFaceRecognition = (photos, currentUserId, isMember) => {
     }
   };
 
-  // Enhanced progress handler with real-time updates
+  // progress handler with real-time updates
   const handleFaceRecognitionProgress = (progressData) => {
     setFaceRecognitionProgress((prev) => {
-      const newProgress = { ...prev };
-
       switch (progressData.type) {
+        case "initializing_models":
+        case "loading_model":
+        case "models_ready":
+          return {
+            ...prev,
+            phase: progressData.phase,
+            current: progressData.current,
+            total: progressData.total,
+            percentage: Math.round(
+              (progressData.current / progressData.total) * 100
+            ),
+          };
+
         case "initializing":
           return {
-            ...newProgress,
-            phase: progressData.phase,
             current: 0,
             total: progressData.total,
+            phase: progressData.phase,
             profileInfo: progressData.profileInfo,
+            matches: [],
+            errors: [],
+            percentage: 0,
           };
 
         case "batch_starting":
           return {
-            ...newProgress,
+            ...prev,
             phase: progressData.phase,
             totalBatches: progressData.totalBatches,
           };
 
         case "processing":
+          // 🔥 FIX: Don't reset, just update current values
           return {
-            ...newProgress,
+            ...prev,
             current: progressData.current,
             total: progressData.total,
             batch: progressData.batch,
@@ -108,14 +122,14 @@ export const useFaceRecognition = (photos, currentUserId, isMember) => {
             currentPhoto: progressData.currentPhoto,
             estimatedTimeRemaining: progressData.estimatedTimeRemaining,
             phase: `${progressData.phase} (${progressData.current}/${progressData.total})`,
-            percentage: Math.round(
-              (progressData.current / progressData.total) * 100
-            ),
+            percentage:
+              progressData.percentage ||
+              Math.round((progressData.current / progressData.total) * 100),
           };
 
         case "match_found":
           return {
-            ...newProgress,
+            ...prev,
             matches: [
               ...prev.matches,
               {
@@ -130,7 +144,7 @@ export const useFaceRecognition = (photos, currentUserId, isMember) => {
 
         case "error":
           return {
-            ...newProgress,
+            ...prev,
             errors: [
               ...prev.errors,
               {
@@ -143,9 +157,10 @@ export const useFaceRecognition = (photos, currentUserId, isMember) => {
 
         case "completed":
           return {
-            ...newProgress,
+            ...prev,
             phase: progressData.phase,
             current: prev.total,
+            percentage: 100,
             totalMatches: progressData.totalMatches,
             strongMatches: progressData.strongMatches,
             weakMatches: progressData.weakMatches,
@@ -156,12 +171,12 @@ export const useFaceRecognition = (photos, currentUserId, isMember) => {
 
         case "cancelled":
           return {
-            ...newProgress,
+            ...prev,
             phase: progressData.phase,
           };
 
         default:
-          return newProgress;
+          return prev;
       }
     });
   };
@@ -171,6 +186,7 @@ export const useFaceRecognition = (photos, currentUserId, isMember) => {
   };
 
   // Face recognition function
+  // 🔥 REPLACE the entire handleFindMyPhotos function:
   const handleFindMyPhotos = async () => {
     if (!currentUserId || photos.length === 0) {
       toast.error("User ID or trip photos missing");
@@ -189,13 +205,18 @@ export const useFaceRecognition = (photos, currentUserId, isMember) => {
     setFaceRecognitionProgress({
       current: 0,
       total: photos.length,
-      phase: "Initializing...",
+      phase: "Initializing AI models...",
       matches: [],
       errors: [],
+      percentage: 0,
     });
     resetFaceRecognition();
 
     try {
+      // 🔥 ADD: Set up initialization progress callback
+      const service = getFaceRecognitionService();
+      service.setInitializationProgressCallback(handleFaceRecognitionProgress);
+
       const photoData = photos.map((photo) => ({
         id: photo.id,
         downloadURL: photo.downloadURL,
@@ -210,15 +231,28 @@ export const useFaceRecognition = (photos, currentUserId, isMember) => {
         handleFaceRecognitionProgress
       );
 
-      if (matches.length > 0) {
-        setFilteredPhotos(matches);
-        setFilterActive(true);
-        toast.success(`Found ${matches.length} matching photos!`);
-      } else {
-        setFilteredPhotos([]);
-        setFilterActive(true); // Still show the section but with "no matches" message
-        toast.info("No matching photos found");
-      }
+      // 🔥 ADD: Success handling with delay for UX
+      setFaceRecognitionProgress((prev) => ({
+        ...prev,
+        phase: "Recognition completed successfully!",
+        percentage: 100,
+      }));
+
+      // Small delay to show completion state
+      setTimeout(() => {
+        if (matches.length > 0) {
+          setFilteredPhotos(matches);
+          setFilterActive(true);
+          setShowScanModal(false);
+          setShowResultsModal(true); // 🔥 AUTO-OPEN RESULTS
+          toast.success(`Found ${matches.length} matching photos!`);
+        } else {
+          setFilteredPhotos([]);
+          setFilterActive(true);
+          setShowScanModal(false);
+          toast.info("No matching photos found");
+        }
+      }, 1500); // 1.5 second delay to show success
     } catch (error) {
       console.error("❌ Face recognition error:", error);
       if (error.message.includes("No face profile found")) {
@@ -229,8 +263,12 @@ export const useFaceRecognition = (photos, currentUserId, isMember) => {
         toast.error("Face recognition failed: " + error.message);
       }
       setFilteredPhotos([]);
+      setShowScanModal(false);
     } finally {
-      setIsProcessingFaces(false);
+      // Don't set this immediately - let the success state show first
+      setTimeout(() => {
+        setIsProcessingFaces(false);
+      }, 1500);
     }
   };
 

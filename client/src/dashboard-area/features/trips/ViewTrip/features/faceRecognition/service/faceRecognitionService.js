@@ -36,7 +36,7 @@ class ModernFaceRecognitionService {
     }
   }
 
-  // ✅ Initialize models ONLY when needed
+  // REPLACE the existing initialize() method with this:
   async initialize() {
     if (this.isInitialized) return;
 
@@ -45,6 +45,16 @@ class ModernFaceRecognitionService {
 
     try {
       console.log("🔄 Loading AI models...");
+
+      // 🔥 ADD PROGRESS CALLBACK FOR INITIALIZATION
+      if (this.initProgressCallback) {
+        this.initProgressCallback({
+          type: "initializing_models",
+          phase: "Loading AI models...",
+          current: 0,
+          total: 3,
+        });
+      }
 
       const MODEL_URLS = [
         "/models", // local backup
@@ -56,18 +66,42 @@ class ModernFaceRecognitionService {
 
       for (const MODEL_URL of MODEL_URLS) {
         try {
-          // Load only essential models first
-          await Promise.all([
-            faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL), // Face detection
-            faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL), // Facial landmarks
-            faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL), // Face recognition (128D descriptors)
-          ]);
+          // 🔥 UPDATE PROGRESS FOR EACH MODEL
+          if (this.initProgressCallback) {
+            this.initProgressCallback({
+              type: "loading_model",
+              phase: "Loading face detection model...",
+              current: 1,
+              total: 3,
+            });
+          }
+
+          await faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL);
+
+          if (this.initProgressCallback) {
+            this.initProgressCallback({
+              type: "loading_model",
+              phase: "Loading facial landmarks model...",
+              current: 2,
+              total: 3,
+            });
+          }
+
+          await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+
+          if (this.initProgressCallback) {
+            this.initProgressCallback({
+              type: "loading_model",
+              phase: "Loading face recognition model...",
+              current: 3,
+              total: 3,
+            });
+          }
+
+          await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
 
           console.log("✅ Essential models loaded from:", MODEL_URL);
-
-          // Load optional models in background (non-blocking)
           this.loadOptionalModels(MODEL_URL, faceapi);
-
           modelsLoaded = true;
           break;
         } catch (error) {
@@ -78,10 +112,19 @@ class ModernFaceRecognitionService {
       }
 
       if (!modelsLoaded) {
-        console.error("❌ All model sources failed. Last error:", lastError);
         throw new Error(
-          `Failed to load face recognition models. Please check:\n1. Model files exist in public/models/\n2. Files are not corrupted\n3. Network connection\n\nLast error: ${lastError?.message}`
+          `Failed to load face recognition models: ${lastError?.message}`
         );
+      }
+
+      // 🔥 NOTIFY COMPLETION
+      if (this.initProgressCallback) {
+        this.initProgressCallback({
+          type: "models_ready",
+          phase: "AI models ready!",
+          current: 3,
+          total: 3,
+        });
       }
 
       this.isInitialized = true;
@@ -429,12 +472,13 @@ class ModernFaceRecognitionService {
           );
           onProgress({
             type: "processing",
-            current: i + 1,
+            current: i + 1, // 🔥 THIS IS CORRECT - keeps incrementing
             total: photos.length,
             currentPhoto:
               photo.fileName || photo.originalName || `Photo ${i + 1}`,
             estimatedTimeRemaining,
             phase: "Face recognition analysis...",
+            percentage: Math.round(((i + 1) / photos.length) * 100), // 🔥 ADD THIS
           });
         }
 
@@ -621,6 +665,10 @@ class ModernFaceRecognitionService {
     const avgTimePerPhoto = elapsed / processed;
     const remaining = (total - processed) * avgTimePerPhoto;
     return Math.max(0, Math.round(remaining / 1000));
+  }
+
+  setInitializationProgressCallback(callback) {
+    this.initProgressCallback = callback;
   }
 
   getFaceProfile(userId) {

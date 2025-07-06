@@ -135,9 +135,9 @@ export const getNavigationItemBadge = (
 export const hasNotifications = (itemId, pendingRequests, tripInvites) => {
   switch (itemId) {
     case "friends":
-      return pendingRequests.length > 0;
+      return pendingRequests && pendingRequests.length > 0;
     case "trips":
-      return tripInvites.length > 0;
+      return tripInvites && tripInvites.length > 0;
     default:
       return false;
   }

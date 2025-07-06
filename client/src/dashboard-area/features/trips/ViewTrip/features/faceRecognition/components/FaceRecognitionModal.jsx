@@ -22,12 +22,27 @@ const FaceRecognitionModal = ({
   useEffect(() => {
     if (isOpen) {
       setIsLoading(true);
-      const timer = setTimeout(() => {
+
+      // LISTEN FOR MODEL LOADING PROGRESS
+      if (
+        faceRecognitionProgress?.phase?.includes("Loading") ||
+        faceRecognitionProgress?.phase?.includes("Initializing")
+      ) {
+        setIsLoading(true);
+      } else if (
+        faceRecognitionProgress?.phase?.includes("ready") ||
+        faceRecognitionProgress?.phase?.includes("scan")
+      ) {
         setIsLoading(false);
-      }, 1500); // 1.5 second loading simulation
-      return () => clearTimeout(timer);
+      } else {
+        // Default loading time
+        const timer = setTimeout(() => {
+          setIsLoading(false);
+        }, 2000);
+        return () => clearTimeout(timer);
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, faceRecognitionProgress?.phase]);
 
   const getProgressPercentage = () => {
     if (!faceRecognitionProgress || faceRecognitionProgress.total === 0)
@@ -45,10 +60,9 @@ const FaceRecognitionModal = ({
     return `~${minutes}m ${remainingSeconds}s remaining`;
   };
 
-  // Enhanced circular progress with smooth animation
+  //  circular progress with smooth animation
   const CircularProgress = ({ percentage }) => {
     const [animatedPercentage, setAnimatedPercentage] = useState(0);
-    <CircularProgress percentage={faceRecognitionProgress?.percentage || 0} />;
 
     useEffect(() => {
       const timer = setTimeout(() => {
@@ -85,7 +99,7 @@ const FaceRecognitionModal = ({
             strokeDasharray={strokeDasharray}
             strokeDashoffset={strokeDashoffset}
             strokeLinecap="round"
-            className="transition-all duration-1000 ease-out"
+            className="transition-all duration-300 ease-out" // 🔥 SHORTER TRANSITION
             style={{
               filter: "drop-shadow(0 0 8px rgba(59, 130, 246, 0.4))",
             }}
@@ -108,7 +122,7 @@ const FaceRecognitionModal = ({
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="text-center">
             <div className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-emerald-600 bg-clip-text text-transparent">
-              {animatedPercentage}%
+              {Math.round(animatedPercentage)}%
             </div>
             <div className="text-xs text-gray-500 dark:text-gray-400 font-medium">
               Complete

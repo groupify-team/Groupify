@@ -1,5 +1,5 @@
 import { doc, setDoc, getDoc, deleteDoc } from "firebase/firestore";
-import { db } from "./config";
+import { db } from "./firebase/config";
 
 /**
  * Save face profile metadata to Firestore
