@@ -57,7 +57,6 @@ const TripDetailView = ({ tripId: propTripId }) => {
     setTripMembers,
   } = useTripData(tripId, currentUser?.uid);
 
-  // 🎯 FIXED: Use the separated lazy face recognition hook with proper error handling
   const {
     hasProfile,
     isLoadingProfile,
@@ -77,6 +76,7 @@ const TripDetailView = ({ tripId: propTripId }) => {
     setFilterActive,
     setFilteredPhotos,
     handleFindMyPhotos,
+    handleClearScan,
   } = useFaceRecognition(
     photos || [],
     currentUser?.uid,
@@ -169,14 +169,14 @@ const TripDetailView = ({ tripId: propTripId }) => {
   // 🎯 FIXED: Corrected handleTripDeleted function
   const handleTripDeleted = (deletedTripId) => {
     setShowEditModal(false);
-    
+
     // Navigate back to dashboard with specific state to trigger immediate removal
     navigate("/dashboard", {
       replace: true,
       state: {
         deletedTripId: deletedTripId,
         forceRefresh: true,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       },
     });
   };
@@ -328,6 +328,7 @@ const TripDetailView = ({ tripId: propTripId }) => {
                 onFindMyPhotos={enhancedHandleFindMyPhotos}
                 onPhotoSelect={setSelectedPhoto}
                 onViewAllResults={() => setShowResultsModal(true)}
+                onClearScan={handleClearScan}
               />
 
               <FaceRecognitionModal
@@ -347,6 +348,7 @@ const TripDetailView = ({ tripId: propTripId }) => {
                 onClose={() => setShowResultsModal(false)}
                 onPhotoSelect={setSelectedPhoto}
                 onRescan={enhancedHandleFindMyPhotos}
+                onClearScan={handleClearScan}
               />
             </div>
 

@@ -37,6 +37,12 @@ export const useFaceRecognition = (photos, currentUserId, isMember) => {
 
   const canFilterByFace = isMember && currentUserId;
 
+  useEffect(() => {
+    if (currentUserId && canFilterByFace) {
+      loadUserFaceProfile();
+    }
+  }, [currentUserId, canFilterByFace]);
+
   // Load user face profile
   const loadUserFaceProfile = async () => {
     if (!currentUserId) return;
@@ -99,6 +105,9 @@ export const useFaceRecognition = (photos, currentUserId, isMember) => {
           };
 
         case "processing":
+          const newPercentage = Math.round(
+            (progressData.current / progressData.total) * 100
+          );
           return {
             ...newProgress,
             current: progressData.current,
@@ -108,9 +117,7 @@ export const useFaceRecognition = (photos, currentUserId, isMember) => {
             currentPhoto: progressData.currentPhoto,
             estimatedTimeRemaining: progressData.estimatedTimeRemaining,
             phase: `${progressData.phase} (${progressData.current}/${progressData.total})`,
-            percentage: Math.round(
-              (progressData.current / progressData.total) * 100
-            ),
+            percentage: newPercentage,
           };
 
         case "match_found":
@@ -214,10 +221,18 @@ export const useFaceRecognition = (photos, currentUserId, isMember) => {
         setFilteredPhotos(matches);
         setFilterActive(true);
         toast.success(`Found ${matches.length} matching photos!`);
+        setTimeout(() => {
+          setShowScanModal(false);
+          setShowResultsModal(true);
+        }, 1500);
       } else {
         setFilteredPhotos([]);
-        setFilterActive(true); // Still show the section but with "no matches" message
+        setFilterActive(true);
         toast.info("No matching photos found");
+        setTimeout(() => {
+          setShowScanModal(false);
+          setShowResultsModal(true);
+        }, 1500);
       }
     } catch (error) {
       console.error("❌ Face recognition error:", error);
@@ -271,5 +286,15 @@ export const useFaceRecognition = (photos, currentUserId, isMember) => {
     enhancedHandleCancelFaceRecognition: handleCancelFaceRecognition,
     handleStartFaceRecognition: handleFindMyPhotos,
     handleNavigateToProfile: () => setShowScanModal(false),
+    handleRescanFromResults: () => {
+      setShowResultsModal(false);
+      setTimeout(() => setShowScanModal(true), 300);
+    },
+    handleClearScan: () => {
+      setFilterActive(false);
+      setFilteredPhotos([]);
+      setShowResultsModal(false);
+      setShowScanModal(false);
+    },
   };
 };
