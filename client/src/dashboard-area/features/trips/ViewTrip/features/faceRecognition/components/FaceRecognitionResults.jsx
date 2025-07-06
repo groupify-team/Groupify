@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { toast } from "react-hot-toast";
 import {
   XMarkIcon,
   CheckIcon,
@@ -17,7 +18,10 @@ const FaceRecognitionResults = ({
 }) => {
   const [selectMode, setSelectMode] = useState(false);
   const [selectedPhotos, setSelectedPhotos] = useState([]);
-  const [showExportModal, setShowExportModal] = useState(false);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showExportOptions, setShowExportOptions] = useState(false);
+  const [photosToExport, setPhotosToExport] = useState([]);
 
   const togglePhotoSelection = (photo) => {
     setSelectedPhotos((prev) => {
@@ -31,12 +35,75 @@ const FaceRecognitionResults = ({
   };
 
   const handleDeleteSelected = () => {
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDeleteSelected = () => {
     if (selectedPhotos.length === 0) return;
-    if (confirm(`Delete ${selectedPhotos.length} selected photos?`)) {
-      // Add your delete logic here
-      console.log("Deleting photos:", selectedPhotos);
-      setSelectedPhotos([]);
-      setSelectMode(false);
+    const remainingPhotos = filteredPhotos.filter(
+      (photo) => !selectedPhotos.some((selected) => selected.id === photo.id)
+    );
+    onPhotosRemoved(remainingPhotos);
+    setSelectedPhotos([]);
+    setSelectMode(false);
+    setShowDeleteConfirm(false);
+    toast.success(`${selectedPhotos.length} photos removed from results`);
+  };
+
+  const handleExportPhotos = async (photosToExport) => {
+    try {
+      if (photosToExport.length === 1) {
+        const photo = photosToExport[0];
+        const link = document.createElement("a");
+        link.href = fixPhotoUrl(photo.downloadURL);
+        link.download = photo.fileName || `photo_${photo.id}.jpg`;
+        link.target = "_blank";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } else {
+        const downloadData = photosToExport.map((photo) => ({
+          url: fixPhotoUrl(photo.downloadURL),
+          filename: photo.fileName || `photo_${photo.id}.jpg`,
+        }));
+        downloadData.forEach((item, index) => {
+          setTimeout(() => {
+            const link = document.createElement("a");
+            link.href = item.url;
+            link.download = item.filename;
+            link.target = "_blank";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+          }, index * 500); // Delay to avoid browser blocking
+        });
+      }
+
+      toast.success(
+        `Downloading ${photosToExport.length} photo${
+          photosToExport.length > 1 ? "s" : ""
+        }...`
+      );
+    } catch (error) {
+      console.error("Export failed:", error);
+      toast.error("Failed to export photos");
+    }
+  };
+
+  const handleExportAsZip = async (photosToExport) => {
+    try {
+      toast.info(
+        `Preparing ${photosToExport.length} photos for ZIP download...`
+      );
+      setTimeout(() => {
+        handleExportPhotos(photosToExport);
+        toast.success(
+          "Note: Individual downloads used (ZIP feature coming soon!)"
+        );
+      }, 1000);
+    } catch (error) {
+      console.error("ZIP export failed:", error);
+      toast.error("Failed to create ZIP file");
     }
   };
 
@@ -69,12 +136,7 @@ const FaceRecognitionResults = ({
             <div className="flex items-center gap-2">
               {filteredPhotos.length > 0 && (
                 <button
-                  onClick={() => {
-                    if (confirm("Clear all scanned results?")) {
-                      onClearScan();
-                      onClose();
-                    }
-                  }}
+                  onClick={() => setShowClearConfirm(true)}
                   className="px-3 py-2 rounded-lg font-medium text-sm bg-red-500/80 hover:bg-red-600/80 text-white transition-all flex items-center gap-1"
                 >
                   <svg
@@ -239,7 +301,10 @@ const FaceRecognitionResults = ({
                 {selectMode && selectedPhotos.length > 0 && (
                   <>
                     <button
-                      onClick={() => setShowExportModal(true)}
+                      onClick={() => {
+                        setPhotosToExport(selectedPhotos);
+                        setShowExportOptions(true);
+                      }}
                       className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white p-3 rounded-xl font-medium transition-all flex items-center justify-center gap-2"
                     >
                       <ArrowDownTrayIcon className="w-5 h-5" />
@@ -256,7 +321,10 @@ const FaceRecognitionResults = ({
 
                 {!selectMode && (
                   <button
-                    onClick={() => setShowExportModal(true)}
+                    onClick={() => {
+                      setPhotosToExport(filteredPhotos);
+                      setShowExportOptions(true);
+                    }}
                     className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white p-3 rounded-xl font-medium transition-all flex items-center justify-center gap-2"
                   >
                     <ArrowDownTrayIcon className="w-5 h-5" />
@@ -268,6 +336,181 @@ const FaceRecognitionResults = ({
           )}
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[70]">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-sm w-full shadow-2xl border border-gray-200 dark:border-gray-700">
+            <div className="p-6">
+              <div className="text-center">
+                <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg
+                    className="w-6 h-6 text-red-600 dark:text-red-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                    />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                  Delete Selected Photos?
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400 text-sm mb-6">
+                  Are you sure you want to delete {selectedPhotos.length}{" "}
+                  selected photo{selectedPhotos.length > 1 ? "s" : ""}? This
+                  action cannot be undone.
+                </p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowDeleteConfirm(false)}
+                    className="flex-1 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={confirmDeleteSelected}
+                    className="flex-1 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-medium transition-colors"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Clear Confirmation Modal */}
+      {showClearConfirm && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[70]">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-sm w-full shadow-2xl border border-gray-200 dark:border-gray-700">
+            <div className="p-6">
+              <div className="text-center">
+                <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg
+                    className="w-6 h-6 text-red-600 dark:text-red-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                    />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                  Clear All Results?
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400 text-sm mb-6">
+                  This will remove all scanned face recognition results. You'll
+                  need to scan again to find your photos.
+                </p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowClearConfirm(false)}
+                    className="flex-1 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => {
+                      onClearScan();
+                      setShowClearConfirm(false);
+                      onClose();
+                    }}
+                    className="flex-1 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-medium transition-colors"
+                  >
+                    Clear
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Export Options Modal */}
+      {showExportOptions && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[70]">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-md w-full shadow-2xl border border-gray-200 dark:border-gray-700">
+            <div className="p-6">
+              <div className="text-center">
+                <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <ArrowDownTrayIcon className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                  Export Photos
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400 text-sm mb-6">
+                  Choose how you want to export {photosToExport.length} photo
+                  {photosToExport.length > 1 ? "s" : ""}
+                </p>
+                <div className="space-y-3">
+                  <button
+                    onClick={() => {
+                      handleExportPhotos(photosToExport);
+                      setShowExportOptions(false);
+                    }}
+                    className="w-full px-4 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                  >
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                      />
+                    </svg>
+                    Download Individual Files
+                  </button>
+                  <button
+                    onClick={() => {
+                      handleExportAsZip(photosToExport);
+                      setShowExportOptions(false);
+                    }}
+                    className="w-full px-4 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                  >
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+                      />
+                    </svg>
+                    Download as ZIP File
+                  </button>
+                  <button
+                    onClick={() => setShowExportOptions(false)}
+                    className="w-full px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* CSS Animations */}
       <style>

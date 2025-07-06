@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   MagnifyingGlassIcon,
   SparklesIcon,
@@ -14,8 +14,10 @@ const FaceRecognitionCard = ({
   onFindMyPhotos,
   onPhotoSelect,
   onViewAllResults,
+  onClearScan,
 }) => {
-  // Helper function to fix photo URLs
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
+
   const fixPhotoUrl = (url) => {
     return url.replace(
       "groupify-77202.appspot.com",
@@ -47,11 +49,7 @@ const FaceRecognitionCard = ({
           <div className="flex items-center gap-2">
             {filterActive && filteredPhotos.length > 0 && (
               <button
-                onClick={() => {
-                  if (confirm("Clear all scanned results?")) {
-                    onClearScan();
-                  }
-                }}
+                onClick={() => setShowClearConfirm(true)}
                 className="p-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-all duration-300 hover:scale-105"
                 title="Clear Results"
               >
@@ -160,6 +158,57 @@ const FaceRecognitionCard = ({
           </div>
         )}
       </div>
+
+      {/* Clear Confirmation Modal */}
+      {showClearConfirm && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[60]">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-sm w-full shadow-2xl border border-gray-200 dark:border-gray-700">
+            <div className="p-6">
+              <div className="text-center">
+                <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg
+                    className="w-6 h-6 text-red-600 dark:text-red-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                    />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                  Clear All Results?
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400 text-sm mb-6">
+                  This will remove all scanned face recognition results. You'll
+                  need to scan again to find your photos.
+                </p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowClearConfirm(false)}
+                    className="flex-1 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => {
+                      onClearScan();
+                      setShowClearConfirm(false);
+                    }}
+                    className="flex-1 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-medium transition-colors"
+                  >
+                    Clear
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

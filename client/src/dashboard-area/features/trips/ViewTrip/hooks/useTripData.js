@@ -70,7 +70,12 @@ export const useTripData = (tripId, currentUserId) => {
 
   useEffect(() => {
     if (tripId && currentUserId) {
-      fetchTripAndPhotos();
+      const savedResults = loadResultsFromStorage(tripId);
+      if (savedResults && savedResults.length > 0) {
+        setFilteredPhotos(savedResults);
+        setFilterActive(true);
+        setPersistedResults(savedResults);
+      }
     }
   }, [tripId, currentUserId]);
 
