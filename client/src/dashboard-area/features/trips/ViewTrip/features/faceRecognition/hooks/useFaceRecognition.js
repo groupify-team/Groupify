@@ -23,6 +23,7 @@ export const useFaceRecognition = (photos, currentUserId, isMember, tripId) => {
   const [showScanModal, setShowScanModal] = useState(false);
   const [showResultsModal, setShowResultsModal] = useState(false);
   const [persistedResults, setPersistedResults] = useState(null);
+  const [lastScanInfo, setLastScanInfo] = useState(null);
 
   const [faceRecognitionProgress, setFaceRecognitionProgress] = useState({
     current: 0,
@@ -45,6 +46,9 @@ export const useFaceRecognition = (photos, currentUserId, isMember, tripId) => {
         tripId,
         timestamp: Date.now(),
         userId: currentUserId,
+        scanDate: new Date().toISOString(), // Add readable date
+        photoCount: results.length,
+        version: "1.0", // For future compatibility
       };
       localStorage.setItem(
         `faceRecognition_${tripId}_${currentUserId}`,
@@ -62,14 +66,14 @@ export const useFaceRecognition = (photos, currentUserId, isMember, tripId) => {
       );
       if (saved) {
         const data = JSON.parse(saved);
-        // Check if results are less than 24 hours old
-        const isRecent = Date.now() - data.timestamp < 24 * 60 * 60 * 1000;
-        if (
-          isRecent &&
-          data.tripId === tripId &&
-          data.userId === currentUserId
-        ) {
-          return data.results;
+        // Remove the 24-hour limit - keep results indefinitely
+        if (data.tripId === tripId && data.userId === currentUserId) {
+          return {
+            results: data.results,
+            scanDate: data.scanDate,
+            photoCount: data.photoCount,
+            timestamp: data.timestamp,
+          };
         }
       }
     } catch (error) {
@@ -79,12 +83,23 @@ export const useFaceRecognition = (photos, currentUserId, isMember, tripId) => {
   };
 
   useEffect(() => {
-    if (currentUserId && canFilterByFace) {
+    if (currentUserId && canFilterByFace && tripId) {
       loadUserFaceProfile();
-    }
-  }, [currentUserId, canFilterByFace]);
 
-  // Load user face profile
+      // Load saved results on component mount
+      const savedData = loadResultsFromStorage(tripId);
+      if (savedData && savedData.results.length > 0) {
+        setFilteredPhotos(savedData.results);
+        setFilterActive(true);
+        setLastScanInfo({
+          date: savedData.scanDate,
+          photoCount: savedData.photoCount,
+          timestamp: savedData.timestamp,
+        });
+      }
+    }
+  }, [currentUserId, canFilterByFace, tripId]);
+
   // Load user face profile
   const loadUserFaceProfile = useCallback(async () => {
     if (!currentUserId) return;
@@ -343,5 +358,6 @@ export const useFaceRecognition = (photos, currentUserId, isMember, tripId) => {
       setTimeout(() => setShowScanModal(true), 300);
     },
     handleClearScan,
+    lastScanInfo,
   };
 };

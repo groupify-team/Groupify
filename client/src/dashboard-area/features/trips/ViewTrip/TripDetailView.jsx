@@ -77,6 +77,7 @@ const TripDetailView = ({ tripId: propTripId }) => {
     setFilteredPhotos,
     handleFindMyPhotos,
     handleClearScan,
+    lastScanInfo,
   } = useFaceRecognition(
     photos || [],
     currentUser?.uid,
@@ -152,10 +153,9 @@ const TripDetailView = ({ tripId: propTripId }) => {
 
   const [modalSource, setModalSource] = useState(null);
 
-  // 🎯 SAFE: Navigate to profile handler
   const handleNavigateToProfileSafe = () => {
     try {
-      navigate("/dashboard?section=faceprofile");
+      navigate("/dashboard/settings");
     } catch (error) {
       console.error("Navigation error:", error);
       toast.error("Unable to navigate to profile");
@@ -318,7 +318,6 @@ const TripDetailView = ({ tripId: propTripId }) => {
               onPhotoUploaded={handlePhotoUploaded}
             />
 
-            {/* 🎯 ENHANCED Face Recognition Section with Error Boundary */}
             <div className="face-recognition-wrapper">
               <FaceRecognitionCard
                 hasProfile={hasProfile}
@@ -330,6 +329,7 @@ const TripDetailView = ({ tripId: propTripId }) => {
                 onPhotoSelect={setSelectedPhoto}
                 onViewAllResults={() => setShowResultsModal(true)}
                 onClearScan={handleClearScan}
+                lastScanInfo={lastScanInfo}
               />
 
               <FaceRecognitionModal
@@ -340,7 +340,10 @@ const TripDetailView = ({ tripId: propTripId }) => {
                 onClose={() => setShowScanModal(false)}
                 onStartFaceRecognition={handleFindMyPhotos}
                 onCancelProcessing={enhancedHandleCancelFaceRecognition}
-                onNavigateToProfile={handleNavigateToProfile}
+                onNavigateToProfile={() => {
+                  setShowScanModal(false);
+                  navigate("/dashboard/settings");
+                }}
               />
 
               <FaceRecognitionResults

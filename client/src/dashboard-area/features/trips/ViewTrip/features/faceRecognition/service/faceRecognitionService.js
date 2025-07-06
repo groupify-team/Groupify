@@ -19,14 +19,11 @@ class ModernFaceRecognitionService {
   async loadFaceAPI() {
     if (this.faceapi) return this.faceapi;
 
-    console.log("🔄 Loading face-api.js library...");
-
     try {
       // Dynamic import - only loads when called
       const faceapiModule = await import("@vladmandic/face-api");
       this.faceapi = faceapiModule;
 
-      console.log("✅ Face-api.js loaded successfully");
       return this.faceapi;
     } catch (error) {
       console.error("❌ Failed to load face-api.js:", error);
@@ -44,8 +41,6 @@ class ModernFaceRecognitionService {
     const faceapi = await this.loadFaceAPI();
 
     try {
-      console.log("🔄 Loading AI models...");
-
       const MODEL_URLS = [
         "/models", // local backup
         "https://cdn.jsdelivr.net/npm/@vladmandic/face-api@latest/model", // Working CDN
@@ -62,8 +57,6 @@ class ModernFaceRecognitionService {
             faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL), // Facial landmarks
             faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL), // Face recognition (128D descriptors)
           ]);
-
-          console.log("✅ Essential models loaded from:", MODEL_URL);
 
           // Load optional models in background (non-blocking)
           this.loadOptionalModels(MODEL_URL, faceapi);
@@ -85,7 +78,6 @@ class ModernFaceRecognitionService {
       }
 
       this.isInitialized = true;
-      console.log("✅ Face recognition initialized");
     } catch (error) {
       console.error("❌ Failed to initialize face-api.js:", error);
       throw new Error(
@@ -101,7 +93,6 @@ class ModernFaceRecognitionService {
         faceapi.nets.ageGenderNet.loadFromUri(MODEL_URL), // Age/gender (optional)
         faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL), // Expressions (optional)
       ]);
-      console.log("✅ Optional models loaded");
     } catch (error) {
       console.warn("⚠️ Optional models failed to load:", error.message);
     }
@@ -497,16 +488,6 @@ class ModernFaceRecognitionService {
             // Add the best match for this photo (if any)
             if (bestMatchForPhoto) {
               matches.push(bestMatchForPhoto);
-
-              console.log(
-                `✅ Match found in ${photo.fileName}: confidence=${(
-                  bestMatchForPhoto.faceMatch.confidence * 100
-                ).toFixed(
-                  1
-                )}%, distance=${bestMatchForPhoto.faceMatch.distance.toFixed(
-                  3
-                )}`
-              );
 
               if (onProgress) {
                 onProgress({
