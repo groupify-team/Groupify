@@ -132,86 +132,76 @@ const EditTripModal = ({
   };
 
   const handleDelete = async () => {
-    if (deleteConfirmText !== trip.name) {
-      setError(`Please type "${trip.name}" exactly to confirm deletion`);
-      return;
+  if (deleteConfirmText !== trip.name) {
+    setError(`Please type "${trip.name}" exactly to confirm deletion`);
+    return;
+  }
+
+  try {
+    setDeleting(true);
+    setError(null);
+
+    // Show centered loading toast
+    const loadingToast = toast.loading("Deleting trip...", {
+      id: "deleting-trip",
+      position: "top-center",
+      style: {
+        background: "#FEF2F2",
+        color: "#B91C1C",
+        border: "1px solid #FECACA",
+        fontSize: "16px",
+        padding: "12px 20px",
+        borderRadius: "12px",
+        boxShadow: "0 10px 25px rgba(0,0,0,0.1)",
+      },
+    });
+
+    // Delete the trip
+    await deleteTrip(trip.id);
+
+    // Show centered success message
+    toast.dismiss(loadingToast);
+    toast.success("Trip deleted successfully!", {
+      position: "top-center",
+      duration: 2000,
+      style: {
+        background: "#F0FDF4",
+        color: "#166534",
+        border: "1px solid #BBF7D0",
+        fontSize: "16px",
+        padding: "12px 20px",
+        borderRadius: "12px",
+        boxShadow: "0 10px 25px rgba(0,0,0,0.1)",
+      },
+    });
+
+    // IMPORTANT: Call onTripDeleted FIRST before navigation
+    if (onTripDeleted) {
+      onTripDeleted(trip.id);
     }
 
-    try {
-      setDeleting(true);
-      setError(null);
+    // Close modal
+    onClose();
 
-      // Show centered loading toast
-      const loadingToast = toast.loading("Deleting trip...", {
-        id: "deleting-trip",
-        position: "top-center",
-        style: {
-          background: "#FEF2F2",
-          color: "#B91C1C",
-          border: "1px solid #FECACA",
-          fontSize: "16px",
-          padding: "12px 20px",
-          borderRadius: "12px",
-          boxShadow: "0 10px 25px rgba(0,0,0,0.1)",
-        },
-      });
-
-      // Delete the trip
-      await deleteTrip(trip.id);
-
-      // Show centered success message
-      toast.dismiss(loadingToast);
-      toast.success("Trip deleted successfully! Redirecting...", {
-        position: "top-center",
-        duration: 2000,
-        style: {
-          background: "#F0FDF4",
-          color: "#166534",
-          border: "1px solid #BBF7D0",
-          fontSize: "16px",
-          padding: "12px 20px",
-          borderRadius: "12px",
-          boxShadow: "0 10px 25px rgba(0,0,0,0.1)",
-        },
-      });
-
-      // Close modal with fade out
-      onClose();
-
-      // Callback to parent
-      if (onTripDeleted) {
-        onTripDeleted(trip.id);
-      }
-
-      // Smooth navigation with delay
-      setTimeout(() => {
-        navigate("/dashboard", {
-          replace: true,
-          state: {
-            deletedTrip: trip.name,
-            showMessage: "Trip deleted successfully",
-          },
-        });
-      }, 800);
-    } catch (error) {
-      console.error("Error deleting trip:", error);
-      toast.dismiss("deleting-trip");
-      setError("Failed to delete trip. Please try again.");
-      toast.error("Failed to delete trip. Please try again.", {
-        position: "top-center",
-        style: {
-          background: "#FEF2F2",
-          color: "#B91C1C",
-          border: "1px solid #FECACA",
-          fontSize: "16px",
-          padding: "12px 20px",
-          borderRadius: "12px",
-        },
-      });
-    } finally {
-      setDeleting(false);
-    }
-  };
+  } catch (error) {
+    console.error("Error deleting trip:", error);
+    toast.dismiss("deleting-trip");
+    setError("Failed to delete trip. Please try again.");
+    toast.error("Failed to delete trip. Please try again.", {
+      position: "top-center",
+      style: {
+        background: "#FEF2F2",
+        color: "#B91C1C",
+        border: "1px solid #FECACA",
+        fontSize: "16px",
+        padding: "12px 20px",
+        borderRadius: "12px",
+      },
+    });
+  } finally {
+    setDeleting(false);
+  }
+};
 
   const handleClose = () => {
     if (!loading && !deleting) {

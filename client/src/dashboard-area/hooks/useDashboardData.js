@@ -1,5 +1,6 @@
-﻿// useDashboardData.js - FIXED VERSION (Proper Data Sharing)
+﻿// useDashboardData.js - COMPLETE FIXED VERSION with Trip Deletion Handler
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useLocation, useNavigate } from "react-router-dom"; // ← ADDED
 import { useAuth } from "@auth/contexts/AuthContext";
 import {
   collection,
@@ -46,7 +47,9 @@ const notifySubscribers = (data) => {
 };
 
 export const useDashboardData = () => {
-  const { currentUser } = useAuth();
+  const { currentUser, loading: authLoading } = useAuth();
+  const location = useLocation(); // ← ADDED
+  const navigate = useNavigate(); // ← ADDED
 
   // Refs
   const initialLoadDone = useRef(false);
@@ -108,7 +111,15 @@ export const useDashboardData = () => {
    * Load all dashboard data (with global deduplication and sharing)
    */
   const loadDashboardData = useCallback(async () => {
+    // AUTH LOADING CHECK
+    if (authLoading) {
+      console.log("⏸️ Auth still loading, waiting...");
+      return;
+    }
+
     if (!currentUser?.uid) {
+      console.log("⏸️ No user, setting loading to false");
+      setLoading(false);
       return;
     }
 
@@ -217,7 +228,24 @@ export const useDashboardData = () => {
       setLoading(false);
       loadingRef.current = false;
     }
-  }, [currentUser?.uid, loadFaceProfile, updateFromGlobalData]);
+  }, [authLoading, currentUser?.uid, loadFaceProfile, updateFromGlobalData]);
+
+  // ← NEW: Function to immediately remove trip from state
+  const removeTripFromState = useCallback((tripId) => {
+    console.log(`🗑️ Immediately removing trip ${tripId} from state`);
+    setTrips(currentTrips => {
+      const updatedTrips = currentTrips.filter(trip => trip.id !== tripId);
+      console.log(`🗑️ Trips updated: ${currentTrips.length} -> ${updatedTrips.length}`);
+      return updatedTrips;
+    });
+    
+    // Also update global data if it exists
+    if (globalData && globalData.userTrips) {
+      globalData.userTrips = globalData.userTrips.filter(trip => trip.id !== tripId);
+      // Notify other subscribers
+      notifySubscribers(globalData);
+    }
+  }, []);
 
   // Refresh functions
   const refreshTrips = useCallback(async () => {
@@ -339,10 +367,50 @@ export const useDashboardData = () => {
     loadDashboardData();
   }, [loadDashboardData]);
 
+  // ← NEW: Effect to handle navigation state (trip deletions, etc.)
+  useEffect(() => {
+    const state = location.state;
+    
+    if (state && state.deletedTripId) {
+      console.log(`🗑️ Processing deleted trip from navigation: ${state.deletedTripId}`);
+      
+      // Immediately remove from state
+      removeTripFromState(state.deletedTripId);
+      
+      // Clear the navigation state to prevent re-processing
+      navigate(location.pathname, { 
+        replace: true, 
+        state: { ...state, deletedTripId: null } 
+      });
+      
+      // Show success message
+      showSuccessMessage("Trip deleted successfully!");
+    }
+    
+    // Handle force refresh if needed
+    if (state && state.forceRefresh && !state.deletedTripId) {
+      console.log("🔄 Force refresh requested from navigation");
+      refreshTrips();
+      
+      // Clear the state
+      navigate(location.pathname, { 
+        replace: true, 
+        state: null 
+      });
+    }
+  }, [location.state, removeTripFromState, navigate, location.pathname, refreshTrips, showSuccessMessage]);
+
   // Effect to handle global data sharing
   useEffect(() => {
+    // AUTH LOADING CHECK
+    if (authLoading) {
+      console.log("⏸️ Auth still loading, skipping dashboard setup");
+      return;
+    }
+
     if (!currentUser?.uid) {
       console.log("⏸️ No user, skipping dashboard load");
+      setLoading(false);
       return;
     }
 
@@ -381,7 +449,7 @@ export const useDashboardData = () => {
       });
       unsubscribersRef.current = [];
     };
-  }, [currentUser?.uid, loadDashboardData, updateFromGlobalData, loadFaceProfile]);
+  }, [authLoading, currentUser?.uid, loadDashboardData, updateFromGlobalData, loadFaceProfile]);
 
   return {
     // Data states
@@ -419,6 +487,7 @@ export const useDashboardData = () => {
     addTripInvite,
     removeTripInvite,
     updateFaceProfile,
+    removeTripFromState, // ← NEW: Added to exports
 
     // Message actions
     showSuccessMessage,

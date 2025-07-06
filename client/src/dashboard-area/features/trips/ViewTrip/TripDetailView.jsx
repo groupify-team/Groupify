@@ -1,4 +1,4 @@
-﻿// 🎯 First, make sure your imports in TripDetailView.jsx include these:
+﻿// 🎯 Complete Fixed TripDetailView.jsx
 
 import React, { useState, lazy, Suspense } from "react";
 import { useParams, useNavigate } from "react-router-dom";
@@ -166,16 +166,19 @@ const TripDetailView = ({ tripId: propTripId }) => {
     setShowEditModal(false);
   };
 
+  // 🎯 FIXED: Corrected handleTripDeleted function
   const handleTripDeleted = (deletedTripId) => {
     setShowEditModal(false);
-    setTimeout(() => {
-      navigate("/dashboard", {
-        state: {
-          refreshTrips: true,
-          deletedTripId: deletedTripId,
-        },
-      });
-    }, 100);
+    
+    // Navigate back to dashboard with specific state to trigger immediate removal
+    navigate("/dashboard", {
+      replace: true,
+      state: {
+        deletedTripId: deletedTripId,
+        forceRefresh: true,
+        timestamp: Date.now()
+      },
+    });
   };
 
   // Loading state

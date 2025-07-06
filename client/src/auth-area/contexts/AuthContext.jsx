@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useRef, useMemo, useCallback } from "react";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -10,9 +10,9 @@ import {
   sendPasswordResetEmail,
 } from "firebase/auth";
 import { doc, setDoc, getDoc } from "firebase/firestore";
-import { auth, db } from "@firebase-services/config";
+import { auth, db } from "../../shared/services/firebase/config";
 import { toast } from "react-hot-toast";
-import subscriptionService from "@shared/services/subscriptionService";
+import subscriptionService from "../../shared/services/subscriptionService";
 
 const AuthContext = createContext();
 
@@ -26,9 +26,13 @@ export function AuthProvider({ children }) {
   const [isSigningUp, setIsSigningUp] = useState(false);
   const [userPlan, setUserPlan] = useState(null);
   const [planLoading, setPlanLoading] = useState(false);
+  const [initialized, setInitialized] = useState(false);
+  
+  // Use ref to track if this is the first auth state change
+  const firstLoad = useRef(true);
 
-  // Initialize user plan data from subscription service
-  const initializeUserPlan = async (user) => {
+  // PERFORMANCE: Memoize functions to prevent re-renders
+  const initializeUserPlan = useCallback(async (user) => {
     if (!user) {
       setUserPlan(null);
       return;
@@ -36,11 +40,11 @@ export function AuthProvider({ children }) {
 
     try {
       setPlanLoading(true);
-
+      
       // Get user profile from Firestore to check for plan info
       const userDoc = await getDoc(doc(db, "users", user.uid));
       let firestorePlan = null;
-
+      
       if (userDoc.exists()) {
         const userData = userDoc.data();
         firestorePlan = userData.subscription || userData.plan;
@@ -51,58 +55,55 @@ export function AuthProvider({ children }) {
 
       // If user has plan data in Firestore, sync it with subscription service
       if (firestorePlan && firestorePlan !== currentSubscription.plan) {
-        console.log("Syncing plan data from Firestore:", firestorePlan);
-
+        console.log('Syncing plan data from Firestore:', firestorePlan);
+        
         const planUpdate = {
           plan: firestorePlan.plan || firestorePlan,
-          billing: firestorePlan.billing || "monthly",
-          status: firestorePlan.status || "active",
+          billing: firestorePlan.billing || 'monthly',
+          status: firestorePlan.status || 'active',
           purchaseDate: firestorePlan.purchaseDate || new Date().toISOString(),
           metadata: {
             ...firestorePlan.metadata,
             syncedFromFirestore: true,
-            syncedAt: new Date().toISOString(),
-          },
+            syncedAt: new Date().toISOString()
+          }
         };
 
-        currentSubscription =
-          subscriptionService.updateSubscription(planUpdate);
+        currentSubscription = subscriptionService.updateSubscription(planUpdate);
       }
 
       // Initialize usage tracking for new users
-      if (
-        currentSubscription.plan === "free" &&
-        !subscriptionService.getStoredUsage().initialized
-      ) {
+      if (currentSubscription.plan === 'free' && !subscriptionService.getStoredUsage().initialized) {
         subscriptionService.updateUsage({
           initialized: true,
           trips: 0,
           photos: 0,
           storage: 0,
-          albums: 0,
+          albums: 0
         });
       }
 
       setUserPlan(currentSubscription);
-
+      
       // Store user plan reference in context for quick access
-      console.log("User plan initialized:", {
+      console.log('User plan initialized:', {
         plan: currentSubscription.plan,
         status: currentSubscription.status,
-        features: currentSubscription.features,
+        features: currentSubscription.features
       });
+
     } catch (error) {
-      console.error("Error initializing user plan:", error);
+      console.error('Error initializing user plan:', error);
       // Fallback to default free plan
       const defaultPlan = subscriptionService.getDefaultSubscription();
       setUserPlan(defaultPlan);
     } finally {
       setPlanLoading(false);
     }
-  };
+  }, []); // Empty dependencies - function is stable
 
-  // Simplified email verification check - no Firestore permissions needed
-  async function checkEmailVerification(email) {
+  // PERFORMANCE: Memoize stable functions
+  const checkEmailVerification = useCallback(async (email) => {
     try {
       console.log("Checking email verification for:", email);
       return { verified: true }; // Let Firebase Auth handle verification
@@ -114,10 +115,9 @@ export function AuthProvider({ children }) {
           "Please verify your email before signing in. Check your inbox!",
       };
     }
-  }
+  }, []);
 
-  // Enhanced signup function with plan initialization
-  async function signup(email, password, displayName, gender = "male") {
+  const signup = useCallback(async (email, password, displayName, gender = "male") => {
     try {
       console.log("Starting signup process for:", email);
 
@@ -157,16 +157,16 @@ export function AuthProvider({ children }) {
           joinedAt: new Date().toISOString(),
           // Initialize with free plan
           subscription: {
-            plan: "free",
-            status: "active",
-            createdAt: new Date().toISOString(),
+            plan: 'free',
+            status: 'active',
+            createdAt: new Date().toISOString()
           },
           usage: {
             trips: 0,
             photos: 0,
             storage: 0,
-            albums: 0,
-          },
+            albums: 0
+          }
         });
         console.log("User document created in Firestore with free plan");
       } catch (firestoreError) {
@@ -176,13 +176,13 @@ export function AuthProvider({ children }) {
 
       // Initialize subscription service for new user
       subscriptionService.updateSubscription({
-        plan: "free",
-        status: "active",
+        plan: 'free',
+        status: 'active',
         purchaseDate: new Date().toISOString(),
         metadata: {
-          signupMethod: "email",
-          initializedAt: new Date().toISOString(),
-        },
+          signupMethod: 'email',
+          initializedAt: new Date().toISOString()
+        }
       });
 
       // Sign out the user to prevent dashboard access before verification
@@ -201,10 +201,9 @@ export function AuthProvider({ children }) {
       console.error("Signup error:", error);
       throw error;
     }
-  }
+  }, []);
 
-  // Enhanced signin function with plan loading
-  async function signin(email, password) {
+  const signin = useCallback(async (email, password) => {
     try {
       console.log("Starting sign-in process for:", email);
 
@@ -225,17 +224,16 @@ export function AuthProvider({ children }) {
       }
 
       console.log("Sign-in successful for:", email);
-
+      
       // Plan initialization will happen in the auth state change listener
       return userCredential;
     } catch (error) {
       console.error("Sign in error:", error);
       throw error;
     }
-  }
+  }, []);
 
-  // Enhanced Google sign-in with plan initialization
-  async function signInWithGoogle() {
+  const signInWithGoogle = useCallback(async () => {
     const provider = new GoogleAuthProvider();
     try {
       const result = await signInWithPopup(auth, provider);
@@ -288,27 +286,27 @@ export function AuthProvider({ children }) {
           joinedAt: new Date().toISOString(),
           // Initialize with free plan for new Google users
           subscription: {
-            plan: "free",
-            status: "active",
-            createdAt: new Date().toISOString(),
+            plan: 'free',
+            status: 'active',
+            createdAt: new Date().toISOString()
           },
           usage: {
             trips: 0,
             photos: 0,
             storage: 0,
-            albums: 0,
-          },
+            albums: 0
+          }
         });
 
         // Initialize subscription service for new Google user
         subscriptionService.updateSubscription({
-          plan: "free",
-          status: "active",
+          plan: 'free',
+          status: 'active',
           purchaseDate: new Date().toISOString(),
           metadata: {
-            signupMethod: "google",
-            initializedAt: new Date().toISOString(),
-          },
+            signupMethod: 'google',
+            initializedAt: new Date().toISOString()
+          }
         });
       }
 
@@ -317,24 +315,24 @@ export function AuthProvider({ children }) {
       console.error("Google sign-in error:", error);
       throw error;
     }
-  }
+  }, []);
 
-  async function logout() {
+  const logout = useCallback(async () => {
     try {
       // Clear subscription data on logout
       setUserPlan(null);
-
+      
       // Optional: Clear subscription service cache
       subscriptionService.clearCache();
-
+      
       return signOut(auth);
     } catch (error) {
       console.error("Logout error:", error);
       throw error;
     }
-  }
+  }, []);
 
-  async function resetPassword(email) {
+  const resetPassword = useCallback(async (email) => {
     try {
       console.log("Sending password reset email to:", email);
 
@@ -369,10 +367,9 @@ export function AuthProvider({ children }) {
       console.error("Failed to send password reset email:", error);
       throw error;
     }
-  }
+  }, []);
 
-  // Fixed resend verification email
-  async function resendVerificationEmail(email) {
+  const resendVerificationEmail = useCallback(async (email) => {
     try {
       console.log("Resending verification email to:", email);
 
@@ -406,41 +403,41 @@ export function AuthProvider({ children }) {
       console.error("Failed to resend verification email:", error);
       throw error;
     }
-  }
+  }, []);
 
-  // New function to update user plan
-  async function updateUserPlan(planData) {
+  const updateUserPlan = useCallback(async (planData) => {
     try {
       if (!currentUser) {
-        throw new Error("No authenticated user");
+        throw new Error('No authenticated user');
       }
 
       // Update Firestore
-      await setDoc(
-        doc(db, "users", currentUser.uid),
-        {
-          subscription: planData,
-          updatedAt: new Date().toISOString(),
-        },
-        { merge: true }
-      );
+      await setDoc(doc(db, "users", currentUser.uid), {
+        subscription: planData,
+        updatedAt: new Date().toISOString()
+      }, { merge: true });
 
       // Update subscription service
-      const updatedSubscription =
-        subscriptionService.updateSubscription(planData);
+      const updatedSubscription = subscriptionService.updateSubscription(planData);
       setUserPlan(updatedSubscription);
 
       return updatedSubscription;
     } catch (error) {
-      console.error("Error updating user plan:", error);
+      console.error('Error updating user plan:', error);
       throw error;
     }
-  }
+  }, [currentUser]);
 
-  // Enhanced auth state change listener with plan initialization
+  // PERFORMANCE: Enhanced auth state change listener with proper loading management
   useEffect(() => {
+    console.log("🔐 Setting up auth state listener...");
+    
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      console.log("Auth state changed:", user?.email || "No user");
+      console.log("🔐 Auth state changed:", {
+        user: user ? `${user.email} (${user.uid})` : null,
+        firstLoad: firstLoad.current,
+        timestamp: new Date().toISOString()
+      });
 
       if (user) {
         // For Google users, allow immediate access
@@ -475,17 +472,26 @@ export function AuthProvider({ children }) {
         setUserPlan(null);
       }
 
-      setLoading(false);
+      // Only set loading to false after the first auth state change
+      if (firstLoad.current) {
+        setLoading(false);
+        setInitialized(true);
+        firstLoad.current = false;
+        console.log("✅ Auth initialization complete");
+      }
     });
 
-    return unsubscribe;
-  }, []); // Remove all dependencies
+    return () => {
+      console.log("🧹 Cleaning up auth listener");
+      unsubscribe();
+    };
+  }, []); // CRITICAL: Empty dependencies to prevent recreation
 
   // Subscribe to subscription service updates
   useEffect(() => {
     const unsubscribe = subscriptionService.subscribe((event, data) => {
-      if (event === "subscriptionUpdated" && currentUser) {
-        console.log("Subscription updated via service:", data);
+      if (event === 'subscriptionUpdated' && currentUser) {
+        console.log('Subscription updated via service:', data);
         setUserPlan(data);
       }
     });
@@ -493,10 +499,23 @@ export function AuthProvider({ children }) {
     return unsubscribe;
   }, [currentUser]);
 
-  const value = {
+  // Debug auth state
+  useEffect(() => {
+    console.log("🔐 Auth context state:", {
+      hasUser: !!currentUser,
+      loading,
+      initialized,
+      planLoading
+    });
+  }, [currentUser, loading, initialized, planLoading]);
+
+  // PERFORMANCE: Memoize context value to prevent unnecessary re-renders
+  const value = useMemo(() => ({
     currentUser,
+    loading,
     userPlan,
     planLoading,
+    initialized,
     signup,
     signin,
     signInWithGoogle,
@@ -505,14 +524,35 @@ export function AuthProvider({ children }) {
     checkEmailVerification,
     resendVerificationEmail,
     updateUserPlan,
-
+    
     // Plan-related helpers
-    isFreePlan: userPlan?.plan === "free",
-    isPremiumPlan: userPlan?.plan === "premium",
-    isProPlan: userPlan?.plan === "pro",
+    isFreePlan: userPlan?.plan === 'free',
+    isPremiumPlan: userPlan?.plan === 'premium',
+    isProPlan: userPlan?.plan === 'pro',
     planFeatures: userPlan?.features,
     planUsage: userPlan?.usage,
-  };
+    
+    // Auth state helpers
+    isAuthenticated: !!currentUser,
+    uid: currentUser?.uid,
+    email: currentUser?.email,
+    displayName: currentUser?.displayName,
+  }), [
+    currentUser, 
+    loading, 
+    userPlan, 
+    planLoading, 
+    initialized,
+    signup,
+    signin,
+    signInWithGoogle,
+    logout,
+    resetPassword,
+    checkEmailVerification,
+    resendVerificationEmail,
+    updateUserPlan,
+    // Note: Functions are now memoized with useCallback, so safe to include
+  ]);
 
   return (
     <AuthContext.Provider value={value}>
