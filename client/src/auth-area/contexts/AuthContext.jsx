@@ -477,12 +477,10 @@ export function AuthProvider({ children }) {
         setLoading(false);
         setInitialized(true);
         firstLoad.current = false;
-        console.log("✅ Auth initialization complete");
       }
     });
 
     return () => {
-      console.log("🧹 Cleaning up auth listener");
       unsubscribe();
     };
   }, []); // CRITICAL: Empty dependencies to prevent recreation
@@ -491,7 +489,6 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const unsubscribe = subscriptionService.subscribe((event, data) => {
       if (event === 'subscriptionUpdated' && currentUser) {
-        console.log('Subscription updated via service:', data);
         setUserPlan(data);
       }
     });

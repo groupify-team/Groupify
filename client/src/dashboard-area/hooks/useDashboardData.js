@@ -77,7 +77,6 @@ export const useDashboardData = () => {
   const updateFromGlobalData = useCallback((data) => {
     if (!data) return;
     
-    console.log("🔄 Updating from global data");
     setUserData(data.userProfile);
     setTrips(data.userTrips);
     setTripInvites(data.pendingInvites);
@@ -113,19 +112,16 @@ export const useDashboardData = () => {
   const loadDashboardData = useCallback(async () => {
     // AUTH LOADING CHECK
     if (authLoading) {
-      console.log("⏸️ Auth still loading, waiting...");
       return;
     }
 
     if (!currentUser?.uid) {
-      console.log("⏸️ No user, setting loading to false");
       setLoading(false);
       return;
     }
 
     // If we have global data for this user, use it immediately
     if (globalData && globalUserId === currentUser.uid) {
-      console.log("✅ Using cached global data");
       updateFromGlobalData(globalData);
       loadFaceProfile();
       return globalData;
@@ -133,7 +129,6 @@ export const useDashboardData = () => {
 
     // If already loading for this user, wait for it
     if (globalLoadPromise && globalUserId === currentUser.uid) {
-      console.log("⏸️ Waiting for existing load operation...");
       try {
         const result = await globalLoadPromise;
         updateFromGlobalData(result);
@@ -154,7 +149,6 @@ export const useDashboardData = () => {
       setLoading(true);
 
       const startTime = performance.now();
-      console.log("🚀 Dashboard loading started...");
 
       // Set global tracking
       globalUserId = currentUser.uid;
@@ -167,8 +161,6 @@ export const useDashboardData = () => {
           getPendingInvites(currentUser.uid)
         ]);
 
-        console.log(`✅ Phase 1 completed in ${Math.round(performance.now() - startTime)}ms`);
-        console.log(`📈 Found ${userTrips.length} trips`);
 
         // Load friends
         const friendIds = userProfile?.friends || [];
@@ -232,10 +224,8 @@ export const useDashboardData = () => {
 
   // ← NEW: Function to immediately remove trip from state
   const removeTripFromState = useCallback((tripId) => {
-    console.log(`🗑️ Immediately removing trip ${tripId} from state`);
     setTrips(currentTrips => {
       const updatedTrips = currentTrips.filter(trip => trip.id !== tripId);
-      console.log(`🗑️ Trips updated: ${currentTrips.length} -> ${updatedTrips.length}`);
       return updatedTrips;
     });
     
@@ -252,7 +242,6 @@ export const useDashboardData = () => {
     if (!currentUser?.uid) return;
     try {
       const updatedTrips = await getUserTrips(currentUser.uid);
-      console.log("🔄 Refreshed trips:", updatedTrips.length);
       setTrips(updatedTrips);
       
       // Update global data
@@ -312,17 +301,14 @@ export const useDashboardData = () => {
   }, []);
 
   const addTrip = useCallback((newTrip) => {
-    console.log("➕ Adding trip:", newTrip);
     setTrips((prev) => [newTrip, ...prev]);
   }, []);
 
   const removeTrip = useCallback((tripId) => {
-    console.log("➖ Removing trip:", tripId);
     setTrips((prev) => prev.filter((trip) => trip.id !== tripId));
   }, []);
 
   const updateTrip = useCallback((tripId, updatedData) => {
-    console.log("✏️ Updating trip:", tripId, updatedData);
     setTrips((prev) =>
       prev.map((trip) =>
         trip.id === tripId ? { ...trip, ...updatedData } : trip
@@ -357,7 +343,6 @@ export const useDashboardData = () => {
   }, []);
 
   const manualRefresh = useCallback(() => {
-    console.log("🔄 Manual refresh triggered");
     initialLoadDone.current = false;
     loadingRef.current = false;
     // Clear global state to force fresh load
@@ -372,7 +357,6 @@ export const useDashboardData = () => {
     const state = location.state;
     
     if (state && state.deletedTripId) {
-      console.log(`🗑️ Processing deleted trip from navigation: ${state.deletedTripId}`);
       
       // Immediately remove from state
       removeTripFromState(state.deletedTripId);
@@ -389,7 +373,6 @@ export const useDashboardData = () => {
     
     // Handle force refresh if needed
     if (state && state.forceRefresh && !state.deletedTripId) {
-      console.log("🔄 Force refresh requested from navigation");
       refreshTrips();
       
       // Clear the state
@@ -404,12 +387,10 @@ export const useDashboardData = () => {
   useEffect(() => {
     // AUTH LOADING CHECK
     if (authLoading) {
-      console.log("⏸️ Auth still loading, skipping dashboard setup");
       return;
     }
 
     if (!currentUser?.uid) {
-      console.log("⏸️ No user, skipping dashboard load");
       setLoading(false);
       return;
     }
@@ -420,17 +401,14 @@ export const useDashboardData = () => {
 
     // Load data if needed
     if (!initialLoadDone.current || globalUserId !== currentUser.uid) {
-      console.log("🚀 Initializing dashboard for:", currentUser.uid);
       loadDashboardData();
     } else if (globalData && globalUserId === currentUser.uid) {
-      console.log("✅ Using existing global data");
       updateFromGlobalData(globalData);
       loadFaceProfile();
     }
 
     // Cleanup
     return () => {
-      console.log("🧹 Cleaning up dashboard listeners");
       
       // Remove from global subscribers
       if (subscriberCallbackRef.current) {

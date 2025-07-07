@@ -48,6 +48,36 @@ export const canUserCreateTrip = async (userId) => {
   }
 };
 
+export const acceptTripInvite = async (invitationId, userId) => {
+  try {
+    // Call the secure backend function instead of direct Firestore manipulation
+    const response = await fetch(`${FIREBASE_FUNCTIONS_URL}/acceptTripInvitation`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${await auth.currentUser?.getIdToken()}`
+      },
+      body: JSON.stringify({
+        data: {
+          invitationId,
+          userId
+        }
+      })
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.message || 'Failed to accept invitation');
+    }
+
+    return result;
+  } catch (error) {
+    console.error('Error accepting trip invitation:', error);
+    throw error;
+  }
+};
+
 // Function to get trip photo count
 export const getTripPhotoCount = async (tripId) => {
   try {
@@ -320,20 +350,6 @@ export const getPendingInvites = async (uid) => {
   return invites;
 };
 
-export const acceptTripInvite = async (inviteId, userId) => {
-  const inviteRef = doc(db, "tripInvites", inviteId);
-  const inviteSnap = await getDoc(inviteRef);
-  if (!inviteSnap.exists()) throw new Error("Invite not found");
-
-  const { tripId } = inviteSnap.data();
-  const tripRef = doc(db, "trips", tripId);
-
-  await updateDoc(tripRef, {
-    members: arrayUnion(userId),
-  });
-
-  await deleteDoc(inviteRef);
-};
 
 export const declineTripInvite = async (inviteId) => {
   await updateDoc(doc(db, "tripInvites", inviteId), {

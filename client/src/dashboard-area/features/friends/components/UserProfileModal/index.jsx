@@ -1,5 +1,8 @@
-﻿import React from "react";
+﻿// Replace your UserProfileModal component with this optimized version:
+
+import React, { useState, useEffect } from "react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
+import { userStatsCache } from "@shared/services/userStatsCache";
 
 const UserProfileModal = ({
   isOpen,
@@ -12,6 +15,52 @@ const UserProfileModal = ({
   friends = [],
   pendingRequests = [],
 }) => {
+  const [userStats, setUserStats] = useState({
+    friendsCount: 0,
+    tripsCount: 0,
+    loading: true,
+    error: false
+  });
+
+  // Lazy load stats only when modal opens
+  useEffect(() => {
+    if (!isOpen || !user?.uid) {
+      return;
+    }
+
+    let isMounted = true;
+
+    const loadStats = async () => {
+      try {
+        console.log(`🎭 Loading stats for ${user.displayName} (${user.uid})`);
+        setUserStats(prev => ({ ...prev, loading: true, error: false }));
+        
+        const stats = await userStatsCache.getUserStats(user.uid);
+        
+        if (isMounted) {
+          console.log(`📊 Stats loaded for ${user.displayName}:`, stats);
+          setUserStats(stats);
+        }
+      } catch (error) {
+        console.error("❌ Error loading user stats:", error);
+        if (isMounted) {
+          setUserStats({
+            friendsCount: 0,
+            tripsCount: 0,
+            loading: false,
+            error: true
+          });
+        }
+      }
+    };
+
+    loadStats();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isOpen, user?.uid]); // Only load when modal opens
+
   if (!isOpen || !user) {
     return null;
   }
@@ -22,6 +71,26 @@ const UserProfileModal = ({
       (req.from === currentUserId && req.to === user.uid) ||
       (req.from === user.uid && req.to === currentUserId)
   );
+
+  const handleRemoveFriendWithCache = async (targetUid) => {
+    try {
+      await onRemoveFriend?.(targetUid);
+      // Invalidate cache since friend count will change for both users
+      userStatsCache.invalidateUser(targetUid);
+      userStatsCache.invalidateUser(currentUserId);
+    } catch (error) {
+      console.error("Error removing friend:", error);
+    }
+  };
+
+  const handleAddFriendWithCache = async (targetUid) => {
+    try {
+      await onAddFriend?.(targetUid);
+      // Cache will be invalidated when friendship is confirmed
+    } catch (error) {
+      console.error("Error adding friend:", error);
+    }
+  };
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -63,13 +132,21 @@ const UserProfileModal = ({
               {user.email}
             </p>
 
-            {/* User Stats */}
+            {/* Optimized Stats with Loading States */}
             <div className="flex justify-center gap-8 mb-4">
               <div className="text-center">
                 <div className="w-8 h-8 bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-1">
                   <span className="text-slate-400 text-xs">📍</span>
                 </div>
-                <div className="text-2xl font-bold text-white">0</div>
+                <div className="text-2xl font-bold text-white h-8 flex items-center justify-center">
+                  {userStats.loading ? (
+                    <div className="w-4 h-4 border-2 border-slate-400 border-t-white rounded-full animate-spin"></div>
+                  ) : userStats.error ? (
+                    <span className="text-slate-500 text-lg">-</span>
+                  ) : (
+                    <span className="text-2xl">{userStats.tripsCount}</span>
+                  )}
+                </div>
                 <div className="text-xs text-slate-400 uppercase tracking-wide">
                   TRIPS
                 </div>
@@ -78,7 +155,15 @@ const UserProfileModal = ({
                 <div className="w-8 h-8 bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-1">
                   <span className="text-slate-400 text-xs">👥</span>
                 </div>
-                <div className="text-2xl font-bold text-white">0</div>
+                <div className="text-2xl font-bold text-white h-8 flex items-center justify-center">
+                  {userStats.loading ? (
+                    <div className="w-4 h-4 border-2 border-slate-400 border-t-white rounded-full animate-spin"></div>
+                  ) : userStats.error ? (
+                    <span className="text-slate-500 text-lg">-</span>
+                  ) : (
+                    <span className="text-2xl">{userStats.friendsCount}</span>
+                  )}
+                </div>
                 <div className="text-xs text-slate-400 uppercase tracking-wide">
                   FRIENDS
                 </div>
@@ -112,7 +197,7 @@ const UserProfileModal = ({
               <>
                 {isFriend ? (
                   <button
-                    onClick={() => onRemoveFriend?.(user.uid)}
+                    onClick={() => handleRemoveFriendWithCache(user.uid)}
                     className="w-full px-4 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-semibold transition-colors duration-200"
                   >
                     Remove Friend
@@ -126,7 +211,7 @@ const UserProfileModal = ({
                   </button>
                 ) : (
                   <button
-                    onClick={() => onAddFriend?.(user.uid)}
+                    onClick={() => handleAddFriendWithCache(user.uid)}
                     className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold transition-colors duration-200"
                   >
                     Send Friend Request

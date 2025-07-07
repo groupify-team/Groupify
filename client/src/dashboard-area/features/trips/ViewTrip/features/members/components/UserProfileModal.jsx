@@ -216,7 +216,7 @@ const UserProfileModal = ({
 
   return (
     <div
-      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-3 sm:p-4"
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[99999] p-3 sm:p-4"
       onClick={onClose}
     >
       <div
@@ -490,7 +490,7 @@ const UserProfileModal = ({
       {/* Confirmation Modal */}
       {confirmAction && (
         <div
-          className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[10000] p-4"
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[100000] p-4"
           onClick={() => setConfirmAction(null)}
         >
           <div
