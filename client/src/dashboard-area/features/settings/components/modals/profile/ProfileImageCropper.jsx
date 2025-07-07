@@ -235,3 +235,4 @@ const ProfileImageCropper = ({ imageSrc, onCropComplete, onCancel }) => {
 };
 
 export default ProfileImageCropper;
+

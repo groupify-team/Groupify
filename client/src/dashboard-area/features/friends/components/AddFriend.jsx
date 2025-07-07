@@ -1,5 +1,5 @@
-ï»¿import React, { useState } from "react";
-import { useAuth } from "@auth/contexts/AuthContext";
+import React, { useState } from "react";
+import { useAuth } from "@auth/hooks/useAuth";
 import { findUsersByEmail } from "@firebase-services/users";
 import { useFriendSearch, useFriendRequests } from "../hooks/index";
 
@@ -250,16 +250,16 @@ const AddFriend = ({
       <div className="bg-blue-50/80 dark:bg-blue-900/30 backdrop-blur-lg border border-blue-200/50 dark:border-blue-800/50 rounded-xl sm:rounded-2xl p-3 sm:p-4 shadow-lg">
         <div className="flex items-start gap-3">
           <div className="w-5 h-5 sm:w-6 sm:h-6 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-            <span className="text-white text-xs font-bold">ðŸ’¡</span>
+            <span className="text-white text-xs font-bold">??</span>
           </div>
           <div>
             <h4 className="font-semibold text-blue-800 dark:text-blue-400 text-xs sm:text-sm mb-2">
               Tips for adding friends:
             </h4>
             <ul className="text-blue-700 dark:text-blue-300 text-xs space-y-1">
-              <li>â€¢ Make sure they have registered with this email</li>
-              <li>â€¢ Check for typos in the email address</li>
-              <li>â€¢ They'll receive a friend request notification</li>
+              <li>• Make sure they have registered with this email</li>
+              <li>• Check for typos in the email address</li>
+              <li>• They'll receive a friend request notification</li>
             </ul>
           </div>
         </div>
@@ -269,3 +269,4 @@ const AddFriend = ({
 };
 
 export default AddFriend;
+

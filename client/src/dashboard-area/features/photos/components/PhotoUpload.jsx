@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useAuth } from "@auth/contexts/AuthContext";
+import { useAuth } from "@auth/hooks/useAuth";
 import { uploadPhoto } from "@firebase-services/storage";
 import { storage } from "@shared/services/firebase/config";
 import { usePlanLimits } from "../../../../shared/hooks/usePlanLimits";
@@ -771,8 +771,6 @@ const PhotoUpload = ({
               <button
                 onClick={() => {
                   setShowUpgradeModal(false);
-                  // Navigate to upgrade page
-                  console.log("Navigate to upgrade page");
                 }}
                 className="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white py-3 px-4 rounded-xl font-medium transition-all"
               >
@@ -787,3 +785,4 @@ const PhotoUpload = ({
 };
 
 export default PhotoUpload;
+

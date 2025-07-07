@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   acceptFriendRequest,
   rejectFriendRequest,
@@ -35,7 +35,7 @@ const FriendRequestsModal = ({ currentUserId, onClose }) => {
             onClick={onClose}
             className="text-gray-500 hover:text-gray-700"
           >
-            ✕
+            ?
           </button>
         </div>
         {requests.length === 0 ? (
@@ -72,3 +72,4 @@ const FriendRequestsModal = ({ currentUserId, onClose }) => {
 };
 
 export default FriendRequestsModal;
+

@@ -1,11 +1,8 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { useAuth } from "../../../auth-area/contexts/AuthContext.jsx";
+import { useAuth } from "../../../auth-area/hooks/useAuth";
 import { useTheme } from "@shared/contexts/ThemeContext";
-import {
-  CameraIcon,
-  CogIcon,
-} from "@heroicons/react/24/outline";
+import { CameraIcon, CogIcon } from "@heroicons/react/24/outline";
 
 const HomeHeader = ({ onSettingsClick, className = "" }) => {
   const { currentUser } = useAuth();

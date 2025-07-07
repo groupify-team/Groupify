@@ -28,3 +28,4 @@ const DeleteAccountModal = ({ isOpen, onClose, ...props }) => {
 };
 
 export default DeleteAccountModal;
+

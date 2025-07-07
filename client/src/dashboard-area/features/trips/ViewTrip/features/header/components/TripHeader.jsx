@@ -130,3 +130,4 @@ const TripHeader = ({ trip, photos, tripMembers, isAdmin, onEditTrip }) => {
 };
 
 export default TripHeader;
+

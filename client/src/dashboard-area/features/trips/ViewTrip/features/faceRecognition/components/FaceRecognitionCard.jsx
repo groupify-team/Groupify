@@ -254,3 +254,4 @@ const FaceRecognitionCard = ({
 };
 
 export default FaceRecognitionCard;
+

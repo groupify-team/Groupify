@@ -1,11 +1,10 @@
-﻿// 🎯 Complete Fixed TripDetailView.jsx
+// ?? Complete Fixed TripDetailView.jsx
 
-import React, { useState, lazy, Suspense } from "react";
+import React, { useState, Suspense } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { toast } from "react-hot-toast";
 
 // Context
-import { useAuth } from "@/auth-area/contexts/AuthContext";
+import { useAuth } from "@/auth-area/hooks/useAuth";
 
 // Components
 import TripHeader from "./features/header/components/TripHeader";
@@ -41,14 +40,13 @@ const TripDetailView = ({ tripId: propTripId }) => {
   const tripId = propTripId || paramTripId;
   const navigate = useNavigate();
   const { currentUser } = useAuth();
-  const userId = currentUser?.uid;
+  // const userId = currentUser?.uid;
 
   // Core trip data and loading
   const {
     trip,
     photos,
     tripMembers,
-    memberProfiles,
     isAdmin,
     loading,
     error,
@@ -64,16 +62,13 @@ const TripDetailView = ({ tripId: propTripId }) => {
     filterActive,
     filteredPhotos,
     faceRecognitionProgress,
-    canFilterByFace,
     showScanModal,
     showResultsModal,
     setShowScanModal,
     setShowResultsModal,
     enhancedHandleFindMyPhotos,
     enhancedHandleCancelFaceRecognition,
-    handleStartFaceRecognition,
-    handleNavigateToProfile,
-    setFilterActive,
+
     setFilteredPhotos,
     handleFindMyPhotos,
     handleClearScan,
@@ -87,21 +82,11 @@ const TripDetailView = ({ tripId: propTripId }) => {
 
   // Rest of your existing hooks...
   const {
-    selectMode,
-    selectedPhotos,
     showUploadForm,
     showAllPhotosModal,
-    showDeleteConfirm,
-    setSelectMode,
-    setSelectedPhotos,
     setShowUploadForm,
     setShowAllPhotosModal,
-    setShowDeleteConfirm,
     handlePhotoUploaded,
-    handleDeleteSelectedPhotos,
-    confirmDeletePhotos,
-    toggleSelectMode,
-    selectPhoto,
   } = usePhotoOperations(
     tripId,
     photos,
@@ -114,19 +99,14 @@ const TripDetailView = ({ tripId: propTripId }) => {
   );
 
   const {
-    friends,
     selectedUser,
     showSuccess,
     cancelSuccess,
-    pendingFriendRequests,
     setSelectedUser,
-    setShowSuccess,
-    setCancelSuccess,
     handleMemberClick,
     handleAddFriend,
     handleRemoveFriend,
     handleCancelFriendRequest,
-    handleInviteFriend,
     handleInviteToTrip,
     handlePromoteToAdmin,
     handleDemoteFromAdmin,
@@ -141,7 +121,6 @@ const TripDetailView = ({ tripId: propTripId }) => {
     navigateToNext,
     navigateToPrevious,
     selectRandomPhoto,
-    closeModal,
   } = usePhotoModal();
 
   // Additional handlers
@@ -153,25 +132,14 @@ const TripDetailView = ({ tripId: propTripId }) => {
 
   const [modalSource, setModalSource] = useState(null);
 
-  const handleNavigateToProfileSafe = () => {
-    try {
-      navigate("/dashboard/settings");
-    } catch (error) {
-      console.error("Navigation error:", error);
-      toast.error("Unable to navigate to profile");
-    }
-  };
-
   const handleTripUpdated = (updatedTrip) => {
     setTrip(updatedTrip);
     setShowEditModal(false);
   };
 
-  // 🎯 FIXED: Corrected handleTripDeleted function
   const handleTripDeleted = (deletedTripId) => {
     setShowEditModal(false);
 
-    // Navigate back to dashboard with specific state to trigger immediate removal
     navigate("/dashboard", {
       replace: true,
       state: {

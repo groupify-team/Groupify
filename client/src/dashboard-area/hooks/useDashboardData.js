@@ -1,7 +1,7 @@
-﻿// useDashboardData.js - COMPLETE FIXED VERSION with Trip Deletion Handler
+// useDashboardData.js - COMPLETE FIXED VERSION with Trip Deletion Handler
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useLocation, useNavigate } from "react-router-dom"; // ← ADDED
-import { useAuth } from "@auth/contexts/AuthContext";
+import { useLocation, useNavigate } from "react-router-dom"; // ? ADDED
+import { useAuth } from "@auth/hooks/useAuth";
 import {
   collection,
   doc,
@@ -48,8 +48,8 @@ const notifySubscribers = (data) => {
 
 export const useDashboardData = () => {
   const { currentUser, loading: authLoading } = useAuth();
-  const location = useLocation(); // ← ADDED
-  const navigate = useNavigate(); // ← ADDED
+  const location = useLocation(); // ? ADDED
+  const navigate = useNavigate(); // ? ADDED
 
   // Refs
   const initialLoadDone = useRef(false);
@@ -100,7 +100,7 @@ export const useDashboardData = () => {
         setProfilePhotos([]);
       }
     } catch (error) {
-      console.error("❌ Error loading face profile:", error);
+      console.error("? Error loading face profile:", error);
       setHasProfile(false);
       setProfilePhotos([]);
     }
@@ -135,7 +135,7 @@ export const useDashboardData = () => {
         loadFaceProfile();
         return result;
       } catch (error) {
-        console.error("❌ Global load operation failed:", error);
+        console.error("? Global load operation failed:", error);
       }
     }
 
@@ -173,7 +173,7 @@ export const useDashboardData = () => {
               getPendingFriendRequests(currentUser.uid),
             ]);
           } catch (error) {
-            console.error("❌ Error loading friends:", error);
+            console.error("? Error loading friends:", error);
           }
         }
 
@@ -206,7 +206,7 @@ export const useDashboardData = () => {
 
       return result;
     } catch (error) {
-      console.error("❌ Error loading dashboard data:", error);
+      console.error("? Error loading dashboard data:", error);
       setError(ERROR_MESSAGES.loadingDashboard);
       showErrorMessage(ERROR_MESSAGES.loadingDashboard);
 
@@ -220,7 +220,7 @@ export const useDashboardData = () => {
     }
   }, [authLoading, currentUser?.uid, loadFaceProfile, updateFromGlobalData]);
 
-  // ← NEW: Function to immediately remove trip from state
+  // ? NEW: Function to immediately remove trip from state
   const removeTripFromState = useCallback((tripId) => {
     setTrips((currentTrips) => {
       const updatedTrips = currentTrips.filter((trip) => trip.id !== tripId);
@@ -249,7 +249,7 @@ export const useDashboardData = () => {
         globalData.userTrips = updatedTrips;
       }
     } catch (error) {
-      console.error("❌ Error refreshing trips:", error);
+      console.error("? Error refreshing trips:", error);
     }
   }, [currentUser?.uid]);
 
@@ -264,7 +264,7 @@ export const useDashboardData = () => {
         globalData.friendsData = updatedFriends;
       }
     } catch (error) {
-      console.error("❌ Error refreshing friends:", error);
+      console.error("? Error refreshing friends:", error);
     }
   }, [currentUser?.uid]);
 
@@ -279,7 +279,7 @@ export const useDashboardData = () => {
         globalData.friendRequests = requests || [];
       }
     } catch (error) {
-      console.error("❌ Error refreshing pending requests:", error);
+      console.error("? Error refreshing pending requests:", error);
     }
   }, [currentUser?.uid]);
 
@@ -352,7 +352,7 @@ export const useDashboardData = () => {
     loadDashboardData();
   }, [loadDashboardData]);
 
-  // ← NEW: Effect to handle navigation state (trip deletions, etc.)
+  // ? NEW: Effect to handle navigation state (trip deletions, etc.)
   useEffect(() => {
     const state = location.state;
 
@@ -426,7 +426,7 @@ export const useDashboardData = () => {
           try {
             unsubscribe();
           } catch (error) {
-            console.warn("⚠️ Error unsubscribing:", error);
+            console.warn("?? Error unsubscribing:", error);
           }
         }
       });
@@ -476,7 +476,7 @@ export const useDashboardData = () => {
     addTripInvite,
     removeTripInvite,
     updateFaceProfile,
-    removeTripFromState, // ← NEW: Added to exports
+    removeTripFromState, // ? NEW: Added to exports
 
     // Message actions
     showSuccessMessage,

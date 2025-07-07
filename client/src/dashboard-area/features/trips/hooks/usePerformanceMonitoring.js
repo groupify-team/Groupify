@@ -33,3 +33,4 @@ export const usePerformanceMonitoring = (componentName) => {
     renderCount: renderCount.current,
   };
 };
+

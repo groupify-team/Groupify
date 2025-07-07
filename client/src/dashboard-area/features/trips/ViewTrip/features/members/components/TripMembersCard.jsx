@@ -128,3 +128,4 @@ const TripMembersCard = ({
 };
 
 export default TripMembersCard;
+

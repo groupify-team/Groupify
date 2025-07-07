@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Hook for managing friend relationships and requests
  * Handles adding friends, removing friends, and pending request status
  */
@@ -71,3 +71,4 @@ export const useFriendship = (currentUser) => {
     loadFriendsData,
   };
 };
+

@@ -1,6 +1,6 @@
 // dashboard-area/hooks/useDeleteAccount.js
 import { useState, useCallback } from "react";
-import { useAuth } from "../../../../auth-area/contexts/AuthContext";
+import { useAuth } from "../../../../auth-area/hooks/useAuth";
 import { DeleteAccountService } from "../services/deleteAccountService";
 import { useNavigate } from "react-router-dom";
 

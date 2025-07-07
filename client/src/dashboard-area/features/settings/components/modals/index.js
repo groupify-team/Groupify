@@ -20,3 +20,4 @@ export { default as BackupModal } from './data/BackupModal';
 
 // Account modals
 export { default as DeleteAccountModal } from './DeleteAccountModal';
+
