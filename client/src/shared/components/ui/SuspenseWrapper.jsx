@@ -1,12 +1,16 @@
 import React, { Suspense, memo } from "react";
-import PageLoadingSpinner, {
+import LoadingSpinner, {
   DashboardSkeleton,
-} from "@/shared/components/ui/PageLoadingSpinner";
+} from "@/shared/components/ui/LoadingSpinner";
 
 const SuspenseWrapper = memo(({ children, fallback, useSkeleton = false }) => (
   <Suspense
     fallback={
-      useSkeleton ? <DashboardSkeleton /> : fallback || <PageLoadingSpinner />
+      useSkeleton ? (
+        <DashboardSkeleton />
+      ) : (
+        fallback || <LoadingSpinner fullPage />
+      )
     }
   >
     {children}
@@ -16,6 +20,3 @@ const SuspenseWrapper = memo(({ children, fallback, useSkeleton = false }) => (
 SuspenseWrapper.displayName = "SuspenseWrapper";
 
 export default SuspenseWrapper;
-
-
-

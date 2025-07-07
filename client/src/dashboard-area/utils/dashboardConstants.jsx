@@ -18,6 +18,10 @@ import {
   SparklesIcon,
 } from "@heroicons/react/24/outline";
 
+// Import shared constants
+import { BREAKPOINTS, ANIMATIONS } from "@/shared/constants/ui";
+import { TOAST_MESSAGES, ERROR_MESSAGES } from "@/shared/constants/messages";
+
 // Navigation Configuration
 export const NAVIGATION_ITEMS = [
   {
@@ -41,59 +45,11 @@ export const NAVIGATION_ITEMS = [
 
 // Filter Options
 export const FILTER_OPTIONS = [
-  { value: "all", label: "?? All Trips" },
-  { value: "upcoming", label: "?? Upcoming" },
-  { value: "recent", label: "?? Recent" },
-  { value: "past", label: "? Past" },
+  { value: "all", label: "🗂️ All Trips" },
+  { value: "upcoming", label: "🚀 Upcoming" },
+  { value: "recent", label: "📅 Recent" },
+  { value: "past", label: "📜 Past" },
 ];
-
-// Plan Configurations
-export const PLAN_CONFIGS = {
-  free: {
-    name: "Free Plan",
-    icon: "F",
-    gradient: "from-indigo-500 to-purple-600",
-    storage: "2GB",
-    photos: "500",
-    price: "$0",
-    billing: "Forever",
-    features: ["Basic AI recognition", "2 trip albums", "Share with 3 friends"],
-  },
-  pro: {
-    name: "Pro Plan",
-    icon: "P",
-    gradient: "from-blue-500 to-indigo-600",
-    storage: "50GB",
-    photos: "10,000",
-    features: [
-      "Advanced AI recognition",
-      "Unlimited albums",
-      "Share with 20 friends",
-      "Priority support",
-    ],
-  },
-  family: {
-    name: "Family Plan",
-    icon: "F",
-    gradient: "from-purple-500 to-pink-600",
-    storage: "250GB",
-    photos: "50,000",
-    features: [
-      "Premium AI recognition",
-      "Unlimited albums",
-      "Unlimited sharing",
-      "24/7 support",
-      "Family management",
-    ],
-  },
-};
-
-// Responsive Breakpoints
-export const BREAKPOINTS = {
-  mobile: 768,
-  tablet: 1024,
-  desktop: 1280,
-};
 
 // Default State Values
 export const DEFAULT_STATE = {
@@ -102,36 +58,8 @@ export const DEFAULT_STATE = {
   dateFilter: "all",
   activeSection: "trips",
   currentView: "home",
-  sidebarOpen: window.innerWidth >= 1024,
-  isMobile: window.innerWidth < 768,
-};
-
-// Animation Durations (in ms)
-export const ANIMATIONS = {
-  fast: 200,
-  normal: 300,
-  slow: 500,
-  dropdown: 700,
-};
-
-// Toast Messages (Dashboard-specific, settings toasts moved to settingsConstants)
-export const TOAST_MESSAGES = {
-  tripCreated: "Trip created successfully!",
-  friendRequestSent: "Friend request sent successfully!",
-  friendRequestAccepted: "Friend request accepted",
-  friendRequestDeclined: "Friend request declined",
-  tripInviteAccepted: "Trip invitation accepted",
-  tripInviteDeclined: "Trip invitation declined",
-};
-
-// Error Messages (Dashboard-specific, settings errors moved to settingsConstants)
-export const ERROR_MESSAGES = {
-  loadingDashboard: "Failed to load dashboard data",
-  sendingFriendRequest: "Failed to send friend request",
-  acceptingFriendRequest: "Failed to accept friend request",
-  decliningFriendRequest: "Failed to decline friend request",
-  tripLimitReached: (current, max) =>
-    `Trip limit reached! You can only create ${max} trips. You currently have ${current} trips.`,
+  sidebarOpen: window.innerWidth >= BREAKPOINTS.desktop,
+  isMobile: window.innerWidth < BREAKPOINTS.mobile,
 };
 
 // User Menu Items (Mobile)
@@ -159,6 +87,10 @@ export const BOTTOM_NAV_ITEMS = [
   { id: "settings", name: "Settings", icon: Cog6ToothIcon },
 ];
 
-
-
-
+// Re-export shared constants for convenience
+export { BREAKPOINTS, ANIMATIONS } from "@/shared/constants/ui";
+export {
+  TOAST_MESSAGES as SHARED_TOAST_MESSAGES,
+  ERROR_MESSAGES as SHARED_ERROR_MESSAGES,
+} from "@/shared/constants/messages";
+export { PLAN_CONFIGS } from "@/shared/constants/plans";

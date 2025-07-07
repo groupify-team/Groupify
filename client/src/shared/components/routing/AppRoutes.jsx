@@ -2,9 +2,9 @@ import React from "react";
 import { Routes, Route } from "react-router-dom";
 import ProtectedRoute from "@/auth-area/components/ProtectedRoute";
 import SuspenseWrapper from "@/shared/components/ui/SuspenseWrapper";
-import PageLoadingSpinner, {
+import LoadingSpinner, {
   DashboardSkeleton,
-} from "@/shared/components/ui/PageLoadingSpinner";
+} from "@/shared/components/ui/LoadingSpinner";
 
 // Auth Area Components (Lazy Loaded)
 const SignInPage = React.lazy(() =>
@@ -85,7 +85,9 @@ const AppRoutes = () => {
           path="/"
           element={
             <SuspenseWrapper
-              fallback={<PageLoadingSpinner message="Loading homepage..." />}
+              fallback={
+                <LoadingSpinner fullPage message="Loading homepage..." />
+              }
             >
               <HomePage />
             </SuspenseWrapper>
@@ -97,7 +99,9 @@ const AppRoutes = () => {
           path="/signin"
           element={
             <SuspenseWrapper
-              fallback={<PageLoadingSpinner message="Loading sign in..." />}
+              fallback={
+                <LoadingSpinner fullPage message="Loading sign in..." />
+              }
             >
               <SignInPage />
             </SuspenseWrapper>
@@ -107,7 +111,9 @@ const AppRoutes = () => {
           path="/signup"
           element={
             <SuspenseWrapper
-              fallback={<PageLoadingSpinner message="Loading sign up..." />}
+              fallback={
+                <LoadingSpinner fullPage message="Loading sign up..." />
+              }
             >
               <SignUpPage />
             </SuspenseWrapper>
@@ -312,6 +318,3 @@ const AppRoutes = () => {
 };
 
 export default AppRoutes;
-
-
-
