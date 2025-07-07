@@ -1,3 +1,4 @@
+// src/shared/components/pricing/PricingPage.jsx - Professional pricing component
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@auth/hooks/useAuth";
@@ -33,7 +34,8 @@ const PricingPage = () => {
     usePublicNavigation();
 
   const [isLoaded, setIsLoaded] = useState(false);
-  const [billingCycle, setBillingCycle] = useState("monthly"); // 'monthly' or 'yearly'
+  const [isLoading, setIsLoading] = useState(true);
+  const [billingCycle, setBillingCycle] = useState("monthly");
   const [openFaq, setOpenFaq] = useState(null);
   const [showFreeModal, setShowFreeModal] = useState(false);
   const [showEnterpriseModal, setShowEnterpriseModal] = useState(false);
@@ -42,22 +44,33 @@ const PricingPage = () => {
   const [navigationContext, setNavigationContext] = useState(null);
   const [currentSubscription, setCurrentSubscription] = useState(null);
 
-  // Scroll to top on component mount
+  // Initialize component
   useEffect(() => {
+    const initializeComponent = async () => {
+      try {
+        setIsLoading(true);
+        
+        // Get navigation context and subscription data
+        const context = navigationService.getContext();
+        const subscription = subscriptionService.getCurrentSubscription();
+
+        setNavigationContext(context);
+        setCurrentSubscription(subscription);
+        
+        // Small delay to ensure all data is loaded
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        setIsLoaded(true);
+      } catch (error) {
+        console.error('Error initializing pricing page:', error);
+        setIsLoaded(true); // Still show the page even if there's an error
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
     window.scrollTo(0, 0);
-    setIsLoaded(true);
-
-    // Get navigation context and subscription data
-    const context = navigationService.getContext();
-    const subscription = subscriptionService.getCurrentSubscription();
-
-    setNavigationContext(context);
-    setCurrentSubscription(subscription);
-
-    // Log navigation context for debugging
-    if (context) {
-      console.log("Navigation context:", context);
-    }
+    initializeComponent();
   }, []);
 
   const pricingPlans = [
@@ -67,10 +80,10 @@ const PricingPage = () => {
       price: { monthly: 0, yearly: 0 },
       badge: null,
       features: [
-        "Up to 5 trips", // UPDATED to match CORE_LIMITS
-        "Up to 30 photos per trip", // UPDATED to match CORE_LIMITS
-        "2GB total storage", // UPDATED to match CORE_LIMITS
-        "Up to 5 members per trip", // UPDATED to match CORE_LIMITS
+        "Up to 5 trips",
+        "Up to 30 photos per trip",
+        "2GB total storage",
+        "Up to 5 members per trip",
         "Basic AI face recognition",
         "Mobile app access",
         "Standard photo quality",
@@ -86,15 +99,15 @@ const PricingPage = () => {
       color: "gray",
     },
     {
-      name: "Premium", // CHANGED from "Pro" to match your CORE_LIMITS
+      name: "Premium",
       description: "Ideal for active travelers and photo enthusiasts",
       price: { monthly: 9.99, yearly: 99.99 },
       badge: "Most Popular",
       features: [
-        "Up to 50 trips", // UPDATED to match CORE_LIMITS
-        "Up to 200 photos per trip", // UPDATED to match CORE_LIMITS
-        "50GB total storage", // UPDATED to match CORE_LIMITS
-        "Up to 20 members per trip", // UPDATED to match CORE_LIMITS
+        "Up to 50 trips",
+        "Up to 200 photos per trip",
+        "50GB total storage",
+        "Up to 20 members per trip",
         "Advanced AI face recognition",
         "Mobile & desktop apps",
         "High-quality photo processing",
@@ -109,15 +122,15 @@ const PricingPage = () => {
       color: "indigo",
     },
     {
-      name: "Pro", // RENAMED from "Family"
+      name: "Pro",
       description: "Perfect for unlimited trips and maximum storage",
       price: { monthly: 19.99, yearly: 199.99 },
       badge: "Best Value",
       features: [
-        "Unlimited trips", // UPDATED to match CORE_LIMITS
-        "Unlimited photos per trip", // UPDATED to match CORE_LIMITS
-        "500GB total storage", // UPDATED to match CORE_LIMITS
-        "Unlimited members per trip", // UPDATED to match CORE_LIMITS
+        "Unlimited trips",
+        "Unlimited photos per trip",
+        "500GB total storage",
+        "Unlimited members per trip",
         "Premium AI face recognition",
         "All apps & platforms",
         "Original quality photos",
@@ -177,8 +190,7 @@ const PricingPage = () => {
         "Our AI analyzes facial features in your photos to identify and group images of the same person. Higher-tier plans have more advanced algorithms that work better in challenging lighting conditions and with partial faces.",
     },
     {
-      question:
-        "Can I share photos with people who don't have Groupify accounts?",
+      question: "Can I share photos with people who don't have Groupify accounts?",
       answer:
         "Yes! You can share individual photos or entire albums via secure links. Recipients can view and download photos without creating an account.",
     },
@@ -203,26 +215,22 @@ const PricingPage = () => {
     {
       icon: SparklesIcon,
       title: "AI-Powered Recognition",
-      description:
-        "Advanced machine learning algorithms that get smarter with every photo you upload.",
+      description: "Advanced machine learning algorithms that get smarter with every photo you upload.",
     },
     {
       icon: CloudIcon,
       title: "Secure Cloud Storage",
-      description:
-        "Enterprise-grade security with automatic backups and 99.9% uptime guarantee.",
+      description: "Enterprise-grade security with automatic backups and 99.9% uptime guarantee.",
     },
     {
       icon: UserGroupIcon,
       title: "Seamless Sharing",
-      description:
-        "Share memories with friends and family effortlessly across all devices.",
+      description: "Share memories with friends and family effortlessly across all devices.",
     },
     {
       icon: ShieldCheckIcon,
       title: "Privacy First",
-      description:
-        "Your photos are private by default with granular privacy controls.",
+      description: "Your photos are private by default with granular privacy controls.",
     },
   ];
 
@@ -248,20 +256,21 @@ const PricingPage = () => {
       }
     } else if (plan.name === "Enterprise") {
       setShowEnterpriseModal(true);
-    } else if (plan.name === "Pro" || plan.name === "Family") {
+    } else if (plan.name === "Premium" || plan.name === "Pro") {
       if (currentUser) {
-        // User is logged in - set context and go to billing
-        navigationService.navigateToBilling(navigate, {
-          plan: plan.name.toLowerCase(),
-          billing: billingCycle,
-          from: navigationContext?.origin || "pricing",
-        });
+        // User is logged in - check for conflicts first
+        if (currentSubscription?.plan === plan.name.toLowerCase()) {
+          toast.info(`You already have the ${plan.name} plan!`);
+          return;
+        }
+        
+        // Navigate to billing with proper plan mapping
+        const planParam = plan.name === "Premium" ? "premium" : "pro";
+        navigate(`/billing?plan=${planParam}&billing=${billingCycle}&from=pricing`);
       } else {
         // User not logged in - go to signup with plan info
-        // The signup page will redirect to billing after successful registration
-        navigate(
-          `/signup?plan=${plan.name.toLowerCase()}&billing=${billingCycle}&redirect=billing`
-        );
+        const planParam = plan.name === "Premium" ? "premium" : "pro";
+        navigate(`/signup?plan=${planParam}&billing=${billingCycle}&redirect=billing&from=pricing`);
       }
     }
   };
@@ -272,20 +281,20 @@ const PricingPage = () => {
 
   // Handle back navigation
   const handleBackNavigation = () => {
-    navigationService.navigateBack(navigate, {
-      fallbackPath: "/",
-    });
+    if (navigationContext?.origin === "dashboard-settings") {
+      navigate("/dashboard/settings", { replace: true });
+    } else if (navigationContext?.origin) {
+      navigate(-1);
+    } else {
+      navigate("/", { replace: true });
+    }
   };
 
   // Handle get started action
   const handleGetStarted = () => {
     if (currentUser) {
-      // User is logged in, redirect to dashboard
-      navigationService.navigateBack(navigate, {
-        fallbackPath: "/dashboard",
-      });
+      navigate("/dashboard");
     } else {
-      // User not logged in, go to signup
       navigate("/signup?from=pricing");
     }
   };
@@ -349,7 +358,7 @@ const PricingPage = () => {
     </div>
   );
 
-  return (
+return (
     <PublicLayout
       headerType="public"
       headerProps={{ ...headerProps, handleSmoothNavigation }}
@@ -359,7 +368,12 @@ const PricingPage = () => {
         handleSmoothNavigation,
       }}
     >
-      <PageTransition variant="fadeIn" trigger={isLoaded}>
+      {isLoading ? (
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+        </div>
+      ) : (
+        <PageTransition variant="fadeIn" trigger={isLoaded}>
         {/* Navigation Breadcrumb */}
         {navigationContext && (
           <div className="bg-white/40 dark:bg-gray-800/40 backdrop-blur-sm border-b border-gray-200/50 dark:border-gray-700/50">
@@ -369,10 +383,7 @@ const PricingPage = () => {
                 className="inline-flex items-center text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
               >
                 <ArrowLeftIcon className="w-4 h-4 mr-2" />
-                Back to{" "}
-                {navigationContext.origin === "dashboard-settings"
-                  ? "Settings"
-                  : "Previous Page"}
+                Back to {navigationContext.origin === "dashboard-settings" ? "Settings" : "Previous Page"}
               </button>
             </div>
           </div>
@@ -386,25 +397,18 @@ const PricingPage = () => {
                 <div className="flex items-center gap-3">
                   <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                   <span className="text-sm text-blue-800 dark:text-blue-200">
-                    Current plan:{" "}
-                    <strong className="capitalize">
-                      {currentSubscription.plan}
-                    </strong>
+                    Current plan: <strong className="capitalize">{currentSubscription.plan}</strong>
                     {currentSubscription.isTrial && (
                       <span className="ml-2 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 px-2 py-0.5 rounded text-xs">
-                        Trial - {currentSubscription.trialDaysRemaining} days
-                        left
+                        Trial - {currentSubscription.trialDaysRemaining} days left
                       </span>
                     )}
                   </span>
                 </div>
                 {currentSubscription.plan !== "free" && (
                   <span className="text-xs text-blue-600 dark:text-blue-400">
-                    Next billing:{" "}
-                    {currentSubscription.nextBillingDate
-                      ? new Date(
-                          currentSubscription.nextBillingDate
-                        ).toLocaleDateString()
+                    Next billing: {currentSubscription.nextBillingDate 
+                      ? new Date(currentSubscription.nextBillingDate).toLocaleDateString() 
                       : "N/A"}
                   </span>
                 )}
@@ -416,10 +420,7 @@ const PricingPage = () => {
         {/* Hero Section */}
         <HeroSection
           variant="pricing"
-          badge={{
-            icon: StarIcon,
-            text: "Simple, Transparent Pricing",
-          }}
+          badge={{ icon: StarIcon, text: "Simple, Transparent Pricing" }}
           title="Choose Your Perfect Plan"
           description="From free photo organization to enterprise solutions, find the plan that fits your needs. Start free and upgrade anytime."
           additionalContent={billingToggle}
@@ -432,8 +433,10 @@ const PricingPage = () => {
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 sm:gap-8">
               {pricingPlans.map((plan, index) => {
                 // Check if this is the user's current plan
-                const isCurrentPlan =
-                  currentSubscription?.plan === plan.name.toLowerCase();
+                const isCurrentPlan = currentSubscription?.plan === plan.name.toLowerCase();
+                const canUpgrade = currentUser && currentSubscription && 
+                  ((currentSubscription.plan === "free" && plan.name !== "Free") ||
+                  (currentSubscription.plan === "premium" && plan.name === "Pro"));
 
                 return (
                   <div
@@ -441,42 +444,26 @@ const PricingPage = () => {
                     className={`relative bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-2xl border border-white/20 dark:border-gray-700/50 overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 ${
                       plan.popular ? "ring-2 ring-indigo-500 lg:scale-105" : ""
                     } ${isCurrentPlan ? "ring-2 ring-green-500" : ""} ${
-                      isLoaded
-                        ? `opacity-100 translate-y-0 delay-${index * 100}`
-                        : "opacity-0 translate-y-8"
+                      isLoaded ? `opacity-100 translate-y-0 delay-${index * 100}` : "opacity-0 translate-y-8"
                     }`}
                   >
                     {/* Current Plan Badge */}
                     {isCurrentPlan && (
                       <div className="absolute top-0 left-0 right-0 bg-green-500 text-center py-2">
-                        <span className="text-sm font-semibold text-white">
-                          Current Plan
-                        </span>
+                        <span className="text-sm font-semibold text-white">Current Plan</span>
                       </div>
                     )}
 
                     {/* Badge */}
                     {plan.badge && !isCurrentPlan && (
-                      <div
-                        className={`absolute top-0 left-0 right-0 ${getPlanColor(
-                          plan.color
-                        )} text-center py-2`}
-                      >
-                        <span
-                          className={`text-base sm:text-sm font-semibold ${getPlanTextColor(
-                            plan.color
-                          )}`}
-                        >
+                      <div className={`absolute top-0 left-0 right-0 ${getPlanColor(plan.color)} text-center py-2`}>
+                        <span className={`text-base sm:text-sm font-semibold ${getPlanTextColor(plan.color)}`}>
                           {plan.badge}
                         </span>
                       </div>
                     )}
 
-                    <div
-                      className={`p-6 sm:p-8 ${
-                        plan.badge || isCurrentPlan ? "pt-12 sm:pt-14" : ""
-                      }`}
-                    >
+                    <div className={`p-6 sm:p-8 ${plan.badge || isCurrentPlan ? "pt-12 sm:pt-14" : ""}`}>
                       {/* Plan Header */}
                       <div className="text-center mb-6 sm:mb-8">
                         <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-2">
@@ -496,20 +483,15 @@ const PricingPage = () => {
                                 </span>
                                 {plan.price[billingCycle] > 0 && (
                                   <span className="text-gray-600 dark:text-gray-400 ml-2">
-                                    /
-                                    {billingCycle === "yearly"
-                                      ? "year"
-                                      : "month"}
+                                    /{billingCycle === "yearly" ? "year" : "month"}
                                   </span>
                                 )}
                               </div>
-                              {billingCycle === "yearly" &&
-                                plan.price.monthly > 0 && (
-                                  <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                                    ${(plan.price.yearly / 12).toFixed(2)}/month
-                                    billed annually
-                                  </div>
-                                )}
+                              {billingCycle === "yearly" && plan.price.monthly > 0 && (
+                                <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                                  ${(plan.price.yearly / 12).toFixed(2)}/month billed annually
+                                </div>
+                              )}
                             </>
                           ) : (
                             <div className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
@@ -525,13 +507,15 @@ const PricingPage = () => {
                           className={`w-full ${
                             isCurrentPlan && plan.name !== "Free"
                               ? "bg-gray-400 cursor-not-allowed"
+                              : canUpgrade
+                              ? "bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800"
                               : getPlanButtonColor(plan.color)
                           } text-white px-6 py-3 sm:py-4 rounded-xl text-sm sm:text-base font-semibold transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-105 mb-4 sm:mb-6 disabled:hover:scale-100 disabled:hover:shadow-lg`}
                         >
                           {isCurrentPlan
-                            ? plan.name === "Free"
-                              ? "Current Plan"
-                              : "Current Plan"
+                            ? "Current Plan"
+                            : canUpgrade
+                            ? `Upgrade to ${plan.name}`
                             : plan.cta}
                         </button>
                       </div>
@@ -542,10 +526,7 @@ const PricingPage = () => {
                         </h4>
                         <ul className="space-y-2 sm:space-y-3 flex flex-col items-center sm:items-start pl-[25%] sm:pl-0">
                           {plan.features.map((feature, featureIndex) => (
-                            <li
-                              key={featureIndex}
-                              className="flex items-start w-full max-w-xs sm:max-w-none"
-                            >
+                            <li key={featureIndex} className="flex items-start w-full max-w-xs sm:max-w-none">
                               <CheckIcon className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 flex-shrink-0 mt-0.5 mr-3" />
                               <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 text-left">
                                 {feature}
@@ -561,19 +542,14 @@ const PricingPage = () => {
                               Limitations:
                             </h4>
                             <ul className="space-y-2 flex flex-col items-center sm:items-start pl-[25%] sm:pl-0">
-                              {plan.limitations.map(
-                                (limitation, limitIndex) => (
-                                  <li
-                                    key={limitIndex}
-                                    className="flex items-start w-full max-w-xs sm:max-w-none"
-                                  >
-                                    <XMarkIcon className="w-4 h-4 sm:w-5 sm:h-5 text-red-400 flex-shrink-0 mt-0.5 mr-3" />
-                                    <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 text-left">
-                                      {limitation}
-                                    </span>
-                                  </li>
-                                )
-                              )}
+                              {plan.limitations.map((limitation, limitIndex) => (
+                                <li key={limitIndex} className="flex items-start w-full max-w-xs sm:max-w-none">
+                                  <XMarkIcon className="w-4 h-4 sm:w-5 sm:h-5 text-red-400 flex-shrink-0 mt-0.5 mr-3" />
+                                  <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 text-left">
+                                    {limitation}
+                                  </span>
+                                </li>
+                              ))}
                             </ul>
                           </div>
                         )}
@@ -589,9 +565,7 @@ const PricingPage = () => {
               <div className="mt-8 sm:mt-12 text-center">
                 <div className="inline-flex items-center bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 px-4 py-2 sm:px-6 sm:py-3 rounded-full">
                   <HeartIcon className="w-5 h-5 mr-2" />
-                  <span className="text-sm sm:text-base font-medium">
-                    Save up to 20% with yearly billing!
-                  </span>
+                  <span className="text-sm sm:text-base font-medium">Save up to 20% with yearly billing!</span>
                 </div>
               </div>
             )}
@@ -606,8 +580,7 @@ const PricingPage = () => {
                 Why Choose Groupify?
               </h2>
               <p className="text-base sm:text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-                All plans include our core features designed to make photo
-                organization effortless
+                All plans include our core features designed to make photo organization effortless
               </p>
             </div>
 
@@ -616,9 +589,7 @@ const PricingPage = () => {
                 <div
                   key={index}
                   className={`text-center p-6 sm:p-8 bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-xl border border-white/20 dark:border-gray-700/50 hover:shadow-lg transition-all duration-300 hover:-translate-y-2 ${
-                    isLoaded
-                      ? `opacity-100 translate-y-0 delay-${index * 100}`
-                      : "opacity-0 translate-y-8"
+                    isLoaded ? `opacity-100 translate-y-0 delay-${index * 100}` : "opacity-0 translate-y-8"
                   }`}
                 >
                   <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-4 sm:mb-6">
@@ -627,9 +598,7 @@ const PricingPage = () => {
                   <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-2 sm:mb-3">
                     {feature.title}
                   </h3>
-                  <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
-                    {feature.description}
-                  </p>
+                  <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">{feature.description}</p>
                 </div>
               ))}
             </div>
@@ -643,9 +612,7 @@ const PricingPage = () => {
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
                 Frequently Asked Questions
               </h2>
-              <p className="text-base sm:text-lg text-gray-600 dark:text-gray-300">
-                Got questions? We've got answers.
-              </p>
+              <p className="text-base sm:text-lg text-gray-600 dark:text-gray-300">Got questions? We've got answers.</p>
             </div>
 
             <div className="space-y-4 sm:space-y-6">
@@ -671,9 +638,7 @@ const PricingPage = () => {
                   </button>
                   <div
                     className={`overflow-hidden transition-all duration-500 ease-in-out ${
-                      openFaq === index
-                        ? "max-h-96 opacity-100"
-                        : "max-h-0 opacity-0"
+                      openFaq === index ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
                     }`}
                   >
                     <div className="px-4 sm:px-6 pb-4 sm:pb-6 pt-2">
@@ -696,8 +661,7 @@ const PricingPage = () => {
               Ready to Organize Your Memories?
             </h2>
             <p className="text-base sm:text-lg md:text-xl text-indigo-100 mb-6 sm:mb-8 leading-relaxed max-w-2xl mx-auto">
-              Join thousands of users who trust Groupify to keep their precious
-              memories organized and accessible. Start free today!
+              Join thousands of users who trust Groupify to keep their precious memories organized and accessible. Start free today!
             </p>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
               <button
@@ -726,36 +690,14 @@ const PricingPage = () => {
                 onClick={() => setShowFreeModal(false)}
                 className="absolute top-4 right-4 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
               >
-                <svg
-                  className="w-5 h-5 text-gray-500"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
+                <XMarkIcon className="w-5 h-5 text-gray-500" />
               </button>
 
               {/* Modal Content */}
               <div className="text-center">
                 <div className="w-16 h-16 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg
-                    className="w-8 h-8 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.99-.833-2.76 0L4.054 16.5c-.77.833.192 2.5 1.732 2.5z"
-                    />
+                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.99-.833-2.76 0L4.054 16.5c-.77.833.192 2.5 1.732 2.5z" />
                   </svg>
                 </div>
 
@@ -764,39 +706,29 @@ const PricingPage = () => {
                 </h3>
 
                 <p className="text-gray-600 dark:text-gray-400 mb-6 leading-relaxed">
-                  Our Pro plan gives you 20x more storage, advanced AI
-                  recognition, and unlimited sharing.
-                  <span className="font-semibold text-indigo-600 dark:text-indigo-400">
-                    {" "}
-                    Plus, you get a 14-day free trial!
-                  </span>
+                  Our Premium plan gives you 20x more storage, advanced AI recognition, and unlimited sharing.
+                  <span className="font-semibold text-indigo-600 dark:text-indigo-400"> Plus, you get a 14-day free trial!</span>
                 </p>
 
                 <div className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-lg p-4 mb-6">
                   <div className="flex items-center justify-center mb-2">
-                    <span className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
-                      $9.99/month
-                    </span>
+                    <span className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">$9.99/month</span>
                     <span className="ml-2 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 px-2 py-1 rounded text-sm font-medium">
                       14-day trial
                     </span>
                   </div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Cancel anytime during trial
-                  </p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Cancel anytime during trial</p>
                 </div>
 
                 <div className="space-y-3">
                   <button
                     onClick={() => {
                       setShowFreeModal(false);
-                      handlePlanSelect(
-                        pricingPlans.find((p) => p.name === "Pro")
-                      );
+                      handlePlanSelect(pricingPlans.find((p) => p.name === "Premium"));
                     }}
                     className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl"
                   >
-                    Start Pro Trial (Free for 14 days)
+                    Start Premium Trial (Free for 14 days)
                   </button>
 
                   <button
@@ -823,36 +755,14 @@ const PricingPage = () => {
                 onClick={() => setShowEnterpriseModal(false)}
                 className="absolute top-4 right-4 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
               >
-                <svg
-                  className="w-5 h-5 text-gray-500"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
+                <XMarkIcon className="w-5 h-5 text-gray-500" />
               </button>
 
               {/* Modal Content */}
               <div className="text-center">
                 <div className="w-16 h-16 bg-gradient-to-r from-emerald-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg
-                    className="w-8 h-8 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H3m2 0h-2m8 0V9a2 2 0 012-2h2a2 2 0 012 2v8m-6 0v-6"
-                    />
+                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H3m2 0h-2m8 0V9a2 2 0 012-2h2a2 2 0 012 2v8m-6 0v-6" />
                   </svg>
                 </div>
 
@@ -861,78 +771,26 @@ const PricingPage = () => {
                 </h3>
 
                 <p className="text-gray-600 dark:text-gray-400 mb-6 leading-relaxed">
-                  Join leading companies using Groupify Enterprise for team
-                  events, corporate retreats, and organizational memories.
-                  <span className="font-semibold text-emerald-600 dark:text-emerald-400">
-                    {" "}
-                    Get custom pricing and dedicated support.
-                  </span>
+                  Join leading companies using Groupify Enterprise for team events, corporate retreats, and organizational memories.
+                  <span className="font-semibold text-emerald-600 dark:text-emerald-400"> Get custom pricing and dedicated support.</span>
                 </p>
 
                 <div className="bg-gradient-to-r from-emerald-50 to-blue-50 dark:from-emerald-900/20 dark:to-blue-900/20 rounded-lg p-4 mb-6">
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div className="flex items-center">
-                      <svg
-                        className="w-4 h-4 text-emerald-600 mr-2"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M5 13l4 4L19 7"
-                        />
-                      </svg>
+                      <CheckIcon className="w-4 h-4 text-emerald-600 mr-2" />
                       <span>Unlimited Storage</span>
                     </div>
                     <div className="flex items-center">
-                      <svg
-                        className="w-4 h-4 text-emerald-600 mr-2"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M5 13l4 4L19 7"
-                        />
-                      </svg>
+                      <CheckIcon className="w-4 h-4 text-emerald-600 mr-2" />
                       <span>Custom Integrations</span>
                     </div>
                     <div className="flex items-center">
-                      <svg
-                        className="w-4 h-4 text-emerald-600 mr-2"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M5 13l4 4L19 7"
-                        />
-                      </svg>
+                      <CheckIcon className="w-4 h-4 text-emerald-600 mr-2" />
                       <span>Dedicated Manager</span>
                     </div>
                     <div className="flex items-center">
-                      <svg
-                        className="w-4 h-4 text-emerald-600 mr-2"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M5 13l4 4L19 7"
-                        />
-                      </svg>
+                      <CheckIcon className="w-4 h-4 text-emerald-600 mr-2" />
                       <span>24/7 Priority Support</span>
                     </div>
                   </div>
@@ -940,8 +798,7 @@ const PricingPage = () => {
 
                 <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 mb-6">
                   <p className="text-sm text-blue-800 dark:text-blue-200 font-medium">
-                    💼 Perfect for: Corporate Events • Team Building • Company
-                    Retreats • Product Launches
+                    💼 Perfect for: Corporate Events • Team Building • Company Retreats • Product Launches
                   </p>
                 </div>
 
@@ -967,7 +824,8 @@ const PricingPage = () => {
             </div>
           </div>
         )}
-      </PageTransition>
+        </PageTransition>
+      )}
 
       {/* Global Accessibility Modal */}
       <AccessibilityModal {...accessibilityModalProps} />

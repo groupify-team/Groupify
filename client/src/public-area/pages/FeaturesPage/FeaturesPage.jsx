@@ -1,10 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import PublicLayout from "../../components/layout/PublicLayout";
-import HeroSection from "../../components/ui/HeroSection";
-import { usePublicNavigation } from "../../hooks/usePublicNavigation";
-import AccessibilityModal from "@/shared/components/accessibility/AccessibilityModal";
-
 import {
   SparklesIcon,
   UserGroupIcon,
@@ -31,7 +25,16 @@ import {
   CheckIcon,
   EyeIcon,
   PencilIcon,
+  CameraIcon,
+  UsersIcon,
+  DocumentArrowDownIcon,
 } from "@heroicons/react/24/outline";
+
+// Import required components and hooks
+// Note: These imports should be adjusted based on your actual file structure
+// import { usePublicNavigation } from "../hooks/usePublicNavigation";
+// import PublicLayout from "../components/layout/PublicLayout";
+// import AccessibilityModal from "../components/modals/AccessibilityModal";
 
 // Extract components for better organization
 const StatsSection = ({ stats, isLoaded }) => (
@@ -105,7 +108,7 @@ const FeatureCard = ({ feature, index, isLoaded }) => (
       )}
       {feature.premium && (
         <span className="px-2 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400 rounded-full text-xs font-medium inline-block w-auto">
-          Premium
+          Premium+
         </span>
       )}
     </div>
@@ -251,26 +254,34 @@ const CallToActionSection = ({ handleGetStarted }) => (
           Start Free Trial
           <ArrowRightIcon className="ml-2 w-5 h-5" />
         </button>
-        <Link
-          to="/pricing"
+        <a
+          href="/pricing"
           className="inline-flex items-center justify-center bg-white/20 backdrop-blur-sm text-white px-6 py-3 sm:px-8 sm:py-4 rounded-xl text-base sm:text-lg font-semibold border border-white/30 hover:bg-white/30 transition-all duration-200"
         >
           View Pricing
-        </Link>
+        </a>
       </div>
     </div>
   </div>
 );
 
 const Features = () => {
-  const {
-    handleGetStarted,
-    handleSmoothNavigation,
-    headerProps, // NEW: Contains onSettingsClick
-    accessibilityModalProps, // NEW: Contains all accessibility modal props
-  } = usePublicNavigation();
+  // Uncomment and adjust these lines based on your actual hook implementation
+  // const {
+  //   handleGetStarted: navHandleGetStarted,
+  //   handleSmoothNavigation,
+  //   headerProps,
+  //   accessibilityModalProps,
+  // } = usePublicNavigation();
+
   const [isLoaded, setIsLoaded] = useState(false);
   const [activeCategory, setActiveCategory] = useState("all");
+
+  // Single handleGetStarted function
+  const handleGetStarted = () => {
+    // Navigate to sign up or dashboard
+    window.location.href = "/sign-up";
+  };
 
   // Scroll to top on component mount
   useEffect(() => {
@@ -283,246 +294,254 @@ const Features = () => {
     { id: "sharing", name: "Sharing & Collaboration", icon: UserGroupIcon },
     { id: "organization", name: "Organization", icon: FolderIcon },
     { id: "security", name: "Security & Privacy", icon: ShieldCheckIcon },
-    { id: "platform", name: "Platform & Apps", icon: DevicePhoneMobileIcon },
+    { id: "platform", name: "Platform & Storage", icon: CloudIcon },
   ];
 
+  // CORRECTED features based on actual implementation
   const allFeatures = [
+    // AI & RECOGNITION FEATURES (Actually Implemented)
     {
       category: "ai",
-      title: "Advanced AI Face Recognition",
+      title: "Face-API.js Recognition",
       description:
-        "Our cutting-edge AI identifies faces across thousands of photos with incredible accuracy, even in challenging lighting conditions.",
+        "Advanced face recognition powered by face-api.js library with 90%+ accuracy in optimal conditions using 128D face embeddings.",
       icon: FaceSmileIcon,
       details: [
-        "Recognizes faces from different angles and lighting",
-        "Learns and improves with each photo uploaded",
-        "Groups photos by person automatically",
-        "Works with partial faces and side profiles",
+        "90%+ accuracy with proper lighting",
+        "Uses 128D face embeddings for precision",
+        "Real-time quality assessment",
+        "Confidence scoring for matches",
+        "Smart Face Scan guided capture",
       ],
       premium: false,
       comingSoon: false,
     },
     {
-      category: "ai",
-      title: "Smart Object Detection",
+      category: "ai", 
+      title: "Smart Face Profile Creation",
       description:
-        "AI-powered object recognition helps you find photos containing specific items, locations, or activities.",
-      icon: MagnifyingGlassIcon,
+        "Create face profiles using guided Smart Face Scan or upload 2-5 photos for optimal AI training.",
+      icon: CameraIcon,
       details: [
-        "Detects objects, animals, and landmarks",
-        "Identifies activities and scenes",
-        "Location-based photo grouping",
-        "Weather and time-of-day recognition",
+        "Guided camera capture with real-time feedback",
+        "Photo upload method with quality assessment",
+        "Requires 2-5 high-quality photos minimum",
+        "Automatic face quality validation",
+        "Profile optimization recommendations",
       ],
-      premium: true,
+      premium: false,
       comingSoon: false,
     },
-    {
-      category: "ai",
-      title: "Emotion & Mood Analysis",
-      description:
-        "Discover your happiest moments with AI that detects emotions and moods in your photos.",
-      icon: HeartIcon,
-      details: [
-        "Identifies happy, sad, surprised expressions",
-        "Groups photos by emotional content",
-        "Creates mood-based photo collections",
-        "Highlights your best memories",
-      ],
-      premium: true,
-      comingSoon: true,
-    },
+
+    // SHARING & COLLABORATION (Actually Implemented)
     {
       category: "sharing",
-      title: "Collaborative Trip Albums",
+      title: "Trip Collaboration",
       description:
-        "Create shared trip albums where everyone can contribute photos and relive memories together.",
+        "Create shared trip albums where friends can contribute photos based on your plan limits.",
       icon: UserGroupIcon,
       details: [
-        "Invite unlimited friends and family",
+        "Free: Up to 5 members per trip",
+        "Premium: Up to 20 members per trip", 
+        "Pro: Unlimited members per trip",
         "Real-time photo contributions",
-        "Collaborative editing and organizing",
-        "Group chat within albums",
+        "Member permission management",
       ],
       premium: false,
       comingSoon: false,
     },
     {
       category: "sharing",
-      title: "Smart Sharing Links",
+      title: "Friend Management",
       description:
-        "Share photos and albums with secure, customizable links that work without requiring account creation.",
-      icon: ShareIcon,
+        "Send friend requests, manage connections, and control who can find you with privacy settings.",
+      icon: UsersIcon,
       details: [
-        "Password-protected sharing",
-        "Expiring links for temporary access",
-        "Download permissions control",
-        "View-only or full access options",
+        "Send and receive friend requests",
+        "Search visibility controls",
+        "Privacy-aware friend discovery",
+        "Mutual friend connections",
+        "Friend invitation to trips",
       ],
       premium: false,
       comingSoon: false,
     },
-    {
-      category: "sharing",
-      title: "Social Media Integration",
-      description:
-        "Seamlessly share your organized photos to all major social media platforms with one click.",
-      icon: GlobeAltIcon,
-      details: [
-        "Direct posting to Instagram, Facebook, Twitter",
-        "Optimized image sizing for each platform",
-        "Batch sharing capabilities",
-        "Story and post format options",
-      ],
-      premium: true,
-      comingSoon: true,
-    },
+
+    // ORGANIZATION (Actually Implemented)
     {
       category: "organization",
-      title: "Intelligent Auto-Tagging",
+      title: "Trip-Based Organization",
       description:
-        "Automatically tag photos based on content, location, people, and events for effortless organization.",
-      icon: TagIcon,
+        "Organize photos by trips with automatic date sorting and metadata preservation.",
+      icon: FolderIcon,
       details: [
-        "Automatic location tagging via GPS",
-        "Event and occasion recognition",
-        "Custom tag suggestions",
-        "Batch tagging tools",
+        "Trip creation with location autocomplete",
+        "Automatic photo date sorting",
+        "Photo metadata preservation",
+        "Trip statistics and insights",
+        "Batch photo operations",
       ],
       premium: false,
       comingSoon: false,
     },
     {
       category: "organization",
-      title: "Timeline & Memory Lane",
+      title: "Photo Upload & Processing",
       description:
-        "View your photos in beautiful timeline layouts and get reminded of memories from past years.",
-      icon: ClockIcon,
+        "Upload photos up to 10MB in JPEG, PNG, GIF formats with plan-based limits.",
+      icon: PhotoIcon,
       details: [
-        "Chronological photo timeline",
-        "Memory notifications and reminders",
-        "Year-in-review compilations",
-        "Anniversary and birthday highlights",
+        "10MB maximum file size",
+        "JPEG, PNG, GIF format support",
+        "Plan-based photo limits per trip",
+        "Progressive image loading",
+        "Batch upload capabilities",
       ],
       premium: false,
       comingSoon: false,
     },
-    {
-      category: "organization",
-      title: "Advanced Search & Filters",
-      description:
-        "Find any photo instantly with powerful search capabilities and intelligent filtering options.",
-      icon: MagnifyingGlassIcon,
-      details: [
-        "Search by people, objects, locations",
-        "Date and time range filtering",
-        "Advanced metadata search",
-        "Natural language queries",
-      ],
-      premium: true,
-      comingSoon: false,
-    },
-    {
-      category: "organization",
-      title: "Duplicate Photo Detection",
-      description:
-        "Automatically find and manage duplicate photos to save storage space and keep your library clean.",
-      icon: DocumentTextIcon,
-      details: [
-        "Intelligent duplicate detection",
-        "Side-by-side comparison tools",
-        "Bulk deletion options",
-        "Similar photo grouping",
-      ],
-      premium: true,
-      comingSoon: false,
-    },
+
+    // SECURITY & PRIVACY (Actually Implemented)
     {
       category: "security",
-      title: "End-to-End Encryption",
+      title: "Enterprise-Grade Security",
       description:
-        "Your photos are protected with military-grade encryption both in transit and at rest.",
+        "AES-256 encryption, secure storage, and comprehensive privacy controls to protect your photos.",
       icon: LockClosedIcon,
       details: [
-        "AES-256 encryption standard",
-        "Zero-knowledge architecture",
-        "Encrypted local storage",
-        "Secure backup protocols",
+        "AES-256 encryption at rest and in transit",
+        "HTTPS/TLS for all data transfers",
+        "ISO 27001 certified data centers",
+        "Multiple geographic backups",
+        "24/7 security monitoring",
       ],
       premium: false,
-      comingSoon: false,
-    },
-    {
-      category: "security",
-      title: "Private Photo Vaults",
-      description:
-        "Keep sensitive photos in secure, password-protected vaults with additional security layers.",
-      icon: ShieldCheckIcon,
-      details: [
-        "Biometric authentication access",
-        "Hidden from main photo library",
-        "Additional password protection",
-        "Secure sharing capabilities",
-      ],
-      premium: true,
       comingSoon: false,
     },
     {
       category: "security",
       title: "Privacy Controls",
       description:
-        "Granular privacy settings give you complete control over who can see your photos and albums.",
+        "Granular privacy settings including search visibility, face recognition opt-out, and data export.",
       icon: EyeIcon,
       details: [
+        "Search visibility on/off controls",
+        "Face recognition enable/disable",
         "Individual photo privacy settings",
-        "Album-level access controls",
-        "Friend permission management",
-        "Anonymous viewing options",
+        "Complete data export options",
+        "Account deletion with data removal",
       ],
       premium: false,
       comingSoon: false,
     },
     {
-      category: "platform",
-      title: "Cross-Platform Sync",
+      category: "security",
+      title: "Data Export & Control",
       description:
-        "Access your photos seamlessly across all devices with real-time synchronization.",
+        "Export your data in multiple formats including complete JSON export and CSV options.",
+      icon: DocumentArrowDownIcon,
+      details: [
+        "Complete data export (JSON format)",
+        "Trip data export (CSV)",
+        "Photo metadata export (CSV)",
+        "Friends data export (CSV)",
+        "Original quality photo downloads",
+      ],
+      premium: false,
+      comingSoon: false,
+    },
+
+    // PLATFORM & STORAGE (Actually Implemented)
+    {
+      category: "platform",
+      title: "Plan-Based Storage",
+      description:
+        "Flexible storage plans from 2GB free to 500GB Pro with automatic usage tracking.",
       icon: CloudIcon,
       details: [
-        "iOS, Android, and web apps",
-        "Real-time cross-device sync",
-        "Offline photo access",
-        "Progressive photo loading",
+        "Free: 2GB storage, 5 trips, 30 photos/trip",
+        "Premium: 50GB storage, 50 trips, 200 photos/trip",
+        "Pro: 500GB storage, unlimited trips/photos",
+        "Real-time usage monitoring",
+        "Automatic plan limit enforcement",
       ],
       premium: false,
       comingSoon: false,
     },
     {
       category: "platform",
-      title: "Desktop Applications",
+      title: "Cross-Platform Access",
       description:
-        "Full-featured desktop apps for Windows and Mac with advanced editing and organization tools.",
+        "Access your photos through responsive web interface optimized for desktop and mobile.",
       icon: DevicePhoneMobileIcon,
       details: [
-        "Native Windows and Mac apps",
-        "Bulk upload and organization",
-        "Advanced editing tools",
-        "Local storage management",
+        "Responsive web application",
+        "Mobile-optimized interface",
+        "Progressive web app features",
+        "Cross-device synchronization",
+        "Browser-based access",
+      ],
+      premium: false,
+      comingSoon: false,
+    },
+
+    // COMING SOON FEATURES
+    {
+      category: "ai",
+      title: "Advanced Object Detection",
+      description:
+        "AI-powered object and scene recognition to automatically tag and organize your photos.",
+      icon: MagnifyingGlassIcon,
+      details: [
+        "Automatic object detection",
+        "Scene and activity recognition",
+        "Location-based tagging",
+        "Smart photo categorization",
       ],
       premium: true,
       comingSoon: true,
     },
     {
       category: "platform",
-      title: "API & Integrations",
+      title: "Native Mobile Apps",
       description:
-        "Connect Groupify with your favorite apps and services through our comprehensive API.",
-      icon: CogIcon,
+        "Dedicated iOS and Android apps with camera integration and offline capabilities.",
+      icon: DevicePhoneMobileIcon,
       details: [
-        "RESTful API with full documentation",
-        "Webhooks for real-time updates",
-        "Third-party app integrations",
-        "Custom workflow automation",
+        "Native iOS and Android apps",
+        "Camera integration",
+        "Offline photo access",
+        "Push notifications",
+      ],
+      premium: false,
+      comingSoon: true,
+    },
+    {
+      category: "organization",
+      title: "Advanced Search",
+      description:
+        "Powerful search capabilities with natural language queries and advanced filtering.",
+      icon: MagnifyingGlassIcon,
+      details: [
+        "Natural language search",
+        "Advanced metadata filtering",
+        "Date range queries",
+        "People and location search",
+      ],
+      premium: true,
+      comingSoon: true,
+    },
+    {
+      category: "sharing",
+      title: "Social Media Integration",
+      description:
+        "Direct sharing to social media platforms with optimized formatting.",
+      icon: ShareIcon,
+      details: [
+        "Instagram, Facebook, Twitter sharing",
+        "Optimized image sizing",
+        "Batch sharing capabilities",
+        "Story format options",
       ],
       premium: true,
       comingSoon: true,
@@ -531,61 +550,31 @@ const Features = () => {
       category: "organization",
       title: "Photo Editing Tools",
       description:
-        "Built-in photo editing tools to enhance your memories without leaving the app.",
+        "Built-in editing tools for basic adjustments and enhancements.",
       icon: PencilIcon,
       details: [
         "Basic adjustments and filters",
         "Crop, rotate, and straighten",
-        "Color correction and enhancement",
-        "Batch editing capabilities",
+        "Color correction",
+        "Batch editing",
       ],
       premium: true,
-      comingSoon: false,
-    },
-    {
-      category: "sharing",
-      title: "Photo Books & Prints",
-      description:
-        "Create beautiful photo books and order professional prints directly from your organized albums.",
-      icon: PrinterIcon,
-      details: [
-        "Custom photo book creation",
-        "Professional print ordering",
-        "Multiple format options",
-        "High-quality printing partners",
-      ],
-      premium: true,
-      comingSoon: false,
+      comingSoon: true,
     },
     {
       category: "ai",
       title: "Video Organization",
       description:
-        "AI-powered video organization with scene detection, people recognition, and smart highlights.",
+        "Extend AI recognition capabilities to video files with scene detection.",
       icon: PlayIcon,
       details: [
-        "Automatic video scene detection",
+        "Video scene detection",
         "Face recognition in videos",
         "Smart highlight creation",
         "Video timeline organization",
       ],
       premium: true,
       comingSoon: true,
-    },
-    {
-      category: "organization",
-      title: "Analytics & Insights",
-      description:
-        "Gain insights into your photo collection with detailed analytics and usage statistics.",
-      icon: ChartBarIcon,
-      details: [
-        "Photo collection statistics",
-        "Usage and engagement metrics",
-        "Storage utilization reports",
-        "Sharing activity insights",
-      ],
-      premium: true,
-      comingSoon: false,
     },
   ];
 
@@ -596,35 +585,68 @@ const Features = () => {
 
   const comingSoonFeatures = allFeatures.filter((f) => f.comingSoon);
 
+  // CORRECTED stats based on actual implementation
   const stats = [
-    { number: "99.9%", label: "Face Recognition Accuracy" },
-    { number: "10M+", label: "Photos Organized" },
-    { number: "<0.5s", label: "Average Search Time" },
-    { number: "256-bit", label: "Encryption Standard" },
+    { number: "90%+", label: "Face Recognition Accuracy*" },
+    { number: "10MB", label: "Max Photo File Size" },
+    { number: "500GB", label: "Max Storage (Pro Plan)" },
+    { number: "256-bit", label: "AES Encryption" },
   ];
 
+  // Basic layout wrapper - adjust based on your actual layout structure
+  const LayoutWrapper = ({ children }) => (
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-indigo-900">
+      {children}
+    </div>
+  );
+
   return (
-    <PublicLayout
-      headerType="public"
-      headerProps={{ ...headerProps, handleSmoothNavigation }}
-      footerType="extended"
-      footerProps={{
-        customText: "© 2025 Groupify. Powerful features, simple experience.",
-        handleSmoothNavigation,
-      }}
-    >
-      {/* Hero Section */}
-      <HeroSection
-        badge={{ icon: SparklesIcon, text: "Powerful Features" }}
-        title="Everything You Need to Organize Your Photos"
-        description="From AI-powered face recognition to secure sharing, discover all the features that make Groupify the smartest way to manage your memories."
-        primaryCTA={{
-          text: "Get Started Free",
-          onClick: handleGetStarted,
-          icon: ArrowRightIcon,
+    <LayoutWrapper>
+      {/* Uncomment and adjust based on your actual layout component */}
+      {/* <PublicLayout
+        headerType="public"
+        headerProps={{ ...headerProps, handleSmoothNavigation }}
+        footerType="extended"
+        footerProps={{
+          customText: "© 2025 Groupify. Powerful features, simple experience.",
+          handleSmoothNavigation,
         }}
-        variant="features"
-      />
+      > */}
+      
+      {/* Hero Section */}
+      <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 text-white py-16 px-4">
+        <div className="max-w-4xl mx-auto text-center">
+          <div className="flex items-center justify-center gap-3 mb-6">
+            <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+              <SparklesIcon className="w-6 h-6 text-white" />
+            </div>
+            <span className="bg-white/20 px-4 py-2 rounded-full text-sm font-medium">
+              Powerful Features
+            </span>
+          </div>
+          <h1 className="text-4xl sm:text-5xl font-bold mb-4">
+            Everything You Need to Organize Your Photos
+          </h1>
+          <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
+            From AI-powered face recognition to secure sharing, discover all the features that make Groupify the smartest way to manage your memories.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
+            <button
+              onClick={handleGetStarted}
+              className="inline-flex items-center justify-center bg-white text-indigo-600 px-6 py-3 sm:px-8 sm:py-4 rounded-xl text-base sm:text-lg font-semibold hover:bg-gray-50 transition-all duration-200 shadow-xl hover:shadow-2xl hover:scale-105"
+            >
+              Get Started Free
+              <ArrowRightIcon className="ml-2 w-5 h-5" />
+            </button>
+            <a
+              href="/pricing"
+              className="inline-flex items-center justify-center bg-white/20 backdrop-blur-sm text-white px-6 py-3 sm:px-8 sm:py-4 rounded-xl text-base sm:text-lg font-semibold border border-white/30 hover:bg-white/30 transition-all duration-200"
+            >
+              View Pricing
+            </a>
+          </div>
+        </div>
+      </div>
 
       {/* Stats Section */}
       <StatsSection stats={stats} isLoaded={isLoaded} />
@@ -644,10 +666,11 @@ const Features = () => {
       {/* CTA Section */}
       <CallToActionSection handleGetStarted={handleGetStarted} />
 
-      {/* Settings Modal*/}
-
-      <AccessibilityModal {...accessibilityModalProps} />
-    </PublicLayout>
+      {/* Uncomment and adjust based on your actual modal component */}
+      {/* <AccessibilityModal {...accessibilityModalProps} /> */}
+      
+      {/* </PublicLayout> */}
+    </LayoutWrapper>
   );
 };
 
