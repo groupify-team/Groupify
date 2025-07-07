@@ -36,7 +36,7 @@ const UserProfileModal = ({
   setTrip = null,
   tripMembers = [],
   setTripMembers = null,
-  isAdmin = false,
+  isAdmin = false, // eslint-disable-line no-unused-vars
   onPromoteToAdmin = null,
   onDemoteFromAdmin = null,
   onRemoveFromTrip = null,
@@ -44,7 +44,7 @@ const UserProfileModal = ({
 
   // Modal props
   onClose,
-  setSelectedUser = null,
+  setSelectedUser = null, // eslint-disable-line no-unused-vars
 }) => {
   const [loading, setLoading] = useState(false);
   const [confirmAction, setConfirmAction] = useState(null);
@@ -61,33 +61,6 @@ const UserProfileModal = ({
     context === "trip" && trip?.admins?.includes(currentUserId);
   const isOwnProfile = user.uid === currentUserId;
   const isTripMember = context === "trip" && trip?.members?.includes(user.uid);
-
-  // Calculate user statistics
-  const getUserStats = () => {
-    if (context === "trip" && trip) {
-      // Mock data - replace with actual data from your backend
-      const joinDate = new Date(2024, 0, 15); // Mock join date
-      const photosCount = Math.floor(Math.random() * 20); // Mock photos count
-      const daysInTrip = Math.floor(
-        (new Date() - joinDate) / (1000 * 60 * 60 * 24)
-      );
-
-      return {
-        photosCount,
-        joinDate: joinDate.toLocaleDateString(),
-        daysInTrip,
-        memberCount: trip.members?.length || 0,
-      };
-    }
-    return {
-      photosCount: 0,
-      joinDate: "N/A",
-      daysInTrip: 0,
-      memberCount: 0,
-    };
-  };
-
-  const stats = getUserStats();
 
   // Helper functions
   const getInitials = (name) => {
@@ -216,11 +189,11 @@ const UserProfileModal = ({
 
   return (
     <div
-      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[99999] p-3 sm:p-4"
+      className="modal-backdrop-standard trip-modal-backdrop-enter p-3 sm:p-4"
       onClick={onClose}
     >
       <div
-        className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-sm max-h-[95vh] overflow-hidden border border-gray-200 dark:border-gray-700 transform transition-all duration-300 animate-slide-in-scale"
+        className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-sm max-h-[95vh] overflow-hidden border border-gray-200 dark:border-gray-700 transform transition-all duration-300 trip-modal-enter cursor-default modal-content-standard"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -580,7 +553,3 @@ const UserProfileModal = ({
 };
 
 export default UserProfileModal;
-
-
-
-

@@ -23,6 +23,18 @@
     overflow-x: hidden;
   }
 
+  /* === TOAST NOTIFICATIONS GLOBAL === */
+  /* Ensure toast notifications always appear above modal backdrops */
+  [data-testid="toast-container"] {
+    z-index: var(--z-toast) !important;
+  }
+
+  /* React Hot Toast emergency override */
+  .react-hot-toast > div,
+  div[style*="z-index"] {
+    z-index: 1000000 !important;
+  }
+
   /* === SCROLLBAR STYLES === */
   ::-webkit-scrollbar {
     width: 8px;
@@ -121,7 +133,7 @@
     }
 
     * {
-      color-adjust: exact;
+      print-color-adjust: exact;
     }
   }
 }

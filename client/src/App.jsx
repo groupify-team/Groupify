@@ -24,7 +24,7 @@ function App() {
               position="top-center"
               toastOptions={{
                 duration: 3000,
-                className: "z-[70]",
+                className: "toast-above-modal",
               }}
             />
             <PageTransitionWrapper>
