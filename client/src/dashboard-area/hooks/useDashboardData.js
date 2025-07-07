@@ -1,7 +1,7 @@
 // useDashboardData.js - COMPLETE FIXED VERSION with Trip Deletion Handler
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom"; // ? ADDED
-import { useAuth } from "@auth/hooks/useAuth";
+import { useAuth } from "@/auth-area/contexts/AuthContext";
 import {
   collection,
   doc,

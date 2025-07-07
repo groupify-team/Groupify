@@ -1,3 +1,7 @@
+/**
+ * Consolidated AuthContext - Single source of truth for authentication
+ * PERFORMANCE OPTIMIZED: Removed duplicates, memoized functions, minimal re-renders
+ */
 import React, {
   createContext,
   useContext,
@@ -22,6 +26,7 @@ import subscriptionService from "../../shared/services/subscriptionService";
 
 const AuthContext = createContext();
 
+export { AuthContext };
 export function useAuth() {
   return useContext(AuthContext);
 }
@@ -33,10 +38,8 @@ export function AuthProvider({ children }) {
   const [planLoading, setPlanLoading] = useState(false);
   const [initialized, setInitialized] = useState(false);
 
-  // Use ref to track if this is the first auth state change
   const firstLoad = useRef(true);
 
-  // PERFORMANCE: Memoize functions to prevent re-renders
   const initializeUserPlan = useCallback(async (user) => {
     if (!user) {
       setUserPlan(null);
@@ -451,7 +454,7 @@ export function AuthProvider({ children }) {
     return () => {
       unsubscribe();
     };
-  }, []);
+  }, [initializeUserPlan]);
 
   useEffect(() => {
     const unsubscribe = subscriptionService.subscribe((event, data) => {

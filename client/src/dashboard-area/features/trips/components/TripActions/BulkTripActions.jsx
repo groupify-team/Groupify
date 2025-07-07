@@ -1,4 +1,4 @@
-﻿// components/TripActions/BulkTripActions.jsx
+// components/TripActions/BulkTripActions.jsx
 import React from 'react';
 import { TrashIcon, ArchiveBoxIcon } from '@heroicons/react/24/outline';
 
@@ -31,3 +31,6 @@ const BulkTripActions = ({ selectedTrips, onAction }) => {
 };
 
 export default BulkTripActions;
+
+
+

@@ -70,3 +70,5 @@ export const ANIMATION_CLASSES = {
   REDUCE_MOTION: "reduce-motion",
   HIGH_CONTRAST: "high-contrast-mode",
 };
+
+

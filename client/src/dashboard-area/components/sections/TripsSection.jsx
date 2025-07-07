@@ -23,7 +23,7 @@ import {
 } from "@heroicons/react/24/outline";
 
 // Auth Context
-import { useAuth } from "@/auth-area/hooks/useAuth";
+import { useAuth } from "@/auth-area/contexts/AuthContext";
 
 // Dashboard Hooks
 import { useDashboardLayout } from "@/dashboard-area/hooks/useDashboardLayout";

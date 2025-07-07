@@ -165,3 +165,6 @@ export const getPhotoNavigation = (photos, currentPhotoId) => {
   };
 };
 
+
+
+

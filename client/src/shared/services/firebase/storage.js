@@ -400,3 +400,5 @@ export const deletePhoto = async (photoId, userId) => {
     throw error;
   }
 };
+
+

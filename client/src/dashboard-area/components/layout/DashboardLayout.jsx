@@ -1,6 +1,6 @@
 // DashboardLayout.jsx - OPTIMIZED VERSION with progressive loading
 import React, { useState, useEffect } from "react";
-import { useAuth } from "@auth/hooks/useAuth";
+import { useAuth } from "@/auth-area/contexts/AuthContext";
 import { useDashboardData } from "@dashboard/hooks/useDashboardData";
 import { useTheme } from "@shared/contexts/ThemeContext";
 import { useClickOutside } from "@/shared/hooks/useClickOutside";

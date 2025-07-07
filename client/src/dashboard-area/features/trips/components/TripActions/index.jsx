@@ -1,4 +1,4 @@
-﻿// components/TripActions/index.jsx
+// components/TripActions/index.jsx
 import React from 'react';
 import TripInvitations from './TripInvitations';
 import BulkTripActions from './BulkTripActions';
@@ -15,3 +15,6 @@ const TripActions = ({ selectedTrips, onBulkAction, invitations, onInvitationAct
 };
 
 export default TripActions;
+
+
+

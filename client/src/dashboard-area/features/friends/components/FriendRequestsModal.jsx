@@ -73,3 +73,6 @@ const FriendRequestsModal = ({ currentUserId, onClose }) => {
 
 export default FriendRequestsModal;
 
+
+
+

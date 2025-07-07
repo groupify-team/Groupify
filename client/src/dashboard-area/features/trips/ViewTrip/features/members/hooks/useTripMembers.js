@@ -411,3 +411,6 @@ export const useTripMembers = (currentUserId, trip, setTrip) => {
   };
 };
 
+
+
+

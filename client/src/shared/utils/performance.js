@@ -22,3 +22,6 @@ export const logComponentRender = (componentName) => {
 export const logHookExecution = (hookName, dependencies) => {
   console.log(`🎣 ${hookName} executed`, dependencies);
 };
+
+
+

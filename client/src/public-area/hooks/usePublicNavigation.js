@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../auth-area/hooks/useAuth";
+import { useAuth } from "@/auth-area/contexts/AuthContext";
 import { useTheme } from "@shared/contexts/ThemeContext";
 
 export const usePublicNavigation = () => {
@@ -87,3 +87,6 @@ export const usePublicNavigation = () => {
     },
   };
 };
+
+
+

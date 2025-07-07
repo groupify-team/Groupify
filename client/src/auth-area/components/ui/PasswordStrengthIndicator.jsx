@@ -34,3 +34,5 @@ const PasswordStrengthIndicator = ({ strength, className = "" }) => {
 };
 
 export default PasswordStrengthIndicator;
+
+

@@ -645,3 +645,6 @@ const SettingsModal = ({ isOpen, onClose, theme, toggleTheme }) => {
 
 export default SettingsModal;
 
+
+
+

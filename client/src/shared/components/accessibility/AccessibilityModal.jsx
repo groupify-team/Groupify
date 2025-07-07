@@ -159,3 +159,5 @@ const AccessibilityModal = ({ isOpen, onClose, theme, toggleTheme }) => {
 };
 
 export default AccessibilityModal;
+
+

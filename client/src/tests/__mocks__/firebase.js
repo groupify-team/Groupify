@@ -29,3 +29,5 @@ export const mockStorage = {
   uploadBytesResumable: jest.fn(),
   getDownloadURL: jest.fn()
 };
+
+

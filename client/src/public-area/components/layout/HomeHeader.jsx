@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { useAuth } from "../../../auth-area/hooks/useAuth";
+import { useAuth } from "@/auth-area/contexts/AuthContext";
 import { useTheme } from "@shared/contexts/ThemeContext";
 import { CameraIcon, CogIcon } from "@heroicons/react/24/outline";
 
@@ -74,3 +74,6 @@ const HomeHeader = ({ onSettingsClick, className = "" }) => {
 };
 
 export default HomeHeader;
+
+
+

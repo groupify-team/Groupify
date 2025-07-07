@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
 const CloudflareTurnstileGate = ({ children, onVerificationComplete }) => {
   const [isVerified, setIsVerified] = useState(false);
@@ -205,3 +205,6 @@ const CloudflareTurnstileGate = ({ children, onVerificationComplete }) => {
 };
 
 export default CloudflareTurnstileGate;
+
+
+

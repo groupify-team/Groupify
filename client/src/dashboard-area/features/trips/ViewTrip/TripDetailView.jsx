@@ -29,7 +29,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useRenderTracker } from "@shared/hooks/usePerformanceMonitor";
 
 // Context
-import { useAuth } from "@/auth-area/hooks/useAuth";
+import { useAuth } from "@/auth-area/contexts/AuthContext";
 
 // Optimized components - load immediately
 import TripHeader from "./features/header/components/TripHeader";

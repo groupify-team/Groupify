@@ -140,3 +140,6 @@ const TripCard = memo(({ trip, onViewTrip }) => {
 TripCard.displayName = "TripCard";
 
 export default TripCard;
+
+
+

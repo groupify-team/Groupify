@@ -133,3 +133,6 @@ export const useTripData = (tripId, currentUserId) => {
     refreshTripData,
   };
 };
+
+
+

@@ -1,4 +1,4 @@
-﻿// components/TripFilters/index.jsx
+// components/TripFilters/index.jsx
 import React from 'react';
 import SearchFilter from './SearchFilter';
 import DateFilter from './DateFilter'; 
@@ -17,3 +17,6 @@ const TripFilters = ({ filters, onFiltersChange }) => {
 };
 
 export default TripFilters;
+
+
+

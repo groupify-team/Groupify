@@ -1,6 +1,6 @@
 // src/dashboard-area/features/settings/hooks/useSettings.js
 import { useState, useEffect, useCallback } from "react";
-import { useAuth } from "@auth/hooks/useAuth";
+import { useAuth } from "@/auth-area/contexts/AuthContext";
 import { SettingsService } from "../services/settingsService";
 import { DEFAULT_USER_SETTINGS } from "../constants/settingsConstants";
 
@@ -106,4 +106,3 @@ export const useSettings = () => {
     loadSettings,
   };
 };
-

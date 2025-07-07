@@ -134,3 +134,5 @@ const GlobalAccessibilityProvider = ({ children }) => {
 };
 
 export default GlobalAccessibilityProvider;
+
+
