@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { createPortal } from 'react-dom';
 import { useAuth } from "@auth/contexts/AuthContext";
 import { doc, onSnapshot, getDoc } from "firebase/firestore";
 import { db } from "@shared/services/firebase/config";
@@ -279,7 +280,20 @@ const FriendsSection = () => {
   };
 
   const handleViewProfile = (friend) => {
-    setSelectedUser(friend);
+    console.log("🔍 handleViewProfile called with:", friend);
+    
+    // Since this is the friends section, we know they are already friends
+    // Set the friend object with proper flags
+    const enhancedFriend = {
+      ...friend,
+      __isFriend: true, // Since they're in the friends list, they are friends
+      __isPending: false, // No pending requests since they're already friends
+    };
+    
+    console.log("🚀 Setting enhanced friend:", enhancedFriend);
+    console.log("📝 Setting showUserProfileModal to true");
+    
+    setSelectedUser(enhancedFriend);
     setShowUserProfileModal(true);
   };
 
@@ -482,20 +496,25 @@ const FriendsSection = () => {
         </div>
       )}
 
-      {/* User Profile Modal */}
-      {showUserProfileModal && selectedUser && (
+      {/* User Profile Modal - Fixed Props */}
+      {showUserProfileModal && selectedUser && createPortal(
         <UserProfileModal
+          isOpen={showUserProfileModal}
           user={selectedUser}
           currentUserId={currentUser?.uid}
-          context="friends"
-          // Only friendship props needed
-          isFriend={selectedUser.__isFriend || false}
-          isPending={selectedUser.__isPending || false}
-          onAddFriend={handleAddFriend}
+          // Pass friends array and pending requests for the component's logic
+          friends={friends.map(f => f.uid)} // Convert to array of UIDs
+          pendingRequests={pendingRequests} // Pass pending requests
+          onAddFriend={handleAddFriendDirect}
           onRemoveFriend={handleRemoveFriend}
-          onCancelRequest={handleCancelFriendRequest}
-          onClose={() => setSelectedUser(null)}
-        />
+          onCancelRequest={handleCancelRequest}
+          onClose={() => {
+            console.log("🚪 Closing UserProfileModal");
+            setSelectedUser(null);
+            setShowUserProfileModal(false);
+          }}
+        />,
+        document.body
       )}
     </div>
   );

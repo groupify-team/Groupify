@@ -62,6 +62,26 @@ const CreateTripModal = ({ isOpen, onClose, onTripCreated }) => {
     }
   }, [isOpen, currentUser]);
 
+  useEffect(() => {
+  if (isOpen) {
+    // Add body class to help with z-index management
+    document.body.classList.add('modal-open');
+    // Prevent body scroll
+    document.body.style.overflow = 'hidden';
+  } else {
+    // Remove body class
+    document.body.classList.remove('modal-open');
+    // Restore body scroll
+    document.body.style.overflow = 'unset';
+  }
+
+  // Cleanup on unmount
+  return () => {
+    document.body.classList.remove('modal-open');
+    document.body.style.overflow = 'unset';
+  };
+}, [isOpen]);
+
   const loadTripCount = async () => {
     try {
       const count = await tripsService.getUserTripCount(currentUser.uid);
