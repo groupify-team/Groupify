@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import PublicLayout from "../../components/layout/PublicLayout";
 import HeroSection from "../../components/ui/HeroSection";
 import { usePublicNavigation } from "../../hooks/usePublicNavigation";
+import AccessibilityModal from "@/shared/components/accessibility/AccessibilityModal";
 import {
   DocumentTextIcon,
   ShieldCheckIcon,
@@ -10,7 +11,13 @@ import {
 } from "@heroicons/react/24/outline";
 
 const TermsOfServicePage = () => {
-  const { handleGetStarted, handleSignIn } = usePublicNavigation();
+  const {
+    handleGetStarted,
+    handleSignIn,
+    handleSmoothNavigation,
+    headerProps,
+    accessibilityModalProps,
+  } = usePublicNavigation();
 
   // Scroll to top on component mount
   useEffect(() => {
@@ -71,16 +78,18 @@ const TermsOfServicePage = () => {
   ];
 
   return (
-    <PublicLayout 
+    <PublicLayout
       headerType="public"
+      headerProps={{ ...headerProps, handleSmoothNavigation }}
       footerType="simple"
+      footerProps={{ handleSmoothNavigation }}
     >
       {/* Hero Section */}
       <HeroSection
         variant="legal"
-        badge={{ 
-          icon: DocumentTextIcon, 
-          text: "Legal Document" 
+        badge={{
+          icon: DocumentTextIcon,
+          text: "Legal Document",
         }}
         title="Terms of Service"
         description="Please read these terms carefully before using Groupify. By using our service, you agree to these terms and conditions."
@@ -186,10 +195,11 @@ const TermsOfServicePage = () => {
           </div>
         </div>
       </div>
+
+      {/* Global Accessibility Modal */}
+      <AccessibilityModal {...accessibilityModalProps} />
     </PublicLayout>
   );
 };
 
 export default TermsOfServicePage;
-
-

@@ -1,5 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import PublicLayout from "../../components/layout/PublicLayout";
+import HeroSection from "../../components/ui/HeroSection";
+import { usePublicNavigation } from "../../hooks/usePublicNavigation";
+import AccessibilityModal from "@/shared/components/accessibility/AccessibilityModal";
+
 import {
   MagnifyingGlassIcon,
   QuestionMarkCircleIcon,
@@ -30,8 +35,13 @@ const SearchBar = ({ searchQuery, setSearchQuery }) => (
   </div>
 );
 
-// Help Category Card Component
-const HelpCategoryCard = ({ category, expandedCategories, setExpandedCategories, setSelectedArticle, getArticleContent }) => (
+const HelpCategoryCard = ({
+  category,
+  expandedCategories,
+  setExpandedCategories,
+  setSelectedArticle,
+  getArticleContent,
+}) => (
   <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-md hover:shadow-lg transition-shadow border border-gray-200 dark:border-gray-700">
     <div className="flex items-center mb-4 justify-center md:justify-start">
       <div className="w-12 h-12 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
@@ -46,24 +56,22 @@ const HelpCategoryCard = ({ category, expandedCategories, setExpandedCategories,
     </p>
 
     <ul className="space-y-2 text-center md:text-left">
-      {category.articles
-        .slice(0, 3)
-        .map((article, articleIndex) => (
-          <li key={articleIndex}>
-            <button
-              onClick={() =>
-                setSelectedArticle({
-                  category: category.title,
-                  article,
-                  content: getArticleContent(category.title, article),
-                })
-              }
-              className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 text-sm transition-colors text-left hover:underline"
-            >
-              {article}
-            </button>
-          </li>
-        ))}
+      {category.articles.slice(0, 3).map((article, articleIndex) => (
+        <li key={articleIndex}>
+          <button
+            onClick={() =>
+              setSelectedArticle({
+                category: category.title,
+                article,
+                content: getArticleContent(category.title, article),
+              })
+            }
+            className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 text-sm transition-colors text-left hover:underline"
+          >
+            {article}
+          </button>
+        </li>
+      ))}
 
       {!expandedCategories[category.title] && category.articles.length > 3 && (
         <li>
@@ -133,6 +141,109 @@ const HelpCategoryCard = ({ category, expandedCategories, setExpandedCategories,
 );
 
 // Article Modal Component
+const HelpCategoriesSection = ({
+  filteredCategories,
+  expandedCategories,
+  setExpandedCategories,
+  setSelectedArticle,
+  getArticleContent,
+}) => (
+  <div className="mb-16">
+    <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-6 sm:mb-8 text-center">
+      Browse by Category
+    </h2>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {filteredCategories.map((category) => (
+        <HelpCategoryCard
+          key={category.title}
+          category={category}
+          expandedCategories={expandedCategories}
+          setExpandedCategories={setExpandedCategories}
+          setSelectedArticle={setSelectedArticle}
+          getArticleContent={getArticleContent}
+        />
+      ))}
+    </div>
+  </div>
+);
+
+const FAQItem = ({ faq, index, openFaq, toggleFaq }) => (
+  <div className="bg-white dark:bg-gray-800 rounded-lg mb-4 shadow-sm border border-gray-200 dark:border-gray-700">
+    <button
+      onClick={() => toggleFaq(index)}
+      className="w-full text-left p-4 sm:p-6 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 rounded-lg"
+    >
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm sm:text-lg font-semibold text-gray-900 dark:text-white pr-4 sm:pr-8">
+          {faq.question}
+        </h3>
+        <ChevronDownIcon
+          className={`w-5 h-5 text-gray-500 dark:text-gray-400 flex-shrink-0 transition-transform duration-300 ${
+            openFaq === index ? "-rotate-90" : "rotate-0"
+          }`}
+        />
+      </div>
+    </button>
+    <div
+      className={`overflow-hidden transition-all duration-300 ease-in-out ${
+        openFaq === index ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+      }`}
+    >
+      <div className="px-4 sm:px-6 pb-4 sm:pb-6 pt-2">
+        <p className="text-gray-600 dark:text-gray-400 leading-relaxed text-sm sm:text-base">
+          {faq.answer}
+        </p>
+      </div>
+    </div>
+  </div>
+);
+
+const FAQSection = ({ filteredFaqs, openFaq, toggleFaq }) => (
+  <div className="mb-16">
+    <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-6 sm:mb-8 text-center">
+      Frequently Asked Questions
+    </h2>
+    <div className="max-w-4xl mx-auto">
+      {filteredFaqs.map((faq, index) => (
+        <FAQItem
+          key={index}
+          faq={faq}
+          index={index}
+          openFaq={openFaq}
+          toggleFaq={toggleFaq}
+        />
+      ))}
+    </div>
+  </div>
+);
+
+const ContactSupportSection = () => (
+  <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-8 text-center">
+    <ChatBubbleLeftRightIcon className="w-16 h-16 text-indigo-600 dark:text-indigo-400 mx-auto mb-6" />
+    <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+      Still need help?
+    </h2>
+    <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-2xl mx-auto">
+      Can't find what you're looking for? Our support team is here to help you
+      with any questions or issues you might have.
+    </p>
+    <div className="flex flex-row items-center justify-center gap-4">
+      <Link
+        to="/contact"
+        className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors shadow-md hover:shadow-lg"
+      >
+        Contact Support
+      </Link>
+      <a
+        href="mailto:groupify.ltd@gmail.com"
+        className="bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 px-6 py-3 rounded-lg font-semibold border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+      >
+        Email Us
+      </a>
+    </div>
+  </div>
+);
+
 const ArticleModal = ({ selectedArticle, setSelectedArticle }) => {
   if (!selectedArticle) return null;
 
@@ -233,6 +344,9 @@ const ArticleModal = ({ selectedArticle, setSelectedArticle }) => {
 };
 
 const HelpCenter = () => {
+  const { handleSmoothNavigation, headerProps, accessibilityModalProps } =
+    usePublicNavigation();
+
   const [searchQuery, setSearchQuery] = useState("");
   const [openFaq, setOpenFaq] = useState(null);
   const [selectedArticle, setSelectedArticle] = useState(null);
@@ -461,27 +575,28 @@ const HelpCenter = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50/50 via-indigo-50/50 to-purple-50/50 dark:from-gray-900 dark:via-blue-900/20 dark:to-purple-900/20">
-      {/* Hero Section */}
-      <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 text-white py-16 px-4">
-        <div className="max-w-4xl mx-auto text-center">
-          <div className="flex items-center justify-center gap-3 mb-6">
-            <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-              <QuestionMarkCircleIcon className="w-6 h-6 text-white" />
-            </div>
-            <span className="bg-white/20 px-4 py-2 rounded-full text-sm font-medium">
-              Help Center
-            </span>
-          </div>
-          <h1 className="text-4xl sm:text-5xl font-bold mb-4">
-            How can we help you?
-          </h1>
-          <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
-            Find answers to your questions, learn how to use Groupify, and get the most out of your photo organization experience.
-          </p>
-          <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
-        </div>
-      </div>
+    <PublicLayout
+      headerType="public"
+      headerProps={{ ...headerProps, handleSmoothNavigation }}
+      footerType="extended"
+      footerProps={{
+        customText: "© 2025 Groupify. Here to help you organize your memories.",
+        handleSmoothNavigation,
+      }}
+    >
+      {/* Hero Section with Search */}
+      <HeroSection
+        badge={{ icon: QuestionMarkCircleIcon, text: "Help Center" }}
+        title="How can we help you?"
+        description="Find answers to your questions, learn how to use Groupify, and get the most out of your photo organization experience."
+        variant="help"
+        customContent={
+          <SearchBar
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+          />
+        }
+      />
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
@@ -575,7 +690,10 @@ const HelpCenter = () => {
         selectedArticle={selectedArticle}
         setSelectedArticle={setSelectedArticle}
       />
-    </div>
+
+      {/* Accessibility Modal - Add this section */}
+      <AccessibilityModal {...accessibilityModalProps} />
+    </PublicLayout>
   );
 };
 

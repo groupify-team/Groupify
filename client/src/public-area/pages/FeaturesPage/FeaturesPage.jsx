@@ -30,6 +30,12 @@ import {
   DocumentArrowDownIcon,
 } from "@heroicons/react/24/outline";
 
+// Import required components and hooks
+// Note: These imports should be adjusted based on your actual file structure
+// import { usePublicNavigation } from "../hooks/usePublicNavigation";
+// import PublicLayout from "../components/layout/PublicLayout";
+// import AccessibilityModal from "../components/modals/AccessibilityModal";
+
 // Extract components for better organization
 const StatsSection = ({ stats, isLoaded }) => (
   <div className="py-12 sm:py-16 bg-white/40 dark:bg-gray-800/40 backdrop-blur-sm">
@@ -260,9 +266,18 @@ const CallToActionSection = ({ handleGetStarted }) => (
 );
 
 const Features = () => {
+  // Uncomment and adjust these lines based on your actual hook implementation
+  // const {
+  //   handleGetStarted: navHandleGetStarted,
+  //   handleSmoothNavigation,
+  //   headerProps,
+  //   accessibilityModalProps,
+  // } = usePublicNavigation();
+
   const [isLoaded, setIsLoaded] = useState(false);
   const [activeCategory, setActiveCategory] = useState("all");
 
+  // Single handleGetStarted function
   const handleGetStarted = () => {
     // Navigate to sign up or dashboard
     window.location.href = "/sign-up";
@@ -578,8 +593,26 @@ const Features = () => {
     { number: "256-bit", label: "AES Encryption" },
   ];
 
+  // Basic layout wrapper - adjust based on your actual layout structure
+  const LayoutWrapper = ({ children }) => (
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-indigo-900">
+      {children}
+    </div>
+  );
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50/50 via-indigo-50/50 to-purple-50/50 dark:from-gray-900 dark:via-blue-900/20 dark:to-purple-900/20">
+    <LayoutWrapper>
+      {/* Uncomment and adjust based on your actual layout component */}
+      {/* <PublicLayout
+        headerType="public"
+        headerProps={{ ...headerProps, handleSmoothNavigation }}
+        footerType="extended"
+        footerProps={{
+          customText: "© 2025 Groupify. Powerful features, simple experience.",
+          handleSmoothNavigation,
+        }}
+      > */}
+      
       {/* Hero Section */}
       <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 text-white py-16 px-4">
         <div className="max-w-4xl mx-auto text-center">
@@ -633,15 +666,11 @@ const Features = () => {
       {/* CTA Section */}
       <CallToActionSection handleGetStarted={handleGetStarted} />
 
-      {/* Accuracy Disclaimer */}
-      <div className="py-8 bg-gray-50 dark:bg-gray-800/50">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            * Face recognition accuracy depends on photo quality, lighting conditions, and proper profile setup with 2-5 high-quality training photos.
-          </p>
-        </div>
-      </div>
-    </div>
+      {/* Uncomment and adjust based on your actual modal component */}
+      {/* <AccessibilityModal {...accessibilityModalProps} /> */}
+      
+      {/* </PublicLayout> */}
+    </LayoutWrapper>
   );
 };
 

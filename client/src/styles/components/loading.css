@@ -1,0 +1,260 @@
+/* ========================================
+   LOADING COMPONENTS
+   Beautiful loading states and spinners
+   ======================================== */
+
+@layer components {
+  /* === ENHANCED LOADING OVERLAY === */
+  .enhanced-loading-overlay {
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.95),
+      rgba(249, 250, 251, 0.98)
+    );
+    z-index: var(--z-modal-backdrop);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  .dark .enhanced-loading-overlay {
+    background: linear-gradient(
+      135deg,
+      rgba(17, 24, 39, 0.95),
+      rgba(31, 41, 55, 0.98)
+    );
+  }
+
+  /* === GRADIENT SPINNER === */
+  .gradient-spinner {
+    position: relative;
+    width: 64px;
+    height: 64px;
+  }
+
+  .gradient-spinner::before,
+  .gradient-spinner::after {
+    content: "";
+    position: absolute;
+    border-radius: 50%;
+  }
+
+  /* Outer ring */
+  .gradient-spinner::before {
+    width: 64px;
+    height: 64px;
+    border: 4px solid transparent;
+    border-top: 4px solid var(--color-primary-500);
+    border-right: 4px solid var(--color-secondary-500);
+    border-bottom: 4px solid #ec4899;
+    border-left: 4px solid #06b6d4;
+    animation: multiRingRotate 2s linear infinite;
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.3),
+      inset 0 0 0 12px rgba(255, 255, 255, 0.9);
+  }
+
+  /* Inner ring */
+  .gradient-spinner::after {
+    width: 40px;
+    height: 40px;
+    top: 12px;
+    left: 12px;
+    border: 3px solid transparent;
+    border-top: 3px solid #ec4899;
+    border-right: 3px solid var(--color-warning);
+    border-bottom: 3px solid var(--color-success);
+    border-left: 3px solid var(--color-secondary-500);
+    animation: multiRingRotate 1.2s linear infinite reverse;
+    box-shadow: 0 0 15px rgba(236, 72, 153, 0.3);
+  }
+
+  .dark .gradient-spinner::before {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.4),
+      inset 0 0 0 12px rgba(17, 24, 39, 0.9);
+  }
+
+  /* === SIMPLE SPINNERS === */
+  .spinner-primary {
+    width: 4rem;
+    height: 4rem;
+    border: 4px solid var(--color-gray-200);
+    border-top: 4px solid var(--color-primary-600);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+
+  .dark .spinner-primary {
+    border-color: var(--color-gray-700);
+    border-top-color: var(--color-primary-400);
+  }
+
+  .spinner-small {
+    width: 1.25rem;
+    height: 1.25rem;
+    border: 2px solid currentColor;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+
+  .spinner-medium {
+    width: 2rem;
+    height: 2rem;
+    border: 2px solid var(--color-gray-200);
+    border-top-color: var(--color-primary-500);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+
+  .spinner-large {
+    width: 3rem;
+    height: 3rem;
+    border: 3px solid var(--color-gray-200);
+    border-top-color: var(--color-primary-500);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+
+  /* === DUAL RING SPINNER === */
+  .spinner-dual {
+    position: relative;
+    width: 2rem;
+    height: 2rem;
+    border: 2px solid var(--color-gray-200);
+    border-top-color: var(--color-primary-500);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+
+  .spinner-dual::before {
+    content: "";
+    position: absolute;
+    inset: -4px;
+    border: 2px solid transparent;
+    border-top: 2px solid currentColor;
+    border-radius: 50%;
+    animation: spinReverse 1.5s linear infinite;
+    opacity: 0.3;
+  }
+
+  /* === PULSE SPINNER === */
+  .spinner-pulse {
+    position: relative;
+    width: 2rem;
+    height: 2rem;
+  }
+
+  .spinner-pulse::before,
+  .spinner-pulse::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: var(--color-primary-500);
+    animation: pulse 2s linear infinite;
+  }
+
+  .spinner-pulse::after {
+    animation-delay: 1s;
+  }
+
+  @keyframes pulse {
+    0% {
+      transform: scale(0);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(1);
+      opacity: 0;
+    }
+  }
+
+  /* === LOADING STATES === */
+  .loading-shimmer {
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.4),
+      transparent
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+
+  .dark .loading-shimmer {
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.1),
+      transparent
+    );
+  }
+
+  .loading-skeleton {
+    background: var(--color-gray-200);
+    border-radius: var(--radius-md);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .dark .loading-skeleton {
+    background: var(--color-gray-700);
+  }
+
+  .loading-skeleton::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.6),
+      transparent
+    );
+    transform: translateX(-100%);
+    animation: shimmer 1.5s infinite;
+  }
+
+  .dark .loading-skeleton::after {
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.1),
+      transparent
+    );
+  }
+
+  /* === PAGE TRANSITION LOADING === */
+  .page-fade-out {
+    transition: opacity var(--duration-normal) var(--ease-out),
+      transform var(--duration-normal) var(--ease-out);
+    opacity: 0.2;
+    transform: translateY(-8px);
+  }
+
+  .navigation-locked {
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .navigation-locked * {
+    pointer-events: none !important;
+  }
+
+  /* === LOADING TEXT === */
+  .loading-text {
+    color: var(--color-text-secondary);
+    font-size: var(--text-sm);
+    margin-top: var(--space-4);
+    text-align: center;
+  }
+
+  .loading-text-primary {
+    color: var(--color-text-primary);
+    font-weight: 500;
+  }
+}

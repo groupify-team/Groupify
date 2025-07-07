@@ -4,6 +4,7 @@ import { toast } from "react-hot-toast";
 import PublicLayout from "../../components/layout/PublicLayout";
 import HeroSection from "../../components/ui/HeroSection";
 import { usePublicNavigation } from "../../hooks/usePublicNavigation";
+import AccessibilityModal from "@/shared/components/accessibility/AccessibilityModal";
 import {
   CheckCircleIcon,
   ExclamationTriangleIcon,
@@ -20,6 +21,7 @@ import {
   WrenchScrewdriverIcon,
   BoltIcon,
   ArrowTrendingUpIcon,
+  CameraIcon,
 } from "@heroicons/react/24/outline";
 
 const toastOptions = {
@@ -31,7 +33,8 @@ const toastOptions = {
 };
 
 const StatusPage = () => {
-  const { handleGetStarted } = usePublicNavigation();
+  const { handleSmoothNavigation, headerProps, accessibilityModalProps } =
+    usePublicNavigation();
   const [isLoaded, setIsLoaded] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [email, setEmail] = useState("");
@@ -307,14 +310,14 @@ const StatusPage = () => {
 
     try {
       // Simulate API call - in real app would be actual subscription
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
       toast.success(
         "Successfully subscribed! Thank you for joining us.",
         toastOptions
       );
       setEmail("");
-    } catch (error) {
+    } catch {
       toast.error("Subscription failed. Please try again.", toastOptions);
     } finally {
       setIsSubscribing(false);
@@ -354,18 +357,21 @@ const StatusPage = () => {
   );
 
   return (
-    <PublicLayout 
+    <PublicLayout
       headerType="public"
+      headerProps={{ ...headerProps, handleSmoothNavigation }}
       footerType="default"
-      footerProps={{ 
-        customText: "© 2025 Groupify. Transparent and reliable service monitoring."
+      footerProps={{
+        customText:
+          "© 2025 Groupify. Transparent and reliable service monitoring.",
+        handleSmoothNavigation,
       }}
     >
       {/* Hero Section */}
       <HeroSection
         variant="status"
-        badge={{ 
-          content: statusBadgeContent
+        badge={{
+          content: statusBadgeContent,
         }}
         title="Groupify System Status"
         description="Real-time status and performance monitoring for all Groupify services. We're committed to transparency and keeping you informed."
@@ -517,7 +523,7 @@ const StatusPage = () => {
 
           <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-xl border border-white/20 dark:border-gray-700/50 p-4 sm:p-6">
             <div className="grid grid-cols-8 gap-1 sm:gap-2 mb-4">
-              {uptime.map((day, index) => (
+              {uptime.map((day) => (
                 <div key={day.date} className="text-center">
                   <div
                     className={`w-full h-8 sm:h-12 rounded ${getUptimeColor(
@@ -645,10 +651,11 @@ const StatusPage = () => {
           </form>
         </div>
       </div>
+
+      {/* Global Accessibility Modal */}
+      <AccessibilityModal {...accessibilityModalProps} />
     </PublicLayout>
   );
 };
 
 export default StatusPage;
-
-

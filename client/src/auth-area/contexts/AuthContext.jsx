@@ -304,18 +304,41 @@ export function AuthProvider({ children }) {
 
   const logout = useCallback(async () => {
     try {
-      // Clear subscription data on logout
+      const currentUserId = currentUser?.uid;
+
+      // Clear all user-related state
+      setCurrentUser(null);
       setUserPlan(null);
 
-      // Optional: Clear subscription service cache
+      // Clear localStorage data (user-specific only)
+      localStorage.removeItem("userPlan");
+      localStorage.removeItem("groupify_usage");
+      localStorage.removeItem("groupify_billing_history");
+
+      // Clear subscription service cache
       subscriptionService.clearCache();
+
+      // Clear ONLY user-specific cache entries (preserve general cache for performance)
+      if (window.apiCache && currentUserId) {
+        window.apiCache.clearUserData(currentUserId);
+      }
+
+      // Clear user stats cache for this user only
+      if (window.userStatsCache && currentUserId) {
+        window.userStatsCache.invalidateUser(currentUserId);
+      }
+
+      // Clear global dashboard data if available
+      if (window.clearGlobalData) {
+        window.clearGlobalData();
+      }
 
       return signOut(auth);
     } catch (error) {
       console.error("Logout error:", error);
       throw error;
     }
-  }, []);
+  }, [currentUser]);
 
   const resetPassword = useCallback(async (email) => {
     try {
@@ -419,6 +442,22 @@ export function AuthProvider({ children }) {
   // PERFORMANCE: Enhanced auth state change listener with proper loading management
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      // If user changed, clear only user-specific caches (preserve general cache for performance)
+      if (currentUser && user && currentUser.uid !== user.uid) {
+        const previousUserId = currentUser.uid;
+
+        // Clear ONLY user-specific cache entries
+        if (window.apiCache) {
+          window.apiCache.clearUserData(previousUserId);
+        }
+        if (window.userStatsCache) {
+          window.userStatsCache.invalidateUser(previousUserId);
+        }
+        if (window.clearGlobalData) {
+          window.clearGlobalData();
+        }
+      }
+
       if (user) {
         if (user.providerData[0]?.providerId === "google.com") {
           setCurrentUser(user);
@@ -450,7 +489,7 @@ export function AuthProvider({ children }) {
     return () => {
       unsubscribe();
     };
-  }, [initializeUserPlan]);
+  }, [initializeUserPlan, currentUser]);
 
   useEffect(() => {
     const unsubscribe = subscriptionService.subscribe((event, data) => {
