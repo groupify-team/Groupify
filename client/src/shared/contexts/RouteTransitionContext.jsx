@@ -2,6 +2,7 @@ import React, { createContext, useState, useEffect, useCallback } from "react";
 import { useLocation } from "react-router-dom";
 
 // Route Transition Context
+// eslint-disable-next-line react-refresh/only-export-components
 export const RouteTransitionContext = createContext();
 
 // Route Transition Provider Component

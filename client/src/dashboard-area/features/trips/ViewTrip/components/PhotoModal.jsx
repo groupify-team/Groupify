@@ -44,9 +44,9 @@ const PhotoModal = ({ photo, photos, isOpen, onClose, onNext, onPrevious }) => {
   const photoCount = photos.length;
 
   return (
-    <div className="fixed inset-0 bg-black/95 backdrop-blur-sm z-50 flex items-center justify-center">
+    <div className="modal-backdrop-photo trip-modal-backdrop-enter">
       {/* Fixed container with consistent dimensions */}
-      <div className="relative w-full h-full max-w-7xl max-h-screen flex items-center justify-center p-4">
+      <div className="relative w-full h-full max-w-7xl max-h-screen flex items-center justify-center p-4 modal-content-standard">
         {/* Image container with fixed aspect ratio */}
         <div className="relative w-full h-full max-w-6xl max-h-[90vh] bg-black rounded-2xl overflow-hidden shadow-2xl flex items-center justify-center">
           <img
@@ -157,7 +157,3 @@ const PhotoModal = ({ photo, photos, isOpen, onClose, onNext, onPrevious }) => {
 };
 
 export default PhotoModal;
-
-
-
-

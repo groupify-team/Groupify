@@ -104,16 +104,36 @@
   }
 
   /* === MODAL ANIMATIONS === */
-  @keyframes modalEnter {
+  @keyframes modalBackdropEnter {
     from {
       opacity: 0;
-      transform: scale(0.9) translateY(-30px);
       backdrop-filter: blur(0px);
     }
     to {
       opacity: 1;
-      transform: scale(1) translateY(0);
       backdrop-filter: blur(8px);
+    }
+  }
+
+  @keyframes modalBackdropExit {
+    from {
+      opacity: 1;
+      backdrop-filter: blur(8px);
+    }
+    to {
+      opacity: 0;
+      backdrop-filter: blur(0px);
+    }
+  }
+
+  @keyframes modalEnter {
+    from {
+      opacity: 0;
+      transform: scale(0.92) translateY(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1) translateY(0);
     }
   }
 
@@ -124,7 +144,22 @@
     }
     to {
       opacity: 0;
-      transform: scale(0.9) translateY(-30px);
+      transform: scale(0.92) translateY(-20px);
+    }
+  }
+
+  @keyframes modalSlideInScale {
+    from {
+      opacity: 0;
+      transform: scale(0.88) translateY(-40px);
+    }
+    20% {
+      opacity: 0.7;
+      transform: scale(0.94) translateY(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1) translateY(0);
     }
   }
 
@@ -342,6 +377,18 @@
 
   .animate-modal-exit {
     animation: modalExit var(--duration-normal) var(--ease-in);
+  }
+
+  .animate-modal-backdrop-enter {
+    animation: modalBackdropEnter var(--duration-normal) var(--ease-out);
+  }
+
+  .animate-modal-backdrop-exit {
+    animation: modalBackdropExit var(--duration-normal) var(--ease-in);
+  }
+
+  .animate-slide-in-scale {
+    animation: modalSlideInScale var(--duration-slower) var(--ease-spring);
   }
 
   .animate-spin {

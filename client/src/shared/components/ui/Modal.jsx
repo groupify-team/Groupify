@@ -16,6 +16,7 @@ const Modal = ({
   backdropClassName = "",
   contentClassName = "",
   zIndex = Z_INDEX.modal,
+  animationType = "slide-scale", // "slide-scale", "fade", "scale"
 }) => {
   const modalRef = useRef(null);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -30,17 +31,35 @@ const Modal = ({
     } else {
       setIsAnimating(false);
       // Wait for exit animation before unmounting
-      setTimeout(() => setShouldRender(false), 300);
+      setTimeout(() => setShouldRender(false), 400);
     }
   }, [isOpen]);
 
-  // Size variants
+  // Size variants using design system classes
   const sizeClasses = {
-    small: "max-w-md",
-    medium: "max-w-2xl",
-    large: "max-w-4xl",
-    xlarge: "max-w-6xl",
-    fullscreen: "max-w-none m-0 h-full w-full",
+    small: "modal-sm",
+    medium: "modal-md",
+    large: "modal-lg",
+    xlarge: "modal-xl",
+    fullscreen: "modal-full",
+  };
+
+  // Animation variants
+  const getAnimationClasses = () => {
+    if (!isAnimating) {
+      return "opacity-0 scale-95 translate-y-4";
+    }
+
+    switch (animationType) {
+      case "slide-scale":
+        return "animate-slide-in-scale";
+      case "fade":
+        return "animate-fade-in";
+      case "scale":
+        return "animate-scale-in";
+      default:
+        return "animate-modal-enter";
+    }
   };
 
   // Handle escape key
@@ -85,9 +104,8 @@ const Modal = ({
   return (
     <div
       className={`
-        fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 
-        transition-all duration-300 ease-smooth transform-gpu
-        ${isAnimating ? "opacity-100" : "opacity-0"}
+        modal-backdrop modal-backdrop-clickable
+        ${isAnimating ? "animate-modal-backdrop-enter" : "opacity-0"}
         ${backdropClassName}
       `}
       style={{ zIndex }}
@@ -96,41 +114,32 @@ const Modal = ({
       <div
         ref={modalRef}
         className={`
-          bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full
-          transition-all duration-400 ease-spring transform-gpu
+          modal-content modal-content-protected
           ${sizeClasses[size]}
+          ${getAnimationClasses()}
           ${contentClassName}
           ${className}
-          ${
-            isAnimating
-              ? "opacity-100 scale-100 translate-y-0"
-              : "opacity-0 scale-95 translate-y-4"
-          }
         `}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         {(title || showCloseButton) && (
-          <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-            {title && (
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                {title}
-              </h2>
-            )}
+          <div className="modal-header">
+            {title && <h2 className="modal-title">{title}</h2>}
             {showCloseButton && (
               <button
                 onClick={onClose}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-200"
+                className="modal-close"
                 aria-label="Close modal"
               >
-                <XMarkIcon className="w-6 h-6" />
+                <XMarkIcon className="w-5 h-5" />
               </button>
             )}
           </div>
         )}
 
         {/* Content */}
-        <div className="p-6">{children}</div>
+        <div className="modal-body">{children}</div>
       </div>
     </div>
   );

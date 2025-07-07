@@ -334,8 +334,7 @@ const AllPhotosModal = ({
   return (
     <>
       <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-6 animate-fade-in"
-        style={{ zIndex: 9999 }}
+        className="modal-backdrop-standard trip-modal-backdrop-enter"
         onClick={(e) => {
           if (e.target === e.currentTarget) {
             onClose();
@@ -346,7 +345,7 @@ const AllPhotosModal = ({
         }}
       >
         <div
-          className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-3xl shadow-2xl max-w-7xl max-h-[90vh] overflow-hidden w-full border border-white/20 dark:border-gray-700/50 flex flex-col animate-slide-in-scale"
+          className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-3xl shadow-2xl max-w-7xl max-h-[90vh] overflow-hidden w-full border border-white/20 dark:border-gray-700/50 flex flex-col trip-modal-enter cursor-default modal-content-standard"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
@@ -623,7 +622,3 @@ const AllPhotosModal = ({
 };
 
 export default AllPhotosModal;
-
-
-
-
