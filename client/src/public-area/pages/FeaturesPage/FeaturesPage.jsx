@@ -265,8 +265,9 @@ const CallToActionSection = ({ handleGetStarted }) => (
 const Features = () => {
   const {
     handleGetStarted,
+    handleSmoothNavigation,
     headerProps, // NEW: Contains onSettingsClick
-    settingsProps, // NEW: Contains all settings modal props
+    accessibilityModalProps, // NEW: Contains all accessibility modal props
   } = usePublicNavigation();
   const [isLoaded, setIsLoaded] = useState(false);
   const [activeCategory, setActiveCategory] = useState("all");
@@ -605,10 +606,11 @@ const Features = () => {
   return (
     <PublicLayout
       headerType="public"
-      headerProps={headerProps}
+      headerProps={{ ...headerProps, handleSmoothNavigation }}
       footerType="extended"
       footerProps={{
         customText: "© 2025 Groupify. Powerful features, simple experience.",
+        handleSmoothNavigation,
       }}
     >
       {/* Hero Section */}
@@ -644,12 +646,9 @@ const Features = () => {
 
       {/* Settings Modal*/}
 
-      <AccessibilityModal {...settingsProps} />
+      <AccessibilityModal {...accessibilityModalProps} />
     </PublicLayout>
   );
 };
 
 export default Features;
-
-
-

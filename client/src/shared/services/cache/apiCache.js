@@ -12,6 +12,11 @@ class ApiCache {
       users: 10 * 60 * 1000, // 10 minutes
       default: 2 * 60 * 1000, // 2 minutes
     };
+
+    // Make cache globally accessible for logout cleanup
+    if (typeof window !== "undefined") {
+      window.apiCache = this;
+    }
   }
 
   // Generate cache key
@@ -88,6 +93,29 @@ class ApiCache {
     console.log("🧹 Cache CLEARED");
   }
 
+  // Clear user-specific cache entries
+  clearUserData(userId) {
+    const keysToDelete = [];
+    for (const [key] of this.cache) {
+      // Clear user-specific entries - be more comprehensive
+      if (
+        key.includes(`users:${userId}`) ||
+        key.includes(`${userId}:`) ||
+        key.includes(`trips:${userId}`) ||
+        key.includes(`photos:${userId}`) ||
+        key.includes(`friends:${userId}`) ||
+        key.includes(`user_${userId}`)
+      ) {
+        keysToDelete.push(key);
+      }
+    }
+
+    keysToDelete.forEach((key) => this.cache.delete(key));
+    console.log(
+      `🧹 Cache CLEARED for user ${userId} (${keysToDelete.length} items)`
+    );
+  }
+
   // Get cache stats
   getStats() {
     return {
@@ -118,9 +146,7 @@ export const invalidateCache = (type, id, params) =>
   apiCache.invalidate(type, id, params);
 export const invalidateCacheType = (type) => apiCache.invalidateType(type);
 export const clearCache = () => apiCache.clear();
+export const clearUserData = (userId) => apiCache.clearUserData(userId);
 export const getCacheStats = () => apiCache.getStats();
 
 export default apiCache;
-
-
-

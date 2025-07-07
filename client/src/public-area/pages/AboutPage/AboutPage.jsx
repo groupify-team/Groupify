@@ -30,8 +30,12 @@ import ofirprofile from "../../../assets/ofirprofile.jpg";
 import adirprofile from "../../../assets/adirprofile.jpg";
 
 const AboutPage = () => {
-  const { handleGetStarted, headerProps, settingsProps } =
-    usePublicNavigation();
+  const {
+    handleGetStarted,
+    handleSmoothNavigation,
+    headerProps,
+    accessibilityModalProps,
+  } = usePublicNavigation();
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
@@ -138,10 +142,11 @@ const AboutPage = () => {
   return (
     <PublicLayout
       headerType="public"
-      headerProps={headerProps}
+      headerProps={{ ...headerProps, handleSmoothNavigation }}
       footerType="default"
       footerProps={{
         customText: "© 2025 Groupify. Built with ❤️ by Ofir & Adir.",
+        handleSmoothNavigation,
       }}
     >
       <PageTransition variant="fadeIn" trigger={isLoaded}>
@@ -467,7 +472,7 @@ const AboutPage = () => {
           </div>
         </SectionTransition>
       </PageTransition>
-      <AccessibilityModal {...settingsProps} />
+      <AccessibilityModal {...accessibilityModalProps} />
     </PublicLayout>
   );
 };

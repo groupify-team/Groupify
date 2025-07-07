@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import PublicLayout from "../../components/layout/PublicLayout";
 import HeroSection from "../../components/ui/HeroSection";
+import { usePublicNavigation } from "../../hooks/usePublicNavigation";
+import AccessibilityModal from "@/shared/components/accessibility/AccessibilityModal";
 import PageTransition, {
   SectionTransition,
 } from "@/shared/components/ui/PageTransition";
@@ -372,6 +374,9 @@ const SuccessPage = ({ setSubmitted }) => (
 );
 
 const ContactUs = () => {
+  const { handleSmoothNavigation, headerProps, accessibilityModalProps } =
+    usePublicNavigation();
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -478,8 +483,12 @@ const ContactUs = () => {
   return (
     <PublicLayout
       headerType="public"
+      headerProps={{ ...headerProps, handleSmoothNavigation }}
       footerType="extended"
-      footerProps={{ customText: "© 2025 Groupify. We're here to help." }}
+      footerProps={{
+        customText: "© 2025 Groupify. We're here to help.",
+        handleSmoothNavigation,
+      }}
     >
       <PageTransition variant="fadeIn" trigger={isLoaded}>
         {/* Hero Section */}
@@ -502,6 +511,9 @@ const ContactUs = () => {
           categories={categories}
         />
       </PageTransition>
+
+      {/* Accessibility Modal */}
+      <AccessibilityModal {...accessibilityModalProps} />
     </PublicLayout>
   );
 };

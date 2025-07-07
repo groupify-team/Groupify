@@ -1,18 +1,27 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { useTheme } from "@shared/contexts/ThemeContext";
-import { CameraIcon, SunIcon, MoonIcon, ArrowLeftIcon } from "@heroicons/react/24/outline";
+import { useGlobalAccessibility } from "@shared/components/accessibility/hooks/useGlobalAccessibility";
+import {
+  CameraIcon,
+  SunIcon,
+  MoonIcon,
+  ArrowLeftIcon,
+} from "@heroicons/react/24/outline";
+import AccessibilityButton from "@shared/components/accessibility/AccessibilityButton";
 
-const AuthHeader = ({ 
-  showBackButton = true, 
+const AuthHeader = ({
+  showBackButton = true,
   backTo = "/",
   showLogo = true,
-  className = ""
+  className = "",
 }) => {
-  const { theme, toggleTheme } = useTheme();
+  const { theme, toggleTheme, openAccessibilitySettings } =
+    useGlobalAccessibility();
 
   return (
-    <div className={`flex items-center justify-between p-4 sm:p-6 md:px-6 lg:px-12 xl:px-20 2xl:px-24 md:py-8 lg:py-12 ${className}`}>
+    <div
+      className={`flex items-center justify-between p-4 sm:p-6 md:px-6 lg:px-12 xl:px-20 2xl:px-24 md:py-8 lg:py-12 ${className}`}
+    >
       {/* Left Side - Back Button or Logo */}
       <div className="flex items-center">
         {showBackButton ? (
@@ -37,17 +46,29 @@ const AuthHeader = ({
         )}
       </div>
 
-      {/* Right Side - Theme Toggle */}
-      <button
-        onClick={toggleTheme}
-        className="p-2 rounded-lg text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-      >
-        {theme === "dark" ? <SunIcon className="w-5 h-5" /> : <MoonIcon className="w-5 h-5" />}
-      </button>
+      {/* Right Side - Accessibility & Theme Toggle */}
+      <div className="flex items-center gap-2">
+        {/* Accessibility Button */}
+        <AccessibilityButton
+          onSettingsClick={openAccessibilitySettings}
+          size="default"
+          variant="default"
+        />
+
+        {/* Theme Toggle */}
+        <button
+          onClick={toggleTheme}
+          className="p-2 rounded-lg text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+        >
+          {theme === "dark" ? (
+            <SunIcon className="w-5 h-5" />
+          ) : (
+            <MoonIcon className="w-5 h-5" />
+          )}
+        </button>
+      </div>
     </div>
   );
 };
 
 export default AuthHeader;
-
-

@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import PublicLayout from "../../components/layout/PublicLayout";
 import HeroSection from "../../components/ui/HeroSection";
+import { usePublicNavigation } from "../../hooks/usePublicNavigation";
+import AccessibilityModal from "@/shared/components/accessibility/AccessibilityModal";
 
 import {
   MagnifyingGlassIcon,
@@ -33,7 +35,13 @@ const SearchBar = ({ searchQuery, setSearchQuery }) => (
   </div>
 );
 
-const HelpCategoryCard = ({ category, expandedCategories, setExpandedCategories, setSelectedArticle, getArticleContent }) => (
+const HelpCategoryCard = ({
+  category,
+  expandedCategories,
+  setExpandedCategories,
+  setSelectedArticle,
+  getArticleContent,
+}) => (
   <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-md hover:shadow-lg transition-shadow border border-gray-200 dark:border-gray-700">
     <div className="flex items-center mb-4 justify-center md:justify-start">
       <div className="w-12 h-12 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
@@ -48,24 +56,22 @@ const HelpCategoryCard = ({ category, expandedCategories, setExpandedCategories,
     </p>
 
     <ul className="space-y-2 text-center md:text-left">
-      {category.articles
-        .slice(0, 3)
-        .map((article, articleIndex) => (
-          <li key={articleIndex}>
-            <button
-              onClick={() =>
-                setSelectedArticle({
-                  category: category.title,
-                  article,
-                  content: getArticleContent(category.title, article),
-                })
-              }
-              className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 text-sm transition-colors text-left hover:underline"
-            >
-              {article}
-            </button>
-          </li>
-        ))}
+      {category.articles.slice(0, 3).map((article, articleIndex) => (
+        <li key={articleIndex}>
+          <button
+            onClick={() =>
+              setSelectedArticle({
+                category: category.title,
+                article,
+                content: getArticleContent(category.title, article),
+              })
+            }
+            className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 text-sm transition-colors text-left hover:underline"
+          >
+            {article}
+          </button>
+        </li>
+      ))}
 
       {!expandedCategories[category.title] && category.articles.length > 3 && (
         <li>
@@ -140,13 +146,19 @@ const HelpCategoryCard = ({ category, expandedCategories, setExpandedCategories,
   </div>
 );
 
-const HelpCategoriesSection = ({ filteredCategories, expandedCategories, setExpandedCategories, setSelectedArticle, getArticleContent }) => (
+const HelpCategoriesSection = ({
+  filteredCategories,
+  expandedCategories,
+  setExpandedCategories,
+  setSelectedArticle,
+  getArticleContent,
+}) => (
   <div className="mb-16">
     <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-6 sm:mb-8 text-center">
       Browse by Category
     </h2>
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {filteredCategories.map((category, index) => (
+      {filteredCategories.map((category) => (
         <HelpCategoryCard
           key={category.title}
           category={category}
@@ -217,8 +229,8 @@ const ContactSupportSection = () => (
       Still need help?
     </h2>
     <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-2xl mx-auto">
-      Can't find what you're looking for? Our support team is here to help
-      you with any questions or issues you might have.
+      Can't find what you're looking for? Our support team is here to help you
+      with any questions or issues you might have.
     </p>
     <div className="flex flex-row items-center justify-center gap-4">
       <Link
@@ -348,6 +360,9 @@ const ArticleModal = ({ selectedArticle, setSelectedArticle }) => {
 };
 
 const HelpCenter = () => {
+  const { handleSmoothNavigation, headerProps, accessibilityModalProps } =
+    usePublicNavigation();
+
   const [searchQuery, setSearchQuery] = useState("");
   const [openFaq, setOpenFaq] = useState(null);
   const [selectedArticle, setSelectedArticle] = useState(null);
@@ -569,8 +584,12 @@ const HelpCenter = () => {
   return (
     <PublicLayout
       headerType="public"
+      headerProps={{ ...headerProps, handleSmoothNavigation }}
       footerType="extended"
-      footerProps={{ customText: "© 2025 Groupify. Here to help you organize your memories." }}
+      footerProps={{
+        customText: "© 2025 Groupify. Here to help you organize your memories.",
+        handleSmoothNavigation,
+      }}
     >
       {/* Hero Section with Search */}
       <HeroSection
@@ -579,7 +598,10 @@ const HelpCenter = () => {
         description="Find answers to your questions, learn how to use Groupify, and get the most out of your photo organization experience."
         variant="help"
         customContent={
-          <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
+          <SearchBar
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+          />
         }
       />
 
@@ -610,10 +632,11 @@ const HelpCenter = () => {
         selectedArticle={selectedArticle}
         setSelectedArticle={setSelectedArticle}
       />
+
+      {/* Accessibility Modal - Add this section */}
+      <AccessibilityModal {...accessibilityModalProps} />
     </PublicLayout>
   );
 };
 
 export default HelpCenter;
-
-

@@ -1,6 +1,13 @@
 // Create this file: client/src/shared/services/userStatsCache.js
 
-import { doc, getDoc, collection, query, where, getDocs } from "firebase/firestore";
+import {
+  doc,
+  getDoc,
+  collection,
+  query,
+  where,
+  getDocs,
+} from "firebase/firestore";
 import { db } from "@shared/services/firebase/config";
 
 class UserStatsCache {
@@ -8,6 +15,11 @@ class UserStatsCache {
     this.cache = new Map();
     this.pendingRequests = new Map();
     this.CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+    // Make cache globally accessible for logout cleanup
+    if (typeof window !== "undefined") {
+      window.userStatsCache = this;
+    }
   }
 
   async getUserStats(userId) {
@@ -31,11 +43,11 @@ class UserStatsCache {
 
     try {
       const stats = await requestPromise;
-      
+
       // Cache the result
       this.cache.set(userId, {
         data: stats,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       });
 
       console.log(`✅ Cached stats for user ${userId}:`, stats);
@@ -51,7 +63,7 @@ class UserStatsCache {
       // Fetch user document for friends count
       const userDocRef = doc(db, "users", userId);
       const userSnap = await getDoc(userDocRef);
-      
+
       let friendsCount = 0;
       if (userSnap.exists()) {
         const userData = userSnap.data();
@@ -70,7 +82,7 @@ class UserStatsCache {
         friendsCount,
         tripsCount,
         loading: false,
-        error: false
+        error: false,
       };
     } catch (error) {
       console.error("❌ Error fetching user stats:", error);
@@ -78,7 +90,7 @@ class UserStatsCache {
         friendsCount: 0,
         tripsCount: 0,
         loading: false,
-        error: true
+        error: true,
       };
     }
   }
@@ -112,8 +124,8 @@ class UserStatsCache {
       entries: Array.from(this.cache.entries()).map(([userId, cached]) => ({
         userId,
         age: Date.now() - cached.timestamp,
-        data: cached.data
-      }))
+        data: cached.data,
+      })),
     };
   }
 }
@@ -127,11 +139,11 @@ setInterval(() => {
 }, 10 * 60 * 1000);
 
 // Log cache info every 30 seconds (for debugging - remove in production)
-if (process.env.NODE_ENV === 'development') {
+if (import.meta.env.DEV) {
   setInterval(() => {
     const info = userStatsCache.getCacheInfo();
     if (info.size > 0) {
-      console.log('📊 Cache info:', info);
+      console.log("📊 Cache info:", info);
     }
   }, 30 * 1000);
 }

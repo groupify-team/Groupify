@@ -9,6 +9,8 @@ import {
   CameraIcon,
   ArrowLeftIcon,
 } from "@heroicons/react/24/outline";
+
+import AuthLayout from "../../components/layout/AuthLayout";
 import PageTransition, {
   SectionTransition,
 } from "@/shared/components/ui/PageTransition";
@@ -282,101 +284,101 @@ const SignUpPage = () => {
 
   const passwordStrength = getPasswordStrength(formData.password);
 
-  return (
-    <PageTransition variant="fadeIn" trigger={isLoaded}>
-      <div className="min-h-screen flex">
-        {/* Left Side - Visual */}
-        <SectionTransition variant="slideInFromLeft" delay={0.1}>
-          <div className="hidden md:flex md:flex-1 md:flex-col md:justify-center md:items-center md:px-6 lg:px-8 xl:px-12 2xl:px-20 bg-gradient-to-br from-purple-600 via-indigo-600 to-blue-600 relative overflow-hidden">
-            {/* Background Decoration */}
-            <div className="absolute inset-0">
-              <div className="absolute top-0 left-0 w-96 h-96 bg-white/10 rounded-full blur-3xl"></div>
-              <div className="absolute bottom-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl"></div>
-            </div>
+  const leftContent = (
+    <div className="w-full h-full bg-gradient-to-br from-purple-600 via-indigo-600 to-blue-600 flex items-center justify-center p-12 relative overflow-hidden">
+      <div className="max-w-md text-center text-white z-10">
+        {/* Title */}
+        <h2 className="text-3xl font-bold mb-6">Join thousands of travelers</h2>
 
-            {/* Content */}
-            <div className="relative z-10 text-white max-w-md lg:max-w-lg xl:max-w-xl 2xl:max-w-2xl text-center md:text-left">
-              <h2 className="text-2xl lg:text-3xl xl:text-4xl font-bold mb-3 lg:mb-4 xl:mb-6">
-                Join thousands of travelers
-              </h2>
-              <p className="text-base lg:text-lg xl:text-xl text-purple-100 mb-4 lg:mb-6 xl:mb-8 leading-relaxed">
-                Start organizing your travel photos with AI-powered face
-                recognition. Create albums, share with friends, and never lose a
-                memory again.
-              </p>
+        {/* Subtitle */}
+        <p className="text-lg mb-8 text-purple-100 leading-relaxed">
+          Start organizing your travel photos with AI-powered face recognition.
+          Create albums, share with friends, and never lose a memory again.
+        </p>
 
-              {/* Stats */}
-              <div className="grid grid-cols-2 gap-6 mb-8">
-                <div className="text-center">
-                  <div className="text-3xl font-bold">10K+</div>
-                  <div className="text-purple-200">Active Users</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold">1M+</div>
-                  <div className="text-purple-200">Photos Organized</div>
-                </div>
-              </div>
-
-              {/* Features */}
-              <div className="space-y-4">
-                <div className="flex items-center">
-                  <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center mr-3">
-                    <CheckIcon className="w-4 h-4" />
-                  </div>
-                  <span>Free to start - no credit card required</span>
-                </div>
-                <div className="flex items-center">
-                  <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center mr-3">
-                    <CheckIcon className="w-4 h-4" />
-                  </div>
-                  <span>Advanced AI face recognition</span>
-                </div>
-                <div className="flex items-center">
-                  <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center mr-3">
-                    <CheckIcon className="w-4 h-4" />
-                  </div>
-                  <span>Secure cloud storage</span>
-                </div>
-                <div className="flex items-center">
-                  <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center mr-3">
-                    <CheckIcon className="w-4 h-4" />
-                  </div>
-                  <span>Share with unlimited friends</span>
-                </div>
-              </div>
-            </div>
+        {/* Stats */}
+        <div className="grid grid-cols-2 gap-6 mb-8">
+          <div className="text-center">
+            <div className="text-3xl font-bold">10K+</div>
+            <div className="text-purple-200">Active Users</div>
           </div>
-        </SectionTransition>
+          <div className="text-center">
+            <div className="text-3xl font-bold">1M+</div>
+            <div className="text-purple-200">Photos Organized</div>
+          </div>
+        </div>
 
-        {/* Right Side - Form */}
-        <SectionTransition variant="slideInFromRight" delay={0.2}>
-          <div className="flex-1 flex flex-col justify-center py-2 sm:py-4 md:py-6 lg:py-8 px-3 sm:px-4 md:px-6 lg:px-12 xl:px-20 2xl:px-24 bg-white dark:bg-gray-900 min-h-0">
-            <div className="mx-auto w-full max-w-[280px] sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-md">
-              {/* Plan Info Banner */}
-              {showPlanInfo && (
-                <div className="mb-6 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 border border-indigo-200 dark:border-indigo-800 rounded-xl p-4">
-                  <div className="text-center">
-                    <h3 className="text-lg font-semibold text-indigo-800 dark:text-indigo-200 mb-2">
-                      🎯 Signing up for{" "}
-                      {selectedPlan?.charAt(0).toUpperCase() +
-                        selectedPlan?.slice(1)}{" "}
-                      Plan
-                    </h3>
-                    <p className="text-sm text-indigo-600 dark:text-indigo-300">
-                      {redirectAfter === "billing"
-                        ? "After creating your account, you'll be redirected to complete your subscription"
-                        : "Great choice! Let's get your account set up"}
-                    </p>
-                    {billingCycle === "yearly" && (
-                      <div className="mt-2 inline-flex items-center px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 rounded-full text-xs font-medium">
-                        💰 Save 20% with yearly billing
-                      </div>
-                    )}
-                  </div>
+        {/* Features */}
+        <div className="space-y-4 text-left">
+          {[
+            "Free to start - no credit card required",
+            "Advanced AI face recognition",
+            "Secure cloud storage",
+            "Share with unlimited friends",
+          ].map((feature, index) => (
+            <div key={index} className="flex items-center">
+              <div className="flex-shrink-0 w-5 h-5 rounded-full bg-white bg-opacity-20 flex items-center justify-center mr-3">
+                <svg
+                  className="w-3 h-3 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              </div>
+              <span className="text-purple-100 font-medium">{feature}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Background decoration */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-10 left-10 w-32 h-32 bg-white bg-opacity-10 rounded-full blur-xl"></div>
+        <div className="absolute bottom-20 right-16 w-24 h-24 bg-white bg-opacity-10 rounded-full blur-xl"></div>
+        <div className="absolute top-1/2 right-8 w-16 h-16 bg-white bg-opacity-10 rounded-full blur-xl"></div>
+      </div>
+    </div>
+  );
+
+  return (
+    <AuthLayout layoutType="split" leftContent={leftContent} showHeader={false}>
+      <PageTransition variant="fadeIn" trigger={isLoaded}>
+        {/* Form Container */}
+        <div className="flex-1 flex flex-col justify-center py-2 sm:py-4 md:py-6 lg:py-8 px-3 sm:px-4 md:px-6 lg:px-12 xl:px-20 2xl:px-24 bg-white dark:bg-gray-900 min-h-0">
+          <div className="mx-auto w-full max-w-[280px] sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-md">
+            {/* Plan Info Banner */}
+            {showPlanInfo && (
+              <div className="mb-6 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 border border-indigo-200 dark:border-indigo-800 rounded-xl p-4">
+                <div className="text-center">
+                  <h3 className="text-lg font-semibold text-indigo-800 dark:text-indigo-200 mb-2">
+                    🎯 Signing up for{" "}
+                    {selectedPlan?.charAt(0).toUpperCase() +
+                      selectedPlan?.slice(1)}{" "}
+                    Plan
+                  </h3>
+                  <p className="text-sm text-indigo-600 dark:text-indigo-300">
+                    {redirectAfter === "billing"
+                      ? "After creating your account, you'll be redirected to complete your subscription"
+                      : "Great choice! Let's get your account set up"}
+                  </p>
+                  {billingCycle === "yearly" && (
+                    <div className="mt-2 inline-flex items-center px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 rounded-full text-xs font-medium">
+                      💰 Save 20% with yearly billing
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
+            )}
 
-              {/* Header */}
+            {/* Header */}
+            <SectionTransition variant="slideInFromTop" delay={0.1}>
               <div className="mb-4 sm:mb-6 md:mb-8">
                 {/* Navigation */}
                 <div className="flex items-center justify-between mb-2 sm:mb-4 md:mb-6 lg:mb-8 pt-2 sm:pt-3 md:pt-4">
@@ -409,415 +411,445 @@ const SignUpPage = () => {
                   </p>
                 </div>
               </div>
+            </SectionTransition>
 
-              {/* Form */}
-              <form
-                onSubmit={handleSubmit}
-                className="space-y-3 sm:space-y-4 md:space-y-5 text-sm md:text-base"
-              >
-                {/* Display Name */}
-                <div>
-                  <label
-                    htmlFor="displayName"
-                    className="block text-xs sm:text-sm md:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 sm:mb-2"
-                  >
-                    Full Name *
-                  </label>
-                  <input
-                    id="displayName"
-                    name="displayName"
-                    type="text"
-                    autoComplete="name"
-                    required
-                    value={formData.displayName}
-                    onChange={handleInputChange}
-                    className="input-primary py-1.5 sm:py-2 md:py-3"
-                    placeholder="John Doe"
-                    disabled={loading}
-                  />
-                </div>
-
-                {/* Email */}
-                <div>
-                  <label
-                    htmlFor="email"
-                    className="block text-xs sm:text-sm md:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 sm:mb-2"
-                  >
-                    Email Address *
-                  </label>
-                  <input
-                    id="email"
-                    name="email"
-                    type="email"
-                    autoComplete="email"
-                    required
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    className="input-primary py-1.5 sm:py-2 md:py-3"
-                    placeholder="you@example.com"
-                    disabled={loading}
-                  />
-                </div>
-
-                {/* Password */}
-                <div>
-                  <label
-                    htmlFor="password"
-                    className="block text-xs sm:text-sm md:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 sm:mb-2"
-                  >
-                    Password *
-                  </label>
-                  <div className="relative">
+            {/* Form Section */}
+            <SectionTransition variant="slideInFromBottom" delay={0.2}>
+              <div className="space-y-3 sm:space-y-4 md:space-y-5 text-sm md:text-base">
+                {/* Form */}
+                <form
+                  onSubmit={handleSubmit}
+                  className="space-y-3 sm:space-y-4 md:space-y-5"
+                >
+                  {/* Display Name */}
+                  <div>
+                    <label
+                      htmlFor="displayName"
+                      className="block text-xs sm:text-sm md:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 sm:mb-2"
+                    >
+                      Full Name *
+                    </label>
                     <input
-                      id="password"
-                      name="password"
-                      type={showPassword ? "text" : "password"}
-                      autoComplete="new-password"
+                      id="displayName"
+                      name="displayName"
+                      type="text"
+                      autoComplete="name"
                       required
-                      value={formData.password}
+                      value={formData.displayName}
                       onChange={handleInputChange}
-                      className="input-primary pr-12 py-1.5 sm:py-2 md:py-3"
-                      placeholder="••••••••"
+                      className="input-primary py-1.5 sm:py-2 md:py-3"
+                      placeholder="John Doe"
                       disabled={loading}
                     />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                      disabled={loading}
-                    >
-                      {showPassword ? (
-                        <EyeIcon className="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
-                      ) : (
-                        <EyeSlashIcon className="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
-                      )}
-                    </button>
                   </div>
 
-                  {/* Password Strength Indicator */}
-                  {formData.password && (
-                    <div className="mt-2">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-gray-500 dark:text-gray-400">
-                          Password strength:
-                        </span>
-                        <span
-                          className={`font-medium ${
-                            passwordStrength.label === "Strong"
-                              ? "text-green-600"
-                              : passwordStrength.label === "Medium"
-                              ? "text-yellow-600"
-                              : "text-red-600"
-                          }`}
-                        >
-                          {passwordStrength.label}
-                        </span>
-                      </div>
-                      <div className="mt-1 w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1">
-                        <div
-                          className={`h-1 rounded-full transition-all duration-300 ${passwordStrength.color}`}
-                          style={{
-                            width: `${(passwordStrength.strength / 6) * 100}%`,
-                          }}
-                        />
-                      </div>
-                    </div>
-                  )}
-                </div>
+                  {/* Email */}
+                  <div>
+                    <label
+                      htmlFor="email"
+                      className="block text-xs sm:text-sm md:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 sm:mb-2"
+                    >
+                      Email Address *
+                    </label>
+                    <input
+                      id="email"
+                      name="email"
+                      type="email"
+                      autoComplete="email"
+                      required
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      className="input-primary py-1.5 sm:py-2 md:py-3"
+                      placeholder="you@example.com"
+                      disabled={loading}
+                    />
+                  </div>
 
-                {/* Password Requirements */}
-                {formData.password && (
-                  <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 mt-3">
-                    <div className="flex items-center justify-between mb-3">
-                      <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Password requirements:
-                      </p>
+                  {/* Password */}
+                  <div>
+                    <label
+                      htmlFor="password"
+                      className="block text-xs sm:text-sm md:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 sm:mb-2"
+                    >
+                      Password *
+                    </label>
+                    <div className="relative">
+                      <input
+                        id="password"
+                        name="password"
+                        type={showPassword ? "text" : "password"}
+                        autoComplete="new-password"
+                        required
+                        value={formData.password}
+                        onChange={handleInputChange}
+                        className="input-primary pr-12 py-1.5 sm:py-2 md:py-3"
+                        placeholder="••••••••"
+                        disabled={loading}
+                      />
                       <button
                         type="button"
-                        onClick={() =>
-                          setShowPasswordRequirements(!showPasswordRequirements)
-                        }
-                        className="p-1 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-all duration-200"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                        disabled={loading}
                       >
-                        <ChevronUpIcon
-                          className={`w-4 h-4 transition-transform duration-300 ${
-                            showPasswordRequirements ? "rotate-0" : "rotate-180"
-                          }`}
-                        />
+                        {showPassword ? (
+                          <EyeIcon className="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
+                        ) : (
+                          <EyeSlashIcon className="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
+                        )}
                       </button>
                     </div>
 
-                    <div
-                      className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                        showPasswordRequirements
-                          ? "max-h-96 opacity-100"
-                          : "max-h-0 opacity-0"
-                      }`}
-                    >
-                      <div className="space-y-2">
-                        <div className="flex items-center">
-                          {formData.password.length >= 6 ? (
-                            <CheckIcon className="w-4 h-4 text-green-500 mr-2" />
-                          ) : (
-                            <div className="w-4 h-4 border border-gray-400 rounded-full mr-2"></div>
-                          )}
+                    {/* Password Strength Indicator */}
+                    {formData.password && (
+                      <div className="mt-2">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-gray-500 dark:text-gray-400">
+                            Password strength:
+                          </span>
                           <span
-                            className={`text-sm ${
-                              formData.password.length >= 6
-                                ? "text-green-600 dark:text-green-400"
-                                : "text-gray-500 dark:text-gray-400"
+                            className={`font-medium ${
+                              passwordStrength.label === "Strong"
+                                ? "text-green-600"
+                                : passwordStrength.label === "Medium"
+                                ? "text-yellow-600"
+                                : "text-red-600"
                             }`}
                           >
-                            At least 6 characters
+                            {passwordStrength.label}
                           </span>
                         </div>
-                        <div className="flex items-center">
-                          {/[A-Z]/.test(formData.password) ? (
-                            <CheckIcon className="w-4 h-4 text-green-500 mr-2" />
-                          ) : (
-                            <div className="w-4 h-4 border border-gray-400 rounded-full mr-2"></div>
-                          )}
-                          <span
-                            className={`text-sm ${
-                              /[A-Z]/.test(formData.password)
-                                ? "text-green-600 dark:text-green-400"
-                                : "text-gray-500 dark:text-gray-400"
-                            }`}
-                          >
-                            One uppercase letter
-                          </span>
-                        </div>
-                        <div className="flex items-center">
-                          {/[a-z]/.test(formData.password) ? (
-                            <CheckIcon className="w-4 h-4 text-green-500 mr-2" />
-                          ) : (
-                            <div className="w-4 h-4 border border-gray-400 rounded-full mr-2"></div>
-                          )}
-                          <span
-                            className={`text-sm ${
-                              /[a-z]/.test(formData.password)
-                                ? "text-green-600 dark:text-green-400"
-                                : "text-gray-500 dark:text-gray-400"
-                            }`}
-                          >
-                            One lowercase letter
-                          </span>
-                        </div>
-                        <div className="flex items-center">
-                          {/\d/.test(formData.password) ? (
-                            <CheckIcon className="w-4 h-4 text-green-500 mr-2" />
-                          ) : (
-                            <div className="w-4 h-4 border border-gray-400 rounded-full mr-2"></div>
-                          )}
-                          <span
-                            className={`text-sm ${
-                              /\d/.test(formData.password)
-                                ? "text-green-600 dark:text-green-400"
-                                : "text-gray-500 dark:text-gray-400"
-                            }`}
-                          >
-                            One number
-                          </span>
-                        </div>
-                        <div className="flex items-center">
-                          {/[!@#$%^&*(),.?":{}|<>]/.test(formData.password) ? (
-                            <CheckIcon className="w-4 h-4 text-green-500 mr-2" />
-                          ) : (
-                            <div className="w-4 h-4 border border-gray-400 rounded-full mr-2"></div>
-                          )}
-                          <span
-                            className={`text-sm ${
-                              /[!@#$%^&*(),.?":{}|<>]/.test(formData.password)
-                                ? "text-green-600 dark:text-green-400"
-                                : "text-gray-500 dark:text-gray-400"
-                            }`}
-                          >
-                            One special character (!@#$%^&*)
-                          </span>
+                        <div className="mt-1 w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1">
+                          <div
+                            className={`h-1 rounded-full transition-all duration-300 ${passwordStrength.color}`}
+                            style={{
+                              width: `${
+                                (passwordStrength.strength / 6) * 100
+                              }%`,
+                            }}
+                          />
                         </div>
                       </div>
-                    </div>
+                    )}
                   </div>
-                )}
 
-                {/* Confirm Password */}
-                <div>
-                  <label
-                    htmlFor="confirmPassword"
-                    className="block text-xs sm:text-sm md:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 sm:mb-2"
-                  >
-                    Confirm Password *
-                  </label>
-                  <div className="relative">
-                    <input
-                      id="confirmPassword"
-                      name="confirmPassword"
-                      type={showConfirmPassword ? "text" : "password"}
-                      autoComplete="new-password"
-                      required
-                      value={formData.confirmPassword}
-                      onChange={handleInputChange}
-                      className="input-primary pr-12 py-1.5 sm:py-2 md:py-3"
-                      placeholder="••••••••"
-                      disabled={loading}
-                    />
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setShowConfirmPassword(!showConfirmPassword)
-                      }
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                      disabled={loading}
-                    >
-                      {showConfirmPassword ? (
-                        <EyeIcon className="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
-                      ) : (
-                        <EyeSlashIcon className="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
-                      )}
-                    </button>
-                  </div>
-                </div>
+                  {/* Password Requirements */}
+                  {formData.password && (
+                    <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 mt-3">
+                      <div className="flex items-center justify-between mb-3">
+                        <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Password requirements:
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setShowPasswordRequirements(
+                              !showPasswordRequirements
+                            )
+                          }
+                          className="p-1 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-all duration-200"
+                        >
+                          <ChevronUpIcon
+                            className={`w-4 h-4 transition-transform duration-300 ${
+                              showPasswordRequirements
+                                ? "rotate-0"
+                                : "rotate-180"
+                            }`}
+                          />
+                        </button>
+                      </div>
 
-                {/* Gender Selection */}
-                <div>
-                  <p className="block text-xs sm:text-sm md:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 sm:mb-3">
-                    Gender (Optional)
-                  </p>
-                  <div className="flex space-x-2 sm:space-x-3">
-                    {["male", "female", "other"].map((option) => (
-                      <button
-                        key={option}
-                        type="button"
-                        onClick={() =>
-                          setFormData((prev) => ({ ...prev, gender: option }))
-                        }
-                        disabled={loading}
-                        className={`flex-1 py-1.5 sm:py-2 px-2 sm:px-4 rounded-lg border text-xs sm:text-sm font-medium transition-all ${
-                          formData.gender === option
-                            ? "bg-indigo-600 text-white border-indigo-600"
-                            : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
+                      <div
+                        className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                          showPasswordRequirements
+                            ? "max-h-96 opacity-100"
+                            : "max-h-0 opacity-0"
                         }`}
                       >
-                        {option.charAt(0).toUpperCase() + option.slice(1)}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                        <div className="space-y-2">
+                          <div className="flex items-center">
+                            {formData.password.length >= 6 ? (
+                              <CheckIcon className="w-4 h-4 text-green-500 mr-2" />
+                            ) : (
+                              <div className="w-4 h-4 border border-gray-400 rounded-full mr-2"></div>
+                            )}
+                            <span
+                              className={`text-sm ${
+                                formData.password.length >= 6
+                                  ? "text-green-600 dark:text-green-400"
+                                  : "text-gray-500 dark:text-gray-400"
+                              }`}
+                            >
+                              At least 6 characters
+                            </span>
+                          </div>
+                          <div className="flex items-center">
+                            {/[A-Z]/.test(formData.password) ? (
+                              <CheckIcon className="w-4 h-4 text-green-500 mr-2" />
+                            ) : (
+                              <div className="w-4 h-4 border border-gray-400 rounded-full mr-2"></div>
+                            )}
+                            <span
+                              className={`text-sm ${
+                                /[A-Z]/.test(formData.password)
+                                  ? "text-green-600 dark:text-green-400"
+                                  : "text-gray-500 dark:text-gray-400"
+                              }`}
+                            >
+                              One uppercase letter
+                            </span>
+                          </div>
+                          <div className="flex items-center">
+                            {/[a-z]/.test(formData.password) ? (
+                              <CheckIcon className="w-4 h-4 text-green-500 mr-2" />
+                            ) : (
+                              <div className="w-4 h-4 border border-gray-400 rounded-full mr-2"></div>
+                            )}
+                            <span
+                              className={`text-sm ${
+                                /[a-z]/.test(formData.password)
+                                  ? "text-green-600 dark:text-green-400"
+                                  : "text-gray-500 dark:text-gray-400"
+                              }`}
+                            >
+                              One lowercase letter
+                            </span>
+                          </div>
+                          <div className="flex items-center">
+                            {/\d/.test(formData.password) ? (
+                              <CheckIcon className="w-4 h-4 text-green-500 mr-2" />
+                            ) : (
+                              <div className="w-4 h-4 border border-gray-400 rounded-full mr-2"></div>
+                            )}
+                            <span
+                              className={`text-sm ${
+                                /\d/.test(formData.password)
+                                  ? "text-green-600 dark:text-green-400"
+                                  : "text-gray-500 dark:text-gray-400"
+                              }`}
+                            >
+                              One number
+                            </span>
+                          </div>
+                          <div className="flex items-center">
+                            {/[!@#$%^&*(),.?":{}|<>]/.test(
+                              formData.password
+                            ) ? (
+                              <CheckIcon className="w-4 h-4 text-green-500 mr-2" />
+                            ) : (
+                              <div className="w-4 h-4 border border-gray-400 rounded-full mr-2"></div>
+                            )}
+                            <span
+                              className={`text-sm ${
+                                /[!@#$%^&*(),.?":{}|<>]/.test(formData.password)
+                                  ? "text-green-600 dark:text-green-400"
+                                  : "text-gray-500 dark:text-gray-400"
+                              }`}
+                            >
+                              One special character (!@#$%^&*)
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
-                {/* Terms Agreement */}
-                <div className="flex items-start">
-                  <div className="flex items-center h-5">
-                    <input
-                      id="terms"
-                      name="terms"
-                      type="checkbox"
-                      checked={agreedToTerms}
-                      onChange={(e) => setAgreedToTerms(e.target.checked)}
-                      className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:border-gray-600 rounded"
-                      disabled={loading}
-                    />
-                  </div>
-                  <div className="ml-3 text-xs sm:text-sm">
+                  {/* Confirm Password */}
+                  <div>
                     <label
-                      htmlFor="terms"
-                      className="text-gray-700 dark:text-gray-300 leading-tight"
+                      htmlFor="confirmPassword"
+                      className="block text-xs sm:text-sm md:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 sm:mb-2"
                     >
-                      I agree to the{" "}
-                      <Link
-                        to="/terms"
-                        className="text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
-                      >
-                        Terms of Service
-                      </Link>{" "}
-                      and{" "}
-                      <Link
-                        to="/privacy-policy"
-                        className="text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
-                      >
-                        Privacy Policy
-                      </Link>
+                      Confirm Password *
                     </label>
+                    <div className="relative">
+                      <input
+                        id="confirmPassword"
+                        name="confirmPassword"
+                        type={showConfirmPassword ? "text" : "password"}
+                        autoComplete="new-password"
+                        required
+                        value={formData.confirmPassword}
+                        onChange={handleInputChange}
+                        className="input-primary pr-12 py-1.5 sm:py-2 md:py-3"
+                        placeholder="••••••••"
+                        disabled={loading}
+                      />
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setShowConfirmPassword(!showConfirmPassword)
+                        }
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                        disabled={loading}
+                      >
+                        {showConfirmPassword ? (
+                          <EyeIcon className="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
+                        ) : (
+                          <EyeSlashIcon className="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
+                        )}
+                      </button>
+                    </div>
                   </div>
+
+                  {/* Gender Selection */}
+                  <div>
+                    <p className="block text-xs sm:text-sm md:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 sm:mb-3">
+                      Gender (Optional)
+                    </p>
+                    <div className="flex space-x-2 sm:space-x-3">
+                      {["male", "female", "other"].map((option) => (
+                        <button
+                          key={option}
+                          type="button"
+                          onClick={() =>
+                            setFormData((prev) => ({ ...prev, gender: option }))
+                          }
+                          disabled={loading}
+                          className={`flex-1 py-1.5 sm:py-2 px-2 sm:px-4 rounded-lg border text-xs sm:text-sm font-medium transition-all ${
+                            formData.gender === option
+                              ? "bg-indigo-600 text-white border-indigo-600"
+                              : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
+                          }`}
+                        >
+                          {option.charAt(0).toUpperCase() + option.slice(1)}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Terms Agreement */}
+                  <div className="flex items-start">
+                    <div className="flex items-center h-5">
+                      <input
+                        id="terms"
+                        name="terms"
+                        type="checkbox"
+                        checked={agreedToTerms}
+                        onChange={(e) => setAgreedToTerms(e.target.checked)}
+                        className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:border-gray-600 rounded"
+                        disabled={loading}
+                      />
+                    </div>
+                    <div className="ml-3 text-xs sm:text-sm">
+                      <label
+                        htmlFor="terms"
+                        className="text-gray-700 dark:text-gray-300 leading-tight"
+                      >
+                        I agree to the{" "}
+                        <Link
+                          to="/terms"
+                          className="text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
+                        >
+                          Terms of Service
+                        </Link>{" "}
+                        and{" "}
+                        <Link
+                          to="/privacy-policy"
+                          className="text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
+                        >
+                          Privacy Policy
+                        </Link>
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Submit Button */}
+                  <button
+                    type="submit"
+                    disabled={loading || !agreedToTerms}
+                    className={`w-full flex items-center justify-center py-2 sm:py-2.5 md:py-3 text-xs sm:text-sm md:text-base relative overflow-hidden rounded-lg font-medium transition-all duration-300 ease-in-out transform ${
+                      loading || !agreedToTerms
+                        ? "bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed opacity-50 scale-95"
+                        : "bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl scale-100 hover:scale-[1.02]"
+                    }`}
+                  >
+                    {loading ? (
+                      <>
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                        Creating account...
+                      </>
+                    ) : showPlanInfo && redirectAfter === "billing" ? (
+                      `Create Account & Continue to ${
+                        selectedPlan?.charAt(0).toUpperCase() +
+                        selectedPlan?.slice(1)
+                      }`
+                    ) : (
+                      "Create Account"
+                    )}
+                  </button>
+                </form>
+
+                {/* Social Login */}
+                <div className="mt-4 sm:mt-6 md:mt-8">
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-gray-300 dark:border-gray-600" />
+                    </div>
+                    <div className="relative flex justify-center text-sm">
+                      <span className="px-2 bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400">
+                        Or continue with
+                      </span>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleGoogleSignUp}
+                    disabled={loading || !agreedToTerms}
+                    className={`mt-3 sm:mt-4 md:mt-6 w-full flex justify-center items-center py-2 sm:py-2.5 md:py-3 px-3 sm:px-4 border rounded-lg shadow-sm text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-300 ease-in-out transform ${
+                      loading || !agreedToTerms
+                        ? "border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed opacity-50 scale-95"
+                        : "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 scale-100 hover:scale-[1.02] hover:shadow-md"
+                    }`}
+                  >
+                    {loading ? (
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-600 mr-2"></div>
+                    ) : (
+                      <svg
+                        className="w-5 h-5 mr-2"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                          fill="#4285F4"
+                        />
+                        <path
+                          d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                          fill="#34A853"
+                        />
+                        <path
+                          d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                          fill="#FBBC05"
+                        />
+                        <path
+                          d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                          fill="#EA4335"
+                        />
+                      </svg>
+                    )}
+                    Sign up with Google
+                  </button>
                 </div>
 
-                {/* Submit Button - Update text based on plan */}
-                <button
-                  type="submit"
-                  disabled={loading || !agreedToTerms}
-                  className={`w-full flex items-center justify-center py-2 sm:py-2.5 md:py-3 text-xs sm:text-sm md:text-base relative overflow-hidden rounded-lg font-medium transition-all duration-300 ease-in-out transform ${
-                    loading || !agreedToTerms
-                      ? "bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed opacity-50 scale-95"
-                      : "bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl scale-100 hover:scale-[1.02]"
-                  }`}
-                >
-                  {loading ? (
-                    <>
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                      Creating account...
-                    </>
-                  ) : showPlanInfo && redirectAfter === "billing" ? (
-                    `Create Account & Continue to ${
-                      selectedPlan?.charAt(0).toUpperCase() +
-                      selectedPlan?.slice(1)
-                    }`
-                  ) : (
-                    "Create Account"
-                  )}
-                </button>
-              </form>
-
-              {/* Divider */}
-              <div className="mt-4 sm:mt-6 md:mt-8">
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-gray-300 dark:border-gray-600" />
-                  </div>
-                  <div className="relative flex justify-center text-sm">
-                    <span className="px-2 bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400">
-                      Or sign up with
-                    </span>
-                  </div>
-                </div>
-
-                {/* Google Sign Up */}
-                <button
-                  type="button"
-                  onClick={handleGoogleSignUp}
-                  disabled={loading || !agreedToTerms}
-                  className={`mt-3 sm:mt-4 md:mt-6 w-full flex justify-center items-center py-2 sm:py-2.5 md:py-3 px-3 sm:px-4 border rounded-lg shadow-sm text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-300 ease-in-out transform ${
-                    loading || !agreedToTerms
-                      ? "border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed opacity-50 scale-95"
-                      : "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 scale-100 hover:scale-[1.02] hover:shadow-md"
-                  }`}
-                >
-                  {loading ? (
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-600 mr-2"></div>
-                  ) : (
-                    <img
-                      className="h-5 w-5 mr-2"
-                      src="https://www.svgrepo.com/show/475656/google-color.svg"
-                      alt="Google logo"
-                    />
-                  )}
-                  Sign up with Google
-                </button>
+                {/* Sign In Link */}
+                <p className="mt-4 sm:mt-6 md:mt-8 text-center text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                  Already have an account?{" "}
+                  <button
+                    onClick={handleNavigateToSignIn}
+                    className="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300 bg-transparent border-none cursor-pointer"
+                  >
+                    Sign in instead
+                  </button>
+                </p>
               </div>
-
-              {/* Sign In Link */}
-              <p className="mt-4 sm:mt-6 md:mt-8 text-center text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-                Already have an account?{" "}
-                <button
-                  onClick={handleNavigateToSignIn}
-                  className="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300 bg-transparent border-none cursor-pointer"
-                >
-                  Sign in instead
-                </button>
-              </p>
-            </div>
+            </SectionTransition>
           </div>
-        </SectionTransition>
-      </div>
-    </PageTransition>
+        </div>
+      </PageTransition>
+    </AuthLayout>
   );
 };
 

@@ -3,11 +3,11 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@auth/hooks/useAuth";
 
 import { useDashboardData } from "@dashboard/hooks/useDashboardData";
-import { useTheme } from "@shared/contexts/ThemeContext";
 import { useClickOutside } from "@/shared/hooks/useClickOutside";
 import { useNavigate } from "react-router-dom";
 import { useDashboardLayout } from "@dashboard/hooks/useDashboardLayout";
 import { useDashboardModals } from "@dashboard/contexts/DashboardModalsContext";
+import { useGlobalAccessibility } from "@shared/components/accessibility/hooks/useGlobalAccessibility";
 
 // Import layout components
 import DashboardSidebar from "@dashboard/components/layout/DashboardSidebar";
@@ -21,7 +21,8 @@ let AddFriendModal, UserProfileModal;
 
 const DashboardLayout = ({ children }) => {
   const { currentUser, logout } = useAuth();
-  const { theme, toggleTheme } = useTheme();
+  const { accessibilityModalProps, openAccessibilitySettings } =
+    useGlobalAccessibility();
   const navigate = useNavigate();
 
   const {
@@ -46,7 +47,6 @@ const DashboardLayout = ({ children }) => {
   const [localIsMobile, setLocalIsMobile] = useState(
     typeof window !== "undefined" ? window.innerWidth < 768 : false
   );
-  const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showLocalAddFriendModal, setShowLocalAddFriendModal] = useState(false);
   const [showLocalUserProfileModal, setShowLocalUserProfileModal] =
@@ -123,7 +123,6 @@ const DashboardLayout = ({ children }) => {
     const handleEscape = (e) => {
       if (e.key === "Escape") {
         if (showLogoutModal) setShowLogoutModal(false);
-        if (showSettingsModal) setShowSettingsModal(false);
         if (showAddFriendModal && closeAddFriendModal) closeAddFriendModal();
         if (isUserProfileOpen && closeUserProfile) closeUserProfile();
       }
@@ -133,7 +132,6 @@ const DashboardLayout = ({ children }) => {
     return () => document.removeEventListener("keydown", handleEscape);
   }, [
     showLogoutModal,
-    showSettingsModal,
     showAddFriendModal,
     isUserProfileOpen,
     closeAddFriendModal,
@@ -142,7 +140,7 @@ const DashboardLayout = ({ children }) => {
 
   // Handler functions
   const handleSettingsClick = () => {
-    setShowSettingsModal(true);
+    openAccessibilitySettings();
   };
 
   const handleLogoutClick = () => {
@@ -155,10 +153,6 @@ const DashboardLayout = ({ children }) => {
     } else {
       setLocalSidebarOpen((prev) => !prev);
     }
-  };
-
-  const closeSettingsModal = () => {
-    setShowSettingsModal(false);
   };
 
   const closeLogoutModal = () => {
@@ -394,15 +388,8 @@ const DashboardLayout = ({ children }) => {
         />
       )}
 
-      {/* Settings Modal */}
-      {showSettingsModal && (
-        <AccessibilityModal
-          isOpen={showSettingsModal}
-          onClose={closeSettingsModal}
-          theme={theme}
-          toggleTheme={toggleTheme}
-        />
-      )}
+      {/* Global Accessibility Modal */}
+      <AccessibilityModal {...accessibilityModalProps} />
 
       {/* Logout Modal */}
       {showLogoutModal && (
