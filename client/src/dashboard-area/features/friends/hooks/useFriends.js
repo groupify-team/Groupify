@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { useAuth } from "@auth/hooks/useAuth";
+import { useAuth } from "@auth/contexts/AuthContext";
 import { FriendsService } from "../services/friendsService";
 
 export const useFriends = () => {
@@ -93,7 +93,3 @@ export const useFriends = () => {
     loadFriends,
   };
 };
-
-
-
-

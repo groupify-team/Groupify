@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { useAuth } from "@auth/hooks/useAuth";
+import { useAuth } from "@auth/contexts/AuthContext";
 import { ExportService } from "@shared/services/exportService";
 
 export const useExportBackup = () => {
@@ -129,7 +129,3 @@ export const useExportBackup = () => {
     getDataPreview,
   };
 };
-
-
-
-

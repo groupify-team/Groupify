@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useAuth } from "@auth/hooks/useAuth";
+import { useAuth } from "@auth/contexts/AuthContext";
 import { createFaceProfile } from "@face-recognition/service/faceRecognitionService";
 import { saveFaceProfileToStorage } from "@firebase-services/faceProfiles";
 import { uploadBytes, getDownloadURL, ref } from "firebase/storage";
@@ -111,33 +111,44 @@ const FaceProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
 
   // Function to check if an image is a duplicate
   const isDuplicate = (newPhoto, existingPhotos) => {
-    return existingPhotos.some(existingPhoto => {
+    return existingPhotos.some((existingPhoto) => {
       // Compare by file size and name (basic check)
       const sizeMatch = newPhoto.size === existingPhoto.size;
       const nameMatch = newPhoto.originalName === existingPhoto.originalName;
-      
+
       // Compare by download URL if available (for exact matches)
-      const urlMatch = newPhoto.downloadURL && existingPhoto.downloadURL && 
-                      newPhoto.downloadURL === existingPhoto.downloadURL;
-      
+      const urlMatch =
+        newPhoto.downloadURL &&
+        existingPhoto.downloadURL &&
+        newPhoto.downloadURL === existingPhoto.downloadURL;
+
       // If we have file objects, compare lastModified as additional check
-      const modifiedMatch = newPhoto.lastModified && existingPhoto.lastModified &&
-                           newPhoto.lastModified === existingPhoto.lastModified;
-      
+      const modifiedMatch =
+        newPhoto.lastModified &&
+        existingPhoto.lastModified &&
+        newPhoto.lastModified === existingPhoto.lastModified;
+
       // Consider it a duplicate if size + name match, or URL matches, or size + modified time match
-      return (sizeMatch && nameMatch) || urlMatch || (sizeMatch && modifiedMatch);
+      return (
+        (sizeMatch && nameMatch) || urlMatch || (sizeMatch && modifiedMatch)
+      );
     });
   };
 
   // Handle photos uploaded via PhotoUpload component
   const handlePhotosUploaded = (photos) => {
     // Filter out duplicate photos
-    const newUniquePhotos = photos.filter(photo => {
+    const newUniquePhotos = photos.filter((photo) => {
       if (isDuplicate(photo, uploadedPhotos)) {
         // Show error for duplicate but don't stop the process
-        setError(prev => prev ? 
-          `${prev} • Duplicate image "${photo.originalName || 'Unknown'}" was skipped.` :
-          `Duplicate image "${photo.originalName || 'Unknown'}" was skipped.`
+        setError((prev) =>
+          prev
+            ? `${prev} • Duplicate image "${
+                photo.originalName || "Unknown"
+              }" was skipped.`
+            : `Duplicate image "${
+                photo.originalName || "Unknown"
+              }" was skipped.`
         );
         return false;
       }
@@ -145,17 +156,22 @@ const FaceProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
     });
 
     if (newUniquePhotos.length === 0) {
-      setError("All selected images are duplicates. Please choose different photos.");
+      setError(
+        "All selected images are duplicates. Please choose different photos."
+      );
       return;
     }
 
     // Clear any previous errors if we have valid new photos
-    if (newUniquePhotos.length > 0 && newUniquePhotos.length === photos.length) {
+    if (
+      newUniquePhotos.length > 0 &&
+      newUniquePhotos.length === photos.length
+    ) {
       setError("");
     }
 
-    setUploadedPhotos(prev => [...prev, ...newUniquePhotos]); // Append new unique photos
-    
+    setUploadedPhotos((prev) => [...prev, ...newUniquePhotos]); // Append new unique photos
+
     // Show review screen after upload
     setShowReview(true);
   };
@@ -480,10 +496,15 @@ const FaceProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
                     </div>
                   </div>
                   <p className="text-sm text-blue-700 dark:text-blue-300">
-                    {uploadedPhotos.length < 2 
-                      ? `Upload ${2 - uploadedPhotos.length} more photo${2 - uploadedPhotos.length === 1 ? '' : 's'} to create your profile`
-                      : `You can upload ${5 - uploadedPhotos.length} more photo${5 - uploadedPhotos.length === 1 ? '' : 's'} or create your profile now`
-                    }
+                    {uploadedPhotos.length < 2
+                      ? `Upload ${2 - uploadedPhotos.length} more photo${
+                          2 - uploadedPhotos.length === 1 ? "" : "s"
+                        } to create your profile`
+                      : `You can upload ${
+                          5 - uploadedPhotos.length
+                        } more photo${
+                          5 - uploadedPhotos.length === 1 ? "" : "s"
+                        } or create your profile now`}
                   </p>
                 </div>
               )}
@@ -495,11 +516,19 @@ const FaceProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
                 maxPhotos={5}
                 currentPhotoCount={uploadedPhotos.length} // Pass actual count, not 0
                 title="Upload Face Photos"
-                subtitle={`Upload ${uploadedPhotos.length > 0 ? `${5 - uploadedPhotos.length} more` : '2-5'} clear photos of yourself for profile creation`}
+                subtitle={`Upload ${
+                  uploadedPhotos.length > 0
+                    ? `${5 - uploadedPhotos.length} more`
+                    : "2-5"
+                } clear photos of yourself for profile creation`}
                 acceptedFormats="JPG, PNG"
                 maxFileSize="10MB"
                 showLimitWarning={true}
-                limitWarningText={`Please upload ${uploadedPhotos.length === 0 ? 'between 2-5' : `${Math.max(0, 2 - uploadedPhotos.length)} more`} high-quality photos of yourself for best recognition accuracy.`}
+                limitWarningText={`Please upload ${
+                  uploadedPhotos.length === 0
+                    ? "between 2-5"
+                    : `${Math.max(0, 2 - uploadedPhotos.length)} more`
+                } high-quality photos of yourself for best recognition accuracy.`}
                 disabled={uploadedPhotos.length >= 5} // Disable when max reached
               />
 
@@ -622,7 +651,3 @@ const FaceProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
 };
 
 export default FaceProfileModal;
-
-
-
-

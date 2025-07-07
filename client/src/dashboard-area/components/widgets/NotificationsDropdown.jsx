@@ -5,7 +5,7 @@ import {
   CheckCircleIcon,
   XCircleIcon,
 } from "@heroicons/react/24/outline";
-import { useAuth } from "@auth/hooks/useAuth";
+import { useAuth } from "@auth/contexts/AuthContext";
 import { useDashboardData } from "../../hooks/useDashboardData";
 import {
   acceptFriendRequest,
@@ -285,7 +285,3 @@ const NotificationsDropdown = ({ pendingRequests, tripInvites }) => {
 };
 
 export default NotificationsDropdown;
-
-
-
-

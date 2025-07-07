@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useAuth } from "@auth/hooks/useAuth";
+import { useAuth } from "@auth/contexts/AuthContext";
 import { uploadPhoto } from "@firebase-services/storage";
 import { storage } from "@shared/services/firebase/config";
 import { usePlanLimits } from "../../../../shared/hooks/usePlanLimits";
@@ -785,7 +785,3 @@ const PhotoUpload = ({
 };
 
 export default PhotoUpload;
-
-
-
-

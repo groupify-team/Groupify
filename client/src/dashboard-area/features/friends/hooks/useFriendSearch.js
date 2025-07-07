@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { useAuth } from "@auth/hooks/useAuth";
+import { useAuth } from "@auth/contexts/AuthContext";
 import { FriendsService } from "../services/friendsService";
 
 export const useFriendSearch = () => {
@@ -57,7 +57,3 @@ export const useFriendSearch = () => {
     clearSearch,
   };
 };
-
-
-
-

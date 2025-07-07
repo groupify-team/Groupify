@@ -4,7 +4,7 @@ import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { auth, db, storage } from "@shared/services/firebase/config";
 import { updateEmail, updatePassword, updateProfile } from "firebase/auth";
 import ProfileImageCropper from "./ProfileImageCropper";
-import { useAuth } from "@auth/hooks/useAuth";
+import { useAuth } from "@auth/contexts/AuthContext";
 import { useTheme } from "@shared/contexts/ThemeContext";
 import {
   CameraIcon,
@@ -497,7 +497,3 @@ const EditProfileModal = ({ isOpen, onClose }) => {
 };
 
 export default EditProfileModal;
-
-
-
-

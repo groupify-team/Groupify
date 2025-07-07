@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useAuth } from "@auth/hooks/useAuth";
+import { useAuth } from "@auth/contexts/AuthContext";
 import { doc, onSnapshot, getDoc } from "firebase/firestore";
 import { db } from "@shared/services/firebase/config";
 import {
@@ -502,6 +502,3 @@ const FriendsSection = () => {
 };
 
 export default FriendsSection;
-
-
-

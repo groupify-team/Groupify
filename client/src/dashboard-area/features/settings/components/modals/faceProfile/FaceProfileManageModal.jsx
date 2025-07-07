@@ -9,7 +9,7 @@ import {
   SparklesIcon,
   ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
-import { useAuth } from "@auth/hooks/useAuth";
+import { useAuth } from "@auth/contexts/AuthContext";
 import { toast } from "react-hot-toast";
 import {
   addPhotosToProfile,
@@ -558,7 +558,3 @@ const FaceProfileManageModal = ({ isOpen, onClose, onProfileUpdated }) => {
 };
 
 export default FaceProfileManageModal;
-
-
-
-

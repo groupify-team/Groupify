@@ -26,7 +26,9 @@ import {
 import {
   hasFaceProfile,
   getProfilePhotos,
+  createFaceProfile,
 } from "@face-recognition/service/faceRecognitionService";
+import { getFaceProfileFromStorage } from "@shared/services/firebase/faceProfiles";
 import { ERROR_MESSAGES } from "@dashboard/utils/dashboardConstants";
 
 // Global state to share data between instances
@@ -88,21 +90,46 @@ export const useDashboardData = () => {
   /**
    * Load face profile data
    */
-  const loadFaceProfile = useCallback(() => {
+  const loadFaceProfile = useCallback(async () => {
     if (!currentUser?.uid) return;
 
+    setIsLoadingProfile(true);
     try {
+      // Check if profile exists in memory first
       if (hasFaceProfile(currentUser.uid)) {
         setHasProfile(true);
         setProfilePhotos(getProfilePhotos(currentUser.uid));
+        return;
+      }
+
+      // Try to load from Firebase Storage if not in memory
+      const storedProfile = await getFaceProfileFromStorage(currentUser.uid);
+
+      if (
+        storedProfile &&
+        storedProfile.images &&
+        storedProfile.images.length > 0
+      ) {
+        try {
+          const imageUrls = storedProfile.images.map((img) => img.url);
+          await createFaceProfile(currentUser.uid, imageUrls);
+          setHasProfile(true);
+          setProfilePhotos(getProfilePhotos(currentUser.uid));
+        } catch (error) {
+          console.error("❌ Failed to auto-load face profile:", error);
+          setHasProfile(false);
+          setProfilePhotos([]);
+        }
       } else {
         setHasProfile(false);
         setProfilePhotos([]);
       }
     } catch (error) {
-      console.error("? Error loading face profile:", error);
+      console.error("❌ Error loading face profile:", error);
       setHasProfile(false);
       setProfilePhotos([]);
+    } finally {
+      setIsLoadingProfile(false);
     }
   }, [currentUser?.uid]);
 
@@ -123,7 +150,7 @@ export const useDashboardData = () => {
     // If we have global data for this user, use it immediately
     if (globalData && globalUserId === currentUser.uid) {
       updateFromGlobalData(globalData);
-      loadFaceProfile();
+      loadFaceProfile(); // Already async, no need to await here
       return globalData;
     }
 
@@ -132,7 +159,7 @@ export const useDashboardData = () => {
       try {
         const result = await globalLoadPromise;
         updateFromGlobalData(result);
-        loadFaceProfile();
+        loadFaceProfile(); // Already async, no need to await here
         return result;
       } catch (error) {
         console.error("? Global load operation failed:", error);
@@ -200,7 +227,7 @@ export const useDashboardData = () => {
 
       // Update local state
       updateFromGlobalData(result);
-      loadFaceProfile();
+      loadFaceProfile(); // Already async, no need to await here
 
       initialLoadDone.current = true;
 
@@ -410,7 +437,7 @@ export const useDashboardData = () => {
       loadDashboardData();
     } else if (globalData && globalUserId === currentUser.uid) {
       updateFromGlobalData(globalData);
-      loadFaceProfile();
+      loadFaceProfile(); // Already async, no need to await here
     }
 
     // Cleanup

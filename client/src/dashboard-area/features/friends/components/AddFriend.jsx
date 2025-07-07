@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useAuth } from "@auth/hooks/useAuth";
+import { useAuth } from "@auth/contexts/AuthContext";
 import { findUsersByEmail } from "@firebase-services/users";
 import { useFriendSearch, useFriendRequests } from "../hooks/index";
 
@@ -257,9 +257,9 @@ const AddFriend = ({
               Tips for adding friends:
             </h4>
             <ul className="text-blue-700 dark:text-blue-300 text-xs space-y-1">
-              <li>• Make sure they have registered with this email</li>
-              <li>• Check for typos in the email address</li>
-              <li>• They'll receive a friend request notification</li>
+              <li>ï¿½ Make sure they have registered with this email</li>
+              <li>ï¿½ Check for typos in the email address</li>
+              <li>ï¿½ They'll receive a friend request notification</li>
             </ul>
           </div>
         </div>
@@ -269,7 +269,3 @@ const AddFriend = ({
 };
 
 export default AddFriend;
-
-
-
-

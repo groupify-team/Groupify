@@ -5,7 +5,7 @@ import React, {
   forwardRef,
   useImperativeHandle,
 } from "react";
-import { useAuth } from "@auth/hooks/useAuth";
+import { useAuth } from "@auth/contexts/AuthContext";
 import { createFaceProfile } from "@face-recognition/service/faceRecognitionService";
 import { saveFaceProfileToStorage } from "@firebase-services/faceProfiles";
 import { uploadBytes, getDownloadURL, ref } from "firebase/storage";
@@ -632,7 +632,3 @@ const SmartFaceScan = forwardRef(
 SmartFaceScan.displayName = "SmartFaceScan";
 
 export default SmartFaceScan;
-
-
-
-
