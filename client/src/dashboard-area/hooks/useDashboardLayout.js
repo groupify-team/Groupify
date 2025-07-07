@@ -5,10 +5,7 @@ import {
   DEFAULT_STATE,
   BREAKPOINTS,
 } from "@dashboard/utils/dashboardConstants";
-import {
-  shouldShowSidebar,
-  isMobileDevice,
-} from "@dashboard/utils/dashboardHelpers";
+import { isMobileDevice } from "@dashboard/utils/dashboardHelpers";
 
 export const useDashboardLayout = () => {
   const navigate = useNavigate();
@@ -445,4 +442,3 @@ export const useDashboardLayout = () => {
     },
   };
 };
-

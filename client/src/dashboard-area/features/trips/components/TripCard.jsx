@@ -1,5 +1,5 @@
 // components/TripCard.jsx
-import React from "react";
+import React, { memo } from "react";
 import {
   MapPinIcon,
   UserGroupIcon,
@@ -9,7 +9,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { formatTripDate, getTripStatus } from "@trips/utils/tripHelpers";
 
-const TripCard = ({ trip, onViewTrip }) => {
+const TripCard = memo(({ trip, onViewTrip }) => {
   const tripStatus = getTripStatus(trip);
 
   return (
@@ -135,7 +135,8 @@ const TripCard = ({ trip, onViewTrip }) => {
       </div>
     </div>
   );
-};
+});
+
+TripCard.displayName = "TripCard";
 
 export default TripCard;
-

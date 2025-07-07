@@ -4,12 +4,10 @@ import { XMarkIcon } from "@heroicons/react/24/outline";
 const PhotoUploadSection = ({
   isOpen,
   onClose,
-  tripId,
   photoLimitStatus,
   remainingPhotoSlots,
   maxPhotos,
   currentPhotoCount,
-  onPhotoUploaded,
 }) => {
   if (!isOpen) return null;
 
@@ -188,4 +186,3 @@ const PhotoUploadSection = ({
 };
 
 export default PhotoUploadSection;
-

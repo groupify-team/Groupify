@@ -1,36 +1,15 @@
 /**
- * Hook for managin  // PERFORMANCE OPTIMIZED: Fetch data in parallel + add timing + prevent duplicates
-  const fetchTripAndPhotos = useCallback(async () => {
-    const currentKey = `${tripId}-${currentUserId}`;
-    
-    // PERFORMANCE: Prevent duplicate fetches
-    if (fetchInProgress.current || lastFetchKey.current === currentKey) {
-      console.log("⏭️ Skipping duplicate fetch for", currentKey);
-      return;
-    }
-    
-    fetchInProgress.current = true;
-    lastFetchKey.current = currentKey;
-    
-    try {
-      setLoading(true);
-      setError(null);
-
-      console.log("🚀 Starting trip data fetch...");
-      const startTime = performance.now();
-
-      // OPTIMIZATION 1: Fetch trip and photos in parallel
-      const [tripData, photosData] = await Promise.all([
-        measureAsyncPerformance("Trip fetch", () => getTrip(tripId)),
-        measureAsyncPerformance("Photos fetch", () => getTripPhotos(tripId))
-      ]);hotos, and members in trip detail view
- * PERFORMANCE OPTIMIZED VERSION
+ * Hook for managing trips, photos, and members in trip detail view
+ * PERFORMANCE OPTIMIZED VERSION with caching
  */
 
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
-import { getTrip, updateTrip } from "@shared/services/firebase/trips";
-import { getTripPhotos } from "@shared/services/firebase/storage";
-import { getUserProfile } from "@firebase-services/users";
+import { updateTrip } from "@shared/services/firebase/trips";
+import {
+  getTrip,
+  getTripPhotos,
+  getBatchUserProfiles,
+} from "@shared/services/cache/cachedFirebaseServices";
 import { measureAsyncPerformance } from "@shared/utils/performance";
 
 export const useTripData = (tripId, currentUserId) => {
@@ -43,11 +22,19 @@ export const useTripData = (tripId, currentUserId) => {
   const [error, setError] = useState(null);
 
   // PERFORMANCE: Add dependency tracking to prevent duplicate calls
-  const lastFetchKey = useRef(null);
   const fetchInProgress = useRef(false);
 
-  // PERFORMANCE OPTIMIZED: Fetch data in parallel + add timing
+  // PERFORMANCE OPTIMIZED: Fetch data in parallel + add timing + prevent duplicates
   const fetchTripAndPhotos = useCallback(async () => {
+    const currentKey = `${tripId}-${currentUserId}`;
+
+    // PERFORMANCE: Prevent duplicate fetches
+    if (fetchInProgress.current) {
+      console.log("⏭️ Skipping duplicate fetch for", currentKey);
+      return;
+    }
+
+    fetchInProgress.current = true;
     try {
       setLoading(true);
       setError(null);
@@ -86,10 +73,10 @@ export const useTripData = (tripId, currentUserId) => {
 
       // OPTIMIZATION 2: Load member profiles in background (non-blocking)
       if (updatedTripData.members.length > 0) {
-        // Don't await - load in background
+        // Don't await - load in background using batch operation
         measureAsyncPerformance("Member profiles fetch", async () => {
-          const memberData = await Promise.all(
-            updatedTripData.members.map((uid) => getUserProfile(uid))
+          const memberData = await getBatchUserProfiles(
+            updatedTripData.members
           );
           setMemberProfiles(memberData);
           setTripMembers(memberData);
