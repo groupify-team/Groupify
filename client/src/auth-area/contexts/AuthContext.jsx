@@ -4,7 +4,6 @@
  */
 import React, {
   createContext,
-  useContext,
   useState,
   useEffect,
   useRef,
@@ -27,9 +26,6 @@ import subscriptionService from "../../shared/services/subscriptionService";
 const AuthContext = createContext();
 
 export { AuthContext };
-export function useAuth() {
-  return useContext(AuthContext);
-}
 
 export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);

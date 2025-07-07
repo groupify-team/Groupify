@@ -5,10 +5,11 @@ import React, {
   forwardRef,
   useImperativeHandle,
 } from "react";
-import { useAuth } from "@auth/contexts/AuthContext";
+import { useAuth } from "@auth/hooks/useAuth";
+
 import { createFaceProfile } from "@face-recognition/service/faceRecognitionService";
 import { saveFaceProfileToStorage } from "@firebase-services/faceProfiles";
-import { uploadBytes, getDownloadURL, ref } from "firebase/storage";
+import { uploadBytes, getDownloadURL } from "firebase/storage";
 import { storage } from "@shared/services/firebase/config";
 import MobileStepGuide from "./ui/MobileStepGuide";
 import DesktopCameraView from "./ui/DesktopCameraView";

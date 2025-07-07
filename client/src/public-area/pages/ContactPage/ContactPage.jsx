@@ -2,7 +2,9 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import PublicLayout from "../../components/layout/PublicLayout";
 import HeroSection from "../../components/ui/HeroSection";
-import { usePublicNavigation } from "../../hooks/usePublicNavigation";
+import PageTransition, {
+  SectionTransition,
+} from "@/shared/components/ui/PageTransition";
 
 import {
   EnvelopeIcon,
@@ -370,7 +372,6 @@ const SuccessPage = ({ setSubmitted }) => (
 );
 
 const ContactUs = () => {
-  const { handleGetStarted } = usePublicNavigation();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -379,11 +380,13 @@ const ContactUs = () => {
     category: "general",
   });
   const [loading, setLoading] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
   // Scroll to top on component mount
   useEffect(() => {
     window.scrollTo(0, 0);
+    setIsLoaded(true);
   }, []);
 
   const handleSubmit = async (e) => {
@@ -411,7 +414,7 @@ const ContactUs = () => {
 
       // Send email via Firebase Function
       const sendContactEmail = httpsCallable(functions, "sendContactEmail");
-      const result = await sendContactEmail(formData);
+      await sendContactEmail(formData);
       setSubmitted(true);
       toast.success("Message sent successfully!");
     } catch (error) {
@@ -478,30 +481,29 @@ const ContactUs = () => {
       footerType="extended"
       footerProps={{ customText: "© 2025 Groupify. We're here to help." }}
     >
-      {/* Hero Section */}
-      <HeroSection
-        badge={{ icon: ChatBubbleLeftRightIcon, text: "Get In Touch" }}
-        title="Contact Us"
-        description="Have questions or feedback? We'd love to hear from you. Send us a message and we'll respond as soon as possible."
-        variant="contact"
-      />
+      <PageTransition variant="fadeIn" trigger={isLoaded}>
+        {/* Hero Section */}
+        <HeroSection
+          badge={{ icon: ChatBubbleLeftRightIcon, text: "Get In Touch" }}
+          title="Contact Us"
+          description="Have questions or feedback? We'd love to hear from you. Send us a message and we'll respond as soon as possible."
+          variant="contact"
+        />
 
-      {/* Contact Methods */}
-      <ContactMethods contactInfo={contactInfo} />
+        {/* Contact Methods */}
+        <ContactMethods contactInfo={contactInfo} />
 
-      {/* Contact Form Section */}
-      <ContactFormSection
-        formData={formData}
-        setFormData={setFormData}
-        handleSubmit={handleSubmit}
-        loading={loading}
-        categories={categories}
-      />
+        {/* Contact Form Section */}
+        <ContactFormSection
+          formData={formData}
+          setFormData={setFormData}
+          handleSubmit={handleSubmit}
+          loading={loading}
+          categories={categories}
+        />
+      </PageTransition>
     </PublicLayout>
   );
 };
 
 export default ContactUs;
-
-
-

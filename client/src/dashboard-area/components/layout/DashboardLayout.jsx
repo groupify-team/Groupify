@@ -1,10 +1,13 @@
 // DashboardLayout.jsx - OPTIMIZED VERSION with progressive loading
-import React, { useState, useEffect } from "react";
-import { useAuth } from "@/auth-area/contexts/AuthContext";
+import React, { useState, useEffect, useMemo } from "react";
+import { useAuth } from "@auth/hooks/useAuth";
+
 import { useDashboardData } from "@dashboard/hooks/useDashboardData";
 import { useTheme } from "@shared/contexts/ThemeContext";
 import { useClickOutside } from "@/shared/hooks/useClickOutside";
 import { useNavigate } from "react-router-dom";
+import { useDashboardLayout } from "@dashboard/hooks/useDashboardLayout";
+import { useDashboardModals } from "@dashboard/contexts/DashboardModalsContext";
 
 // Import layout components
 import DashboardSidebar from "@dashboard/components/layout/DashboardSidebar";
@@ -13,36 +16,8 @@ import MobileBottomNav from "@dashboard/components/layout/MobileBottomNav";
 import AccessibilityModal from "@/shared/components/accessibility/AccessibilityModal";
 import DashboardSkeleton from "./DashboardSkeleton"; // New skeleton component
 
-// Try to import new hooks and modals, fallback if they don't exist
-let useDashboardLayout, useDashboardModals, AddFriendModal, UserProfileModal;
-
-try {
-  const layoutModule = require("@dashboard/hooks/useDashboardLayout");
-  useDashboardLayout = layoutModule.useDashboardLayout;
-} catch (e) {
-  console.log("useDashboardLayout not available, using fallback");
-}
-
-try {
-  const modalsModule = require("@dashboard/contexts/DashboardModalsContext");
-  useDashboardModals = modalsModule.useDashboardModals;
-} catch (e) {
-  console.log("useDashboardModals not available, using fallback");
-}
-
-try {
-  AddFriendModal =
-    require("@dashboard/features/friends/components/AddFriendModal").default;
-} catch (e) {
-  console.log("AddFriendModal not available");
-}
-
-try {
-  UserProfileModal =
-    require("@dashboard/features/friends/components/UserProfileModal").default;
-} catch (e) {
-  console.log("UserProfileModal not available");
-}
+// For now, disable modal components until proper imports are available
+let AddFriendModal, UserProfileModal;
 
 const DashboardLayout = ({ children }) => {
   const { currentUser, logout } = useAuth();
@@ -60,29 +35,9 @@ const DashboardLayout = ({ children }) => {
     removePendingRequest,
   } = useDashboardData();
 
-  // Try to use new layout system, fallback to local state
-  let layoutData = null;
-  let modalsData = null;
-
-  if (useDashboardLayout) {
-    try {
-      layoutData = useDashboardLayout();
-    } catch (e) {
-      console.log(
-        "Error using useDashboardLayout, falling back to local state"
-      );
-    }
-  }
-
-  if (useDashboardModals) {
-    try {
-      modalsData = useDashboardModals();
-    } catch (e) {
-      console.log(
-        "Error using useDashboardModals, falling back to local state"
-      );
-    }
-  }
+  // Use new layout system and modals
+  const layoutData = useDashboardLayout();
+  const modalsData = useDashboardModals();
 
   // Local state for when new hooks aren't available
   const [localSidebarOpen, setLocalSidebarOpen] = useState(
@@ -101,7 +56,6 @@ const DashboardLayout = ({ children }) => {
   // Use new layout system or local state
   const sidebarOpen = layoutData?.layout?.sidebarOpen ?? localSidebarOpen;
   const isMobile = layoutData?.layout?.isMobile ?? localIsMobile;
-  const setSidebarOpen = layoutData?.sidebar?.toggle ?? setLocalSidebarOpen;
 
   // Use new modals system or local state
   const showAddFriendModal =
@@ -115,14 +69,25 @@ const DashboardLayout = ({ children }) => {
   const preservedFoundUser =
     modalsData?.userProfile?.preservedFoundUser ?? null;
 
-  const closeAddFriendModal =
-    modalsData?.addFriend?.close ?? (() => setShowLocalAddFriendModal(false));
-  const closeUserProfile =
-    modalsData?.userProfileActions?.close ??
-    (() => {
-      setShowLocalUserProfileModal(false);
-      setSelectedLocalUser(null);
-    });
+  const closeAddFriendModal = useMemo(
+    () =>
+      modalsData?.addFriend?.close ?? (() => setShowLocalAddFriendModal(false)),
+    [modalsData?.addFriend?.close, setShowLocalAddFriendModal]
+  );
+
+  const closeUserProfile = useMemo(
+    () =>
+      modalsData?.userProfileActions?.close ??
+      (() => {
+        setShowLocalUserProfileModal(false);
+        setSelectedLocalUser(null);
+      }),
+    [
+      modalsData?.userProfileActions?.close,
+      setShowLocalUserProfileModal,
+      setSelectedLocalUser,
+    ]
+  );
   const openUserProfile =
     modalsData?.userProfileActions?.open ??
     ((user) => {

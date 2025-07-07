@@ -25,7 +25,7 @@ import {
 } from "@heroicons/react/24/outline";
 
 // Auth Context
-import { useAuth } from "@/auth-area/contexts/AuthContext";
+import { useAuth } from "@auth/hooks/useAuth";
 
 // Dashboard Hooks
 import { useDashboardLayout } from "@/dashboard-area/hooks/useDashboardLayout";
@@ -53,7 +53,6 @@ import {
 
 // Services
 import {
-  canUserCreateTrip,
   getUserTripCount,
   MAX_TRIPS_PER_USER,
   acceptTripInvite,
@@ -65,12 +64,7 @@ const TripsSection = () => {
   const navigate = useNavigate();
 
   // Plan Limits Hook
-  const { 
-    canPerformAction, 
-    showUpgradePrompt, 
-    getUsageInfo,
-    isFreePlan 
-  } = usePlanLimits();
+  const { canPerformAction, showUpgradePrompt, getUsageInfo } = usePlanLimits();
 
   // Layout state and actions
   const {
@@ -99,20 +93,21 @@ const TripsSection = () => {
 
   // Modal state
   const {
-    createTrip: { open: openCreateTripModal },
+    createTrip: { open: _openCreateTripModal },
   } = useDashboardModals();
 
   // Local state
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [canAcceptMoreInvitations, setCanAcceptMoreInvitations] = useState(true);
+  const [canAcceptMoreInvitations, setCanAcceptMoreInvitations] =
+    useState(true);
   const [currentTripCount, setCurrentTripCount] = useState(0);
   const [processingInviteId, setProcessingInviteId] = useState(null);
-  
+
   // Memoize filtered trips to prevent unnecessary recalculations
   const filteredTrips = useMemo(() => {
     return filterTrips(trips, searchTerm, dateFilter);
   }, [trips, searchTerm, dateFilter]);
-  
+
   // Click outside ref for filter dropdown
   const filterDropdownRef = useClickOutside(() => closeFilterDropdown());
 
@@ -123,11 +118,13 @@ const TripsSection = () => {
         try {
           const tripCount = await getUserTripCount(currentUser.uid);
           setCurrentTripCount(tripCount);
-          
+
           const usageInfo = getUsageInfo();
           if (usageInfo?.trips) {
             const { limit } = usageInfo.trips;
-            setCanAcceptMoreInvitations(limit === "unlimited" || tripCount < limit);
+            setCanAcceptMoreInvitations(
+              limit === "unlimited" || tripCount < limit
+            );
           }
         } catch (error) {
           console.error("Error checking trip acceptance ability:", error);
@@ -142,14 +139,14 @@ const TripsSection = () => {
   const handleCreateTrip = useCallback(async () => {
     try {
       // Use plan limits validation instead of hardcoded check
-      const limitCheck = canPerformAction("create_trip", { 
-        currentTripCount: trips.length 
+      const limitCheck = canPerformAction("create_trip", {
+        currentTripCount: trips.length,
       });
 
       if (!limitCheck.allowed) {
         showUpgradePrompt(limitCheck.reason, {
           title: "Upgrade to Create More Trips",
-          persistent: true
+          persistent: true,
         });
         return;
       }
@@ -162,98 +159,112 @@ const TripsSection = () => {
   }, [canPerformAction, trips.length, showUpgradePrompt, showErrorMessage]);
 
   // Enhanced Accept Invite Handler with Validation and Performance Optimization
-  const handleAcceptTripInvite = useCallback(async (invite) => {
-    if (processingInviteId === invite.id) return; // Prevent double-processing
+  const handleAcceptTripInvite = useCallback(
+    async (invite) => {
+      if (processingInviteId === invite.id) return; // Prevent double-processing
 
-    try {
-      setProcessingInviteId(invite.id);
+      try {
+        setProcessingInviteId(invite.id);
 
-      // Check if user can accept more trips
-      const limitCheck = canPerformAction("create_trip", { 
-        currentTripCount: currentTripCount + 1 // +1 because they're joining a new trip
-      });
-
-      if (!limitCheck.allowed) {
-        showUpgradePrompt(
-          `You've reached your trip limit (${limitCheck.limit} trips). Upgrade to accept more invitations!`,
-          {
-            title: "Upgrade to Accept Invitation",
-            persistent: true
-          }
-        );
-        return;
-      }
-
-      // Proceed with accepting the invitation
-      await acceptTripInvite(invite.id, currentUser.uid);
-      removeTripInvite(invite.id);
-      await refreshTrips();
-
-      // Update local state
-      setCurrentTripCount(prev => prev + 1);
-      
-      // Check if user can still accept more invitations
-      const usageInfo = getUsageInfo();
-      if (usageInfo?.trips) {
-        const { limit } = usageInfo.trips;
-        setCanAcceptMoreInvitations(limit === "unlimited" || (currentTripCount + 1) < limit);
-      }
-
-      // Show success message with usage info
-      const usageInfo2 = getUsageInfo();
-      if (usageInfo2?.trips) {
-        showSuccessMessage(
-          `Joined ${invite.tripName}! (${currentTripCount + 1}/${usageInfo2.trips.limit === "unlimited" ? "∞" : usageInfo2.trips.limit} trips)`
-        );
-      } else {
-        showSuccessMessage("Trip invitation accepted");
-      }
-
-    } catch (error) {
-      console.error("Error accepting trip invite:", error);
-      
-      // Check if error is related to plan limits
-      if (error.message?.includes("limit") || error.message?.includes("upgrade")) {
-        showErrorMessage(error.message);
-        showUpgradePrompt(error.message, {
-          title: "Upgrade Required",
-          persistent: true
+        // Check if user can accept more trips
+        const limitCheck = canPerformAction("create_trip", {
+          currentTripCount: currentTripCount + 1, // +1 because they're joining a new trip
         });
-      } else {
-        showErrorMessage("Failed to accept trip invitation");
+
+        if (!limitCheck.allowed) {
+          showUpgradePrompt(
+            `You've reached your trip limit (${limitCheck.limit} trips). Upgrade to accept more invitations!`,
+            {
+              title: "Upgrade to Accept Invitation",
+              persistent: true,
+            }
+          );
+          return;
+        }
+
+        // Proceed with accepting the invitation
+        await acceptTripInvite(invite.id, currentUser.uid);
+        removeTripInvite(invite.id);
+        await refreshTrips();
+
+        // Update local state
+        setCurrentTripCount((prev) => prev + 1);
+
+        // Check if user can still accept more invitations
+        const usageInfo = getUsageInfo();
+        if (usageInfo?.trips) {
+          const { limit } = usageInfo.trips;
+          setCanAcceptMoreInvitations(
+            limit === "unlimited" || currentTripCount + 1 < limit
+          );
+        }
+
+        // Show success message with usage info
+        const usageInfo2 = getUsageInfo();
+        if (usageInfo2?.trips) {
+          showSuccessMessage(
+            `Joined ${invite.tripName}! (${currentTripCount + 1}/${
+              usageInfo2.trips.limit === "unlimited"
+                ? "∞"
+                : usageInfo2.trips.limit
+            } trips)`
+          );
+        } else {
+          showSuccessMessage("Trip invitation accepted");
+        }
+      } catch (error) {
+        console.error("Error accepting trip invite:", error);
+
+        // Check if error is related to plan limits
+        if (
+          error.message?.includes("limit") ||
+          error.message?.includes("upgrade")
+        ) {
+          showErrorMessage(error.message);
+          showUpgradePrompt(error.message, {
+            title: "Upgrade Required",
+            persistent: true,
+          });
+        } else {
+          showErrorMessage("Failed to accept trip invitation");
+        }
+      } finally {
+        setProcessingInviteId(null);
       }
-    } finally {
-      setProcessingInviteId(null);
-    }
-  }, [
-    processingInviteId,
-    canPerformAction,
-    currentTripCount,
-    showUpgradePrompt,
-    currentUser.uid,
-    removeTripInvite,
-    refreshTrips,
-    getUsageInfo,
-    showSuccessMessage,
-    showErrorMessage
-  ]);
+    },
+    [
+      processingInviteId,
+      canPerformAction,
+      currentTripCount,
+      showUpgradePrompt,
+      currentUser.uid,
+      removeTripInvite,
+      refreshTrips,
+      getUsageInfo,
+      showSuccessMessage,
+      showErrorMessage,
+    ]
+  );
 
   // Decline invite handler with Performance Optimization
-  const handleDeclineTripInvite = useCallback(async (invite) => {
-    if (processingInviteId === invite.id) return;
+  const handleDeclineTripInvite = useCallback(
+    async (invite) => {
+      if (processingInviteId === invite.id) return;
 
-    try {
-      setProcessingInviteId(invite.id);
-      await declineTripInvite(invite.id);
-      removeTripInvite(invite.id);
-      showSuccessMessage("Trip invitation declined");
-    } catch (error) {
-      console.error("Error declining trip invite:", error);
-      showErrorMessage("Failed to decline trip invitation");
-    } finally {
-      setProcessingInviteId(null);
-    }
-  }, [processingInviteId, removeTripInvite, showSuccessMessage, showErrorMessage]);
+      try {
+        setProcessingInviteId(invite.id);
+        await declineTripInvite(invite.id);
+        removeTripInvite(invite.id);
+        showSuccessMessage("Trip invitation declined");
+      } catch (error) {
+        console.error("Error declining trip invite:", error);
+        showErrorMessage("Failed to decline trip invitation");
+      } finally {
+        setProcessingInviteId(null);
+      }
+    },
+    [processingInviteId, removeTripInvite, showSuccessMessage, showErrorMessage]
+  );
 
   const handleTripCreated = useCallback(() => {
     refreshTrips();
@@ -276,83 +287,103 @@ const TripsSection = () => {
   );
 
   // Helper function to render invitation action buttons
-  const renderInvitationButtons = useCallback((invite) => {
-    const isProcessing = processingInviteId === invite.id;
-    const canAccept = canAcceptMoreInvitations && !isProcessing;
+  const renderInvitationButtons = useCallback(
+    (invite) => {
+      const isProcessing = processingInviteId === invite.id;
+      const canAccept = canAcceptMoreInvitations && !isProcessing;
 
-    return (
-      <div className="flex gap-2">
-        <button
-          onClick={() => handleAcceptTripInvite(invite)}
-          disabled={!canAccept}
-          className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-1 ${
-            canAccept
-              ? 'bg-green-600 hover:bg-green-700 text-white'
-              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-          }`}
-          title={!canAcceptMoreInvitations ? "Trip limit reached - upgrade to accept" : "Accept invitation"}
-        >
-          {isProcessing ? (
-            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-          ) : (
-            <CheckCircleIcon className="w-4 h-4" />
-          )}
-          Accept
-        </button>
-        <button
-          onClick={() => handleDeclineTripInvite(invite)}
-          disabled={isProcessing}
-          className="bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-1"
-        >
-          {isProcessing ? (
-            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-          ) : (
-            <XCircleIcon className="w-4 h-4" />
-          )}
-          Decline
-        </button>
-      </div>
-    );
-  }, [processingInviteId, canAcceptMoreInvitations, handleAcceptTripInvite, handleDeclineTripInvite]);
+      return (
+        <div className="flex gap-2">
+          <button
+            onClick={() => handleAcceptTripInvite(invite)}
+            disabled={!canAccept}
+            className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-1 ${
+              canAccept
+                ? "bg-green-600 hover:bg-green-700 text-white"
+                : "bg-gray-300 text-gray-500 cursor-not-allowed"
+            }`}
+            title={
+              !canAcceptMoreInvitations
+                ? "Trip limit reached - upgrade to accept"
+                : "Accept invitation"
+            }
+          >
+            {isProcessing ? (
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <CheckCircleIcon className="w-4 h-4" />
+            )}
+            Accept
+          </button>
+          <button
+            onClick={() => handleDeclineTripInvite(invite)}
+            disabled={isProcessing}
+            className="bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-1"
+          >
+            {isProcessing ? (
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <XCircleIcon className="w-4 h-4" />
+            )}
+            Decline
+          </button>
+        </div>
+      );
+    },
+    [
+      processingInviteId,
+      canAcceptMoreInvitations,
+      handleAcceptTripInvite,
+      handleDeclineTripInvite,
+    ]
+  );
 
   // Helper function to render mobile invitation buttons
-  const renderMobileInvitationButtons = useCallback((invite) => {
-    const isProcessing = processingInviteId === invite.id;
-    const canAccept = canAcceptMoreInvitations && !isProcessing;
+  const renderMobileInvitationButtons = useCallback(
+    (invite) => {
+      const isProcessing = processingInviteId === invite.id;
+      const canAccept = canAcceptMoreInvitations && !isProcessing;
 
-    return (
-      <div className="flex gap-3">
-        <button
-          onClick={() => handleAcceptTripInvite(invite)}
-          disabled={!canAccept}
-          className={`flex-1 py-3 px-4 rounded-xl font-medium transition-all duration-200 flex items-center justify-center gap-2 ${
-            canAccept
-              ? 'bg-green-600 hover:bg-green-700 text-white'
-              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-          }`}
-        >
-          {isProcessing ? (
-            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-          ) : (
-            <CheckCircleIcon className="w-4 h-4" />
-          )}
-          Accept
-        </button>
-        <button
-          onClick={() => handleDeclineTripInvite(invite)}
-          disabled={isProcessing}
-          className="flex-1 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white py-3 px-4 rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
-        >
-          {isProcessing ? (
-            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-          ) : (
-            <XCircleIcon className="w-4 h-4" />
-          )}
-          Decline
-        </button>
-      </div>
-    );
-  }, [processingInviteId, canAcceptMoreInvitations, handleAcceptTripInvite, handleDeclineTripInvite]);
+      return (
+        <div className="flex gap-3">
+          <button
+            onClick={() => handleAcceptTripInvite(invite)}
+            disabled={!canAccept}
+            className={`flex-1 py-3 px-4 rounded-xl font-medium transition-all duration-200 flex items-center justify-center gap-2 ${
+              canAccept
+                ? "bg-green-600 hover:bg-green-700 text-white"
+                : "bg-gray-300 text-gray-500 cursor-not-allowed"
+            }`}
+          >
+            {isProcessing ? (
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <CheckCircleIcon className="w-4 h-4" />
+            )}
+            Accept
+          </button>
+          <button
+            onClick={() => handleDeclineTripInvite(invite)}
+            disabled={isProcessing}
+            className="flex-1 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white py-3 px-4 rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
+          >
+            {isProcessing ? (
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <XCircleIcon className="w-4 h-4" />
+            )}
+            Decline
+          </button>
+        </div>
+      );
+    },
+    [
+      processingInviteId,
+      canAcceptMoreInvitations,
+      handleAcceptTripInvite,
+      handleDeclineTripInvite,
+    ]
+  );
 
   // Show loading state
   if (loading) {
@@ -415,14 +446,18 @@ const TripsSection = () => {
               {(() => {
                 const usageInfo = getUsageInfo();
                 const limit = usageInfo?.trips?.limit || MAX_TRIPS_PER_USER;
-                return `Create Trip (${trips.length}/${limit === "unlimited" ? "∞" : limit})`;
+                return `Create Trip (${trips.length}/${
+                  limit === "unlimited" ? "∞" : limit
+                })`;
               })()}
             </span>
             <span className="sm:hidden">
               {(() => {
                 const usageInfo = getUsageInfo();
                 const limit = usageInfo?.trips?.limit || MAX_TRIPS_PER_USER;
-                return `Create (${trips.length}/${limit === "unlimited" ? "∞" : limit})`;
+                return `Create (${trips.length}/${
+                  limit === "unlimited" ? "∞" : limit
+                })`;
               })()}
             </span>
           </button>
@@ -495,9 +530,12 @@ const TripsSection = () => {
                   <div className="flex items-start gap-2">
                     <ExclamationTriangleIcon className="w-5 h-5 text-amber-600 mt-0.5" />
                     <div className="text-sm">
-                      <p className="font-medium text-amber-800">Trip Limit Reached</p>
+                      <p className="font-medium text-amber-800">
+                        Trip Limit Reached
+                      </p>
                       <p className="text-amber-700">
-                        You've reached your plan's trip limit. Upgrade to accept more invitations.
+                        You've reached your plan's trip limit. Upgrade to accept
+                        more invitations.
                       </p>
                     </div>
                   </div>
@@ -625,9 +663,12 @@ const TripsSection = () => {
                 <div className="flex items-start gap-3">
                   <ExclamationTriangleIcon className="w-6 h-6 text-amber-600 mt-0.5 flex-shrink-0" />
                   <div>
-                    <p className="font-medium text-amber-800 text-sm">Trip Limit Reached</p>
+                    <p className="font-medium text-amber-800 text-sm">
+                      Trip Limit Reached
+                    </p>
                     <p className="text-amber-700 text-sm mt-1">
-                      You've reached your plan's trip limit. Upgrade to accept more invitations.
+                      You've reached your plan's trip limit. Upgrade to accept
+                      more invitations.
                     </p>
                   </div>
                 </div>

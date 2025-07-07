@@ -1,7 +1,8 @@
 // src/shared/components/billing/BillingPage.jsx - Context-aware billing component
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
-import { useAuth } from "@/auth-area/contexts/AuthContext";
+import { useAuth } from "@auth/hooks/useAuth";
+
 import PublicLayout from "../../../public-area/components/layout/PublicLayout";
 import HeroSection from "../../../public-area/components/ui/HeroSection";
 import navigationService from "../../services/navigationService";
@@ -121,6 +122,7 @@ const BillingPage = () => {
 
     // Log navigation context for debugging
     if (context) {
+      console.log("Navigation context available:", context);
     }
   }, [currentUser, navigate]);
 
@@ -590,7 +592,6 @@ const CardLogo = ({ type, active }) => {
 const PaymentForm = ({
   paymentMethod,
   setPaymentMethod,
-  showInfoModal,
   setShowInfoModal,
   setShowPayPalModal,
   setShowApplePayModal,
@@ -606,7 +607,6 @@ const PaymentForm = ({
   loading,
   hasConflict,
   needsToCancelFirst,
-  currentPlan,
   cardType,
   handleSubmit,
 }) => (
@@ -847,10 +847,8 @@ const PaymentForm = ({
 // Order Summary Component
 const OrderSummary = ({
   currentPlan,
-  billingCycle,
   currentPrice,
   isYearly,
-  navigationContext,
   handleBackNavigation,
 }) => (
   <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-2xl border border-white/20 dark:border-gray-700/50 p-6 sm:p-8 sticky top-8">
@@ -1408,6 +1406,3 @@ const ApplePayModal = ({
 };
 
 export default BillingPage;
-
-
-

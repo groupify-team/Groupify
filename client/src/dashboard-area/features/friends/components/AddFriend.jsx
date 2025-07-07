@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import { useAuth } from "@auth/contexts/AuthContext";
+import { useAuth } from "@auth/hooks/useAuth";
+
 import { findUsersByEmail } from "@firebase-services/users";
-import { useFriendSearch, useFriendRequests } from "../hooks/index";
 
 import {
   MagnifyingGlassIcon,
@@ -106,7 +106,7 @@ const AddFriend = ({
           type: "success",
           message: "Friend request sent successfully!",
         });
-      } catch (error) {
+      } catch {
         setStatus({
           type: "error",
           message: "Failed to send friend request. Please try again.",

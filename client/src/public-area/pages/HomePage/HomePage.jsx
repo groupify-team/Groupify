@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { useAuth } from "@/auth-area/contexts/AuthContext";
+import { useAuth } from "@auth/hooks/useAuth";
+
 import { useTheme } from "@shared/contexts/ThemeContext";
+import PageTransition, {
+  SectionTransition,
+} from "@/shared/components/ui/PageTransition";
 
 import { toast } from "react-hot-toast";
 import {
@@ -61,7 +65,7 @@ const LaunchAnimation = ({ onAnimationComplete }) => {
       clearInterval(progressInterval);
       clearInterval(textInterval);
     };
-  }, []);
+  }, [loadingTexts.length, onAnimationComplete]);
 
   return (
     <div
@@ -359,102 +363,108 @@ const HomePage = () => {
         </div>
       </nav>
 
-      {/* Hero Section */}
-      <div
-        className={`relative overflow-hidden transition-all duration-1000 ${
-          isLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-        }`}
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16">
-          <div className="text-center">
-            {/* Hero Badge */}
-            <div className="inline-flex items-center px-4 py-2 bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-full border border-white/20 dark:border-gray-700/50 mb-8">
-              <SparklesIcon className="w-4 h-4 text-indigo-600 dark:text-indigo-400 mr-2" />
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                AI-Powered Photo Management
-              </span>
-            </div>
+      {/* Hero Section - Enhanced with smooth transitions */}
+      <PageTransition variant="fadeIn" trigger={isLoaded}>
+        <div className="relative overflow-hidden">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16">
+            <div className="text-center">
+              {/* Hero Badge */}
+              <SectionTransition variant="slideInFromTop" delay={0.2}>
+                <div className="inline-flex items-center px-4 py-2 bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-full border border-white/20 dark:border-gray-700/50 mb-8 transition-all duration-300 hover:scale-105">
+                  <SparklesIcon className="w-4 h-4 text-indigo-600 dark:text-indigo-400 mr-2" />
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    AI-Powered Photo Management
+                  </span>
+                </div>
+              </SectionTransition>
 
-            {/* Hero Title */}
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-gray-900 dark:text-white mb-6">
-              <span className="block">Share Your</span>
-              <span className="block bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 bg-clip-text text-transparent">
-                Trip Memories
-              </span>
-            </h1>
+              {/* Hero Title */}
+              <SectionTransition variant="slideInFromBottom" delay={0.3}>
+                <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-gray-900 dark:text-white mb-6">
+                  <span className="block">Share Your</span>
+                  <span className="block bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 bg-clip-text text-transparent">
+                    Trip Memories
+                  </span>
+                </h1>
 
-            {/* Hero Subtitle */}
-            <p className="max-w-3xl mx-auto text-xl md:text-2xl text-gray-600 dark:text-gray-300 mb-12 leading-relaxed">
-              Upload photos, find yourself with AI face recognition, and relive
-              the moments together. The smartest way to organize and share your
-              travel memories.
-            </p>
+                {/* Hero Subtitle */}
+                <p className="max-w-3xl mx-auto text-xl md:text-2xl text-gray-600 dark:text-gray-300 mb-12 leading-relaxed">
+                  Upload photos, find yourself with AI face recognition, and
+                  relive the moments together. The smartest way to organize and
+                  share your travel memories.
+                </p>
+              </SectionTransition>
 
-            {/* Success Message Banner */}
-            {location.state?.verified && (
-              <div className="mb-8 max-w-2xl mx-auto">
-                <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-6">
-                  <div className="flex items-center justify-center">
-                    <div className="w-8 h-8 bg-green-100 dark:bg-green-800 rounded-full flex items-center justify-center mr-3">
-                      <CheckIcon className="w-5 h-5 text-green-600 dark:text-green-400" />
-                    </div>
-                    <div className="text-center">
-                      <h3 className="text-lg font-semibold text-green-800 dark:text-green-200">
-                        Email Verified Successfully! 🎉
-                      </h3>
-                      <p className="text-green-700 dark:text-green-300 mt-1">
-                        You can now sign in and start organizing your travel
-                        photos.
-                      </p>
-                      <Link
-                        to="/signin"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleLinkClick("/signin");
-                        }}
-                        className="inline-block mt-3 bg-green-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors"
-                      >
-                        Sign In Now
-                      </Link>
+              {/* Success Message Banner */}
+              <SectionTransition variant="slideInFromBottom" delay={0.4}>
+                {location.state?.verified && (
+                  <div className="mb-8 max-w-2xl mx-auto">
+                    <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-6">
+                      <div className="flex items-center justify-center">
+                        <div className="w-8 h-8 bg-green-100 dark:bg-green-800 rounded-full flex items-center justify-center mr-3">
+                          <CheckIcon className="w-5 h-5 text-green-600 dark:text-green-400" />
+                        </div>
+                        <div className="text-center">
+                          <h3 className="text-lg font-semibold text-green-800 dark:text-green-200">
+                            Email Verified Successfully! 🎉
+                          </h3>
+                          <p className="text-green-700 dark:text-green-300 mt-1">
+                            You can now sign in and start organizing your travel
+                            photos.
+                          </p>
+                          <Link
+                            to="/signin"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              handleLinkClick("/signin");
+                            }}
+                            className="inline-block mt-3 bg-green-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors"
+                          >
+                            Sign In Now
+                          </Link>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </div>
-            )}
+                )}
+              </SectionTransition>
 
-            {/* CTA Buttons - WITH PROPER NAVIGATION */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
-              <Link
-                to="/signup"
-                onClick={(e) => {
-                  e.preventDefault();
-                  handleLinkClick("/signup");
-                }}
-                className="group inline-flex items-center bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 rounded-xl text-lg font-semibold transition-all duration-200 shadow-xl hover:shadow-2xl hover:scale-105"
-              >
-                Start Organizing Photos
-                <ArrowRightIcon className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </Link>
-              <Link
-                to="/signin"
-                onClick={(e) => {
-                  e.preventDefault();
-                  handleLinkClick("/signin");
-                }}
-                className="inline-flex items-center bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm hover:bg-white dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 px-8 py-4 rounded-xl text-lg font-semibold border border-white/20 dark:border-gray-700/50 transition-all duration-200 hover:shadow-lg"
-              >
-                Sign In
-              </Link>
+              {/* CTA Buttons - Enhanced with smooth transitions */}
+              <SectionTransition variant="slideInFromBottom" delay={0.6}>
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
+                  <Link
+                    to="/signup"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleLinkClick("/signup");
+                    }}
+                    className="group inline-flex items-center bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 rounded-xl text-lg font-semibold transition-all duration-300 ease-spring shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95 transform-gpu"
+                  >
+                    Start Organizing Photos
+                    <ArrowRightIcon className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
+                  </Link>
+                  <Link
+                    to="/signin"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleLinkClick("/signin");
+                    }}
+                    className="inline-flex items-center bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm hover:bg-white dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 px-8 py-4 rounded-xl text-lg font-semibold border border-white/20 dark:border-gray-700/50 transition-all duration-300 ease-smooth hover:shadow-lg hover:scale-105 active:scale-95 transform-gpu"
+                  >
+                    Sign In
+                  </Link>
+                </div>
+              </SectionTransition>
             </div>
           </div>
-        </div>
 
-        {/* Background Decoration */}
-        <div className="absolute inset-0 -z-10">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-purple-400/20 to-blue-400/20 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-indigo-400/20 to-purple-400/20 rounded-full blur-3xl"></div>
+          {/* Background Decoration */}
+          <div className="absolute inset-0 -z-10">
+            <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-purple-400/20 to-blue-400/20 rounded-full blur-3xl"></div>
+            <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-indigo-400/20 to-purple-400/20 rounded-full blur-3xl"></div>
+          </div>
         </div>
-      </div>
+      </PageTransition>
 
       {/* Features Section */}
       <div className="py-24 bg-white/40 dark:bg-gray-800/40 backdrop-blur-sm">
@@ -586,6 +596,3 @@ const HomePage = () => {
 };
 
 export default HomePage;
-
-
-

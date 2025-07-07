@@ -1,6 +1,6 @@
 // src/dashboard-area/features/settings/components/sections/PrivacySection.jsx
 import React from "react";
-import { PRIVACY_SETTINGS } from "../../constants/settingsConstants";
+import { PRIVACY_SETTINGS } from "../../constants/settingsConstants.jsx";
 
 const PrivacySection = ({ settings, toggleSetting, settingsLoading }) => {
   return (
@@ -46,9 +46,7 @@ const PrivacySection = ({ settings, toggleSetting, settingsLoading }) => {
                 <input
                   type="checkbox"
                   className="sr-only peer"
-                  checked={
-                    settings.privacy?.[item.id] ?? item.defaultChecked
-                  }
+                  checked={settings.privacy?.[item.id] ?? item.defaultChecked}
                   onChange={() => toggleSetting("privacy", item.id)}
                   disabled={settingsLoading}
                 />
@@ -64,7 +62,3 @@ const PrivacySection = ({ settings, toggleSetting, settingsLoading }) => {
 };
 
 export default PrivacySection;
-
-
-
-

@@ -4,7 +4,8 @@ import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { auth, db, storage } from "@shared/services/firebase/config";
 import { updateEmail, updatePassword, updateProfile } from "firebase/auth";
 import ProfileImageCropper from "./ProfileImageCropper";
-import { useAuth } from "@auth/contexts/AuthContext";
+import { useAuth } from "@auth/hooks/useAuth";
+
 import { useTheme } from "@shared/contexts/ThemeContext";
 import {
   CameraIcon,

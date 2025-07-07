@@ -9,16 +9,16 @@ import {
 
 import { useDashboardLayout } from "@dashboard/hooks/useDashboardLayout";
 import { useDashboardData } from "@dashboard/hooks/useDashboardData";
-import { useDashboardModals } from "@dashboard/contexts/DashboardModalsContext";
 import { useDashboardNavigation } from "@dashboard/hooks/useDashboardNavigation";
 import { useNavigate } from "react-router-dom";
 
-import { NAVIGATION_ITEMS } from "@dashboard/utils/dashboardConstants";
+import { NAVIGATION_ITEMS } from "@dashboard/utils/dashboardConstants.js";
 import {
   getNavigationItemBadge,
   hasNotifications,
 } from "@dashboard/utils/dashboardHelpers";
 
+// eslint-disable-next-line no-unused-vars
 const DashboardSidebar = ({ sidebarOpen, onSidebarClose, onLogoutClick }) => {
   const navigate = useNavigate();
   const {
@@ -32,7 +32,7 @@ const DashboardSidebar = ({ sidebarOpen, onSidebarClose, onLogoutClick }) => {
 
   const { userData, trips, pendingRequests, tripInvites } = useDashboardData();
   const {
-    navigate: { toTrip: navigateToTrip },
+    navigate: { toTrip: _navigateToTrip },
   } = useDashboardNavigation();
 
   const currentUser = userData; // Assuming userData contains current user info
@@ -278,7 +278,3 @@ const DashboardSidebar = ({ sidebarOpen, onSidebarClose, onLogoutClick }) => {
 };
 
 export default DashboardSidebar;
-
-
-
-

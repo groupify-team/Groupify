@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { useAuth } from "@/auth-area/contexts/AuthContext";
+import { useAuth } from "@auth/hooks/useAuth";
+
 import PublicLayout from "../../components/layout/PublicLayout";
 import HeroSection from "../../components/ui/HeroSection";
 import { usePublicNavigation } from "../../hooks/usePublicNavigation";
@@ -36,8 +37,7 @@ const toastOptions = {
 
 const BlogPage = () => {
   const { currentUser } = useAuth();
-  const { handleGetStarted, headerProps, settingsProps } =
-    usePublicNavigation();
+  const { headerProps, settingsProps } = usePublicNavigation();
   const [posts, setPosts] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -197,7 +197,7 @@ const BlogPage = () => {
         toastOptions
       );
       setEmail("");
-    } catch (error) {
+    } catch {
       toast.error("Subscription failed. Please try again.", toastOptions);
     } finally {
       setIsSubscribing(false);
@@ -990,6 +990,3 @@ const PostDetailModal = ({ post, onClose, onLike }) => {
 };
 
 export default BlogPage;
-
-
-

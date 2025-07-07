@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 
 import {
   XMarkIcon,
@@ -11,7 +10,8 @@ import {
   TrashIcon,
 } from "@heroicons/react/24/outline";
 import { toast } from "react-hot-toast";
-import { useAuth } from "@/auth-area/contexts/AuthContext";
+import { useAuth } from "@auth/hooks/useAuth";
+
 import { updateTrip, deleteTrip } from "@shared/services/firebase/trips";
 
 const EditTripModal = ({
@@ -35,7 +35,6 @@ const EditTripModal = ({
   const [showSuggestions, setShowSuggestions] = useState(false);
 
   const { currentUser } = useAuth();
-  const navigate = useNavigate();
 
   // Check if current user is admin
   const isAdmin =

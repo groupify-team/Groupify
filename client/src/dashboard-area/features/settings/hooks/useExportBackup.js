@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
-import { useAuth } from "@auth/contexts/AuthContext";
+import { useAuth } from "@auth/hooks/useAuth";
+
 import { ExportService } from "@shared/services/exportService";
 
 export const useExportBackup = () => {

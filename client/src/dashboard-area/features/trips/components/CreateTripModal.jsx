@@ -1,16 +1,16 @@
 // components/CreateTripModal.jsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   XMarkIcon,
   MapPinIcon,
   CalendarIcon,
   SparklesIcon,
   ExclamationTriangleIcon,
-  CheckCircleIcon,
   StarIcon,
   ArrowUpIcon,
 } from "@heroicons/react/24/outline";
-import { useAuth } from "@/auth-area/contexts/AuthContext";
+import { useAuth } from "@auth/hooks/useAuth";
+
 import { tripsService } from "../services/tripsService";
 import { usePlanLimits } from "../../../../shared/hooks/usePlanLimits";
 
@@ -33,7 +33,6 @@ const CreateTripModal = ({ isOpen, onClose, onTripCreated }) => {
   // Plan limits integration
   const {
     canPerformAction,
-    enforceLimit,
     getUsageInfo,
     getPlanFeatures,
     isFreePlan,
@@ -41,6 +40,30 @@ const CreateTripModal = ({ isOpen, onClose, onTripCreated }) => {
     isProPlan,
     loading: planLoading,
   } = usePlanLimits();
+
+  // Handle modal close
+  const handleClose = useCallback(() => {
+    if (!loading) {
+      setName("");
+      setDescription("");
+      setLocation("");
+      setStartDate("");
+      setEndDate("");
+      setError(null);
+      setShowUpgradePrompt(false);
+      onClose();
+    }
+  }, [loading, onClose]);
+
+  // Load trip count function
+  const loadTripCount = useCallback(async () => {
+    try {
+      const count = await tripsService.getUserTripCount(currentUser.uid);
+      setCurrentTripCount(count);
+    } catch (error) {
+      console.error("Error loading trip count:", error);
+    }
+  }, [currentUser]);
 
   useEffect(() => {
     const handleEscape = (e) => {
@@ -53,43 +76,34 @@ const CreateTripModal = ({ isOpen, onClose, onTripCreated }) => {
       document.addEventListener("keydown", handleEscape);
       return () => document.removeEventListener("keydown", handleEscape);
     }
-  }, [isOpen, loading]);
+  }, [isOpen, loading, handleClose]);
 
   // Load current trip count when modal opens
   useEffect(() => {
     if (isOpen && currentUser) {
       loadTripCount();
     }
-  }, [isOpen, currentUser]);
+  }, [isOpen, currentUser, loadTripCount]);
 
   useEffect(() => {
-  if (isOpen) {
-    // Add body class to help with z-index management
-    document.body.classList.add('modal-open');
-    // Prevent body scroll
-    document.body.style.overflow = 'hidden';
-  } else {
-    // Remove body class
-    document.body.classList.remove('modal-open');
-    // Restore body scroll
-    document.body.style.overflow = 'unset';
-  }
-
-  // Cleanup on unmount
-  return () => {
-    document.body.classList.remove('modal-open');
-    document.body.style.overflow = 'unset';
-  };
-}, [isOpen]);
-
-  const loadTripCount = async () => {
-    try {
-      const count = await tripsService.getUserTripCount(currentUser.uid);
-      setCurrentTripCount(count);
-    } catch (error) {
-      console.error("Error loading trip count:", error);
+    if (isOpen) {
+      // Add body class to help with z-index management
+      document.body.classList.add("modal-open");
+      // Prevent body scroll
+      document.body.style.overflow = "hidden";
+    } else {
+      // Remove body class
+      document.body.classList.remove("modal-open");
+      // Restore body scroll
+      document.body.style.overflow = "unset";
     }
-  };
+
+    // Cleanup on unmount
+    return () => {
+      document.body.classList.remove("modal-open");
+      document.body.style.overflow = "unset";
+    };
+  }, [isOpen]);
 
   const handleLocationSearch = async (query) => {
     if (query.length < 2) {
@@ -203,19 +217,6 @@ const CreateTripModal = ({ isOpen, onClose, onTripCreated }) => {
       }
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleClose = () => {
-    if (!loading) {
-      setName("");
-      setDescription("");
-      setLocation("");
-      setStartDate("");
-      setEndDate("");
-      setError(null);
-      setShowUpgradePrompt(false);
-      onClose();
     }
   };
 

@@ -1,7 +1,7 @@
 // src/dashboard-area/features/settings/services/settingsService.js
 import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import { db } from "@shared/services/firebase/config";
-import { DEFAULT_USER_SETTINGS } from "../constants/settingsConstants";
+import { DEFAULT_USER_SETTINGS } from "../constants/settingsConstants.jsx";
 
 export class SettingsService {
   static async getUserSettings(userId) {
@@ -104,7 +104,3 @@ export class SettingsService {
     }
   }
 }
-
-
-
-
