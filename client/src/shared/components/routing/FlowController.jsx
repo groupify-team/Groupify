@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/auth-area/contexts/AuthContext";
 import CloudflareTurnstileGate from "@/shared/components/ui/CloudFlareTurnstileGate";
 import LaunchAnimation from "@/auth-area/components/ui/LaunchAnimation";
-import PageLoadingSpinner from "@/shared/components/ui/PageLoadingSpinner";
+import LoadingSpinner from "@/shared/components/ui/LoadingSpinner";
 
 const FlowController = memo(({ children }) => {
   const { currentUser, loading: authLoading } = useAuth();
@@ -179,7 +179,7 @@ const FlowController = memo(({ children }) => {
   }
 
   if (authLoading || (!flowReady && !showLaunchAnimation)) {
-    return <PageLoadingSpinner message="Loading..." />;
+    return <LoadingSpinner fullPage message="Loading..." />;
   }
 
   if (showLaunchAnimation) {

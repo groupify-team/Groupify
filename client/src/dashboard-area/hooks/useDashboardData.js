@@ -29,7 +29,7 @@ import {
   createFaceProfile,
 } from "@face-recognition/service/faceRecognitionService";
 import { getFaceProfileFromStorage } from "@shared/services/firebase/faceProfiles";
-import { ERROR_MESSAGES } from "@dashboard/utils/dashboardConstants";
+import { ERROR_MESSAGES } from "@/shared/constants/messages";
 
 // Global state to share data between instances
 let globalLoadPromise = null;
@@ -233,8 +233,8 @@ export const useDashboardData = () => {
       return result;
     } catch (error) {
       console.error("? Error loading dashboard data:", error);
-      setError(ERROR_MESSAGES.loadingDashboard);
-      showErrorMessage(ERROR_MESSAGES.loadingDashboard);
+      setError(ERROR_MESSAGES.dashboard.loadingDashboard);
+      showErrorMessage(ERROR_MESSAGES.dashboard.loadingDashboard);
 
       // Clear global tracking on error
       globalLoadPromise = null;

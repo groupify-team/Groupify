@@ -87,8 +87,8 @@ import {
   getRemainingPhotoSlots,
 } from "./features/gallery/utils/photoHelpers";
 
-// Performance: Memoized loading component
-const LoadingSpinner = memo(() => (
+// Performance: Recreate original loading design
+const TripLoadingSpinner = () => (
   <div className="flex items-center justify-center min-h-[60vh]">
     <div className="text-center">
       <div className="relative mb-8">
@@ -111,9 +111,7 @@ const LoadingSpinner = memo(() => (
       </p>
     </div>
   </div>
-));
-
-LoadingSpinner.displayName = "LoadingSpinner";
+);
 
 // Performance: Memoized error component
 const ErrorDisplay = memo(({ error }) => (
@@ -344,7 +342,7 @@ const TripDetailView = ({ tripId: propTripId }) => {
 
   // Loading state
   if (loading) {
-    return <LoadingSpinner />;
+    return <TripLoadingSpinner />;
   }
 
   // Error state
