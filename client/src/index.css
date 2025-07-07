@@ -1145,6 +1145,35 @@ body {
 /* END OF DASHBOARD LAYOUT FIXES */
 
 /* ========================================
+   FORM INPUT STYLES
+   ======================================== */
+
+/* Primary input style for forms */
+.input-primary {
+  @apply w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-indigo-500 dark:focus:border-indigo-500 text-sm;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.input-primary:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.input-primary:disabled {
+  @apply bg-gray-100 dark:bg-gray-800 cursor-not-allowed opacity-50;
+}
+
+/* Input error state */
+.input-error {
+  @apply border-red-500 focus:border-red-500 focus:ring-red-500;
+}
+
+/* Input success state */
+.input-success {
+  @apply border-green-500 focus:border-green-500 focus:ring-green-500;
+}
+
+/* ========================================
    ENHANCED EFFECTS AND UTILITIES
    ======================================== */
 
@@ -1320,140 +1349,143 @@ body {
   }
 }
 
-/* Page content fade-in animation */
-.page-content-enter {
-  opacity: 0;
-  transform: translateY(30px);
+/* ========================================
+   ENHANCED LOADING OVERLAY & BEAUTIFUL ROTATING SPINNER
+   ======================================== */
+
+.enhanced-loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.95),
+    rgba(249, 250, 251, 0.98)
+  );
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
-.page-content-enter-active {
-  opacity: 1;
-  transform: translateY(0);
-  transition: opacity 500ms ease-out, transform 500ms ease-out;
-  transition-delay: 200ms;
+.dark .enhanced-loading-overlay {
+  background: linear-gradient(
+    135deg,
+    rgba(17, 24, 39, 0.95),
+    rgba(31, 41, 55, 0.98)
+  );
 }
 
-/* Button hover enhancements for better UX */
-.smooth-hover {
-  transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.smooth-hover:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1),
-    0 10px 10px -5px rgba(0, 0, 0, 0.04);
-}
-
-.smooth-hover:active {
-  transform: translateY(0);
-  transition-duration: 75ms;
-}
-
-/* Link transition improvements */
-.smooth-link {
+/* Beautiful Multi-Ring Rotating Spinner */
+.gradient-spinner {
   position: relative;
-  transition: color 200ms ease;
+  width: 64px;
+  height: 64px;
 }
 
-.smooth-link::after {
+.gradient-spinner::before,
+.gradient-spinner::after {
   content: "";
   position: absolute;
-  bottom: -2px;
-  left: 0;
-  width: 0;
-  height: 2px;
-  background: currentColor;
-  transition: width 300ms ease;
-}
-
-.smooth-link:hover::after {
-  width: 100%;
-}
-
-/* Loading dots animation */
-.loading-dots {
-  display: flex;
-  space-x: 1px;
-}
-
-.loading-dots > div {
-  width: 8px;
-  height: 8px;
   border-radius: 50%;
-  background: currentColor;
-  animation: loading-dot 1.4s infinite both;
+  animation: multiRingRotate 2s linear infinite;
 }
 
-.loading-dots > div:nth-child(1) {
-  animation-delay: -0.32s;
+/* Outer ring */
+.gradient-spinner::before {
+  width: 64px;
+  height: 64px;
+  border: 4px solid transparent;
+  border-top: 4px solid #3b82f6;
+  border-right: 4px solid #8b5cf6;
+  border-bottom: 4px solid #ec4899;
+  border-left: 4px solid #06b6d4;
+  animation: multiRingRotate 2s linear infinite;
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.3),
+    inset 0 0 0 12px rgba(255, 255, 255, 0.9);
 }
 
-.loading-dots > div:nth-child(2) {
-  animation-delay: -0.16s;
+/* Inner ring */
+.gradient-spinner::after {
+  width: 40px;
+  height: 40px;
+  top: 12px;
+  left: 12px;
+  border: 3px solid transparent;
+  border-top: 3px solid #ec4899;
+  border-right: 3px solid #f59e0b;
+  border-bottom: 3px solid #10b981;
+  border-left: 3px solid #8b5cf6;
+  animation: multiRingRotate 1.2s linear infinite reverse;
+  box-shadow: 0 0 15px rgba(236, 72, 153, 0.3);
 }
 
-@keyframes loading-dot {
-  0%,
-  80%,
-  100% {
-    transform: scale(0.8);
-    opacity: 0.5;
+.dark .gradient-spinner::before {
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.4),
+    inset 0 0 0 12px rgba(17, 24, 39, 0.9);
+}
+
+.loading-shimmer {
+  animation: shimmerFlow 1.8s ease-in-out infinite;
+}
+
+/* Enhanced loading animations */
+@keyframes multiRingRotate {
+  0% {
+    transform: rotate(0deg) scale(1);
+    filter: hue-rotate(0deg);
   }
-  40% {
-    transform: scale(1);
+  25% {
+    transform: rotate(90deg) scale(1.02);
+    filter: hue-rotate(45deg);
+  }
+  50% {
+    transform: rotate(180deg) scale(1.05);
+    filter: hue-rotate(90deg);
+  }
+  75% {
+    transform: rotate(270deg) scale(1.02);
+    filter: hue-rotate(135deg);
+  }
+  100% {
+    transform: rotate(360deg) scale(1);
+    filter: hue-rotate(180deg);
+  }
+}
+
+@keyframes shimmerFlow {
+  0%,
+  100% {
+    transform: translateX(-100%) scaleX(0.5);
+    opacity: 0.6;
+  }
+  50% {
+    transform: translateX(100%) scaleX(1.2);
     opacity: 1;
   }
 }
 
-/* Improved focus states for accessibility */
-.focus-visible-enhanced:focus-visible {
-  outline: 2px solid #4f46e5;
-  outline-offset: 2px;
-  border-radius: 4px;
-  box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+/* Page transition effects */
+.page-fade-out {
+  transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+  opacity: 0.2;
+  transform: translateY(-8px);
 }
 
-/* END ENHANCED ROUTE TRANSITION ANIMATIONS */
+/* Navigation lock styles */
+.navigation-locked {
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.navigation-locked * {
+  pointer-events: none !important;
+}
 
 /* ========================================
-   SMOOTH TRANSITIONS IMPLEMENTATION SUMMARY
+   END ENHANCED LOADING OVERLAY
    ======================================== */
-
-/*
- * IMPROVEMENTS MADE FOR SMOOTH TRANSITIONS:
- * 
- * 1. ENHANCED ROUTE TRANSITIONS:
- *    - Added CSS classes for smooth page transitions
- *    - Replaced abrupt body opacity changes with proper loading overlays
- *    - Added route-transition-enter/exit animations
- * 
- * 2. IMPROVED LOADING STATES:
- *    - Created smooth loading overlays with blur effects
- *    - Added dual-spinner animations for better visual feedback
- *    - Implemented loading-overlay-enter/exit animations
- * 
- * 3. ENHANCED USER INTERACTIONS:
- *    - Added smooth-hover class for better button interactions
- *    - Implemented focus-visible-enhanced for accessibility
- *    - Added smooth-link class for better link transitions
- * 
- * 4. BETTER VISUAL FEEDBACK:
- *    - Loading dots animation for progress indication
- *    - Improved spinner animations with dual rotation
- *    - Added page-content-enter animations for content appearance
- * 
- * 5. COMPONENTS UPDATED:
- *    - SuspenseWrapper: Added useSmooth prop for better loading
- *    - AppRoutes: Updated all routes to use smooth loading
- *    - HomePage: Enhanced all navigation buttons
- *    - AuthLayout: Added smooth entrance animations
- *    - LoadingSpinner: Enhanced with dual spinners and animations
- * 
- * 6. HOOKS CREATED:
- *    - useEnhancedNavigation: Centralized smooth navigation
- *    - useSmoothNavigation: Enhanced navigation with overlays
- *    - Updated useAuthAnimations: Better auth page transitions
- *    - Updated usePublicNavigation: Improved public page transitions
- */
-
-/* END SMOOTH TRANSITIONS IMPLEMENTATION SUMMARY */

@@ -27,7 +27,8 @@ const HeroSection = ({
     switch (variant) {
       case "simple":
         return {
-          badge: "bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400",
+          badge:
+            "bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400",
           title: "text-gray-900 dark:text-white",
           description: "text-gray-600 dark:text-gray-300",
         };
@@ -43,12 +44,18 @@ const HeroSection = ({
   const textClasses = getTextClasses();
 
   return (
-    <div className={`py-12 sm:py-16 md:py-20 ${getVariantClasses()} ${className}`}>
+    <div
+      className={`py-12 sm:py-16 md:py-20 ${getVariantClasses()} ${className}`}
+    >
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         {/* Badge */}
         {badge && (
-          <div className={`inline-flex items-center px-3 py-1.5 sm:px-4 sm:py-2 rounded-full border mb-4 sm:mb-6 ${textClasses.badge}`}>
-            {badge.icon && <badge.icon className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />}
+          <div
+            className={`inline-flex items-center px-3 py-1.5 sm:px-4 sm:py-2 rounded-full border mb-4 sm:mb-6 ${textClasses.badge}`}
+          >
+            {badge.icon && (
+              <badge.icon className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+            )}
             <span className="font-medium text-sm sm:text-base">
               {badge.text}
             </span>
@@ -56,44 +63,46 @@ const HeroSection = ({
         )}
 
         {/* Title */}
-        <h1 className={`text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6 ${textClasses.title}`}>
-          {typeof title === "string" ? (
-            title
-          ) : (
-            title // JSX element with custom styling
-          )}
+        <h1
+          className={`text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6 ${textClasses.title}`}
+        >
+          {typeof title === "string"
+            ? title
+            : title // JSX element with custom styling
+          }
         </h1>
 
         {/* Subtitle */}
         {subtitle && (
-          <h2 className={`text-lg sm:text-xl md:text-2xl font-semibold mb-4 ${textClasses.title}`}>
+          <h2
+            className={`text-lg sm:text-xl md:text-2xl font-semibold mb-4 ${textClasses.title}`}
+          >
             {subtitle}
           </h2>
         )}
 
         {/* Description */}
-        <p className={`text-base sm:text-lg md:text-xl mb-6 sm:mb-8 leading-relaxed max-w-2xl mx-auto ${textClasses.description}`}>
+        <p
+          className={`text-base sm:text-lg md:text-xl mb-6 sm:mb-8 leading-relaxed max-w-2xl mx-auto ${textClasses.description}`}
+        >
           {description}
         </p>
 
         {/* Additional Content (like billing toggle, search bar, etc.) */}
         {additionalContent && (
-          <div className="mb-6 sm:mb-8">
-            {additionalContent}
-          </div>
+          <div className="mb-6 sm:mb-8">{additionalContent}</div>
         )}
 
         {/* CTA Buttons */}
         {(primaryCTA || secondaryCTA) && (
           <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 sm:gap-3 px-3 sm:px-0">
             {primaryCTA && (
-              <Link
-                to={primaryCTA.href}
+              <button
                 onClick={primaryCTA.onClick}
                 className={`group inline-flex items-center justify-center px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl text-sm sm:text-base font-semibold transition-all duration-200 shadow-xl hover:shadow-2xl hover:scale-105 w-full sm:w-auto ${
-                  primaryCTA.className || 
-                  (variant === "simple" 
-                    ? "bg-indigo-600 hover:bg-indigo-700 text-white" 
+                  primaryCTA.className ||
+                  (variant === "simple"
+                    ? "bg-indigo-600 hover:bg-indigo-700 text-white"
                     : "bg-white hover:bg-gray-50 text-indigo-600")
                 }`}
               >
@@ -101,17 +110,16 @@ const HeroSection = ({
                 {primaryCTA.icon && (
                   <primaryCTA.icon className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 )}
-              </Link>
+              </button>
             )}
-            
+
             {secondaryCTA && (
-              <Link
-                to={secondaryCTA.href}
+              <button
                 onClick={secondaryCTA.onClick}
                 className={`inline-flex items-center justify-center px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl text-sm sm:text-base font-semibold transition-all duration-200 w-full sm:w-auto ${
-                  secondaryCTA.className || 
-                  (variant === "simple" 
-                    ? "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700" 
+                  secondaryCTA.className ||
+                  (variant === "simple"
+                    ? "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
                     : "bg-white/20 backdrop-blur-sm text-white border border-white/30 hover:bg-white/30")
                 }`}
               >
@@ -119,7 +127,7 @@ const HeroSection = ({
                 {secondaryCTA.icon && (
                   <secondaryCTA.icon className="ml-2 w-5 h-5" />
                 )}
-              </Link>
+              </button>
             )}
           </div>
         )}
@@ -129,5 +137,3 @@ const HeroSection = ({
 };
 
 export default HeroSection;
-
-

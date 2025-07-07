@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@auth/hooks/useAuth";
+import { usePublicNavigation } from "../../../public-area/hooks/usePublicNavigation";
 
 import { toast } from "react-hot-toast";
 import PublicLayout from "../../../public-area/components/layout/PublicLayout";
 import HeroSection from "../../../public-area/components/ui/HeroSection";
+import AccessibilityModal from "../accessibility/AccessibilityModal";
 import PageTransition, { SectionTransition } from "../ui/PageTransition";
 import navigationService from "../../services/navigationService";
 import subscriptionService from "../../services/subscriptionService";
@@ -27,6 +29,9 @@ import {
 const PricingPage = () => {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
+  const { handleSmoothNavigation, headerProps, accessibilityModalProps } =
+    usePublicNavigation();
+
   const [isLoaded, setIsLoaded] = useState(false);
   const [billingCycle, setBillingCycle] = useState("monthly"); // 'monthly' or 'yearly'
   const [openFaq, setOpenFaq] = useState(null);
@@ -347,9 +352,11 @@ const PricingPage = () => {
   return (
     <PublicLayout
       headerType="public"
+      headerProps={{ ...headerProps, handleSmoothNavigation }}
       footerType="default"
       footerProps={{
         customText: "© 2025 Groupify. Simple pricing, powerful features.",
+        handleSmoothNavigation,
       }}
     >
       <PageTransition variant="fadeIn" trigger={isLoaded}>
@@ -961,6 +968,9 @@ const PricingPage = () => {
           </div>
         )}
       </PageTransition>
+
+      {/* Global Accessibility Modal */}
+      <AccessibilityModal {...accessibilityModalProps} />
     </PublicLayout>
   );
 };

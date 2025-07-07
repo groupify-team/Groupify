@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@auth/hooks/useAuth";
+import { usePublicNavigation } from "../../hooks/usePublicNavigation";
+import AccessibilityButton from "@shared/components/accessibility/AccessibilityButton";
 
-import { useTheme } from "@shared/contexts/ThemeContext";
 import PageTransition, {
   SectionTransition,
 } from "@/shared/components/ui/PageTransition";
@@ -20,7 +21,6 @@ import {
 import PublicFooter from "../../components/layout/PublicFooter";
 
 // Import components that provide functionality
-
 import AccessibilityModal from "@/shared/components/accessibility/AccessibilityModal";
 
 // Launch Animation Component (keep exactly as before)
@@ -193,7 +193,6 @@ const LaunchAnimation = ({ onAnimationComplete }) => {
         </div>
       </div>
 
-      {/* Custom Styles for Shimmer Animation */}
       <style>{`
         @keyframes shimmer {
           0% {
@@ -213,15 +212,16 @@ const LaunchAnimation = ({ onAnimationComplete }) => {
 
 const HomePage = () => {
   const { currentUser } = useAuth();
-  const { theme, toggleTheme } = useTheme(); // Need both for SettingsModal
   const navigate = useNavigate();
   const location = useLocation();
-  const [isLoaded, setIsLoaded] = useState(false);
+  const {
+    handleSmoothNavigation,
+    openAccessibilitySettings,
+    accessibilityModalProps,
+  } = usePublicNavigation();
 
-  // ADD ALL THE MISSING STATE FROM ORIGINAL
-  const [showSettings, setShowSettings] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
   const [showLaunch, setShowLaunch] = useState(() => {
-    // Only show launch animation if user hasn't seen it before
     return !localStorage.getItem("hasSeenLaunchAnimation");
   });
 
@@ -229,69 +229,30 @@ const HomePage = () => {
     setIsLoaded(true);
   }, []);
 
-  // Redirect authenticated users to dashboard
   useEffect(() => {
     if (currentUser) {
       navigate("/dashboard");
     }
   }, [currentUser, navigate]);
 
-  // Success message handling from email verification
   useEffect(() => {
-    // Check if there's a success message from email verification
     if (location.state?.message && location.state?.verified) {
       toast.success(location.state.message, {
         duration: 5000,
       });
-
-      // Clear the state to prevent showing the message again
       navigate(location.pathname, { replace: true });
     }
   }, [location, navigate]);
 
-  // ADD THIS FUNCTION TO HANDLE ANIMATION COMPLETION
   const handleAnimationComplete = () => {
     localStorage.setItem("hasSeenLaunchAnimation", "true");
     setShowLaunch(false);
   };
 
-  // Enhanced smooth navigation function
-  const handleLinkClick = (to) => {
-    // Create loading overlay
-    const overlay = document.createElement("div");
-    overlay.className =
-      "fixed inset-0 bg-white dark:bg-gray-900 z-50 flex items-center justify-center transition-opacity duration-300";
-    overlay.style.opacity = "0";
-    overlay.innerHTML = `
-      <div class="flex flex-col items-center space-y-4">
-        <div class="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
-        <p class="text-gray-600 dark:text-gray-400 text-sm">Loading...</p>
-      </div>
-    `;
-    document.body.appendChild(overlay);
-
-    // Fade in overlay
-    requestAnimationFrame(() => {
-      overlay.style.opacity = "1";
-    });
-
-    // Navigate after overlay is visible
-    setTimeout(() => {
-      navigate(to);
-
-      // Remove overlay after navigation
-      setTimeout(() => {
-        if (overlay && overlay.parentNode) {
-          overlay.style.opacity = "0";
-          setTimeout(() => {
-            if (overlay.parentNode) {
-              overlay.parentNode.removeChild(overlay);
-            }
-          }, 300);
-        }
-      }, 100);
-    }, 300);
-  };
+  useEffect(() => {
+    document.body.classList.add("page-enter");
+    return () => document.body.classList.remove("page-enter");
+  }, []);
 
   // ADD THIS CHECK TO SHOW LAUNCH ANIMATION FIRST
   if (showLaunch) {
@@ -336,7 +297,7 @@ const HomePage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 transition-colors duration-500">
-      {/* Navigation Header - UPDATED: Removed theme toggle button, only settings remains */}
+      {/* Navigation Header - UPDATED: Accessibility icon */}
       <nav className="relative z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
@@ -352,25 +313,23 @@ const HomePage = () => {
               </div>
             </div>
 
-            {/* Navigation Links - UPDATED: Only settings button, theme toggle moved to accessibility settings */}
+            {/* Navigation Links - Accessibility Settings */}
             <div className="flex items-center space-x-4">
-              {/* Settings Toggle - Dark mode toggle is now inside accessibility settings */}
-              <button
-                onClick={() => setShowSettings(true)}
-                className="p-2 rounded-lg text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                aria-label="Open accessibility and settings"
-              >
-                <CogIcon className="w-5 h-5" />
-              </button>
+              {/* Accessibility Settings */}
+              <AccessibilityButton
+                onSettingsClick={openAccessibilitySettings}
+                size="default"
+                variant="default"
+              />
 
-              {/* Auth Links - WITH PROPER NAVIGATION */}
+              {/* Auth Links */}
               {!currentUser && (
                 <div className="flex items-center space-x-3">
                   <Link
                     to="/signin"
                     onClick={(e) => {
                       e.preventDefault();
-                      handleLinkClick("/signin");
+                      handleSmoothNavigation("/signin");
                     }}
                     className="text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 px-3 py-2 rounded-md text-sm font-medium transition-colors"
                   >
@@ -380,9 +339,9 @@ const HomePage = () => {
                     to="/signup"
                     onClick={(e) => {
                       e.preventDefault();
-                      handleLinkClick("/signup");
+                      handleSmoothNavigation("/signup");
                     }}
-                    className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-md hover:shadow-lg smooth-hover focus-visible-enhanced"
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-md hover:shadow-lg btn-flow smooth-hover focus-visible-enhanced"
                   >
                     Get Started
                   </Link>
@@ -446,7 +405,7 @@ const HomePage = () => {
                             to="/signin"
                             onClick={(e) => {
                               e.preventDefault();
-                              handleLinkClick("/signin");
+                              handleSmoothNavigation("/signin");
                             }}
                             className="inline-block mt-3 bg-green-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors"
                           >
@@ -466,9 +425,9 @@ const HomePage = () => {
                     to="/signup"
                     onClick={(e) => {
                       e.preventDefault();
-                      handleLinkClick("/signup");
+                      handleSmoothNavigation("/signup");
                     }}
-                    className="group inline-flex items-center bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 rounded-xl text-lg font-semibold transition-all duration-300 ease-spring shadow-xl hover:shadow-2xl smooth-hover focus-visible-enhanced"
+                    className="group inline-flex items-center bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 rounded-xl text-lg font-semibold transition-all duration-300 ease-spring shadow-xl hover:shadow-2xl btn-flow smooth-hover focus-visible-enhanced"
                   >
                     Start Organizing Photos
                     <ArrowRightIcon className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
@@ -477,9 +436,9 @@ const HomePage = () => {
                     to="/signin"
                     onClick={(e) => {
                       e.preventDefault();
-                      handleLinkClick("/signin");
+                      handleSmoothNavigation("/signin");
                     }}
-                    className="inline-flex items-center bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm hover:bg-white dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 px-8 py-4 rounded-xl text-lg font-semibold border border-white/20 dark:border-gray-700/50 transition-all duration-300 ease-smooth smooth-hover focus-visible-enhanced"
+                    className="inline-flex items-center bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm hover:bg-white dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 px-8 py-4 rounded-xl text-lg font-semibold border border-white/20 dark:border-gray-700/50 transition-all duration-300 ease-smooth btn-flow smooth-hover focus-visible-enhanced"
                   >
                     Sign In
                   </Link>
@@ -601,9 +560,9 @@ const HomePage = () => {
             to="/signup"
             onClick={(e) => {
               e.preventDefault();
-              handleLinkClick("/signup");
+              handleSmoothNavigation("/signup");
             }}
-            className="inline-flex items-center bg-white text-indigo-600 px-8 py-4 rounded-xl text-lg font-semibold hover:bg-gray-50 transition-all duration-200 shadow-xl hover:shadow-2xl smooth-hover focus-visible-enhanced"
+            className="inline-flex items-center bg-white text-indigo-600 px-8 py-4 rounded-xl text-lg font-semibold hover:bg-gray-50 transition-all duration-200 shadow-xl hover:shadow-2xl btn-flow smooth-hover focus-visible-enhanced"
           >
             Get Started Free
             <ArrowRightIcon className="ml-2 w-5 h-5" />
@@ -611,16 +570,11 @@ const HomePage = () => {
         </div>
       </div>
 
-      {/* Footer(imported)  */}
+      {/* Footer */}
       <PublicFooter />
 
       {/* Settings Modal - Contains accessibility settings including dark mode toggle */}
-      <AccessibilityModal
-        isOpen={showSettings}
-        onClose={() => setShowSettings(false)}
-        theme={theme}
-        toggleTheme={toggleTheme}
-      />
+      <AccessibilityModal {...accessibilityModalProps} />
     </div>
   );
 };

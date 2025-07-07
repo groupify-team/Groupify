@@ -26,6 +26,18 @@ let globalUserId = null;
 let globalData = null;
 const globalSubscribers = new Set();
 
+// Make global data accessible for logout cleanup
+if (typeof window !== "undefined") {
+  window.globalData = null;
+  window.clearGlobalData = () => {
+    globalData = null;
+    globalUserId = null;
+    globalLoadPromise = null;
+    globalSubscribers.clear();
+    window.globalData = null;
+  };
+}
+
 // Helper to notify all subscribers
 const notifySubscribers = (data) => {
   globalSubscribers.forEach((callback) => {

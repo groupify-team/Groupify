@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import PublicLayout from "../../components/layout/PublicLayout";
 import HeroSection from "../../components/ui/HeroSection";
 import { usePublicNavigation } from "../../hooks/usePublicNavigation";
+import AccessibilityModal from "@/shared/components/accessibility/AccessibilityModal";
 
 import {
   ShieldCheckIcon,
@@ -46,7 +47,7 @@ const PrivacyHighlights = ({ highlights }) => (
   </div>
 );
 
-const PrivacySection = ({ section, index }) => (
+const PrivacySection = ({ section }) => (
   <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-xl border border-white/20 dark:border-gray-700/50 p-4 sm:p-6 md:p-8 hover:shadow-lg transition-all duration-300">
     <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 dark:text-white mb-3 sm:mb-4">
       {section.title}
@@ -74,9 +75,8 @@ const ContactSection = () => (
           Questions About Your Privacy?
         </h3>
         <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300 mb-3 sm:mb-4">
-          We're committed to transparency. If you have any questions about
-          this privacy policy or how we handle your data, please reach out
-          to us.
+          We're committed to transparency. If you have any questions about this
+          privacy policy or how we handle your data, please reach out to us.
         </p>
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
           <Link
@@ -104,8 +104,8 @@ const DataControlSection = ({ handleGetStarted, handleSignIn }) => (
         Your Data, Your Control
       </h3>
       <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mb-4 sm:mb-6 max-w-2xl mx-auto">
-        You have complete control over your data. Manage your privacy
-        settings, export your photos, or delete your account at any time.
+        You have complete control over your data. Manage your privacy settings,
+        export your photos, or delete your account at any time.
       </p>
       <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
         <button
@@ -126,7 +126,13 @@ const DataControlSection = ({ handleGetStarted, handleSignIn }) => (
 );
 
 const PrivacyPolicy = () => {
-  const { handleGetStarted, handleSignIn } = usePublicNavigation();
+  const {
+    handleGetStarted,
+    handleSignIn,
+    handleSmoothNavigation,
+    headerProps,
+    accessibilityModalProps,
+  } = usePublicNavigation();
 
   // Scroll to top on component mount
   useEffect(() => {
@@ -225,8 +231,12 @@ const PrivacyPolicy = () => {
   return (
     <PublicLayout
       headerType="public"
+      headerProps={{ ...headerProps, handleSmoothNavigation }}
       footerType="extended"
-      footerProps={{ customText: "© 2025 Groupify. Your privacy is protected." }}
+      footerProps={{
+        customText: "© 2025 Groupify. Your privacy is protected.",
+        handleSmoothNavigation,
+      }}
     >
       {/* Hero Section */}
       <HeroSection
@@ -253,15 +263,16 @@ const PrivacyPolicy = () => {
         <ContactSection />
 
         {/* Data Control */}
-        <DataControlSection 
+        <DataControlSection
           handleGetStarted={handleGetStarted}
           handleSignIn={handleSignIn}
         />
       </div>
+
+      {/* Global Accessibility Modal */}
+      <AccessibilityModal {...accessibilityModalProps} />
     </PublicLayout>
   );
 };
 
 export default PrivacyPolicy;
-
-

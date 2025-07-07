@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import PublicLayout from "../../components/layout/PublicLayout";
 import HeroSection from "../../components/ui/HeroSection";
 import { usePublicNavigation } from "../../hooks/usePublicNavigation";
+import AccessibilityModal from "@/shared/components/accessibility/AccessibilityModal";
 
 import {
   SparklesIcon,
@@ -368,9 +369,7 @@ const ApplicationModal = ({ job, onClose }) => {
 
       // Call Firebase function with improved error handling
       const { httpsCallable } = await import("firebase/functions");
-      const { functions } = await import(
-        "@firebase-services/config"
-      );
+      const { functions } = await import("@firebase-services/config");
 
       const sendJobApplication = httpsCallable(
         functions,
@@ -746,7 +745,8 @@ const ApplicationModal = ({ job, onClose }) => {
 };
 
 const Careers = () => {
-  const { handleGetStarted } = usePublicNavigation();
+  const { handleGetStarted, headerProps, accessibilityModalProps } =
+    usePublicNavigation();
   const [showApplicationModal, setShowApplicationModal] = useState(false);
   const [selectedJobId, setSelectedJobId] = useState(null);
 
@@ -970,6 +970,7 @@ const Careers = () => {
   return (
     <PublicLayout
       headerType="public"
+      headerProps={headerProps}
       footerType="extended"
       footerProps={{
         customText: "© 2025 Groupify. Built with ❤️ by Ofir & Adir.",
@@ -1016,11 +1017,11 @@ const Careers = () => {
           onClose={handleCloseModal}
         />
       )}
+
+      {/* Global Accessibility Modal */}
+      <AccessibilityModal {...accessibilityModalProps} />
     </PublicLayout>
   );
 };
 
 export default Careers;
-
-
-

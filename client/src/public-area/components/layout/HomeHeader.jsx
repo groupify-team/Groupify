@@ -1,17 +1,23 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@auth/hooks/useAuth";
+import AccessibilityButton from "@shared/components/accessibility/AccessibilityButton";
 
 import { CameraIcon, CogIcon } from "@heroicons/react/24/outline";
 
-const HomeHeader = ({ onSettingsClick, className = "" }) => {
+const HomeHeader = ({
+  onSettingsClick,
+  handleSmoothNavigation,
+  className = "",
+}) => {
   const { currentUser } = useAuth();
 
-  const handleLinkClick = (to) => {
-    document.body.style.opacity = "0";
-    setTimeout(() => {
-      window.location.href = to;
-    }, 200);
+  const handleLinkClick = (path) => {
+    if (handleSmoothNavigation) {
+      handleSmoothNavigation(path);
+    } else {
+      window.location.href = path;
+    }
   };
 
   return (
@@ -32,13 +38,12 @@ const HomeHeader = ({ onSettingsClick, className = "" }) => {
 
           {/* Navigation Links */}
           <div className="flex items-center space-x-0">
-            {/* Settings Toggle */}
-            <button
-              onClick={onSettingsClick}
-              className="p-2 rounded-lg text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-            >
-              <CogIcon className="w-5 h-5" />
-            </button>
+            {/* Accessibility Settings */}
+            <AccessibilityButton
+              onSettingsClick={onSettingsClick}
+              size="default"
+              variant="default"
+            />
 
             {/* Auth Links */}
             {!currentUser && (

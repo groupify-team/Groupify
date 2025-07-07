@@ -37,7 +37,7 @@ const toastOptions = {
 
 const BlogPage = () => {
   const { currentUser } = useAuth();
-  const { headerProps, settingsProps } = usePublicNavigation();
+  const { headerProps, accessibilityModalProps } = usePublicNavigation();
   const [posts, setPosts] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -334,7 +334,7 @@ const BlogPage = () => {
           onLike={handleLike}
         />
       )}
-      <AccessibilityModal {...settingsProps} />
+      <AccessibilityModal {...accessibilityModalProps} />
     </PublicLayout>
   );
 };
