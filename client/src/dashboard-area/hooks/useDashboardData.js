@@ -76,7 +76,6 @@ export const useDashboardData = () => {
    */
   const updateFromGlobalData = useCallback((data) => {
     if (!data) return;
-
     setUserData(data.userProfile);
     setTrips(data.userTrips);
     setTripInvites(data.pendingInvites);

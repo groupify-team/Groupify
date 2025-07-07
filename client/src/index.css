@@ -75,6 +75,127 @@ body {
   box-shadow: 0 35px 60px -12px rgba(0, 0, 0, 0.25);
 }
 
+
+* ========================================
+   COMPLETE Z-INDEX STACKING CONTEXT FIXES
+   ======================================== */
+
+/* Remove the problematic stacking context from filter section */
+.bg-white\/60.dark\:bg-gray-800\/60.backdrop-blur-lg:has(.filter-dropdown) {
+  position: relative;
+  z-index: auto !important; /* Remove the z-index: 100 */
+}
+
+/* Filter dropdown container - lower z-index */
+.filter-dropdown {
+  position: relative;
+  z-index: 50 !important; /* Lowered from 200 */
+}
+
+/* Desktop filter dropdown overlay - lower z-index */
+.filter-dropdown .hidden.sm\:block {
+  z-index: 60 !important; /* Lowered from 250 */
+  position: absolute !important;
+}
+
+/* Alternative approach - target the specific dropdown */
+.relative.z-\[100\] {
+  z-index: 50 !important; /* Lowered from 200 */
+}
+
+.relative.z-\[100\] > div[class*="absolute"] {
+  z-index: 60 !important; /* Lowered from 250 */
+}
+
+/* Filter dropdown classes - ensure they're lower */
+.z-\[200\] {
+  z-index: 50 !important;
+}
+
+.z-\[201\] {
+  z-index: 51 !important;
+}
+
+.z-\[250\] {
+  z-index: 55 !important;
+}
+
+.z-\[300\] {
+  z-index: 60 !important;
+}
+
+/* Trip cards - keep low */
+.trip-card-container {
+  position: relative;
+  z-index: 1;
+}
+
+/* MODAL Z-INDEX HIERARCHY - Much higher than filters */
+.z-\[9999\] {
+  z-index: 9999 !important;
+}
+
+.z-\[10000\] {
+  z-index: 10000 !important;
+}
+
+.z-\[10001\] {
+  z-index: 10001 !important;
+}
+
+.z-\[10002\] {
+  z-index: 10002 !important;
+}
+
+/* Force modal above everything */
+div[class*="fixed"][class*="inset-0"][class*="bg-black/50"] {
+  z-index: 9999 !important;
+  position: fixed !important;
+}
+
+div[class*="fixed"][class*="inset-0"][class*="bg-black/50"] > * {
+  z-index: 10000 !important;
+}
+
+/* Specific CreateTripModal targeting */
+div[class*="fixed"][class*="inset-0"][class*="bg-black/50"][class*="z-[9999]"] {
+  z-index: 9999 !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+}
+
+/* Ensure no other elements can interfere */
+body.modal-open * {
+  position: relative;
+}
+
+body.modal-open .filter-dropdown,
+body.modal-open .bg-white\/60,
+body.modal-open .dark\:bg-gray-800\/60 {
+  z-index: auto !important;
+}
+
+/* Nuclear option - force all modals to be highest */
+[role="dialog"],
+.modal,
+.modal-backdrop,
+.modal-overlay,
+div[class*="backdrop-blur-sm"]:has(div[class*="max-w-md"]) {
+  z-index: 9999 !important;
+  position: fixed !important;
+}
+
+[role="dialog"] *,
+.modal *,
+.modal-backdrop *,
+.modal-overlay *,
+div[class*="backdrop-blur-sm"]:has(div[class*="max-w-md"]) * {
+  z-index: inherit !important;
+}
+
 /* ========================================
    SIDEBAR COMPONENTS
    ======================================== */
