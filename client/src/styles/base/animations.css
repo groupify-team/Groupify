@@ -1,0 +1,451 @@
+/* ========================================
+   ANIMATION SYSTEM
+   Centralized keyframes and animation utilities
+   ======================================== */
+
+@layer base {
+  /* === CORE KEYFRAMES === */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes fadeOut {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: scale(0.95) translateY(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+
+  @keyframes slideOut {
+    from {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+    to {
+      opacity: 0;
+      transform: scale(0.9) translateY(-10px);
+    }
+  }
+
+  @keyframes slideInLeft {
+    from {
+      transform: translateX(-100%);
+    }
+    to {
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes slideInRight {
+    from {
+      transform: translateX(100%);
+    }
+    to {
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes slideInUp {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes slideInDown {
+    from {
+      transform: translateY(-100%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes scaleIn {
+    from {
+      opacity: 0;
+      transform: scale(0.9);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  @keyframes scaleOut {
+    from {
+      opacity: 1;
+      transform: scale(1);
+    }
+    to {
+      opacity: 0;
+      transform: scale(0.9);
+    }
+  }
+
+  /* === MODAL ANIMATIONS === */
+  @keyframes modalEnter {
+    from {
+      opacity: 0;
+      transform: scale(0.9) translateY(-30px);
+      backdrop-filter: blur(0px);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+      backdrop-filter: blur(8px);
+    }
+  }
+
+  @keyframes modalExit {
+    from {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+    to {
+      opacity: 0;
+      transform: scale(0.9) translateY(-30px);
+    }
+  }
+
+  /* === LOADING ANIMATIONS === */
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @keyframes spinReverse {
+    from {
+      transform: rotate(360deg);
+    }
+    to {
+      transform: rotate(0deg);
+    }
+  }
+
+  @keyframes shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
+  }
+
+  @keyframes shimmerFlow {
+    0%,
+    100% {
+      transform: translateX(-100%) scaleX(0.5);
+      opacity: 0.6;
+    }
+    50% {
+      transform: translateX(100%) scaleX(1.2);
+      opacity: 1;
+    }
+  }
+
+  @keyframes multiRingRotate {
+    0% {
+      transform: rotate(0deg) scale(1);
+      filter: hue-rotate(0deg);
+    }
+    25% {
+      transform: rotate(90deg) scale(1.02);
+      filter: hue-rotate(45deg);
+    }
+    50% {
+      transform: rotate(180deg) scale(1.05);
+      filter: hue-rotate(90deg);
+    }
+    75% {
+      transform: rotate(270deg) scale(1.02);
+      filter: hue-rotate(135deg);
+    }
+    100% {
+      transform: rotate(360deg) scale(1);
+      filter: hue-rotate(180deg);
+    }
+  }
+
+  /* === EFFECT ANIMATIONS === */
+  @keyframes pulseGlow {
+    0%,
+    100% {
+      box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+      transform: scale(1);
+    }
+    50% {
+      box-shadow: 0 0 40px rgba(59, 130, 246, 0.6);
+      transform: scale(1.05);
+    }
+  }
+
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0px) rotate(0deg);
+      opacity: 0.4;
+    }
+    50% {
+      transform: translateY(-15px) rotate(180deg);
+      opacity: 0.8;
+    }
+  }
+
+  @keyframes bounceGentle {
+    0% {
+      transform: scale(0.95);
+    }
+    50% {
+      transform: scale(1.02);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+
+  /* === SCAN ANIMATIONS === */
+  @keyframes scan {
+    0% {
+      transform: translateY(-100%);
+      opacity: 0;
+    }
+    10% {
+      opacity: 1;
+    }
+    90% {
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(100vh);
+      opacity: 0;
+    }
+  }
+
+  @keyframes scanningLine {
+    0% {
+      top: 0%;
+      opacity: 0;
+    }
+    10% {
+      opacity: 1;
+    }
+    90% {
+      opacity: 1;
+    }
+    100% {
+      top: 100%;
+      opacity: 0;
+    }
+  }
+
+  /* === NAVIGATION ANIMATIONS === */
+  @keyframes headerFadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes bottomNavSlideIn {
+    from {
+      opacity: 0;
+      transform: translateY(100%);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* === ROUTE TRANSITION ANIMATIONS === */
+  @keyframes routeEnter {
+    from {
+      opacity: 0;
+      transform: translateY(20px) scale(0.98);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  @keyframes routeExit {
+    from {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+    to {
+      opacity: 0;
+      transform: translateY(-20px) scale(0.98);
+    }
+  }
+}
+
+@layer utilities {
+  /* === ANIMATION UTILITY CLASSES === */
+  .animate-fade-in {
+    animation: fadeIn var(--duration-normal) var(--ease-out);
+  }
+
+  .animate-fade-out {
+    animation: fadeOut var(--duration-normal) var(--ease-in);
+  }
+
+  .animate-slide-in {
+    animation: slideIn var(--duration-normal) var(--ease-out);
+  }
+
+  .animate-slide-out {
+    animation: slideOut var(--duration-normal) var(--ease-in);
+  }
+
+  .animate-scale-in {
+    animation: scaleIn var(--duration-normal) var(--ease-out);
+  }
+
+  .animate-scale-out {
+    animation: scaleOut var(--duration-normal) var(--ease-in);
+  }
+
+  .animate-modal-enter {
+    animation: modalEnter var(--duration-slower) var(--ease-spring);
+  }
+
+  .animate-modal-exit {
+    animation: modalExit var(--duration-normal) var(--ease-in);
+  }
+
+  .animate-spin {
+    animation: spin 1s var(--ease-linear) infinite;
+  }
+
+  .animate-spin-reverse {
+    animation: spinReverse 1s var(--ease-linear) infinite;
+  }
+
+  .animate-shimmer {
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.2),
+      transparent
+    );
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+  }
+
+  .animate-shimmer-flow {
+    animation: shimmerFlow 1.8s ease-in-out infinite;
+  }
+
+  .animate-pulse-glow {
+    animation: pulseGlow 2s ease-in-out infinite;
+  }
+
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  .animate-bounce-gentle {
+    animation: bounceGentle 0.6s var(--ease-out);
+  }
+
+  .animate-scan {
+    animation: scan 3s linear infinite;
+  }
+
+  .animate-scanning-line {
+    animation: scanningLine 2s linear infinite;
+  }
+
+  .animate-header-fade-in {
+    animation: headerFadeIn 0.5s var(--ease-out);
+  }
+
+  .animate-bottom-nav-slide-in {
+    animation: bottomNavSlideIn 0.5s var(--ease-out);
+  }
+
+  .animate-route-enter {
+    animation: routeEnter 400ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+
+  .animate-route-exit {
+    animation: routeExit 300ms cubic-bezier(0.55, 0.055, 0.675, 0.19);
+  }
+
+  /* === LOADING OVERLAY ANIMATIONS === */
+  .loading-overlay-enter {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+  }
+
+  .loading-overlay-enter-active {
+    opacity: 1;
+    backdrop-filter: blur(4px);
+    transition: opacity 300ms ease-out, backdrop-filter 300ms ease-out;
+  }
+
+  .loading-overlay-exit {
+    opacity: 1;
+    backdrop-filter: blur(4px);
+  }
+
+  .loading-overlay-exit-active {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+    transition: opacity 300ms ease-in, backdrop-filter 300ms ease-in;
+  }
+
+  /* === DROPDOWN ANIMATIONS === */
+  .dropdown-enter {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+  }
+
+  .dropdown-enter-active {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    transition: all var(--duration-normal) var(--ease-out);
+  }
+
+  .dropdown-exit {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  .dropdown-exit-active {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+    transition: all var(--duration-normal) var(--ease-in);
+  }
+}

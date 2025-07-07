@@ -1,0 +1,285 @@
+/* ========================================
+   LAYOUT SYSTEM
+   Dashboard, navigation, and layout patterns
+   ======================================== */
+
+@layer components {
+  /* === DASHBOARD LAYOUT === */
+  .dashboard-layout {
+    position: relative;
+    width: 100%;
+    min-height: 100vh;
+    overflow: hidden;
+  }
+
+  /* === FIXED HEADER === */
+  .dashboard-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: var(--z-fixed);
+    height: 3.5rem; /* 56px */
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--color-border-subtle);
+  }
+
+  .dark .dashboard-header {
+    background: rgba(31, 41, 55, 0.9);
+  }
+
+  /* === MAIN CONTENT === */
+  .dashboard-main-content {
+    padding-top: 3.5rem; /* Header height */
+    min-height: 100vh;
+    transition: margin-left var(--duration-normal) var(--ease-in-out);
+    overflow-x: hidden;
+  }
+
+  .dashboard-content-scroll {
+    height: calc(100vh - 3.5rem);
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  /* === SIDEBAR === */
+  .dashboard-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 16rem; /* 256px */
+    z-index: calc(var(--z-fixed) - 1);
+    background: var(--color-bg-surface);
+    border-right: 1px solid var(--color-border-default);
+    box-shadow: var(--shadow-lg);
+    transform: translateX(-100%);
+    transition: transform var(--duration-normal) var(--ease-in-out);
+  }
+
+  .dashboard-sidebar.open {
+    transform: translateX(0);
+  }
+
+  /* === SIDEBAR OVERLAY === */
+  .sidebar-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: calc(var(--z-fixed) - 2);
+    transition: opacity var(--duration-normal) var(--ease-in-out);
+  }
+
+  /* === MOBILE BOTTOM NAVIGATION === */
+  .mobile-bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: var(--z-sticky);
+    height: 3.5rem; /* 56px */
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-top: 1px solid var(--color-border-subtle);
+  }
+
+  .dark .mobile-bottom-nav {
+    background: rgba(31, 41, 55, 0.95);
+  }
+
+  /* === RESPONSIVE BEHAVIOR === */
+  /* Desktop: Always show sidebar */
+  @media (min-width: 1024px) {
+    .dashboard-sidebar.desktop {
+      transform: translateX(0) !important;
+      position: static;
+      height: auto;
+    }
+
+    .dashboard-main-content.sidebar-open {
+      margin-left: 16rem; /* Sidebar width */
+    }
+
+    .sidebar-overlay {
+      display: none !important;
+    }
+
+    .mobile-bottom-nav {
+      display: none;
+    }
+  }
+
+  /* Mobile: Account for bottom nav */
+  @media (max-width: 767px) {
+    .dashboard-main-content {
+      padding-bottom: 3.5rem; /* Bottom nav height */
+    }
+
+    .dashboard-content-scroll {
+      height: calc(100vh - 7rem); /* Header + Bottom nav */
+    }
+  }
+
+  /* Small mobile adjustments */
+  @media (max-width: 375px) {
+    .dashboard-main-content {
+      padding-left: var(--space-2);
+      padding-right: var(--space-2);
+    }
+
+    .dashboard-header {
+      font-size: var(--text-sm);
+    }
+
+    .mobile-bottom-nav {
+      height: 3rem; /* Smaller on tiny screens */
+    }
+
+    .dashboard-content-scroll {
+      height: calc(100vh - 6.5rem);
+    }
+  }
+
+  /* === CONTAINER PATTERNS === */
+  .container {
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: var(--space-4);
+    padding-right: var(--space-4);
+  }
+
+  @media (min-width: 640px) {
+    .container {
+      max-width: 640px;
+      padding-left: var(--space-6);
+      padding-right: var(--space-6);
+    }
+  }
+
+  @media (min-width: 768px) {
+    .container {
+      max-width: 768px;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .container {
+      max-width: 1024px;
+      padding-left: var(--space-8);
+      padding-right: var(--space-8);
+    }
+  }
+
+  @media (min-width: 1280px) {
+    .container {
+      max-width: 1280px;
+    }
+  }
+
+  @media (min-width: 1536px) {
+    .container {
+      max-width: 1536px;
+    }
+  }
+
+  /* === SECTION SPACING === */
+  .section {
+    padding-top: var(--space-8);
+    padding-bottom: var(--space-8);
+  }
+
+  @media (min-width: 1024px) {
+    .section {
+      padding-top: var(--space-12);
+      padding-bottom: var(--space-12);
+    }
+  }
+
+  .section-sm {
+    padding-top: var(--space-6);
+    padding-bottom: var(--space-6);
+  }
+
+  .section-lg {
+    padding-top: var(--space-16);
+    padding-bottom: var(--space-16);
+  }
+
+  /* === GRID PATTERNS === */
+  .grid-responsive {
+    display: grid;
+    gap: var(--space-6);
+    grid-template-columns: 1fr;
+  }
+
+  @media (min-width: 640px) {
+    .grid-responsive {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .grid-responsive {
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-8);
+    }
+  }
+
+  /* === LAYOUT UTILITIES === */
+  .main-content {
+    flex: 1 1 0%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .scrollable-content {
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  .fixed-nav {
+    position: fixed !important;
+    z-index: var(--z-fixed);
+  }
+
+  .mobile-sidebar-open {
+    overflow: hidden;
+  }
+
+  /* === DASHBOARD TRANSITIONS === */
+  .dashboard-layout-transition {
+    transition: all var(--duration-normal) var(--ease-in-out);
+  }
+
+  /* === ACCESSIBILITY IMPROVEMENTS === */
+  .dashboard-header button:focus,
+  .dashboard-sidebar button:focus,
+  .mobile-bottom-nav button:focus {
+    outline: 2px solid var(--color-focus-ring);
+    outline-offset: 2px;
+    z-index: calc(var(--z-fixed) + 1);
+  }
+
+  @media (prefers-contrast: high) {
+    .dashboard-header,
+    .dashboard-sidebar,
+    .mobile-bottom-nav {
+      border: 2px solid currentColor;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .dashboard-sidebar,
+    .dashboard-main-content,
+    .dashboard-layout-transition {
+      transition: none !important;
+    }
+  }
+}
