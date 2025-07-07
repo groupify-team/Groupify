@@ -1,14 +1,11 @@
-﻿// useDashboardLayout.js - Layout and navigation state management
+// useDashboardLayout.js - Layout and navigation state management
 import { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   DEFAULT_STATE,
   BREAKPOINTS,
 } from "@dashboard/utils/dashboardConstants";
-import {
-  shouldShowSidebar,
-  isMobileDevice,
-} from "@dashboard/utils/dashboardHelpers";
+import { isMobileDevice } from "@dashboard/utils/dashboardHelpers";
 
 export const useDashboardLayout = () => {
   const navigate = useNavigate();
@@ -445,3 +442,6 @@ export const useDashboardLayout = () => {
     },
   };
 };
+
+
+

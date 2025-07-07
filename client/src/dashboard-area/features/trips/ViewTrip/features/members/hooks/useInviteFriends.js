@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Hook for friend search and invitation within trip context
  * Handles friend filtering, search functionality, and trip invitations
  */
@@ -17,7 +17,7 @@ export const useInviteFriends = (currentUser, tripId, excludedUserIds = []) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isInviting, setIsInviting] = useState(false);
 
-  // 📥 Load and filter friends (excluding trip members)
+  // ?? Load and filter friends (excluding trip members)
   useEffect(() => {
     const fetchFriends = async () => {
       if (currentUser?.uid) {
@@ -39,7 +39,7 @@ export const useInviteFriends = (currentUser, tripId, excludedUserIds = []) => {
     fetchFriends();
   }, [currentUser, excludedUserIds]);
 
-  // 🔍 Filter by search term
+  // ?? Filter by search term
   useEffect(() => {
     const term = searchTerm.toLowerCase();
     setFilteredFriends(
@@ -84,7 +84,7 @@ export const useInviteFriends = (currentUser, tripId, excludedUserIds = []) => {
             color: "#333",
             border: "1px solid #f59e0b",
           },
-          icon: "⚠️",
+          icon: "??",
         });
         return;
       }
@@ -150,3 +150,7 @@ export const useInviteFriends = (currentUser, tripId, excludedUserIds = []) => {
     handleInviteFriend,
   };
 };
+
+
+
+

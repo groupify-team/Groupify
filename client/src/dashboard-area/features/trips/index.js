@@ -1,4 +1,4 @@
-﻿// index.js - Main barrel export for trips feature
+// index.js - Main barrel export for trips feature
 
 // Components
 export { default as CreateTripModal } from "./components/CreateTripModal";
@@ -31,3 +31,7 @@ export const GRID_CLASSES = {
   CARDS: "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3",
   STATS: "grid-cols-2 sm:grid-cols-4",
 };
+
+
+
+

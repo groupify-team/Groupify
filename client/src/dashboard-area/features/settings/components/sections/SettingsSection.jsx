@@ -1,6 +1,6 @@
 // src/dashboard-area/features/settings/components/sections/SettingsSection.jsx
 import React, { useState } from "react";
-import { useAuth } from "@auth/contexts/AuthContext";
+import { useAuth } from "@auth/hooks/useAuth";
 import { useDashboardLayout } from "@dashboard/hooks/useDashboardLayout";
 import { useDashboardData } from "@dashboard/hooks/useDashboardData";
 import { useSettings, useExportBackup } from "../../hooks";
@@ -240,3 +240,7 @@ const SettingsSection = () => {
 };
 
 export default SettingsSection;
+
+
+
+

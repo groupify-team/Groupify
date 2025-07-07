@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import {
   ArrowLeftIcon,
   ArrowRightOnRectangleIcon,
@@ -232,7 +232,7 @@ const DashboardSidebar = ({ sidebarOpen, onSidebarClose, onLogoutClick }) => {
                               <div className="truncate">{trip.name}</div>
                               {trip.location && (
                                 <div className="text-xs text-gray-500 dark:text-gray-500 truncate">
-                                  📍 {trip.location}
+                                  ?? {trip.location}
                                 </div>
                               )}
                             </button>
@@ -278,3 +278,7 @@ const DashboardSidebar = ({ sidebarOpen, onSidebarClose, onLogoutClick }) => {
 };
 
 export default DashboardSidebar;
+
+
+
+

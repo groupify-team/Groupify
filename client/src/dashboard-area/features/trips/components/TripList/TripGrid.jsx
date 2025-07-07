@@ -1,4 +1,4 @@
-﻿// components/TripList/TripGrid.jsx  
+// components/TripList/TripGrid.jsx  
 import React from 'react';
 import TripCard from '../TripCard';
 
@@ -13,3 +13,6 @@ const TripGrid = ({ trips, onViewTrip }) => {
 };
 
 export default TripGrid;
+
+
+

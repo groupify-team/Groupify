@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 import {
@@ -11,7 +11,7 @@ import {
   TrashIcon,
 } from "@heroicons/react/24/outline";
 import { toast } from "react-hot-toast";
-import { useAuth } from "@auth/contexts/AuthContext";
+import { useAuth } from "@/auth-area/contexts/AuthContext";
 import { updateTrip, deleteTrip } from "@shared/services/firebase/trips";
 
 const EditTripModal = ({
@@ -132,76 +132,75 @@ const EditTripModal = ({
   };
 
   const handleDelete = async () => {
-  if (deleteConfirmText !== trip.name) {
-    setError(`Please type "${trip.name}" exactly to confirm deletion`);
-    return;
-  }
-
-  try {
-    setDeleting(true);
-    setError(null);
-
-    // Show centered loading toast
-    const loadingToast = toast.loading("Deleting trip...", {
-      id: "deleting-trip",
-      position: "top-center",
-      style: {
-        background: "#FEF2F2",
-        color: "#B91C1C",
-        border: "1px solid #FECACA",
-        fontSize: "16px",
-        padding: "12px 20px",
-        borderRadius: "12px",
-        boxShadow: "0 10px 25px rgba(0,0,0,0.1)",
-      },
-    });
-
-    // Delete the trip
-    await deleteTrip(trip.id);
-
-    // Show centered success message
-    toast.dismiss(loadingToast);
-    toast.success("Trip deleted successfully!", {
-      position: "top-center",
-      duration: 2000,
-      style: {
-        background: "#F0FDF4",
-        color: "#166534",
-        border: "1px solid #BBF7D0",
-        fontSize: "16px",
-        padding: "12px 20px",
-        borderRadius: "12px",
-        boxShadow: "0 10px 25px rgba(0,0,0,0.1)",
-      },
-    });
-
-    // IMPORTANT: Call onTripDeleted FIRST before navigation
-    if (onTripDeleted) {
-      onTripDeleted(trip.id);
+    if (deleteConfirmText !== trip.name) {
+      setError(`Please type "${trip.name}" exactly to confirm deletion`);
+      return;
     }
 
-    // Close modal
-    onClose();
+    try {
+      setDeleting(true);
+      setError(null);
 
-  } catch (error) {
-    console.error("Error deleting trip:", error);
-    toast.dismiss("deleting-trip");
-    setError("Failed to delete trip. Please try again.");
-    toast.error("Failed to delete trip. Please try again.", {
-      position: "top-center",
-      style: {
-        background: "#FEF2F2",
-        color: "#B91C1C",
-        border: "1px solid #FECACA",
-        fontSize: "16px",
-        padding: "12px 20px",
-        borderRadius: "12px",
-      },
-    });
-  } finally {
-    setDeleting(false);
-  }
-};
+      // Show centered loading toast
+      const loadingToast = toast.loading("Deleting trip...", {
+        id: "deleting-trip",
+        position: "top-center",
+        style: {
+          background: "#FEF2F2",
+          color: "#B91C1C",
+          border: "1px solid #FECACA",
+          fontSize: "16px",
+          padding: "12px 20px",
+          borderRadius: "12px",
+          boxShadow: "0 10px 25px rgba(0,0,0,0.1)",
+        },
+      });
+
+      // Delete the trip
+      await deleteTrip(trip.id);
+
+      // Show centered success message
+      toast.dismiss(loadingToast);
+      toast.success("Trip deleted successfully!", {
+        position: "top-center",
+        duration: 2000,
+        style: {
+          background: "#F0FDF4",
+          color: "#166534",
+          border: "1px solid #BBF7D0",
+          fontSize: "16px",
+          padding: "12px 20px",
+          borderRadius: "12px",
+          boxShadow: "0 10px 25px rgba(0,0,0,0.1)",
+        },
+      });
+
+      // IMPORTANT: Call onTripDeleted FIRST before navigation
+      if (onTripDeleted) {
+        onTripDeleted(trip.id);
+      }
+
+      // Close modal
+      onClose();
+    } catch (error) {
+      console.error("Error deleting trip:", error);
+      toast.dismiss("deleting-trip");
+      setError("Failed to delete trip. Please try again.");
+      toast.error("Failed to delete trip. Please try again.", {
+        position: "top-center",
+        style: {
+          background: "#FEF2F2",
+          color: "#B91C1C",
+          border: "1px solid #FECACA",
+          fontSize: "16px",
+          padding: "12px 20px",
+          borderRadius: "12px",
+        },
+      });
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   const handleClose = () => {
     if (!loading && !deleting) {
@@ -303,7 +302,7 @@ const EditTripModal = ({
                       </div>
                       <div>
                         <h4 className="font-bold text-red-800 dark:text-red-400">
-                          ⚠️ Permanent Deletion
+                          ?? Permanent Deletion
                         </h4>
                         <p className="text-red-700 dark:text-red-300 text-sm">
                           This action cannot be undone

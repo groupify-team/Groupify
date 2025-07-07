@@ -192,20 +192,20 @@ export const useDashboardNavigation = () => {
    */
   const navigateToPricing = useCallback(
     (plan = null, options = {}) => {
-      const { from = 'dashboard' } = options;
-      
+      const { from = "dashboard" } = options;
+
       // Set navigation context using the navigation service
       navigationService.setContext({
         origin: from,
         returnPath: location.pathname + location.search,
-        section: new URLSearchParams(location.search).get('section'),
-        metadata: { action: 'pricing', originalPlan: plan }
+        section: new URLSearchParams(location.search).get("section"),
+        metadata: { action: "pricing", originalPlan: plan },
       });
 
       // Navigate to pricing
       navigationService.navigateToPricing(navigate, {
         plan,
-        from
+        from,
       });
     },
     [navigate, location]
@@ -215,22 +215,22 @@ export const useDashboardNavigation = () => {
    * Navigate to billing page with context
    */
   const navigateToBilling = useCallback(
-    (plan = null, billing = 'monthly', options = {}) => {
-      const { from = 'dashboard' } = options;
-      
+    (plan = null, billing = "monthly", options = {}) => {
+      const { from = "dashboard" } = options;
+
       // Set navigation context using the navigation service
       navigationService.setContext({
         origin: from,
         returnPath: location.pathname + location.search,
-        section: new URLSearchParams(location.search).get('section'),
-        metadata: { action: 'billing', originalPlan: plan, billing }
+        section: new URLSearchParams(location.search).get("section"),
+        metadata: { action: "billing", originalPlan: plan, billing },
       });
 
       // Navigate to billing
       navigationService.navigateToBilling(navigate, {
         plan,
         billing,
-        from
+        from,
       });
     },
     [navigate, location]
@@ -366,24 +366,17 @@ export const useDashboardNavigation = () => {
     canNavigateForward,
   ]);
 
-  /**
-   * Handle keyboard navigation
-   */
   useEffect(() => {
     const handleKeyDown = (event) => {
-      // Alt + Left Arrow = Back
       if (event.altKey && event.key === "ArrowLeft" && canNavigateBack()) {
         event.preventDefault();
         navigateBack();
       }
-
-      // Alt + Right Arrow = Forward
       if (event.altKey && event.key === "ArrowRight" && canNavigateForward()) {
         event.preventDefault();
         navigateForward();
       }
 
-      // Escape = Clear breadcrumbs and go to dashboard home
       if (event.key === "Escape" && breadcrumbs.length > 0) {
         event.preventDefault();
         navigateToSection("trips", { resetView: true });
@@ -402,49 +395,30 @@ export const useDashboardNavigation = () => {
     navigateToSection,
   ]);
 
-  /**
-   * Preload route data (for performance)
-   */
-  const preloadRoute = useCallback(async (routeType, routeId) => {
-    console.log(`Preloading ${routeType}:${routeId}`);
-  }, []);
+  const preloadRoute = useCallback(async (routeType, routeId) => {}, []);
 
-  /**
-   * Handle successful navigation return from external pages
-   */
   const handleNavigationReturn = useCallback((result) => {
     if (result?.success) {
-      console.log('Navigation return successful:', result);
+      console.log("Navigation return successful:", result);
     }
   }, []);
 
-  /**
-   * Get navigation service context
-   */
   const getNavigationContext = useCallback(() => {
     return navigationService.getContext();
   }, []);
 
-  /**
-   * Clear navigation service context
-   */
   const clearNavigationContext = useCallback(() => {
     navigationService.clearContext();
   }, []);
 
-  /**
-   * Subscribe to navigation service events
-   */
   useEffect(() => {
-    const unsubscribe = navigationService.subscribe((event, data) => {
-      console.log('Navigation service event:', event, data);
-      
+    const unsubscribe = navigationService.subscribe((event) => {
       switch (event) {
-        case 'contextSet':
+        case "contextSet":
           break;
-        case 'contextCleared':
+        case "contextCleared":
           break;
-        case 'metadataUpdated':
+        case "metadataUpdated":
           break;
         default:
           break;
@@ -455,7 +429,6 @@ export const useDashboardNavigation = () => {
   }, []);
 
   return {
-    // Navigation state
     state: {
       navigationHistory,
       currentHistoryIndex,
@@ -464,7 +437,6 @@ export const useDashboardNavigation = () => {
       breadcrumbs,
     },
 
-    // Core navigation actions
     navigate: {
       toSection: navigateToSection,
       toTrip: navigateToTrip,
@@ -473,43 +445,36 @@ export const useDashboardNavigation = () => {
       toExternalPage: navigateToExternalPage,
     },
 
-    // Enhanced page navigation with context
     pages: {
       toPricing: navigateToPricing,
       toBilling: navigateToBilling,
     },
 
-    // URL management
     url: {
       update: updateUrl,
       getParams: getUrlParams,
     },
 
-    // History management
     history: {
       clear: clearHistory,
       getCurrent: getCurrentNavigation,
       getAnalytics: getNavigationAnalytics,
     },
 
-    // Navigation state checks
     can: {
       navigateBack: canNavigateBack,
       navigateForward: canNavigateForward,
     },
 
-    // Performance
     performance: {
       preloadRoute,
     },
 
-    // Breadcrumbs
     breadcrumbs: {
       items: breadcrumbs,
       setBreadcrumbs,
     },
 
-    // Navigation service integration
     service: {
       getContext: getNavigationContext,
       clearContext: clearNavigationContext,
@@ -519,3 +484,7 @@ export const useDashboardNavigation = () => {
 };
 
 export default useDashboardNavigation;
+
+
+
+

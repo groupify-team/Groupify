@@ -282,3 +282,7 @@ const QuickStatsCard = ({ trips, friends, profilePhotos, hasProfile }) => {
 };
 
 export default QuickStatsCard;
+
+
+
+

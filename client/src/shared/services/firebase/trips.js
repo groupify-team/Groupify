@@ -359,3 +359,6 @@ export const declineTripInvite = async (inviteId) => {
 
 // Export constants for use in components
 export { MAX_TRIPS_PER_USER, MAX_PHOTOS_PER_TRIP };
+
+
+

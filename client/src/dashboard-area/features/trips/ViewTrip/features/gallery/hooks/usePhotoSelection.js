@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Hook for photo selection and batch deletion operations
  * Handles multi-select mode, photo deletion, and selection state management
  */
@@ -73,3 +73,7 @@ export const usePhotoSelection = (tripId, photos, removePhotos) => {
     deleteSelectedPhotos,
   };
 };
+
+
+
+

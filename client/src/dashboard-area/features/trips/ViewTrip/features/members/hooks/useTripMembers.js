@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Hook for trip member management and friend operations
  * Handles member actions, role changes, friend requests, and member removal
  */
@@ -76,7 +76,7 @@ export const useTripMembers = (currentUserId, trip, setTrip) => {
         const pendingIds = pending.map((r) => r.uid);
         setPendingFriendRequests(pendingIds);
       } catch (error) {
-        console.error("❌ Failed to fetch friends or pending:", error);
+        console.error("? Failed to fetch friends or pending:", error);
       }
     };
 
@@ -111,7 +111,7 @@ export const useTripMembers = (currentUserId, trip, setTrip) => {
         __isPending: true,
       }));
     } catch (error) {
-      console.error("❌ Failed to send friend request:", error);
+      console.error("? Failed to send friend request:", error);
       throw error;
     }
   };
@@ -141,7 +141,7 @@ export const useTripMembers = (currentUserId, trip, setTrip) => {
             color: "#333",
             border: "1px solid #f59e0b",
           },
-          icon: "⚠️",
+          icon: "??",
         });
         return;
       }
@@ -173,7 +173,7 @@ export const useTripMembers = (currentUserId, trip, setTrip) => {
         __isFriend: false,
       }));
     } catch (error) {
-      console.error("❌ Failed to remove friend:", error);
+      console.error("? Failed to remove friend:", error);
       throw error;
     }
   };
@@ -201,12 +201,10 @@ export const useTripMembers = (currentUserId, trip, setTrip) => {
             break;
           }
         } catch (error) {
-          // Continue to next method if this fails
           console.log("Method 1 failed, trying query method...");
         }
       }
 
-      // Method 2: If direct deletion failed, try query-based approach
       if (!requestDeleted) {
         const queries = [
           query(
@@ -253,7 +251,7 @@ export const useTripMembers = (currentUserId, trip, setTrip) => {
         throw new Error("Friend request not found");
       }
     } catch (error) {
-      console.error("❌ Failed to cancel friend request:", error);
+      console.error("? Failed to cancel friend request:", error);
       throw error;
     }
   };
@@ -277,7 +275,7 @@ export const useTripMembers = (currentUserId, trip, setTrip) => {
             color: "#333",
             border: "1px solid #f59e0b",
           },
-          icon: "⚠️",
+          icon: "??",
         });
         return;
       }
@@ -412,3 +410,7 @@ export const useTripMembers = (currentUserId, trip, setTrip) => {
     handleRemoveFromTrip,
   };
 };
+
+
+
+

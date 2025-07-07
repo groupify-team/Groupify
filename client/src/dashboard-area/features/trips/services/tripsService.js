@@ -1,4 +1,4 @@
-﻿// services/tripsService.js - UPDATED to match exact pricing page limits
+// services/tripsService.js - UPDATED to match exact pricing page limits
 import {
   getTrip,
   createTrip,
@@ -495,3 +495,7 @@ export const tripsService = {
     },
   },
 };
+
+
+
+

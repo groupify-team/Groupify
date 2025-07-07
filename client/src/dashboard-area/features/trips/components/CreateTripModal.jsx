@@ -1,4 +1,4 @@
-﻿// components/CreateTripModal.jsx
+// components/CreateTripModal.jsx
 import React, { useState, useEffect } from "react";
 import {
   XMarkIcon,
@@ -10,7 +10,7 @@ import {
   StarIcon,
   ArrowUpIcon,
 } from "@heroicons/react/24/outline";
-import { useAuth } from "@auth/contexts/AuthContext";
+import { useAuth } from "@/auth-area/contexts/AuthContext";
 import { tripsService } from "../services/tripsService";
 import { usePlanLimits } from "../../../../shared/hooks/usePlanLimits";
 
@@ -39,7 +39,7 @@ const CreateTripModal = ({ isOpen, onClose, onTripCreated }) => {
     isFreePlan,
     isPremiumPlan,
     isProPlan,
-    loading: planLoading
+    loading: planLoading,
   } = usePlanLimits();
 
   useEffect(() => {
@@ -131,8 +131,8 @@ const CreateTripModal = ({ isOpen, onClose, onTripCreated }) => {
     }
 
     // Check plan limits before proceeding
-    const limitCheck = canPerformAction('create_trip', { currentTripCount });
-    
+    const limitCheck = canPerformAction("create_trip", { currentTripCount });
+
     if (!limitCheck.allowed) {
       if (limitCheck.upgradeRequired) {
         setShowUpgradePrompt(true);
@@ -174,7 +174,7 @@ const CreateTripModal = ({ isOpen, onClose, onTripCreated }) => {
       });
 
       // Update usage statistics
-      setCurrentTripCount(prev => prev + 1);
+      setCurrentTripCount((prev) => prev + 1);
 
       // Store trip name for success modal
       setCreatedTripName(name);
@@ -220,10 +220,7 @@ const CreateTripModal = ({ isOpen, onClose, onTripCreated }) => {
   };
 
   const handleUpgradeClick = () => {
-    // Navigate to upgrade page or show upgrade modal
-    console.log('Navigate to upgrade page');
     setShowUpgradePrompt(false);
-    // onClose(); // Close this modal if navigating away
   };
 
   if (!isOpen) return null;
@@ -273,22 +270,31 @@ const CreateTripModal = ({ isOpen, onClose, onTripCreated }) => {
             <div className="px-6 py-3 bg-gray-50/50 dark:bg-gray-700/30 border-b border-gray-200/50 dark:border-gray-600/50">
               <div className="flex items-center justify-between text-xs">
                 <div className="flex items-center gap-2">
-                  {isFreePlan && <StarIcon className="w-4 h-4 text-yellow-500" />}
-                  {isPremiumPlan && <StarIcon className="w-4 h-4 text-blue-500" />}
-                  {isProPlan && <StarIcon className="w-4 h-4 text-purple-500" />}
-                  
+                  {isFreePlan && (
+                    <StarIcon className="w-4 h-4 text-yellow-500" />
+                  )}
+                  {isPremiumPlan && (
+                    <StarIcon className="w-4 h-4 text-blue-500" />
+                  )}
+                  {isProPlan && (
+                    <StarIcon className="w-4 h-4 text-purple-500" />
+                  )}
+
                   <span className="font-medium text-gray-700 dark:text-gray-300">
-                    {isFreePlan && 'Free Plan'}
-                    {isPremiumPlan && 'Premium Plan'}
-                    {isProPlan && 'Pro Plan'}
+                    {isFreePlan && "Free Plan"}
+                    {isPremiumPlan && "Premium Plan"}
+                    {isProPlan && "Pro Plan"}
                   </span>
                 </div>
-                
+
                 <div className="flex items-center gap-4">
                   <span className="text-gray-600 dark:text-gray-400">
-                    Trips: {currentTripCount}/{planFeatures?.trips === 'unlimited' ? '∞' : planFeatures?.trips || 0}
+                    Trips: {currentTripCount}/
+                    {planFeatures?.trips === "unlimited"
+                      ? "8"
+                      : planFeatures?.trips || 0}
                   </span>
-                  
+
                   {(isFreePlan || isPremiumPlan) && (
                     <button
                       onClick={() => setShowUpgradePrompt(true)}
@@ -302,19 +308,22 @@ const CreateTripModal = ({ isOpen, onClose, onTripCreated }) => {
               </div>
 
               {/* Progress bar for trip usage */}
-              {planFeatures?.trips !== 'unlimited' && (
+              {planFeatures?.trips !== "unlimited" && (
                 <div className="mt-2">
                   <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-1.5">
                     <div
                       className={`h-1.5 rounded-full transition-all duration-300 ${
-                        (currentTripCount / planFeatures.trips) > 0.8
-                          ? 'bg-red-500'
-                          : (currentTripCount / planFeatures.trips) > 0.6
-                          ? 'bg-yellow-500'
-                          : 'bg-green-500'
+                        currentTripCount / planFeatures.trips > 0.8
+                          ? "bg-red-500"
+                          : currentTripCount / planFeatures.trips > 0.6
+                          ? "bg-yellow-500"
+                          : "bg-green-500"
                       }`}
                       style={{
-                        width: `${Math.min((currentTripCount / planFeatures.trips) * 100, 100)}%`
+                        width: `${Math.min(
+                          (currentTripCount / planFeatures.trips) * 100,
+                          100
+                        )}%`,
                       }}
                     ></div>
                   </div>
@@ -327,14 +336,16 @@ const CreateTripModal = ({ isOpen, onClose, onTripCreated }) => {
           <div className="p-6 space-y-4">
             {/* Error message */}
             {error && (
-              <div className={`border px-4 py-3 rounded-xl flex items-center gap-2 ${
-                showUpgradePrompt 
-                  ? 'bg-blue-50/80 dark:bg-blue-900/30 border-blue-200/50 dark:border-blue-800/50 text-blue-700 dark:text-blue-400'
-                  : 'bg-red-50/80 dark:bg-red-900/30 border-red-200/50 dark:border-red-800/50 text-red-700 dark:text-red-400'
-              }`}>
+              <div
+                className={`border px-4 py-3 rounded-xl flex items-center gap-2 ${
+                  showUpgradePrompt
+                    ? "bg-blue-50/80 dark:bg-blue-900/30 border-blue-200/50 dark:border-blue-800/50 text-blue-700 dark:text-blue-400"
+                    : "bg-red-50/80 dark:bg-red-900/30 border-red-200/50 dark:border-red-800/50 text-red-700 dark:text-red-400"
+                }`}
+              >
                 <ExclamationTriangleIcon className="w-4 h-4 flex-shrink-0" />
                 <span className="text-sm">{error}</span>
-                
+
                 {showUpgradePrompt && (
                   <button
                     onClick={handleUpgradeClick}
@@ -358,7 +369,9 @@ const CreateTripModal = ({ isOpen, onClose, onTripCreated }) => {
                       Upgrade to Create More Trips
                     </h4>
                     <p className="text-sm text-blue-700 dark:text-blue-300 mb-3">
-                      You've reached your {planFeatures?.trips || 0} trip limit. Upgrade to {isPremiumPlan ? 'Pro' : 'Premium'} for {isPremiumPlan ? 'unlimited' : 'more'} trips!
+                      You've reached your {planFeatures?.trips || 0} trip limit.
+                      Upgrade to {isPremiumPlan ? "Pro" : "Premium"} for{" "}
+                      {isPremiumPlan ? "unlimited" : "more"} trips!
                     </p>
                     <div className="flex gap-2">
                       <button
@@ -554,10 +567,10 @@ const CreateTripModal = ({ isOpen, onClose, onTripCreated }) => {
                 What you can do now:
               </h4>
               <ul className="text-blue-700 dark:text-blue-400 text-sm space-y-1">
-                <li>• Upload photos and create shared memories</li>
-                <li>• Use face recognition to find your photos instantly</li>
-                <li>• Invite friends to join and contribute photos</li>
-                <li>• No more searching through endless folders!</li>
+                <li>� Upload photos and create shared memories</li>
+                <li>� Use face recognition to find your photos instantly</li>
+                <li>� Invite friends to join and contribute photos</li>
+                <li>� No more searching through endless folders!</li>
               </ul>
             </div>
 

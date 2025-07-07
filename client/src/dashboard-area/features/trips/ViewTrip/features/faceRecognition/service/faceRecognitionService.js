@@ -19,14 +19,11 @@ class ModernFaceRecognitionService {
   async loadFaceAPI() {
     if (this.faceapi) return this.faceapi;
 
-    console.log("🔄 Loading face-api.js library...");
-
     try {
       // Dynamic import - only loads when called
       const faceapiModule = await import("@vladmandic/face-api");
       this.faceapi = faceapiModule;
 
-      console.log("✅ Face-api.js loaded successfully");
       return this.faceapi;
     } catch (error) {
       console.error("❌ Failed to load face-api.js:", error);
@@ -44,8 +41,6 @@ class ModernFaceRecognitionService {
     const faceapi = await this.loadFaceAPI();
 
     try {
-      console.log("🔄 Loading AI models...");
-
       const MODEL_URLS = [
         "/models", // local backup
         "https://cdn.jsdelivr.net/npm/@vladmandic/face-api@latest/model", // Working CDN
@@ -62,8 +57,6 @@ class ModernFaceRecognitionService {
             faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL), // Facial landmarks
             faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL), // Face recognition (128D descriptors)
           ]);
-
-          console.log("✅ Essential models loaded from:", MODEL_URL);
 
           // Load optional models in background (non-blocking)
           this.loadOptionalModels(MODEL_URL, faceapi);
@@ -85,7 +78,6 @@ class ModernFaceRecognitionService {
       }
 
       this.isInitialized = true;
-      console.log("✅ Face recognition initialized");
     } catch (error) {
       console.error("❌ Failed to initialize face-api.js:", error);
       throw new Error(
@@ -101,7 +93,6 @@ class ModernFaceRecognitionService {
         faceapi.nets.ageGenderNet.loadFromUri(MODEL_URL), // Age/gender (optional)
         faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL), // Expressions (optional)
       ]);
-      console.log("✅ Optional models loaded");
     } catch (error) {
       console.warn("⚠️ Optional models failed to load:", error.message);
     }
@@ -194,29 +185,16 @@ class ModernFaceRecognitionService {
       return total + numericValue * weights[key];
     }, 0);
 
-    // More lenient validation - focus on essentials
     const isValid =
       score >= this.MIN_QUALITY_THRESHOLD &&
-      metrics.descriptor && // Must have valid 128D descriptor
-      metrics.size && // Must meet minimum size
+      metrics.descriptor &&
+      metrics.size &&
       faceSize >= this.MIN_FACE_SIZE;
-
-    if (!isValid) {
-      console.log(
-        `❌ Face rejected: score=${score.toFixed(3)}, size=${faceSize.toFixed(
-          1
-        )}px, hasDescriptor=${!!metrics.descriptor}, confidence=${detection.detection.score.toFixed(
-          3
-        )}`
-      );
-    }
 
     return { isValid, score, metrics };
   }
 
-  // Calculate image sharpness (edge detection)
   calculateSharpness(detection) {
-    // Simple sharpness estimation based on landmark consistency
     const landmarks = detection.landmarks.positions;
     let variation = 0;
 
@@ -226,11 +204,9 @@ class ModernFaceRecognitionService {
       variation += Math.sqrt(dx * dx + dy * dy);
     }
 
-    // Normalize variation (higher = sharper)
     return Math.min(1, variation / 1000);
   }
 
-  // Calculate face frontality (how front-facing the face is)
   calculateFrontality(landmarks) {
     const nose = landmarks.getNose();
     const leftEye = landmarks.getLeftEye();
@@ -240,32 +216,24 @@ class ModernFaceRecognitionService {
       return 0;
     }
 
-    // Calculate eye distance ratio
-    const noseTip = nose[3]; // Nose tip
+    const noseTip = nose[3];
     const leftEyeCenter = this.getCenterPoint(leftEye);
     const rightEyeCenter = this.getCenterPoint(rightEye);
-
     const leftDist = this.getDistance(noseTip, leftEyeCenter);
     const rightDist = this.getDistance(noseTip, rightEyeCenter);
-
-    // Perfect frontality would have ratio close to 1
     const ratio = Math.min(leftDist, rightDist) / Math.max(leftDist, rightDist);
     return ratio;
   }
 
-  // Assess if eyes are open
   assessEyesOpen(landmarks) {
     const leftEye = landmarks.getLeftEye();
     const rightEye = landmarks.getRightEye();
-
     const leftEyeHeight = this.getEyeHeight(leftEye);
     const rightEyeHeight = this.getEyeHeight(rightEye);
 
-    // Eyes are considered open if height ratio is reasonable
     return leftEyeHeight > 0.02 && rightEyeHeight > 0.02;
   }
 
-  // Helper functions
   getCenterPoint(points) {
     const x = points.reduce((sum, p) => sum + p.x, 0) / points.length;
     const y = points.reduce((sum, p) => sum + p.y, 0) / points.length;
@@ -283,14 +251,12 @@ class ModernFaceRecognitionService {
     return Math.abs(bottom - top);
   }
 
-  // Create face profile with proper 128D descriptors
   async createFaceProfile(userId, imageFiles, onProgress = null) {
     if (!this.isInitialized) {
       await this.initialize();
     }
 
     try {
-      // Clear existing profile
       this.deleteFaceProfile(userId);
 
       const allFaces = [];
@@ -338,7 +304,6 @@ class ModernFaceRecognitionService {
         );
       }
 
-      // Create labeled face descriptors for face-api.js
       const labeledDescriptors = allFaces.map((face, index) => {
         return new this.faceapi.LabeledFaceDescriptors(
           `${userId}_face_${index}`,
@@ -346,7 +311,6 @@ class ModernFaceRecognitionService {
         );
       });
 
-      // Create face matcher with optimized threshold
       const faceMatcher = new this.faceapi.FaceMatcher(
         labeledDescriptors,
         this.FACE_MATCHER_THRESHOLD
@@ -444,27 +408,14 @@ class ModernFaceRecognitionService {
           const faces = await this.detectFacesWithQuality(img);
 
           if (faces.length > 0) {
-            // Check each detected face against the user's profile
             let bestMatchForPhoto = null;
 
             for (const face of faces) {
               const bestMatch = userProfile.faceMatcher.findBestMatch(
                 face.descriptor
               );
-
-              // face-api.js returns distance (lower = more similar)
-              // Convert distance to confidence score
               const confidence = Math.max(0, 1 - bestMatch.distance);
               const isMatch = bestMatch.label !== "unknown";
-
-              console.log(
-                `🔍 Face check: distance=${bestMatch.distance.toFixed(
-                  3
-                )}, confidence=${(confidence * 100).toFixed(1)}%, label=${
-                  bestMatch.label
-                }`
-              );
-
               if (
                 isMatch &&
                 bestMatch.distance <= this.FACE_MATCHER_THRESHOLD
@@ -481,7 +432,6 @@ class ModernFaceRecognitionService {
                   matchedFace: face,
                 };
 
-                // Keep the best match for this photo (lowest distance)
                 if (
                   !bestMatchForPhoto ||
                   bestMatch.distance < bestMatchForPhoto.faceMatch.distance
@@ -497,16 +447,6 @@ class ModernFaceRecognitionService {
             // Add the best match for this photo (if any)
             if (bestMatchForPhoto) {
               matches.push(bestMatchForPhoto);
-
-              console.log(
-                `✅ Match found in ${photo.fileName}: confidence=${(
-                  bestMatchForPhoto.faceMatch.confidence * 100
-                ).toFixed(
-                  1
-                )}%, distance=${bestMatchForPhoto.faceMatch.distance.toFixed(
-                  3
-                )}`
-              );
 
               if (onProgress) {
                 onProgress({
@@ -658,7 +598,6 @@ class ModernFaceRecognitionService {
     };
   }
 
-  // Diagnostic function to analyze why photos aren't matching
   async analyzePhoto(photoUrl, userId) {
     const userProfile = this.getFaceProfile(userId);
     if (!userProfile) {
@@ -669,14 +608,11 @@ class ModernFaceRecognitionService {
     const faces = await this.detectFacesWithQuality(img);
 
     if (faces.length === 0) {
-      console.log(
-        `   ❌ No faces detected - check image quality, lighting, or face size`
-      );
       return { faces: [], matches: [] };
     }
 
     const matches = [];
-    faces.forEach((face, index) => {
+    faces.forEach((face) => {
       const bestMatch = userProfile.faceMatcher.findBestMatch(face.descriptor);
       const confidence = Math.max(0, 1 - bestMatch.distance);
       const wouldMatch =
@@ -891,9 +827,6 @@ export const optimizeProfile = (userId, minQuality = 0.75) => {
     .map((face) => face.sourceImage);
 
   if (highQualityImages.length < 2) {
-    console.log(
-      "✅ Profile already optimized - insufficient high quality faces to filter"
-    );
     return profile;
   }
   return service.createFaceProfile(
@@ -970,3 +903,7 @@ export const filterPhotosByFace = async (
 };
 
 export default getFaceRecognitionService;
+
+
+
+

@@ -1,6 +1,5 @@
-﻿// DashboardHeader.jsx - FIXED VERSION with proper sticky positioning
+// DashboardHeader.jsx - FIXED VERSION with proper sticky positioning
 import React, { useState, useRef, useEffect } from "react";
-import { useClickOutside } from "@/shared/hooks/useClickOutside";
 import { useDashboardData } from "@dashboard/hooks/useDashboardData";
 import {
   ArrowRightOnRectangleIcon,
@@ -10,7 +9,6 @@ import {
   UserIcon,
 } from "@heroicons/react/24/outline";
 
-// Try to import new hooks, fallback to basic functionality if they don't exist
 let useDashboardLayout, useDashboardModals;
 try {
   const layoutModule = require("@dashboard/hooks/useDashboardLayout");
@@ -138,7 +136,7 @@ const DashboardHeader = ({
   };
 
   return (
-    // 🔥 FIXED: Changed from 'sticky top-0' to 'fixed top-0 left-0 right-0'
+    // ?? FIXED: Changed from 'sticky top-0' to 'fixed top-0 left-0 right-0'
     // This ensures the header is ALWAYS pinned to the top regardless of scroll
     <header
       className="fixed top-0 bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg shadow-sm border-b border-white/20 dark:border-gray-700/50 z-50 transition-all duration-300"
@@ -409,3 +407,7 @@ const DashboardHeader = ({
 };
 
 export default DashboardHeader;
+
+
+
+

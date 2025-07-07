@@ -1,5 +1,5 @@
-﻿// components/TripCard.jsx
-import React from "react";
+// components/TripCard.jsx
+import React, { memo } from "react";
 import {
   MapPinIcon,
   UserGroupIcon,
@@ -9,7 +9,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { formatTripDate, getTripStatus } from "@trips/utils/tripHelpers";
 
-const TripCard = ({ trip, onViewTrip }) => {
+const TripCard = memo(({ trip, onViewTrip }) => {
   const tripStatus = getTripStatus(trip);
 
   return (
@@ -55,10 +55,10 @@ const TripCard = ({ trip, onViewTrip }) => {
                   : "bg-gray-100/80 dark:bg-gray-700/50 text-gray-800 dark:text-gray-300 border-gray-200/50 dark:border-gray-600/50"
               }`}
             >
-              {tripStatus.status === "completed" && "✓ Completed"}
-              {tripStatus.status === "upcoming" && "📅 Upcoming"}
-              {tripStatus.status === "ongoing" && "🎯 Ongoing"}
-              {tripStatus.status === "draft" && "📝 Draft"}
+              {tripStatus.status === "completed" && "? Completed"}
+              {tripStatus.status === "upcoming" && "?? Upcoming"}
+              {tripStatus.status === "ongoing" && "?? Ongoing"}
+              {tripStatus.status === "draft" && "?? Draft"}
             </span>
           </div>
 
@@ -135,6 +135,11 @@ const TripCard = ({ trip, onViewTrip }) => {
       </div>
     </div>
   );
-};
+});
+
+TripCard.displayName = "TripCard";
 
 export default TripCard;
+
+
+

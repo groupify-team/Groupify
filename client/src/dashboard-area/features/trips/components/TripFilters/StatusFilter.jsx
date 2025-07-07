@@ -1,4 +1,4 @@
-﻿// components/TripFilters/StatusFilter.jsx
+// components/TripFilters/StatusFilter.jsx
 import React from 'react';
 
 const StatusFilter = ({ value, onChange }) => {
@@ -17,3 +17,6 @@ const StatusFilter = ({ value, onChange }) => {
 };
 
 export default StatusFilter;
+
+
+

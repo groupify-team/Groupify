@@ -1,5 +1,3 @@
-﻿// Replace your UserProfileModal component with this optimized version:
-
 import React, { useState, useEffect } from "react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import { userStatsCache } from "@shared/services/userStatsCache";
@@ -136,7 +134,7 @@ const UserProfileModal = ({
             <div className="flex justify-center gap-8 mb-4">
               <div className="text-center">
                 <div className="w-8 h-8 bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-1">
-                  <span className="text-slate-400 text-xs">📍</span>
+                  <span className="text-slate-400 text-xs">??</span>
                 </div>
                 <div className="text-2xl font-bold text-white h-8 flex items-center justify-center">
                   {userStats.loading ? (
@@ -153,7 +151,7 @@ const UserProfileModal = ({
               </div>
               <div className="text-center">
                 <div className="w-8 h-8 bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-1">
-                  <span className="text-slate-400 text-xs">👥</span>
+                  <span className="text-slate-400 text-xs">??</span>
                 </div>
                 <div className="text-2xl font-bold text-white h-8 flex items-center justify-center">
                   {userStats.loading ? (
@@ -175,17 +173,17 @@ const UserProfileModal = ({
           <div className="mb-4">
             {isFriend ? (
               <button className="w-full bg-green-600 text-white py-3 px-4 rounded-xl font-semibold text-sm flex items-center justify-center gap-2">
-                <span className="text-lg">⭐</span>
+                <span className="text-lg">?</span>
                 Friends
               </button>
             ) : isPending ? (
               <button className="w-full bg-yellow-600 text-white py-3 px-4 rounded-xl font-semibold text-sm flex items-center justify-center gap-2">
-                <span className="text-lg">⏳</span>
+                <span className="text-lg">?</span>
                 Request Pending
               </button>
             ) : currentUserId !== user.uid ? (
               <button className="w-full bg-green-600 text-white py-3 px-4 rounded-xl font-semibold text-sm flex items-center justify-center gap-2">
-                <span className="text-lg">⭐</span>
+                <span className="text-lg">?</span>
                 Add Friend
               </button>
             ) : null}
@@ -227,3 +225,7 @@ const UserProfileModal = ({
 };
 
 export default UserProfileModal;
+
+
+
+

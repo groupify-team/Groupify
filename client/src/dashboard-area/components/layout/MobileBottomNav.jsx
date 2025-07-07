@@ -1,4 +1,4 @@
-﻿// MobileBottomNav.jsx - Mobile bottom navigation bar
+// MobileBottomNav.jsx - Mobile bottom navigation bar
 import React from "react";
 import { useDashboardLayout } from "../../hooks/useDashboardLayout";
 import { useDashboardData } from "../../hooks/useDashboardData";
@@ -75,3 +75,7 @@ const MobileBottomNav = () => {
 };
 
 export default MobileBottomNav;
+
+
+
+

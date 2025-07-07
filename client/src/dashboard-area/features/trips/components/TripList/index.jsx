@@ -1,4 +1,4 @@
-﻿// components/TripList/index.jsx
+// components/TripList/index.jsx
 import React from 'react';
 import TripGrid from './TripGrid';
 import EmptyTripsState from './EmptyTripsState';
@@ -16,3 +16,6 @@ const TripList = ({ trips, onViewTrip, loading }) => {
 };
 
 export default TripList;
+
+
+

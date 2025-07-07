@@ -69,3 +69,7 @@ const NotificationSection = ({ settings, toggleSetting, settingsLoading }) => {
 };
 
 export default NotificationSection;
+
+
+
+

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useAuth } from "../../../auth-area/contexts/AuthContext";
+import { useAuth } from "@/auth-area/contexts/AuthContext";
 import PublicLayout from "../../components/layout/PublicLayout";
 import HeroSection from "../../components/ui/HeroSection";
 import { usePublicNavigation } from "../../hooks/usePublicNavigation";
@@ -25,7 +25,6 @@ import {
 import { toast } from "react-hot-toast";
 
 import AccessibilityModal from "@/shared/components/accessibility/AccessibilityModal";
-
 
 const toastOptions = {
   style: {
@@ -991,3 +990,6 @@ const PostDetailModal = ({ post, onClose, onLike }) => {
 };
 
 export default BlogPage;
+
+
+

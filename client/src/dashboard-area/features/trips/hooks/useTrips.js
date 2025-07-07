@@ -23,7 +23,7 @@ export const useTrips = (userId) => {
     getPlanFeatures,
     isFreePlan,
     isPremiumPlan,
-    isProPlan
+    isProPlan,
   } = usePlanLimits();
 
   const fetchTrips = useCallback(async () => {
@@ -54,7 +54,7 @@ export const useTrips = (userId) => {
 
       // Enhanced plan validation before creation
       const currentTripCount = trips.length;
-      const limitCheck = canPerformAction('create_trip', { currentTripCount });
+      const limitCheck = canPerformAction("create_trip", { currentTripCount });
 
       if (!limitCheck.allowed) {
         if (limitCheck.upgradeRequired) {
@@ -71,8 +71,9 @@ export const useTrips = (userId) => {
       if (!canCreate) {
         const currentCount = await tripsService.getUserTripCount(userId);
         const planFeatures = getPlanFeatures();
-        const planLimit = planFeatures?.trips || tripsService.MAX_TRIPS_PER_USER;
-        
+        const planLimit =
+          planFeatures?.trips || tripsService.MAX_TRIPS_PER_USER;
+
         throw new Error(
           `Trip limit reached! You can only create ${planLimit} trips. You currently have ${currentCount} trips.`
         );
@@ -91,38 +92,40 @@ export const useTrips = (userId) => {
 
       // Show success message with plan context
       const planFeatures = getPlanFeatures();
-      const remaining = planFeatures?.trips === 'unlimited' 
-        ? 'unlimited' 
-        : planFeatures?.trips - (currentTripCount + 1);
-      
-      if (remaining !== 'unlimited' && remaining <= 2) {
+      const remaining =
+        planFeatures?.trips === "unlimited"
+          ? "unlimited"
+          : planFeatures?.trips - (currentTripCount + 1);
+
+      if (remaining !== "unlimited" && remaining <= 2) {
         toast.success(
-          `Trip created! ${remaining} trips remaining in your ${isFreePlan ? 'Free' : isPremiumPlan ? 'Premium' : 'Pro'} plan.`,
+          `Trip created! ${remaining} trips remaining in your ${
+            isFreePlan ? "Free" : isPremiumPlan ? "Premium" : "Pro"
+          } plan.`,
           { duration: 4000 }
         );
       } else {
-        toast.success('Trip created successfully!');
+        toast.success("Trip created successfully!");
       }
 
       return newTrip;
     } catch (err) {
       console.error("Error creating trip:", err);
       setError(err.message || "Failed to create trip");
-      
+
       // Show upgrade prompt for plan limits
-      if (err.message.includes('limit reached')) {
+      if (err.message.includes("limit reached")) {
         toast.error(err.message, {
           duration: 6000,
           action: {
-            label: 'Upgrade Plan',
+            label: "Upgrade Plan",
             onClick: () => {
               // Navigate to upgrade page
-              console.log('Navigate to upgrade page');
-            }
-          }
+            },
+          },
         });
       }
-      
+
       throw err;
     }
   };
@@ -130,13 +133,18 @@ export const useTrips = (userId) => {
   const updateTrip = async (tripId, updates) => {
     try {
       setError(null);
-      
+
       // Validate update based on plan limits if needed
       if (updates.members && updates.members.length > 0) {
         const planFeatures = getPlanFeatures();
-        const memberLimit = tripsService.getMemberLimitForPlan(planFeatures?.plan || 'free');
-        
-        if (memberLimit !== 'unlimited' && updates.members.length > memberLimit) {
+        const memberLimit = tripsService.getMemberLimitForPlan(
+          planFeatures?.plan || "free"
+        );
+
+        if (
+          memberLimit !== "unlimited" &&
+          updates.members.length > memberLimit
+        ) {
           throw new Error(
             `Member limit exceeded! Your plan allows ${memberLimit} members per trip.`
           );
@@ -166,11 +174,11 @@ export const useTrips = (userId) => {
   const deleteTrip = async (tripId) => {
     try {
       setError(null);
-      
+
       // Find trip to get photo count for usage tracking
-      const tripToDelete = trips.find(trip => trip.id === tripId);
+      const tripToDelete = trips.find((trip) => trip.id === tripId);
       const photoCount = tripToDelete?.photoCount || 0;
-      
+
       await tripsService.deleteTrip(tripId);
 
       // Remove from local state
@@ -181,11 +189,11 @@ export const useTrips = (userId) => {
       if (currentUsage) {
         updateUsage({
           trips: Math.max(0, currentUsage.trips.used - 1),
-          photos: Math.max(0, currentUsage.photos.used - photoCount)
+          photos: Math.max(0, currentUsage.photos.used - photoCount),
         });
       }
 
-      toast.success('Trip deleted successfully');
+      toast.success("Trip deleted successfully");
     } catch (err) {
       console.error("Error deleting trip:", err);
       setError(err.message || "Failed to delete trip");
@@ -193,32 +201,38 @@ export const useTrips = (userId) => {
     }
   };
 
-  const addTripToList = useCallback((newTrip) => {
-    setTrips((prev) => [newTrip, ...prev]);
-    
-    // Update usage tracking
-    const currentUsage = getUsageInfo();
-    if (currentUsage) {
-      updateUsage({ trips: currentUsage.trips.used + 1 });
-    }
-  }, [getUsageInfo, updateUsage]);
+  const addTripToList = useCallback(
+    (newTrip) => {
+      setTrips((prev) => [newTrip, ...prev]);
 
-  const removeTripFromList = useCallback((tripId) => {
-    // Find trip before removing for usage tracking
-    const tripToRemove = trips.find(trip => trip.id === tripId);
-    const photoCount = tripToRemove?.photoCount || 0;
-    
-    setTrips((prev) => prev.filter((trip) => trip.id !== tripId));
-    
-    // Update usage tracking
-    const currentUsage = getUsageInfo();
-    if (currentUsage) {
-      updateUsage({
-        trips: Math.max(0, currentUsage.trips.used - 1),
-        photos: Math.max(0, currentUsage.photos.used - photoCount)
-      });
-    }
-  }, [trips, getUsageInfo, updateUsage]);
+      // Update usage tracking
+      const currentUsage = getUsageInfo();
+      if (currentUsage) {
+        updateUsage({ trips: currentUsage.trips.used + 1 });
+      }
+    },
+    [getUsageInfo, updateUsage]
+  );
+
+  const removeTripFromList = useCallback(
+    (tripId) => {
+      // Find trip before removing for usage tracking
+      const tripToRemove = trips.find((trip) => trip.id === tripId);
+      const photoCount = tripToRemove?.photoCount || 0;
+
+      setTrips((prev) => prev.filter((trip) => trip.id !== tripId));
+
+      // Update usage tracking
+      const currentUsage = getUsageInfo();
+      if (currentUsage) {
+        updateUsage({
+          trips: Math.max(0, currentUsage.trips.used - 1),
+          photos: Math.max(0, currentUsage.photos.used - photoCount),
+        });
+      }
+    },
+    [trips, getUsageInfo, updateUsage]
+  );
 
   // Sync usage with actual data
   const syncUsageWithActualData = useCallback(async () => {
@@ -227,7 +241,7 @@ export const useTrips = (userId) => {
     try {
       setSyncingUsage(true);
       await tripsService.syncUsageWithSubscriptionService(userId);
-      
+
       // Refresh trips to ensure consistency
       await fetchTrips();
     } catch (error) {
@@ -238,39 +252,42 @@ export const useTrips = (userId) => {
   }, [userId, fetchTrips]);
 
   // Validate trip operations with plan limits
-  const validateTripOperation = useCallback(async (operation, data = {}) => {
-    try {
-      switch (operation) {
-        case 'create':
-          return canPerformAction('create_trip', { 
-            currentTripCount: trips.length 
-          });
-          
-        case 'upload_photos':
-          return await tripsService.validatePhotoUpload(
-            data.tripId,
-            data.photoCount,
-            data.totalFileSize
-          );
-          
-        case 'invite_member':
-          const trip = trips.find(t => t.id === data.tripId);
-          return canPerformAction('invite_members', {
-            currentMemberCount: trip?.members?.length || 0,
-            newMemberCount: 1
-          });
-          
-        default:
-          return { allowed: true };
+  const validateTripOperation = useCallback(
+    async (operation, data = {}) => {
+      try {
+        switch (operation) {
+          case "create":
+            return canPerformAction("create_trip", {
+              currentTripCount: trips.length,
+            });
+
+          case "upload_photos":
+            return await tripsService.validatePhotoUpload(
+              data.tripId,
+              data.photoCount,
+              data.totalFileSize
+            );
+
+          case "invite_member":
+            const trip = trips.find((t) => t.id === data.tripId);
+            return canPerformAction("invite_members", {
+              currentMemberCount: trip?.members?.length || 0,
+              newMemberCount: 1,
+            });
+
+          default:
+            return { allowed: true };
+        }
+      } catch (error) {
+        console.error("Error validating trip operation:", error);
+        return {
+          allowed: false,
+          reason: "Failed to validate operation",
+        };
       }
-    } catch (error) {
-      console.error("Error validating trip operation:", error);
-      return { 
-        allowed: false, 
-        reason: "Failed to validate operation" 
-      };
-    }
-  }, [trips, canPerformAction]);
+    },
+    [trips, canPerformAction]
+  );
 
   // Get plan-specific trip statistics
   const getTripStats = useCallback(() => {
@@ -279,14 +296,15 @@ export const useTrips = (userId) => {
 
     const currentCount = trips.length;
     const limit = planFeatures.trips;
-    
+
     return {
       current: currentCount,
       limit: limit,
-      remaining: limit === 'unlimited' ? 'unlimited' : Math.max(0, limit - currentCount),
-      percentage: limit === 'unlimited' ? 0 : (currentCount / limit) * 100,
-      nearLimit: limit !== 'unlimited' && (currentCount / limit) > 0.8,
-      atLimit: limit !== 'unlimited' && currentCount >= limit
+      remaining:
+        limit === "unlimited" ? "unlimited" : Math.max(0, limit - currentCount),
+      percentage: limit === "unlimited" ? 0 : (currentCount / limit) * 100,
+      nearLimit: limit !== "unlimited" && currentCount / limit > 0.8,
+      atLimit: limit !== "unlimited" && currentCount >= limit,
     };
   }, [trips, getPlanFeatures]);
 
@@ -296,17 +314,23 @@ export const useTrips = (userId) => {
     return stats ? !stats.atLimit : false;
   }, [getTripStats]);
 
-  const canUploadPhotos = useCallback((tripId, photoCount = 1, totalFileSize = 0) => {
-    return validateTripOperation('upload_photos', {
-      tripId,
-      photoCount,
-      totalFileSize
-    });
-  }, [validateTripOperation]);
+  const canUploadPhotos = useCallback(
+    (tripId, photoCount = 1, totalFileSize = 0) => {
+      return validateTripOperation("upload_photos", {
+        tripId,
+        photoCount,
+        totalFileSize,
+      });
+    },
+    [validateTripOperation]
+  );
 
-  const canInviteMembers = useCallback((tripId) => {
-    return validateTripOperation('invite_member', { tripId });
-  }, [validateTripOperation]);
+  const canInviteMembers = useCallback(
+    (tripId) => {
+      return validateTripOperation("invite_member", { tripId });
+    },
+    [validateTripOperation]
+  );
 
   // Initialize trips on mount
   useEffect(() => {
@@ -318,7 +342,10 @@ export const useTrips = (userId) => {
     if (userId && trips.length > 0) {
       // Sync usage when trips change significantly
       const currentUsage = getUsageInfo();
-      if (currentUsage && Math.abs(trips.length - currentUsage.trips.used) > 1) {
+      if (
+        currentUsage &&
+        Math.abs(trips.length - currentUsage.trips.used) > 1
+      ) {
         syncUsageWithActualData();
       }
     }
@@ -348,7 +375,7 @@ export const useTrips = (userId) => {
 
     // Statistics
     getTripStats,
-    
+
     // Plan information
     planFeatures: getPlanFeatures(),
     isFreePlan,
@@ -359,3 +386,7 @@ export const useTrips = (userId) => {
     setTrips,
   };
 };
+
+
+
+

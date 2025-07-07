@@ -1,6 +1,6 @@
-﻿import React, { useEffect, useState } from "react";
-import { createPortal } from 'react-dom'; // Add this import
-import { useAuth } from "@auth/contexts/AuthContext";
+import React, { useEffect, useState } from "react";
+import { createPortal } from 'react-dom';
+import { useAuth } from "@auth/hooks/useAuth";
 import { doc, onSnapshot, getDoc } from "firebase/firestore";
 import { db } from "@shared/services/firebase/config";
 import {
@@ -56,7 +56,7 @@ const FriendsSection = () => {
         const snap = await getDoc(userDocRef);
 
         if (!snap.exists() || !isMounted) {
-          console.warn("⚠️ userDoc does not exist yet:", currentUser.uid);
+          console.warn("?? userDoc does not exist yet:", currentUser.uid);
           setLoading(false);
           return;
         }
@@ -89,7 +89,7 @@ const FriendsSection = () => {
                 });
               }
             } catch (err) {
-              console.error(`❌ Error fetching friend ${fid}:`, err);
+              console.error(`? Error fetching friend ${fid}:`, err);
             }
           }
 
@@ -141,7 +141,7 @@ const FriendsSection = () => {
                   createdAt: data.createdAt,
                 });
               } catch (err) {
-                console.warn("⚠️ Error fetching sender:", data.from, err);
+                console.warn("?? Error fetching sender:", data.from, err);
               }
             }
 
@@ -159,7 +159,7 @@ const FriendsSection = () => {
           unsubscribePendingRequests();
         };
       } catch (error) {
-        console.error("❌ Error setting up listeners:", error);
+        console.error("? Error setting up listeners:", error);
         setLoading(false);
       }
     };
@@ -185,12 +185,12 @@ const FriendsSection = () => {
         // If request is less than 30 seconds old, show notification
         if (timeDiff < 30000) {
           toast(
-            `🔔 New friend request from ${
+            `?? New friend request from ${
               latestRequest.displayName || latestRequest.email
             }!`,
             {
               duration: 5000,
-              icon: "👋",
+              icon: "??",
             }
           );
         }
@@ -496,26 +496,26 @@ const FriendsSection = () => {
         </div>
       )}
 
-{/* User Profile Modal - Fixed Props */}
-{showUserProfileModal && selectedUser && createPortal(
-  <UserProfileModal
-    isOpen={showUserProfileModal} // Add this missing prop!
-    user={selectedUser}
-    currentUserId={currentUser?.uid}
-    // Pass friends array and pending requests for the component's logic
-    friends={friends.map(f => f.uid)} // Convert to array of UIDs
-    pendingRequests={pendingRequests} // Pass pending requests
-    onAddFriend={handleAddFriendDirect}
-    onRemoveFriend={handleRemoveFriend}
-    onCancelRequest={handleCancelRequest}
-    onClose={() => {
-      console.log("🚪 Closing UserProfileModal");
-      setSelectedUser(null);
-      setShowUserProfileModal(false);
-    }}
-  />,
-  document.body
-)}
+      {/* User Profile Modal - Fixed Props */}
+      {showUserProfileModal && selectedUser && createPortal(
+        <UserProfileModal
+          isOpen={showUserProfileModal}
+          user={selectedUser}
+          currentUserId={currentUser?.uid}
+          // Pass friends array and pending requests for the component's logic
+          friends={friends.map(f => f.uid)} // Convert to array of UIDs
+          pendingRequests={pendingRequests} // Pass pending requests
+          onAddFriend={handleAddFriendDirect}
+          onRemoveFriend={handleRemoveFriend}
+          onCancelRequest={handleCancelRequest}
+          onClose={() => {
+            console.log("🚪 Closing UserProfileModal");
+            setSelectedUser(null);
+            setShowUserProfileModal(false);
+          }}
+        />,
+        document.body
+      )}
     </div>
   );
 };

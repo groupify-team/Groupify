@@ -44,3 +44,5 @@ const FontSettings = ({ fontSize, setFontSize }) => {
 };
 
 export default FontSettings;
+
+

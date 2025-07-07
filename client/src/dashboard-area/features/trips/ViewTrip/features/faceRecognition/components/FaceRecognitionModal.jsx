@@ -45,54 +45,41 @@ const FaceRecognitionModal = ({
     return `~${minutes}m ${remainingSeconds}s remaining`;
   };
 
-  // Enhanced circular progress with smooth animation
   const CircularProgress = ({ percentage }) => {
     const [animatedPercentage, setAnimatedPercentage] = useState(0);
-    <CircularProgress percentage={faceRecognitionProgress?.percentage || 0} />;
 
     useEffect(() => {
-      const timer = setTimeout(() => {
-        setAnimatedPercentage(percentage);
-      }, 100);
-      return () => clearTimeout(timer);
+      if (percentage > animatedPercentage) {
+        const timer = setTimeout(() => {
+          setAnimatedPercentage(percentage);
+        }, 100);
+        return () => clearTimeout(timer);
+      } else if (percentage === 0) {
+        setAnimatedPercentage(0);
+      }
     }, [percentage]);
-
-    const radius = 56;
-    const circumference = radius * 2 * Math.PI;
-    const strokeDasharray = `${circumference} ${circumference}`;
-    const strokeDashoffset =
-      circumference - (animatedPercentage / 100) * circumference;
 
     return (
       <div className="relative w-36 h-36">
-        <svg className="transform -rotate-90 w-36 h-36">
+        {/* Constant spinning circle around the percentage */}
+        <svg className="absolute inset-0 w-36 h-36">
           <circle
             cx="72"
             cy="72"
-            r={radius}
-            stroke="currentColor"
-            strokeWidth="6"
+            r="60"
+            stroke="url(#spinningGradient)"
+            strokeWidth="4"
             fill="transparent"
-            className="text-gray-200 dark:text-gray-700"
-          />
-          <circle
-            cx="72"
-            cy="72"
-            r={radius}
-            stroke="url(#progressGradient)"
-            strokeWidth="6"
-            fill="transparent"
-            strokeDasharray={strokeDasharray}
-            strokeDashoffset={strokeDashoffset}
-            strokeLinecap="round"
-            className="transition-all duration-1000 ease-out"
+            strokeDasharray="15 10"
+            className="animate-spin"
             style={{
-              filter: "drop-shadow(0 0 8px rgba(59, 130, 246, 0.4))",
+              animationDuration: "2s",
+              transformOrigin: "center",
             }}
           />
           <defs>
             <linearGradient
-              id="progressGradient"
+              id="spinningGradient"
               x1="0%"
               y1="0%"
               x2="100%"
@@ -105,9 +92,10 @@ const FaceRecognitionModal = ({
           </defs>
         </svg>
 
+        {/* Animated percentage text in center */}
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="text-center">
-            <div className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-emerald-600 bg-clip-text text-transparent">
+            <div className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-emerald-600 bg-clip-text text-transparent transition-all duration-500">
               {animatedPercentage}%
             </div>
             <div className="text-xs text-gray-500 dark:text-gray-400 font-medium">
@@ -115,8 +103,6 @@ const FaceRecognitionModal = ({
             </div>
           </div>
         </div>
-
-        <div className="absolute inset-2 rounded-full border-2 border-blue-400/20 animate-pulse"></div>
       </div>
     );
   };
@@ -308,26 +294,25 @@ const FaceRecognitionModal = ({
                 </div>
               </div>
 
-              {/* Real-time match counter */}
-              {faceRecognitionProgress?.matches &&
-                faceRecognitionProgress.matches.length > 0 && (
-                  <div className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/30 dark:to-teal-900/30 rounded-lg p-3 border border-emerald-200/30 dark:border-emerald-800/30 animate-pulse">
-                    <div className="text-center">
-                      <div className="flex items-center justify-center gap-2 mb-2">
-                        <p className="text-emerald-700 dark:text-emerald-300 text-sm font-medium">
-                          Matches Found
-                        </p>
-                        <div className="w-2 h-2 bg-emerald-500 rounded-full animate-ping"></div>
-                      </div>
-                      <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
-                        {faceRecognitionProgress.matches.length}
-                      </div>
-                      <div className="text-xs text-emerald-600 dark:text-emerald-400">
-                        photos found so far
-                      </div>
-                    </div>
+              {/* Real-time match counter - Always visible */}
+              <div className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/30 dark:to-teal-900/30 rounded-lg p-3 border border-emerald-200/30 dark:border-emerald-800/30">
+                <div className="text-center">
+                  <div className="flex items-center justify-center gap-2 mb-2">
+                    <p className="text-emerald-700 dark:text-emerald-300 text-sm font-medium">
+                      Matches Found
+                    </p>
+                    {(faceRecognitionProgress?.matches?.length || 0) > 0 && (
+                      <div className="w-2 h-2 bg-emerald-500 rounded-full animate-ping"></div>
+                    )}
                   </div>
-                )}
+                  <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+                    {faceRecognitionProgress?.matches?.length || 0}
+                  </div>
+                  <div className="text-xs text-emerald-600 dark:text-emerald-400">
+                    photos found so far
+                  </div>
+                </div>
+              </div>
 
               <button
                 onClick={onCancelProcessing}
@@ -373,3 +358,7 @@ const FaceRecognitionModal = ({
 };
 
 export default FaceRecognitionModal;
+
+
+
+

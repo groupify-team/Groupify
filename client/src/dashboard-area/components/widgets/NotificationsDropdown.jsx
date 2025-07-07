@@ -1,11 +1,11 @@
-﻿// NotificationsDropdown.jsx - Notifications dropdown widget
+// NotificationsDropdown.jsx - Notifications dropdown widget
 import React from "react";
 import {
   BellIcon,
   CheckCircleIcon,
   XCircleIcon,
 } from "@heroicons/react/24/outline";
-import { useAuth } from "@auth/contexts/AuthContext";
+import { useAuth } from "@auth/hooks/useAuth";
 import { useDashboardData } from "../../hooks/useDashboardData";
 import {
   acceptFriendRequest,
@@ -143,11 +143,11 @@ const NotificationsDropdown = ({ pendingRequests, tripInvites }) => {
   const getNotificationIcon = (type) => {
     switch (type) {
       case "friend_request":
-        return "👥";
+        return "??";
       case "trip_invite":
-        return "✈️";
+        return "??";
       default:
-        return "🔔";
+        return "??";
     }
   };
 
@@ -285,3 +285,7 @@ const NotificationsDropdown = ({ pendingRequests, tripInvites }) => {
 };
 
 export default NotificationsDropdown;
+
+
+
+

@@ -35,3 +35,5 @@ const ContrastSettings = ({ highContrast, setHighContrast }) => {
 };
 
 export default ContrastSettings;
+
+

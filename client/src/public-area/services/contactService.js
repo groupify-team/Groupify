@@ -107,8 +107,6 @@ export const contactService = {
         timestamp: new Date().toISOString(),
       };
 
-      console.log("Subscribing to newsletter:", subscriptionData.email);
-
       // For now, store in localStorage as fallback
       // In production, this would call a Firebase function
       try {
@@ -221,3 +219,6 @@ export const contactService = {
       .substring(0, 2000); // Limit length
   },
 };
+
+
+

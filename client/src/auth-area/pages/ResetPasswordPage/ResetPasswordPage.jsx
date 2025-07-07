@@ -9,8 +9,6 @@ import {
   LockClosedIcon,
   ShieldCheckIcon,
 } from "@heroicons/react/24/outline";
-import { httpsCallable } from "firebase/functions";
-import { functions } from "@firebase-services/config";
 
 // New modular components and hooks
 import AuthLayout from "../../components/layout/AuthLayout";
@@ -52,7 +50,9 @@ const ResetPasswordPage = () => {
 
   const passwordChecks = validatePassword(formData.newPassword);
   const isPasswordValid = Object.values(passwordChecks).every((check) => check);
-  const passwordsMatch = formData.newPassword === formData.confirmPassword && formData.confirmPassword !== "";
+  const passwordsMatch =
+    formData.newPassword === formData.confirmPassword &&
+    formData.confirmPassword !== "";
 
   // Verify token when component mounts
   useEffect(() => {
@@ -74,7 +74,7 @@ const ResetPasswordPage = () => {
   const verifyResetToken = async (email, token) => {
     try {
       setVerifyingToken(true);
-      
+
       const response = await fetch(
         "https://us-central1-groupify-77202.cloudfunctions.net/verifyResetToken",
         {
@@ -83,7 +83,7 @@ const ResetPasswordPage = () => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            data: { email, token }
+            data: { email, token },
           }),
         }
       );
@@ -102,7 +102,7 @@ const ResetPasswordPage = () => {
       }
     } catch (error) {
       console.error("Token verification error:", error);
-      
+
       const errorMessage = error.message || "Invalid or expired reset link";
       toast.error(errorMessage);
       navigate("/forgot-password");
@@ -114,7 +114,7 @@ const ResetPasswordPage = () => {
   // Handle input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   // Handle form submission
@@ -152,7 +152,7 @@ const ResetPasswordPage = () => {
               email,
               token,
               newPassword: formData.newPassword,
-            }
+            },
           }),
         }
       );
@@ -164,7 +164,9 @@ const ResetPasswordPage = () => {
       const result = await response.json();
 
       if (result.success) {
-        toast.success("Password reset successfully! Please sign in with your new password.");
+        toast.success(
+          "Password reset successfully! Please sign in with your new password."
+        );
         navigate("/signin");
       } else {
         toast.error("Failed to reset password. Please try again.");
@@ -172,7 +174,8 @@ const ResetPasswordPage = () => {
     } catch (error) {
       console.error("Password reset error:", error);
 
-      const errorMessage = error.message || "Failed to reset password. Please try again.";
+      const errorMessage =
+        error.message || "Failed to reset password. Please try again.";
       toast.error(errorMessage);
     } finally {
       setLoading(false);
@@ -216,7 +219,7 @@ const ResetPasswordPage = () => {
         placeholder: "Enter your new password",
         required: true,
         showToggle: true,
-        customComponent: (
+        customComponent:
           // Password Requirements
           formData.newPassword && (
             <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 sm:p-4 mt-3">
@@ -225,11 +228,23 @@ const ResetPasswordPage = () => {
               </p>
               <div className="space-y-1 sm:space-y-2">
                 {[
-                  { check: passwordChecks.length, label: "At least 6 characters" },
-                  { check: passwordChecks.hasUpperCase, label: "One uppercase letter" },
-                  { check: passwordChecks.hasLowerCase, label: "One lowercase letter" },
+                  {
+                    check: passwordChecks.length,
+                    label: "At least 6 characters",
+                  },
+                  {
+                    check: passwordChecks.hasUpperCase,
+                    label: "One uppercase letter",
+                  },
+                  {
+                    check: passwordChecks.hasLowerCase,
+                    label: "One lowercase letter",
+                  },
                   { check: passwordChecks.hasNumber, label: "One number" },
-                  { check: passwordChecks.hasSpecialChar, label: "One special character (!@#$%^&*)" },
+                  {
+                    check: passwordChecks.hasSpecialChar,
+                    label: "One special character (!@#$%^&*)",
+                  },
                 ].map((requirement, index) => (
                   <div key={index} className="flex items-center">
                     {requirement.check ? (
@@ -250,8 +265,7 @@ const ResetPasswordPage = () => {
                 ))}
               </div>
             </div>
-          )
-        ),
+          ),
       },
       {
         name: "confirmPassword",
@@ -262,7 +276,7 @@ const ResetPasswordPage = () => {
         showToggle: true,
         showPasswordState: showConfirmPassword,
         onPasswordToggle: () => setShowConfirmPassword(!showConfirmPassword),
-        customComponent: (
+        customComponent:
           // Password match indicator
           formData.confirmPassword && (
             <div className="mt-1 sm:mt-2">
@@ -277,8 +291,7 @@ const ResetPasswordPage = () => {
                 </p>
               )}
             </div>
-          )
-        ),
+          ),
       },
     ],
   };
@@ -294,10 +307,11 @@ const ResetPasswordPage = () => {
 
         {/* Title */}
         <h2 className="text-3xl font-bold mb-6">Secure your account</h2>
-        
+
         {/* Subtitle */}
         <p className="text-lg mb-8 text-indigo-100 leading-relaxed">
-          Create a strong password to keep your travel memories safe and secure. Your account protection is our priority.
+          Create a strong password to keep your travel memories safe and secure.
+          Your account protection is our priority.
         </p>
 
         {/* Features */}
@@ -317,7 +331,7 @@ const ResetPasswordPage = () => {
           ))}
         </div>
       </div>
-      
+
       {/* Background decoration */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-10 left-10 w-32 h-32 bg-white bg-opacity-10 rounded-full blur-xl"></div>
@@ -328,11 +342,7 @@ const ResetPasswordPage = () => {
   );
 
   return (
-    <AuthLayout
-      layoutType="split"
-      leftContent={leftContent}
-      showHeader={false}
-    >
+    <AuthLayout layoutType="split" leftContent={leftContent} showHeader={false}>
       {/* Form Container */}
       <div className="flex-1 flex flex-col justify-center py-2 sm:py-4 md:py-6 lg:py-8 px-3 sm:px-4 md:px-6 lg:px-12 xl:px-20 2xl:px-24 bg-white dark:bg-gray-900 min-h-0">
         <div className="mx-auto w-full max-w-[280px] sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-md">
@@ -396,7 +406,8 @@ const ResetPasswordPage = () => {
                     Security Notice
                   </h3>
                   <p className="mt-1 text-xs sm:text-sm text-yellow-700 dark:text-yellow-300">
-                    After resetting your password, you'll be signed out of all devices for your security.
+                    After resetting your password, you'll be signed out of all
+                    devices for your security.
                   </p>
                 </div>
               </div>
@@ -409,3 +420,6 @@ const ResetPasswordPage = () => {
 };
 
 export default ResetPasswordPage;
+
+
+

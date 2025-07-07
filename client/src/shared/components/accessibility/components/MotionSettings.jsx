@@ -39,3 +39,5 @@ const MotionSettings = ({ reducedMotion, setReducedMotion, toggleSetting }) => {
 };
 
 export default MotionSettings;
+
+

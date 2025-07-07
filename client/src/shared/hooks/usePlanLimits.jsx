@@ -1,15 +1,14 @@
-// src/shared/hooks/usePlanLimits.js - FINAL VERSION aligned with pricing page
-
-import { useState, useEffect, useCallback } from "react";
-import { useAuth } from "@auth/contexts/AuthContext";
-import subscriptionService from "@shared/services/subscriptionService";
-import { toast } from "react-hot-toast";
-
 /**
  * Hook for managing plan limits and enforcement across the application
  * Provides real-time limit checking, usage tracking, and upgrade prompts
  * ALIGNED with exact pricing page values
  */
+
+import { useState, useEffect, useCallback } from "react";
+import { useAuth } from "@/auth-area/contexts/AuthContext";
+import subscriptionService from "@shared/services/subscriptionService";
+import { toast } from "react-hot-toast";
+
 export const usePlanLimits = () => {
   const { currentUser } = useAuth();
   const [subscription, setSubscription] = useState(null);
@@ -35,7 +34,7 @@ export const usePlanLimits = () => {
       trips: "unlimited",
       photosPerTrip: "unlimited",
       membersPerTrip: "unlimited",
-      storageGB: 500, // Note: Pro has 500GB limit, not unlimited
+      storageGB: 500,
     },
     enterprise: {
       trips: "unlimited",
@@ -60,14 +59,12 @@ export const usePlanLimits = () => {
     }
   }, []);
 
-  // Initialize subscription data
   useEffect(() => {
     if (currentUser) {
       loadSubscriptionData();
     }
   }, [currentUser, loadSubscriptionData]);
 
-  // Subscribe to subscription updates
   useEffect(() => {
     const unsubscribe = subscriptionService.subscribe((event, data) => {
       if (event === "subscriptionUpdated" || event === "usageUpdated") {
@@ -78,10 +75,6 @@ export const usePlanLimits = () => {
     return unsubscribe;
   }, [loadSubscriptionData]);
 
-  /**
-   * Check if user can perform an action based on plan limits
-   * Uses EXACT pricing page values
-   */
   const canPerformAction = useCallback(
     (action, additionalData = {}) => {
       if (!subscription || !usage) {
@@ -109,7 +102,6 @@ export const usePlanLimits = () => {
         case "upload_photos":
           const { currentTripPhotos = 0, newPhotoCount = 1 } = additionalData;
 
-          // Check per-trip photo limit
           if (limits.photosPerTrip !== "unlimited") {
             if (currentTripPhotos + newPhotoCount > limits.photosPerTrip) {
               return {
@@ -167,16 +159,10 @@ export const usePlanLimits = () => {
     [subscription, usage, CORE_LIMITS]
   );
 
-  /**
-   * Update usage statistics
-   */
   const updateUsage = useCallback((updates) => {
     return subscriptionService.updateUsage(updates);
   }, []);
 
-  /**
-   * Get formatted usage information
-   */
   const getUsageInfo = useCallback(() => {
     if (!usage || !subscription) return null;
 
@@ -245,9 +231,6 @@ export const usePlanLimits = () => {
     };
   }, [usage, subscription, CORE_LIMITS]);
 
-  /**
-   * Show upgrade prompt with specific messaging
-   */
   const showUpgradePrompt = useCallback(
     (reason, options = {}) => {
       const {
@@ -262,13 +245,10 @@ export const usePlanLimits = () => {
         action: {
           label: "Upgrade Plan",
           onClick: () => {
-            // Navigate to upgrade page or show upgrade modal
             console.log("Navigate to upgrade:", {
               reason,
               subscription: subscription?.plan,
             });
-            // You can implement navigation to pricing page here
-            // window.location.href = '/pricing';
           },
         },
       });
@@ -276,9 +256,6 @@ export const usePlanLimits = () => {
     [subscription]
   );
 
-  /**
-   * Check and enforce limits before performing actions
-   */
   const enforceLimit = useCallback(
     (action, additionalData = {}, options = {}) => {
       const check = canPerformAction(action, additionalData);
@@ -298,9 +275,6 @@ export const usePlanLimits = () => {
     [canPerformAction, showUpgradePrompt]
   );
 
-  /**
-   * Get plan features with enhanced structure
-   */
   const getPlanFeatures = useCallback(() => {
     if (!subscription) return null;
 
@@ -308,7 +282,6 @@ export const usePlanLimits = () => {
 
     return {
       ...subscription.features,
-      // Enhanced plan limits structure from CORE_LIMITS
       trips: limits.trips,
       photosPerTrip: limits.photosPerTrip,
       membersPerTrip: limits.membersPerTrip,
@@ -316,9 +289,6 @@ export const usePlanLimits = () => {
     };
   }, [subscription, CORE_LIMITS]);
 
-  /**
-   * Get current plan status
-   */
   const getPlanStatus = useCallback(() => {
     if (!subscription) return null;
 
@@ -334,9 +304,6 @@ export const usePlanLimits = () => {
     };
   }, [subscription]);
 
-  /**
-   * Check if feature is available in current plan
-   */
   const hasFeature = useCallback(
     (feature) => {
       if (!subscription) return false;
@@ -372,9 +339,6 @@ export const usePlanLimits = () => {
     [subscription, CORE_LIMITS]
   );
 
-  /**
-   * Get upgrade suggestions based on current plan
-   */
   const getUpgradeSuggestions = useCallback(() => {
     if (!subscription) return [];
 
@@ -410,16 +374,12 @@ export const usePlanLimits = () => {
     return suggestions;
   }, [subscription]);
 
-  /**
-   * Check if approaching any limits
-   */
   const getApproachingLimits = useCallback(() => {
     const usageInfo = getUsageInfo();
     if (!usageInfo) return [];
 
     const approachingLimits = [];
 
-    // Check trip limit (80% threshold)
     if (usageInfo.trips.percentage > 80) {
       approachingLimits.push({
         type: "trips",
@@ -428,7 +388,6 @@ export const usePlanLimits = () => {
       });
     }
 
-    // Check storage limit (80% threshold)
     if (usageInfo.storage.percentage > 80) {
       approachingLimits.push({
         type: "storage",
@@ -446,14 +405,12 @@ export const usePlanLimits = () => {
     usage,
     loading,
     recommendations,
-
     // Actions
     canPerformAction,
     enforceLimit,
     updateUsage,
     showUpgradePrompt,
     loadSubscriptionData,
-
     // Helpers
     getUsageInfo,
     getPlanFeatures,
@@ -461,14 +418,12 @@ export const usePlanLimits = () => {
     hasFeature,
     getUpgradeSuggestions,
     getApproachingLimits,
-
     // Quick checks
     isFreePlan: subscription?.plan === "free",
     isPremiumPlan: subscription?.plan === "premium",
     isProPlan: subscription?.plan === "pro",
     isEnterprisePlan: subscription?.plan === "enterprise",
     needsUpgrade: recommendations.length > 0,
-
     // Limit constants for easy access
     CORE_LIMITS,
   };

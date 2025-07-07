@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../../../auth-area/contexts/AuthContext";
+import { useAuth } from "@/auth-area/contexts/AuthContext";
 import { toast } from "react-hot-toast";
 import PublicLayout from "../../../public-area/components/layout/PublicLayout";
 import HeroSection from "../../../public-area/components/ui/HeroSection";
@@ -43,47 +43,46 @@ const PricingPage = () => {
     // Get navigation context and subscription data
     const context = navigationService.getContext();
     const subscription = subscriptionService.getCurrentSubscription();
-    
+
     setNavigationContext(context);
     setCurrentSubscription(subscription);
 
     // Log navigation context for debugging
     if (context) {
-      console.log("🧭 Pricing page loaded with context:", context);
     }
   }, []);
 
-    const pricingPlans = [
+  const pricingPlans = [
     {
-        name: "Free",
-        description: "Perfect for getting started with photo organization",
-        price: { monthly: 0, yearly: 0 },
-        badge: null,
-        features: [
+      name: "Free",
+      description: "Perfect for getting started with photo organization",
+      price: { monthly: 0, yearly: 0 },
+      badge: null,
+      features: [
         "Up to 5 trips", // UPDATED to match CORE_LIMITS
-        "Up to 30 photos per trip", // UPDATED to match CORE_LIMITS  
+        "Up to 30 photos per trip", // UPDATED to match CORE_LIMITS
         "2GB total storage", // UPDATED to match CORE_LIMITS
         "Up to 5 members per trip", // UPDATED to match CORE_LIMITS
         "Basic AI face recognition",
         "Mobile app access",
-        "Standard photo quality", 
+        "Standard photo quality",
         "Email support",
-        ],
-        limitations: [
+      ],
+      limitations: [
         "Limited trips and photos",
-        "Basic recognition accuracy", 
+        "Basic recognition accuracy",
         "No advanced features",
-        ],
-        cta: "Get Started Free",
-        popular: false,
-        color: "gray",
+      ],
+      cta: "Get Started Free",
+      popular: false,
+      color: "gray",
     },
     {
-        name: "Premium", // CHANGED from "Pro" to match your CORE_LIMITS
-        description: "Ideal for active travelers and photo enthusiasts",
-        price: { monthly: 9.99, yearly: 99.99 },
-        badge: "Most Popular",
-        features: [
+      name: "Premium", // CHANGED from "Pro" to match your CORE_LIMITS
+      description: "Ideal for active travelers and photo enthusiasts",
+      price: { monthly: 9.99, yearly: 99.99 },
+      badge: "Most Popular",
+      features: [
         "Up to 50 trips", // UPDATED to match CORE_LIMITS
         "Up to 200 photos per trip", // UPDATED to match CORE_LIMITS
         "50GB total storage", // UPDATED to match CORE_LIMITS
@@ -91,24 +90,24 @@ const PricingPage = () => {
         "Advanced AI face recognition",
         "Mobile & desktop apps",
         "High-quality photo processing",
-        "Priority email support", 
+        "Priority email support",
         "Collaborative editing",
         "Advanced search filters",
         "Photo editing tools",
-        ],
-        limitations: [],
-        cta: "Start Premium Trial",
-        popular: true,
-        color: "indigo",
+      ],
+      limitations: [],
+      cta: "Start Premium Trial",
+      popular: true,
+      color: "indigo",
     },
     {
-        name: "Pro", // RENAMED from "Family" 
-        description: "Perfect for unlimited trips and maximum storage",
-        price: { monthly: 19.99, yearly: 199.99 },
-        badge: "Best Value",
-        features: [
+      name: "Pro", // RENAMED from "Family"
+      description: "Perfect for unlimited trips and maximum storage",
+      price: { monthly: 19.99, yearly: 199.99 },
+      badge: "Best Value",
+      features: [
         "Unlimited trips", // UPDATED to match CORE_LIMITS
-        "Unlimited photos per trip", // UPDATED to match CORE_LIMITS  
+        "Unlimited photos per trip", // UPDATED to match CORE_LIMITS
         "500GB total storage", // UPDATED to match CORE_LIMITS
         "Unlimited members per trip", // UPDATED to match CORE_LIMITS
         "Premium AI face recognition",
@@ -116,37 +115,37 @@ const PricingPage = () => {
         "Original quality photos",
         "24/7 priority support",
         "Advanced privacy controls",
-        "Custom photo books", 
+        "Custom photo books",
         "Professional photo prints",
         "Video storage & organization",
-        ],
-        limitations: [],
-        cta: "Start Pro Plan",
-        popular: false,
-        color: "purple",
+      ],
+      limitations: [],
+      cta: "Start Pro Plan",
+      popular: false,
+      color: "purple",
     },
     {
-        name: "Enterprise",
-        description: "Custom solutions for businesses and organizations", 
-        price: { monthly: "Custom", yearly: "Custom" },
-        badge: "Contact Sales",
-        features: [
+      name: "Enterprise",
+      description: "Custom solutions for businesses and organizations",
+      price: { monthly: "Custom", yearly: "Custom" },
+      badge: "Contact Sales",
+      features: [
         "Everything in Pro",
         "Custom integrations",
-        "Dedicated account manager", 
+        "Dedicated account manager",
         "White-label solutions",
         "Custom user permissions",
         "Advanced analytics",
         "GDPR & compliance tools",
         "Custom deployment options",
         "Training & onboarding",
-        ],
-        limitations: [],
-        cta: "Contact Sales",
-        popular: false,
-        color: "emerald",
+      ],
+      limitations: [],
+      cta: "Contact Sales",
+      popular: false,
+      color: "emerald",
     },
-    ];
+  ];
 
   const faqs = [
     {
@@ -223,15 +222,15 @@ const PricingPage = () => {
     if (plan.name === "Free") {
       if (currentUser) {
         // Check if user already has free plan
-        if (currentSubscription?.plan === 'free') {
+        if (currentSubscription?.plan === "free") {
           toast.success("You're already on the free plan!");
           handleBackNavigation();
         } else {
           // Downgrade to free plan
           subscriptionService.updateSubscription({
-            plan: 'free',
-            billing: 'monthly',
-            price: 0
+            plan: "free",
+            billing: "monthly",
+            price: 0,
           });
           toast.success("Switched to free plan successfully!");
           handleBackNavigation();
@@ -247,12 +246,14 @@ const PricingPage = () => {
         navigationService.navigateToBilling(navigate, {
           plan: plan.name.toLowerCase(),
           billing: billingCycle,
-          from: navigationContext?.origin || 'pricing'
+          from: navigationContext?.origin || "pricing",
         });
       } else {
         // User not logged in - go to signup with plan info
         // The signup page will redirect to billing after successful registration
-        navigate(`/signup?plan=${plan.name.toLowerCase()}&billing=${billingCycle}&redirect=billing`);
+        navigate(
+          `/signup?plan=${plan.name.toLowerCase()}&billing=${billingCycle}&redirect=billing`
+        );
       }
     }
   };
@@ -263,8 +264,8 @@ const PricingPage = () => {
 
   // Handle back navigation
   const handleBackNavigation = () => {
-    navigationService.navigateBack(navigate, { 
-      fallbackPath: "/" 
+    navigationService.navigateBack(navigate, {
+      fallbackPath: "/",
     });
   };
 
@@ -272,8 +273,8 @@ const PricingPage = () => {
   const handleGetStarted = () => {
     if (currentUser) {
       // User is logged in, redirect to dashboard
-      navigationService.navigateBack(navigate, { 
-        fallbackPath: "/dashboard" 
+      navigationService.navigateBack(navigate, {
+        fallbackPath: "/dashboard",
       });
     } else {
       // User not logged in, go to signup
@@ -341,11 +342,11 @@ const PricingPage = () => {
   );
 
   return (
-    <PublicLayout 
+    <PublicLayout
       headerType="public"
       footerType="default"
-      footerProps={{ 
-        customText: "© 2025 Groupify. Simple pricing, powerful features."
+      footerProps={{
+        customText: "© 2025 Groupify. Simple pricing, powerful features.",
       }}
     >
       {/* Navigation Breadcrumb */}
@@ -357,7 +358,10 @@ const PricingPage = () => {
               className="inline-flex items-center text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
             >
               <ArrowLeftIcon className="w-4 h-4 mr-2" />
-              Back to {navigationContext.origin === 'dashboard-settings' ? 'Settings' : 'Previous Page'}
+              Back to{" "}
+              {navigationContext.origin === "dashboard-settings"
+                ? "Settings"
+                : "Previous Page"}
             </button>
           </div>
         </div>
@@ -371,7 +375,10 @@ const PricingPage = () => {
               <div className="flex items-center gap-3">
                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                 <span className="text-sm text-blue-800 dark:text-blue-200">
-                  Current plan: <strong className="capitalize">{currentSubscription.plan}</strong>
+                  Current plan:{" "}
+                  <strong className="capitalize">
+                    {currentSubscription.plan}
+                  </strong>
                   {currentSubscription.isTrial && (
                     <span className="ml-2 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 px-2 py-0.5 rounded text-xs">
                       Trial - {currentSubscription.trialDaysRemaining} days left
@@ -379,12 +386,14 @@ const PricingPage = () => {
                   )}
                 </span>
               </div>
-              {currentSubscription.plan !== 'free' && (
+              {currentSubscription.plan !== "free" && (
                 <span className="text-xs text-blue-600 dark:text-blue-400">
-                  Next billing: {currentSubscription.nextBillingDate ? 
-                    new Date(currentSubscription.nextBillingDate).toLocaleDateString() : 
-                    'N/A'
-                  }
+                  Next billing:{" "}
+                  {currentSubscription.nextBillingDate
+                    ? new Date(
+                        currentSubscription.nextBillingDate
+                      ).toLocaleDateString()
+                    : "N/A"}
                 </span>
               )}
             </div>
@@ -395,9 +404,9 @@ const PricingPage = () => {
       {/* Hero Section */}
       <HeroSection
         variant="pricing"
-        badge={{ 
-          icon: StarIcon, 
-          text: "Simple, Transparent Pricing" 
+        badge={{
+          icon: StarIcon,
+          text: "Simple, Transparent Pricing",
         }}
         title="Choose Your Perfect Plan"
         description="From free photo organization to enterprise solutions, find the plan that fits your needs. Start free and upgrade anytime."
@@ -411,16 +420,15 @@ const PricingPage = () => {
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 sm:gap-8">
             {pricingPlans.map((plan, index) => {
               // Check if this is the user's current plan
-              const isCurrentPlan = currentSubscription?.plan === plan.name.toLowerCase();
-              
+              const isCurrentPlan =
+                currentSubscription?.plan === plan.name.toLowerCase();
+
               return (
                 <div
                   key={plan.name}
                   className={`relative bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-2xl border border-white/20 dark:border-gray-700/50 overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 ${
                     plan.popular ? "ring-2 ring-indigo-500 lg:scale-105" : ""
-                  } ${
-                    isCurrentPlan ? "ring-2 ring-green-500" : ""
-                  } ${
+                  } ${isCurrentPlan ? "ring-2 ring-green-500" : ""} ${
                     isLoaded
                       ? `opacity-100 translate-y-0 delay-${index * 100}`
                       : "opacity-0 translate-y-8"
@@ -453,7 +461,9 @@ const PricingPage = () => {
                   )}
 
                   <div
-                    className={`p-6 sm:p-8 ${(plan.badge || isCurrentPlan) ? "pt-12 sm:pt-14" : ""}`}
+                    className={`p-6 sm:p-8 ${
+                      plan.badge || isCurrentPlan ? "pt-12 sm:pt-14" : ""
+                    }`}
                   >
                     {/* Plan Header */}
                     <div className="text-center mb-6 sm:mb-8">
@@ -474,7 +484,8 @@ const PricingPage = () => {
                               </span>
                               {plan.price[billingCycle] > 0 && (
                                 <span className="text-gray-600 dark:text-gray-400 ml-2">
-                                  /{billingCycle === "yearly" ? "year" : "month"}
+                                  /
+                                  {billingCycle === "yearly" ? "year" : "month"}
                                 </span>
                               )}
                             </div>
@@ -498,16 +509,16 @@ const PricingPage = () => {
                         onClick={() => handlePlanSelect(plan)}
                         disabled={isCurrentPlan && plan.name !== "Free"}
                         className={`w-full ${
-                          isCurrentPlan && plan.name !== "Free" 
-                            ? "bg-gray-400 cursor-not-allowed" 
+                          isCurrentPlan && plan.name !== "Free"
+                            ? "bg-gray-400 cursor-not-allowed"
                             : getPlanButtonColor(plan.color)
                         } text-white px-6 py-3 sm:py-4 rounded-xl text-sm sm:text-base font-semibold transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-105 mb-4 sm:mb-6 disabled:hover:scale-100 disabled:hover:shadow-lg`}
                       >
-                        {isCurrentPlan ? (
-                          plan.name === "Free" ? "Current Plan" : "Current Plan"
-                        ) : (
-                          plan.cta
-                        )}
+                        {isCurrentPlan
+                          ? plan.name === "Free"
+                            ? "Current Plan"
+                            : "Current Plan"
+                          : plan.cta}
                       </button>
                     </div>
 
@@ -945,3 +956,6 @@ const PricingPage = () => {
 };
 
 export default PricingPage;
+
+
+

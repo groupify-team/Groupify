@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import { Outlet } from "react-router-dom";
 import DashboardLayout from "@dashboard/components/layout/DashboardLayout";
 import { DashboardModalsProvider } from "@dashboard/contexts/DashboardModalsContext";
@@ -16,3 +16,7 @@ const DashboardPage = () => {
 };
 
 export default DashboardPage;
+
+
+
+

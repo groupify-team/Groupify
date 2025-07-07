@@ -1,5 +1,13 @@
-// TripsSection.jsx - UPDATED with Plan Limit Validation
-import React, { useState, useEffect } from "react";
+// TripsSection.jsx - Performance Optimized with Plan Limit Validation
+import React, {
+  useState,
+  useEffect,
+  useMemo,
+  useCallback,
+  memo,
+  lazy,
+  Suspense,
+} from "react";
 import { useNavigate } from "react-router-dom";
 import { useClickOutside } from "@/shared/hooks/useClickOutside";
 
@@ -24,7 +32,7 @@ import { useDashboardLayout } from "@/dashboard-area/hooks/useDashboardLayout";
 import { useDashboardData } from "@/dashboard-area/hooks/useDashboardData";
 import { useDashboardModals } from "@dashboard/contexts/DashboardModalsContext";
 
-// Plan Limits Hook - ADD THIS IMPORT
+// Plan Limits Hook
 import { usePlanLimits } from "@shared/hooks/usePlanLimits";
 
 // Dashboard Components
@@ -33,7 +41,9 @@ import FilterDropdown from "@/dashboard-area/components/ui/FilterDropdown";
 
 // Trip Components
 import TripCard from "@/dashboard-area/features/trips/components/TripCard";
-import CreateTripModal from "@/dashboard-area/features/trips/components/CreateTripModal";
+const CreateTripModal = lazy(() =>
+  import("@/dashboard-area/features/trips/components/CreateTripModal")
+);
 
 // Utils
 import {
@@ -54,7 +64,7 @@ const TripsSection = () => {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
 
-  // ADD PLAN LIMITS HOOK
+  // Plan Limits Hook
   const { 
     canPerformAction, 
     showUpgradePrompt, 
@@ -98,8 +108,10 @@ const TripsSection = () => {
   const [currentTripCount, setCurrentTripCount] = useState(0);
   const [processingInviteId, setProcessingInviteId] = useState(null);
   
-  // Filtered trips based on search and date filters
-  const filteredTrips = filterTrips(trips, searchTerm, dateFilter);
+  // Memoize filtered trips to prevent unnecessary recalculations
+  const filteredTrips = useMemo(() => {
+    return filterTrips(trips, searchTerm, dateFilter);
+  }, [trips, searchTerm, dateFilter]);
   
   // Click outside ref for filter dropdown
   const filterDropdownRef = useClickOutside(() => closeFilterDropdown());
@@ -126,8 +138,8 @@ const TripsSection = () => {
     checkTripAcceptanceAbility();
   }, [currentUser?.uid, trips.length, getUsageInfo]);
 
-  // UPDATED: Enhanced Create Trip Handler
-  const handleCreateTrip = async () => {
+  // Enhanced Create Trip Handler with Performance Optimization
+  const handleCreateTrip = useCallback(async () => {
     try {
       // Use plan limits validation instead of hardcoded check
       const limitCheck = canPerformAction("create_trip", { 
@@ -147,10 +159,10 @@ const TripsSection = () => {
       console.error("Error checking trip creation limit:", error);
       showErrorMessage("Failed to check trip limit. Please try again.");
     }
-  };
+  }, [canPerformAction, trips.length, showUpgradePrompt, showErrorMessage]);
 
-  // UPDATED: Enhanced Accept Invite Handler with Validation
-  const handleAcceptTripInvite = async (invite) => {
+  // Enhanced Accept Invite Handler with Validation and Performance Optimization
+  const handleAcceptTripInvite = useCallback(async (invite) => {
     if (processingInviteId === invite.id) return; // Prevent double-processing
 
     try {
@@ -213,10 +225,21 @@ const TripsSection = () => {
     } finally {
       setProcessingInviteId(null);
     }
-  };
+  }, [
+    processingInviteId,
+    canPerformAction,
+    currentTripCount,
+    showUpgradePrompt,
+    currentUser.uid,
+    removeTripInvite,
+    refreshTrips,
+    getUsageInfo,
+    showSuccessMessage,
+    showErrorMessage
+  ]);
 
-  // UNCHANGED: Decline invite handler
-  const handleDeclineTripInvite = async (invite) => {
+  // Decline invite handler with Performance Optimization
+  const handleDeclineTripInvite = useCallback(async (invite) => {
     if (processingInviteId === invite.id) return;
 
     try {
@@ -230,27 +253,30 @@ const TripsSection = () => {
     } finally {
       setProcessingInviteId(null);
     }
-  };
+  }, [processingInviteId, removeTripInvite, showSuccessMessage, showErrorMessage]);
 
-  const handleTripCreated = (newTrip) => {
+  const handleTripCreated = useCallback(() => {
     refreshTrips();
     showSuccessMessage("Trip created successfully!");
-  };
+  }, [refreshTrips, showSuccessMessage]);
 
-  const handleViewTrip = (tripId) => {
-    const tripCard = document.querySelector(`[data-trip-id="${tripId}"]`);
-    if (tripCard) {
-      tripCard.style.transform = "scale(0.95)";
-      tripCard.style.opacity = "0.7";
-    }
+  const handleViewTrip = useCallback(
+    (tripId) => {
+      const tripCard = document.querySelector(`[data-trip-id="${tripId}"]`);
+      if (tripCard) {
+        tripCard.style.transform = "scale(0.95)";
+        tripCard.style.opacity = "0.7";
+      }
 
-    setTimeout(() => {
-      navigate(`/dashboard/trip/${tripId}`);
-    }, 150);
-  };
+      setTimeout(() => {
+        navigate(`/dashboard/trip/${tripId}`);
+      }, 150);
+    },
+    [navigate]
+  );
 
   // Helper function to render invitation action buttons
-  const renderInvitationButtons = (invite) => {
+  const renderInvitationButtons = useCallback((invite) => {
     const isProcessing = processingInviteId === invite.id;
     const canAccept = canAcceptMoreInvitations && !isProcessing;
 
@@ -287,10 +313,10 @@ const TripsSection = () => {
         </button>
       </div>
     );
-  };
+  }, [processingInviteId, canAcceptMoreInvitations, handleAcceptTripInvite, handleDeclineTripInvite]);
 
   // Helper function to render mobile invitation buttons
-  const renderMobileInvitationButtons = (invite) => {
+  const renderMobileInvitationButtons = useCallback((invite) => {
     const isProcessing = processingInviteId === invite.id;
     const canAccept = canAcceptMoreInvitations && !isProcessing;
 
@@ -326,7 +352,7 @@ const TripsSection = () => {
         </button>
       </div>
     );
-  };
+  }, [processingInviteId, canAcceptMoreInvitations, handleAcceptTripInvite, handleDeclineTripInvite]);
 
   // Show loading state
   if (loading) {
@@ -377,7 +403,7 @@ const TripsSection = () => {
           </p>
         </div>
 
-        {/* UPDATED: Create Trip Button with dynamic limit display */}
+        {/* Create Trip Button with dynamic limit display */}
         {tripsActiveTab === "trips" && (
           <button
             onClick={handleCreateTrip}
@@ -463,7 +489,7 @@ const TripsSection = () => {
             }`}
           >
             <div className="p-6">
-              {/* ADD: Plan limit warning for desktop */}
+              {/* Plan limit warning for desktop */}
               {!canAcceptMoreInvitations && tripInvites.length > 0 && (
                 <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
                   <div className="flex items-start gap-2">
@@ -593,7 +619,7 @@ const TripsSection = () => {
         ) : (
           /* Mobile Trip Invitations */
           <div className="space-y-4">
-            {/* ADD: Plan limit warning for mobile */}
+            {/* Plan limit warning for mobile */}
             {!canAcceptMoreInvitations && tripInvites.length > 0 && (
               <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl">
                 <div className="flex items-start gap-3">
@@ -643,13 +669,15 @@ const TripsSection = () => {
       </div>
 
       {/* Create Trip Modal */}
-      <CreateTripModal
-        isOpen={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
-        onTripCreated={handleTripCreated}
-      />
+      <Suspense fallback={<div>Loading modal...</div>}>
+        <CreateTripModal
+          isOpen={showCreateModal}
+          onClose={() => setShowCreateModal(false)}
+          onTripCreated={handleTripCreated}
+        />
+      </Suspense>
     </div>
   );
 };
 
-export default TripsSection;
+export default memo(TripsSection);

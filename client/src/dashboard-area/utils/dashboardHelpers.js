@@ -342,3 +342,7 @@ export const formatNotificationMessage = (notification) => {
 export const getTotalNotificationCount = (pendingRequests, tripInvites) => {
   return (pendingRequests?.length || 0) + (tripInvites?.length || 0);
 };
+
+
+
+

@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BellIcon, CheckCircleIcon, XCircleIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import { usePlanLimits } from '@shared/hooks/usePlanLimits';
 import { tripsService } from '@dashboard/features/trips/services/tripsService';

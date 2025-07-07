@@ -1,4 +1,4 @@
-﻿// Dashboard Constants and Configuration
+// Dashboard Constants and Configuration
 import {
   ArrowRightOnRectangleIcon,
   CheckCircleIcon,
@@ -41,10 +41,10 @@ export const NAVIGATION_ITEMS = [
 
 // Filter Options
 export const FILTER_OPTIONS = [
-  { value: "all", label: "📁 All Trips" },
-  { value: "upcoming", label: "📅 Upcoming" },
-  { value: "recent", label: "🕒 Recent" },
-  { value: "past", label: "✅ Past" },
+  { value: "all", label: "?? All Trips" },
+  { value: "upcoming", label: "?? Upcoming" },
+  { value: "recent", label: "?? Recent" },
+  { value: "past", label: "? Past" },
 ];
 
 // Plan Configurations
@@ -158,3 +158,7 @@ export const BOTTOM_NAV_ITEMS = [
   { id: "friends", name: "Friends", icon: UserGroupIcon },
   { id: "settings", name: "Settings", icon: Cog6ToothIcon },
 ];
+
+
+
+

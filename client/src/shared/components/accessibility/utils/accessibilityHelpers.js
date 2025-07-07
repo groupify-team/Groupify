@@ -202,3 +202,5 @@ export const getAccessibilitySupport = () => {
     colorScheme: window.matchMedia('(prefers-color-scheme)').media !== 'not all',
   };
 };
+
+

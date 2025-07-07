@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useAuth } from "@auth/contexts/AuthContext";
+import { useAuth } from "@auth/hooks/useAuth";
 import { createFaceProfile } from "@face-recognition/service/faceRecognitionService";
 import { saveFaceProfileToStorage } from "@firebase-services/faceProfiles";
 import { uploadBytes, getDownloadURL, ref } from "firebase/storage";
@@ -622,3 +622,7 @@ const FaceProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
 };
 
 export default FaceProfileModal;
+
+
+
+

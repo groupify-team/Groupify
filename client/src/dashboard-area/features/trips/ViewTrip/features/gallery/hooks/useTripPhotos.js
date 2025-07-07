@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Hook for trip photo operations and photo limit management
  * Handles photo uploads, photo statistics, and photo count validation
  */
@@ -12,7 +12,7 @@ export const useTripPhotos = (tripId, trip, setTrip) => {
   const [selectedPhoto, setSelectedPhoto] = useState(null);
   const [showAllPhotosModal, setShowAllPhotosModal] = useState(false);
 
-  // 🔥 OPTIMIZATION: Memoize expensive calculations
+  // ?? OPTIMIZATION: Memoize expensive calculations
   const photoStats = useMemo(
     () => ({
       count: photos.length,
@@ -40,7 +40,7 @@ export const useTripPhotos = (tripId, trip, setTrip) => {
     [trip, setTrip]
   );
 
-  // 🔥 OPTIMIZATION: Use useCallback for functions passed as props
+  // ?? OPTIMIZATION: Use useCallback for functions passed as props
   const handlePhotoUploaded = useCallback(
     (uploadedPhotos) => {
       const totalAfterUpload = photos.length + uploadedPhotos.length;
@@ -82,7 +82,7 @@ export const useTripPhotos = (tripId, trip, setTrip) => {
     [trip, setTrip]
   );
 
-  // 🔥 OPTIMIZATION: Return memoized values
+  // ?? OPTIMIZATION: Return memoized values
   return useMemo(
     () => ({
       photos,
@@ -110,3 +110,7 @@ export const useTripPhotos = (tripId, trip, setTrip) => {
     ]
   );
 };
+
+
+
+

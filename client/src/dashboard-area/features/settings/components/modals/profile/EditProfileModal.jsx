@@ -4,7 +4,7 @@ import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { auth, db, storage } from "@shared/services/firebase/config";
 import { updateEmail, updatePassword, updateProfile } from "firebase/auth";
 import ProfileImageCropper from "./ProfileImageCropper";
-import { useAuth } from "@auth/contexts/AuthContext";
+import { useAuth } from "@auth/hooks/useAuth";
 import { useTheme } from "@shared/contexts/ThemeContext";
 import {
   CameraIcon,
@@ -23,7 +23,6 @@ const EditProfileModal = ({ isOpen, onClose }) => {
   const [password, setPassword] = useState("");
   const [birthdate, setBirthdate] = useState("");
   const [gender, setGender] = useState(null);
-
   // Image upload & crop states - keeping your exact original structure
   const [profileImage, setProfileImage] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
@@ -39,17 +38,14 @@ const EditProfileModal = ({ isOpen, onClose }) => {
   const videoRef = useRef(null);
   const [successMessage, setSuccessMessage] = useState("");
   const [showSuccess, setShowSuccess] = useState(false);
-  // New UI state for password visibility
   const [showPassword, setShowPassword] = useState(false);
 
-  // Create updateUserProfile function since it's not in your AuthContext
   const updateUserProfile = async (updates) => {
     if (auth.currentUser) {
       await updateProfile(auth.currentUser, updates);
     }
   };
 
-  // Load user data when modal opens - keeping your exact logic
   useEffect(() => {
     const loadUserData = async () => {
       if (!auth.currentUser) return;
@@ -60,7 +56,7 @@ const EditProfileModal = ({ isOpen, onClose }) => {
         setDisplayName(data.displayName || "");
         setEmail(data.email || "");
         setBirthdate(data.birthdate || "");
-        setPreviewUrl(data.photoURL || null); // This will load your actual profile photo
+        setPreviewUrl(data.photoURL || null);
         if (data.gender) {
           setGender(data.gender);
         }
@@ -74,7 +70,6 @@ const EditProfileModal = ({ isOpen, onClose }) => {
     }
   }, [isOpen]);
 
-  // Camera functionality - keeping your exact logic
   useEffect(() => {
     const startCamera = async () => {
       if (showCamera && videoRef.current) {
@@ -85,7 +80,6 @@ const EditProfileModal = ({ isOpen, onClose }) => {
           videoRef.current.srcObject = stream;
           await videoRef.current.play();
           setVideoStream(stream);
-          console.log("🎥 Camera started successfully");
         } catch (err) {
           console.error("❌ Failed to start camera:", err);
           setError("Could not access camera");
@@ -96,7 +90,6 @@ const EditProfileModal = ({ isOpen, onClose }) => {
     startCamera();
   }, [showCamera]);
 
-  // Handle raw file selection and open cropper - keeping your exact logic
   const handleImageSelect = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -105,26 +98,16 @@ const EditProfileModal = ({ isOpen, onClose }) => {
     }
   };
 
-  // Receive cropped image blob and preview URL from cropper - keeping your exact logic
   const handleCropComplete = (blob, fileUrl) => {
-    console.log("📸 Received blob from cropper:", blob);
     setProfileImage(blob);
     setPreviewUrl(fileUrl);
     setCropping(false);
   };
 
-  // Upload the blob to Firebase Storage - keeping your exact logic
   const handleImageUpload = async () => {
-    if (!profileImage) {
-      console.log("⚠️ No profile image selected");
-      return null;
-    }
-
-    console.log("⏫ Uploading profile image...");
     const storageRef = ref(storage, `profileImages/${auth.currentUser.uid}`);
     await uploadBytes(storageRef, profileImage);
     const url = await getDownloadURL(storageRef);
-    console.log("✅ Image uploaded:", url);
     return url;
   };
 
@@ -514,3 +497,7 @@ const EditProfileModal = ({ isOpen, onClose }) => {
 };
 
 export default EditProfileModal;
+
+
+
+

@@ -1,9 +1,9 @@
-﻿/**
+/**
  * Hook for AI face recognition and photo filtering functionality
  * Handles face profile loading, photo matching, and recognition progress tracking
  */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { toast } from "react-hot-toast";
 import {
   filterPhotosByFaceProfile,
@@ -14,7 +14,7 @@ import {
 } from "../service/faceRecognitionService";
 import { getFaceProfileFromStorage } from "@shared/services/firebase/faceProfiles";
 
-export const useFaceRecognition = (photos, currentUserId, isMember) => {
+export const useFaceRecognition = (photos, currentUserId, isMember, tripId) => {
   const [hasProfile, setHasProfile] = useState(false);
   const [isLoadingProfile, setIsLoadingProfile] = useState(false);
   const [isProcessingFaces, setIsProcessingFaces] = useState(false);
@@ -22,6 +22,8 @@ export const useFaceRecognition = (photos, currentUserId, isMember) => {
   const [filteredPhotos, setFilteredPhotos] = useState([]);
   const [showScanModal, setShowScanModal] = useState(false);
   const [showResultsModal, setShowResultsModal] = useState(false);
+  const [persistedResults, setPersistedResults] = useState(null);
+  const [lastScanInfo, setLastScanInfo] = useState(null);
 
   const [faceRecognitionProgress, setFaceRecognitionProgress] = useState({
     current: 0,
@@ -37,8 +39,69 @@ export const useFaceRecognition = (photos, currentUserId, isMember) => {
 
   const canFilterByFace = isMember && currentUserId;
 
+  const saveResultsToStorage = (results, tripId) => {
+    try {
+      const dataToSave = {
+        results,
+        tripId,
+        timestamp: Date.now(),
+        userId: currentUserId,
+        scanDate: new Date().toISOString(), // Add readable date
+        photoCount: results.length,
+        version: "1.0", // For future compatibility
+      };
+      localStorage.setItem(
+        `faceRecognition_${tripId}_${currentUserId}`,
+        JSON.stringify(dataToSave)
+      );
+    } catch (error) {
+      console.error("Failed to save results:", error);
+    }
+  };
+
+  const loadResultsFromStorage = (tripId) => {
+    try {
+      const saved = localStorage.getItem(
+        `faceRecognition_${tripId}_${currentUserId}`
+      );
+      if (saved) {
+        const data = JSON.parse(saved);
+        // Remove the 24-hour limit - keep results indefinitely
+        if (data.tripId === tripId && data.userId === currentUserId) {
+          return {
+            results: data.results,
+            scanDate: data.scanDate,
+            photoCount: data.photoCount,
+            timestamp: data.timestamp,
+          };
+        }
+      }
+    } catch (error) {
+      console.error("Failed to load results:", error);
+    }
+    return null;
+  };
+
+  useEffect(() => {
+    if (currentUserId && canFilterByFace && tripId) {
+      loadUserFaceProfile();
+
+      // Load saved results on component mount
+      const savedData = loadResultsFromStorage(tripId);
+      if (savedData && savedData.results.length > 0) {
+        setFilteredPhotos(savedData.results);
+        setFilterActive(true);
+        setLastScanInfo({
+          date: savedData.scanDate,
+          photoCount: savedData.photoCount,
+          timestamp: savedData.timestamp,
+        });
+      }
+    }
+  }, [currentUserId, canFilterByFace, tripId]);
+
   // Load user face profile
-  const loadUserFaceProfile = async () => {
+  const loadUserFaceProfile = useCallback(async () => {
     if (!currentUserId) return;
 
     setIsLoadingProfile(true);
@@ -62,19 +125,19 @@ export const useFaceRecognition = (photos, currentUserId, isMember) => {
           await createFaceProfile(currentUserId, imageUrls);
           setHasProfile(true);
         } catch (error) {
-          console.error("❌ Failed to auto-load face profile:", error);
+          console.error("? Failed to auto-load face profile:", error);
           setHasProfile(false);
         }
       } else {
         setHasProfile(false);
       }
     } catch (error) {
-      console.error("❌ Error checking for face profile:", error);
+      console.error("? Error checking for face profile:", error);
       setHasProfile(false);
     } finally {
       setIsLoadingProfile(false);
     }
-  };
+  }, [currentUserId]);
 
   // Enhanced progress handler with real-time updates
   const handleFaceRecognitionProgress = (progressData) => {
@@ -99,6 +162,9 @@ export const useFaceRecognition = (photos, currentUserId, isMember) => {
           };
 
         case "processing":
+          const newPercentage = Math.round(
+            (progressData.current / progressData.total) * 100
+          );
           return {
             ...newProgress,
             current: progressData.current,
@@ -108,9 +174,7 @@ export const useFaceRecognition = (photos, currentUserId, isMember) => {
             currentPhoto: progressData.currentPhoto,
             estimatedTimeRemaining: progressData.estimatedTimeRemaining,
             phase: `${progressData.phase} (${progressData.current}/${progressData.total})`,
-            percentage: Math.round(
-              (progressData.current / progressData.total) * 100
-            ),
+            percentage: newPercentage,
           };
 
         case "match_found":
@@ -213,14 +277,19 @@ export const useFaceRecognition = (photos, currentUserId, isMember) => {
       if (matches.length > 0) {
         setFilteredPhotos(matches);
         setFilterActive(true);
+        saveResultsToStorage(matches, tripId);
         toast.success(`Found ${matches.length} matching photos!`);
+        setShowScanModal(false);
+        setTimeout(() => setShowResultsModal(true), 300);
       } else {
         setFilteredPhotos([]);
-        setFilterActive(true); // Still show the section but with "no matches" message
+        setFilterActive(true);
         toast.info("No matching photos found");
+        setShowScanModal(false);
+        setTimeout(() => setShowResultsModal(true), 300);
       }
     } catch (error) {
-      console.error("❌ Face recognition error:", error);
+      console.error("? Face recognition error:", error);
       if (error.message.includes("No face profile found")) {
         toast.error(
           "No face profile found. Please create one in your Dashboard first."
@@ -250,6 +319,19 @@ export const useFaceRecognition = (photos, currentUserId, isMember) => {
     }, 500);
   };
 
+  const handleClearScan = () => {
+    setFilterActive(false);
+    setFilteredPhotos([]);
+    setShowResultsModal(false);
+    setShowScanModal(false);
+    // Clear saved results from localStorage
+    try {
+      localStorage.removeItem(`faceRecognition_${tripId}_${currentUserId}`);
+    } catch (error) {
+      console.error("Failed to clear saved results:", error);
+    }
+  };
+
   return {
     hasProfile,
     isLoadingProfile,
@@ -271,5 +353,15 @@ export const useFaceRecognition = (photos, currentUserId, isMember) => {
     enhancedHandleCancelFaceRecognition: handleCancelFaceRecognition,
     handleStartFaceRecognition: handleFindMyPhotos,
     handleNavigateToProfile: () => setShowScanModal(false),
+    handleRescanFromResults: () => {
+      setShowResultsModal(false);
+      setTimeout(() => setShowScanModal(true), 300);
+    },
+    handleClearScan,
+    lastScanInfo,
   };
 };
+
+
+
+

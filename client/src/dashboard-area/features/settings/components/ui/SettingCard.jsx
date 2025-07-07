@@ -37,3 +37,7 @@ const SettingCard = ({
 };
 
 export default SettingCard;
+
+
+
+
