@@ -1,9 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useAuth } from "@auth/contexts/AuthContext";
+import { useAuth } from "@auth/hooks/useAuth";
+
 import { createFaceProfile } from "@face-recognition/service/faceRecognitionService";
 import { saveFaceProfileToStorage } from "@firebase-services/faceProfiles";
-import { uploadBytes, getDownloadURL, ref } from "firebase/storage";
-import { storage } from "@shared/services/firebase/config";
 import SmartFaceScan from "./SmartFaceScan";
 import PhotoUpload from "@photos/components/PhotoUpload";
 import {

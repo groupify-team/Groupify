@@ -1,5 +1,5 @@
-// Generic Modal Component
-import React, { useEffect, useRef } from "react";
+// Generic Modal Component with Smooth Transitions
+import React, { useEffect, useRef, useState } from "react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import { Z_INDEX } from "@/shared/constants/ui";
 
@@ -18,6 +18,21 @@ const Modal = ({
   zIndex = Z_INDEX.modal,
 }) => {
   const modalRef = useRef(null);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [shouldRender, setShouldRender] = useState(isOpen);
+
+  // Handle open/close animations
+  useEffect(() => {
+    if (isOpen) {
+      setShouldRender(true);
+      // Small delay to ensure smooth entrance
+      setTimeout(() => setIsAnimating(true), 10);
+    } else {
+      setIsAnimating(false);
+      // Wait for exit animation before unmounting
+      setTimeout(() => setShouldRender(false), 300);
+    }
+  }, [isOpen]);
 
   // Size variants
   const sizeClasses = {
@@ -65,11 +80,16 @@ const Modal = ({
     };
   }, [isOpen]);
 
-  if (!isOpen) return null;
+  if (!shouldRender) return null;
 
   return (
     <div
-      className={`fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 transition-opacity duration-300 ${backdropClassName}`}
+      className={`
+        fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 
+        transition-all duration-300 ease-smooth transform-gpu
+        ${isAnimating ? "opacity-100" : "opacity-0"}
+        ${backdropClassName}
+      `}
       style={{ zIndex }}
       onClick={handleBackdropClick}
     >
@@ -77,11 +97,15 @@ const Modal = ({
         ref={modalRef}
         className={`
           bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full
+          transition-all duration-400 ease-spring transform-gpu
           ${sizeClasses[size]}
           ${contentClassName}
           ${className}
-          transform transition-all duration-300 scale-100 opacity-100
-          animate-modal-enter
+          ${
+            isAnimating
+              ? "opacity-100 scale-100 translate-y-0"
+              : "opacity-0 scale-95 translate-y-4"
+          }
         `}
         onClick={(e) => e.stopPropagation()}
       >

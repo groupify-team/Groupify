@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import {
   DEFAULT_STATE,
   BREAKPOINTS,
-} from "@dashboard/utils/dashboardConstants";
+} from "@dashboard/utils/dashboardConstants.js";
 import { isMobileDevice } from "@dashboard/utils/dashboardHelpers";
 
 export const useDashboardLayout = () => {
@@ -442,6 +442,3 @@ export const useDashboardLayout = () => {
     },
   };
 };
-
-
-

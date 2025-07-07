@@ -1,5 +1,5 @@
 // Dashboard Helper Functions
-import { PLAN_CONFIGS, FILTER_OPTIONS } from "./dashboardConstants.jsx";
+import { PLAN_CONFIGS, FILTER_OPTIONS } from "./dashboardConstants.js";
 
 /**
  * Filter helper functions
@@ -10,10 +10,17 @@ export const getFilterLabel = (value) => {
 };
 
 export const filterTrips = (trips, searchTerm, dateFilter) => {
+  // Handle edge cases
+  if (!trips || !Array.isArray(trips)) return [];
+  if (!searchTerm || typeof searchTerm !== "string") searchTerm = "";
+
   return trips.filter((trip) => {
+    if (!trip) return false;
+
     const matchesSearch =
-      trip.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      trip.location?.toLowerCase().includes(searchTerm.toLowerCase());
+      trip.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (trip.location &&
+        trip.location.toLowerCase().includes(searchTerm.toLowerCase()));
 
     if (!matchesSearch) return false;
 
@@ -27,10 +34,11 @@ export const filterTrips = (trips, searchTerm, dateFilter) => {
         return tripDate && tripDate > now;
       case "past":
         return tripDate && tripDate < now;
-      case "recent":
+      case "recent": {
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(now.getDate() - 30);
         return tripDate && tripDate > thirtyDaysAgo;
+      }
       default:
         return true;
     }
@@ -342,7 +350,3 @@ export const formatNotificationMessage = (notification) => {
 export const getTotalNotificationCount = (pendingRequests, tripInvites) => {
   return (pendingRequests?.length || 0) + (tripInvites?.length || 0);
 };
-
-
-
-

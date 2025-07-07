@@ -1,19 +1,8 @@
 // useDashboardData.js - COMPLETE FIXED VERSION with Trip Deletion Handler
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom"; // ? ADDED
-import { useAuth } from "@/auth-area/contexts/AuthContext";
-import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  onSnapshot,
-  query,
-  where,
-  orderBy,
-  documentId,
-} from "firebase/firestore";
-import { db } from "@shared/services/firebase/config";
+import { useAuth } from "@auth/hooks/useAuth";
+
 import {
   getFriends,
   getPendingFriendRequests,
@@ -132,6 +121,17 @@ export const useDashboardData = () => {
     }
   }, [currentUser?.uid]);
 
+  // Message display functions
+  const showErrorMessage = useCallback((message, duration = 4000) => {
+    setShowError(message);
+    setTimeout(() => setShowError(null), duration);
+  }, []);
+
+  const showSuccessMessage = useCallback((message, duration = 3000) => {
+    setShowSuccess(message);
+    setTimeout(() => setShowSuccess(null), duration);
+  }, []);
+
   /**
    * Load all dashboard data (with global deduplication and sharing)
    */
@@ -204,6 +204,7 @@ export const useDashboardData = () => {
         }
 
         const totalTime = performance.now() - startTime;
+        console.log(`Dashboard data loaded in ${totalTime.toFixed(2)}ms`);
 
         const result = {
           userProfile,
@@ -244,7 +245,13 @@ export const useDashboardData = () => {
       setLoading(false);
       loadingRef.current = false;
     }
-  }, [authLoading, currentUser?.uid, loadFaceProfile, updateFromGlobalData]);
+  }, [
+    authLoading,
+    currentUser?.uid,
+    loadFaceProfile,
+    updateFromGlobalData,
+    showErrorMessage,
+  ]);
 
   // ? NEW: Function to immediately remove trip from state
   const removeTripFromState = useCallback((tripId) => {
@@ -308,17 +315,6 @@ export const useDashboardData = () => {
       console.error("? Error refreshing pending requests:", error);
     }
   }, [currentUser?.uid]);
-
-  // Message functions
-  const showSuccessMessage = useCallback((message, duration = 3000) => {
-    setShowSuccess(message);
-    setTimeout(() => setShowSuccess(null), duration);
-  }, []);
-
-  const showErrorMessage = useCallback((message, duration = 4000) => {
-    setShowError(message);
-    setTimeout(() => setShowError(null), duration);
-  }, []);
 
   // State updater functions
   const updateFaceProfile = useCallback((hasProfileData, photos = []) => {

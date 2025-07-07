@@ -1,12 +1,11 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { useAuth } from "@/auth-area/contexts/AuthContext";
-import { useTheme } from "@shared/contexts/ThemeContext";
+import { useAuth } from "@auth/hooks/useAuth";
+
 import { CameraIcon, CogIcon } from "@heroicons/react/24/outline";
 
 const HomeHeader = ({ onSettingsClick, className = "" }) => {
   const { currentUser } = useAuth();
-  const { theme } = useTheme();
 
   const handleLinkClick = (to) => {
     document.body.style.opacity = "0";
@@ -74,6 +73,3 @@ const HomeHeader = ({ onSettingsClick, className = "" }) => {
 };
 
 export default HomeHeader;
-
-
-

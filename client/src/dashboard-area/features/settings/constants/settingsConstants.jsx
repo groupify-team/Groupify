@@ -1,4 +1,4 @@
-// src/dashboard-area/features/settings/constants/settingsConstants.jsx
+import React from "react";
 import {
   BellIcon,
   CameraIcon,
@@ -6,11 +6,10 @@ import {
   MapIcon,
   UserCircleIcon,
 } from "@heroicons/react/24/outline";
-
 // Settings sections configuration
 export const SETTINGS_SECTIONS = {
   ACCOUNT: "account",
-  NOTIFICATIONS: "notifications", 
+  NOTIFICATIONS: "notifications",
   PRIVACY: "privacy",
   FACE_PROFILE: "faceProfile",
   SUBSCRIPTION: "subscription",
@@ -48,7 +47,12 @@ export const SUBSCRIPTION_PLANS = {
     storage: "250GB",
     photos: "50K",
     albums: "Unlimited",
-    features: ["250GB storage", "50K photos", "Unlimited sharing", "Premium AI"],
+    features: [
+      "250GB storage",
+      "50K photos",
+      "Unlimited sharing",
+      "Premium AI",
+    ],
     color: "purple",
     icon: "👨‍👩‍👧‍👦",
   },
@@ -63,7 +67,7 @@ export const SUBSCRIPTION_TEXT = {
   USAGE_DETAILS: "Usage Details",
   BILLING_HISTORY: "Billing History",
   PLAN_MANAGEMENT: "Plan Management",
-  
+
   // Plan features
   STORAGE: "Storage",
   PHOTOS: "Photos",
@@ -71,21 +75,21 @@ export const SUBSCRIPTION_TEXT = {
   PER_YEAR: "Per Year",
   MONTHLY: "Monthly",
   YEARLY: "Yearly",
-  
+
   // Actions
   UPGRADE_TO_PRO: "Upgrade to Pro - Get 20x More Storage",
   UPGRADE_TO_FAMILY: "Upgrade to Family - Perfect for families",
   SEE_WHAT_YOURE_MISSING: "See What You're Missing",
   PERFECT_FOR_INDIVIDUALS: "Perfect for individuals",
   PERFECT_FOR_FAMILIES: "Perfect for families",
-  
+
   // Status
   FREE: "Free",
   ACTIVE: "Active",
   TRIAL: "Trial",
   CANCELLED: "Cancelled",
   EXPIRED: "Expired",
-  
+
   // Usage
   STORAGE_USAGE: "Storage Usage",
   PHOTOS_USED: "Photos Used",
@@ -94,19 +98,19 @@ export const SUBSCRIPTION_TEXT = {
   USED: "used",
   OF: "of",
   BYTES: "Bytes",
-  
+
   // Billing
   NEXT_BILLING: "Next Billing",
   LAST_PAYMENT: "Last Payment",
   PAYMENT_METHOD: "Payment Method",
   BILLING_ADDRESS: "Billing Address",
-  
+
   // Messages
   UPGRADE_SUCCESS: "Successfully upgraded your plan!",
   DOWNGRADE_SUCCESS: "Successfully downgraded your plan!",
   CANCEL_SUCCESS: "Subscription cancelled successfully!",
   REACTIVATE_SUCCESS: "Subscription reactivated successfully!",
-  
+
   // Errors
   UPGRADE_ERROR: "Failed to upgrade plan. Please try again.",
   CANCEL_ERROR: "Failed to cancel subscription. Please try again.",
@@ -119,7 +123,7 @@ export const USAGE_TEXT = {
   PHOTO_LIMIT_REACHED: "You've reached your photo limit",
   UPGRADE_RECOMMENDED: "Consider upgrading to continue",
   USAGE_WARNING: "You're approaching your plan limits",
-  
+
   // Progress indicators
   LOW_USAGE: "You have plenty of space remaining",
   MEDIUM_USAGE: "You're using a good amount of your plan",
@@ -133,34 +137,34 @@ export const PLAN_COMPARISON = {
     {
       name: "Storage",
       free: "2GB",
-      pro: "50GB", 
-      family: "250GB"
+      pro: "50GB",
+      family: "250GB",
     },
     {
       name: "Photos",
       free: "500",
       pro: "10K",
-      family: "50K"
+      family: "50K",
     },
     {
-      name: "Albums", 
+      name: "Albums",
       free: "2",
       pro: "Unlimited",
-      family: "Unlimited"
+      family: "Unlimited",
     },
     {
       name: "AI Recognition",
       free: "Basic",
-      pro: "Advanced", 
-      family: "Premium"
+      pro: "Advanced",
+      family: "Premium",
     },
     {
       name: "Support",
       free: "Email",
       pro: "Priority",
-      family: "Phone + Email"
-    }
-  ]
+      family: "Phone + Email",
+    },
+  ],
 };
 
 // Streamlined notification settings - only core app features
@@ -169,7 +173,7 @@ export const NOTIFICATION_SETTINGS = [
     id: "emailNotifications",
     label: "Email Notifications",
     description: "Receive important updates via email",
-    icon: (
+    icon: () => (
       <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center shadow-sm">
         <svg
           className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white"
@@ -187,7 +191,7 @@ export const NOTIFICATION_SETTINGS = [
     id: "tripUpdates",
     label: "Trip Updates",
     description: "Get notified about trip activities and changes",
-    icon: (
+    icon: () => (
       <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center shadow-sm">
         <MapIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white" />
       </div>
@@ -198,7 +202,7 @@ export const NOTIFICATION_SETTINGS = [
     id: "photoRecognition",
     label: "Photo Recognition",
     description: "Notifications when you're tagged in photos",
-    icon: (
+    icon: () => (
       <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg flex items-center justify-center shadow-sm">
         <CameraIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white" />
       </div>
@@ -213,7 +217,7 @@ export const PRIVACY_SETTINGS = [
     id: "publicProfile",
     label: "Public Profile",
     description: "Allow others to find and view your profile",
-    icon: (
+    icon: () => (
       <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg flex items-center justify-center shadow-sm">
         <UserCircleIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white" />
       </div>
@@ -224,7 +228,7 @@ export const PRIVACY_SETTINGS = [
     id: "faceRecognition",
     label: "Face Recognition",
     description: "Enable face detection and tagging in photos",
-    icon: (
+    icon: () => (
       <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-r from-pink-500 to-rose-500 rounded-lg flex items-center justify-center shadow-sm">
         <svg
           className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white"
@@ -246,7 +250,7 @@ export const PRIVACY_SETTINGS = [
     id: "searchVisibility",
     label: "Search Visibility",
     description: "Allow others to find you in search results",
-    icon: (
+    icon: () => (
       <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-lg flex items-center justify-center shadow-sm">
         <MagnifyingGlassIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white" />
       </div>
@@ -295,10 +299,13 @@ export const SETTINGS_TOAST_MESSAGES = {
 export const SETTINGS_ERROR_MESSAGES = {
   loadingSettings: "Failed to load settings",
   updatingSettings: "Failed to update settings",
-  deletingAccount: "Failed to delete account. Please try again or contact support.",
+  deletingAccount:
+    "Failed to delete account. Please try again or contact support.",
   confirmDelete: "Please type 'DELETE' to confirm",
-  requiresRecentLogin: "For security reasons, please log out and log back in, then try deleting your account again.",
-  faceRecognitionDisabled: "Please enable Face Recognition in Privacy Settings first.",
+  requiresRecentLogin:
+    "For security reasons, please log out and log back in, then try deleting your account again.",
+  faceRecognitionDisabled:
+    "Please enable Face Recognition in Privacy Settings first.",
   exportFailed: "Export failed. Please try again.",
   backupFailed: "Backup creation failed. Please try again.",
   subscriptionLoadFailed: "Failed to load subscription data",
@@ -309,7 +316,7 @@ export const SETTINGS_ERROR_MESSAGES = {
 // Settings Modal Types
 export const SETTINGS_MODAL_TYPES = {
   EDIT_PROFILE: "editProfile",
-  FACE_PROFILE: "faceProfile", 
+  FACE_PROFILE: "faceProfile",
   FACE_PROFILE_MANAGE: "faceProfileManage",
   DELETE_ACCOUNT: "deleteAccount",
   USAGE: "usage",
@@ -323,7 +330,7 @@ export const SETTINGS_MODAL_TYPES = {
 export const EXPORT_DATA_TYPES = {
   COMPLETE: "complete",
   TRIPS: "trips",
-  PHOTOS: "photos", 
+  PHOTOS: "photos",
   FRIENDS: "friends",
 };
 
@@ -340,23 +347,25 @@ export const getSubscriptionText = (key, fallback = "") => {
 };
 
 export const getPlanDisplayName = (planName) => {
-  const plan = Object.values(SUBSCRIPTION_PLANS).find(p => p.name === planName);
-  return plan ? plan.displayName : planName.charAt(0).toUpperCase() + planName.slice(1);
+  const plan = Object.values(SUBSCRIPTION_PLANS).find(
+    (p) => p.name === planName
+  );
+  return plan
+    ? plan.displayName
+    : planName.charAt(0).toUpperCase() + planName.slice(1);
 };
 
 export const getPlanFeatures = (planName) => {
-  const plan = Object.values(SUBSCRIPTION_PLANS).find(p => p.name === planName);
+  const plan = Object.values(SUBSCRIPTION_PLANS).find(
+    (p) => p.name === planName
+  );
   return plan ? plan.features : [];
 };
 
 export const formatStorageDisplay = (bytes) => {
   if (bytes === 0) return "0 Bytes";
   const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+  const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
 };
-
-
-
-

@@ -1,8 +1,9 @@
 // src/dashboard-area/features/settings/hooks/useSettings.js
 import { useState, useEffect, useCallback } from "react";
-import { useAuth } from "@/auth-area/contexts/AuthContext";
+import { useAuth } from "@auth/hooks/useAuth";
+
 import { SettingsService } from "../services/settingsService";
-import { DEFAULT_USER_SETTINGS } from "../constants/settingsConstants";
+import { DEFAULT_USER_SETTINGS } from "../constants/settingsConstants.jsx";
 
 export const useSettings = () => {
   const { currentUser } = useAuth();

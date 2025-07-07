@@ -28,69 +28,85 @@ export const NAVIGATION_ITEMS = [
     id: "trips",
     name: "My Trips",
     icon: MapIcon,
-    hasDropdown: true,
+    href: "/dashboard/trips",
+    description: "View and manage your travel memories",
   },
   {
     id: "friends",
     name: "Friends",
-    icon: UserGroupIcon,
-    hasNotification: true,
+    icon: UserPlusIcon,
+    href: "/dashboard/friends",
+    description: "Manage your friends and friend requests",
   },
   {
     id: "settings",
     name: "Settings",
     icon: Cog6ToothIcon,
+    href: "/dashboard/settings",
+    description: "Configure your account and preferences",
   },
 ];
 
 // Filter Options
 export const FILTER_OPTIONS = [
-  { value: "all", label: "🗂️ All Trips" },
-  { value: "upcoming", label: "🚀 Upcoming" },
-  { value: "recent", label: "📅 Recent" },
-  { value: "past", label: "📜 Past" },
+  { value: "all", label: "All Trips" },
+  { value: "recent", label: "Recent" },
+  { value: "favorites", label: "Favorites" },
+  { value: "shared", label: "Shared" },
 ];
 
-// Default State Values
+// Default Dashboard State
 export const DEFAULT_STATE = {
-  visibleTripsCount: 5,
-  searchTerm: "",
-  dateFilter: "all",
-  activeSection: "trips",
-  currentView: "home",
-  sidebarOpen: window.innerWidth >= BREAKPOINTS.desktop,
-  isMobile: window.innerWidth < BREAKPOINTS.mobile,
+  currentView: "trips",
+  selectedTrip: null,
+  filterOption: "all",
+  searchQuery: "",
+  showCreateModal: false,
+  showJoinModal: false,
+  loading: false,
+  error: null,
 };
 
-// User Menu Items (Mobile)
+// User Menu Items
 export const USER_MENU_ITEMS = [
   {
     id: "profile",
-    label: "View Profile",
+    name: "Profile",
     icon: UserIcon,
-    action: "viewProfile",
+    href: "/dashboard/profile",
+  },
+  {
+    id: "settings",
+    name: "Settings",
+    icon: CogIcon,
+    href: "/dashboard/settings",
+  },
+  {
+    id: "billing",
+    name: "Billing",
+    icon: SparklesIcon,
+    href: "/dashboard/billing",
   },
   {
     id: "logout",
-    label: "Logout",
+    name: "Sign Out",
     icon: ArrowRightOnRectangleIcon,
     action: "logout",
-    className:
-      "text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20",
   },
 ];
 
 // Bottom Navigation Items (Mobile)
 export const BOTTOM_NAV_ITEMS = [
   { id: "trips", name: "Trips", icon: MapIcon },
-  { id: "friends", name: "Friends", icon: UserGroupIcon },
+  { id: "friends", name: "Friends", icon: UserPlusIcon },
   { id: "settings", name: "Settings", icon: Cog6ToothIcon },
 ];
 
-// Re-export shared constants for convenience
-export { BREAKPOINTS, ANIMATIONS } from "@/shared/constants/ui";
+// Re-export shared constants with dashboard-specific names
 export {
   TOAST_MESSAGES as SHARED_TOAST_MESSAGES,
   ERROR_MESSAGES as SHARED_ERROR_MESSAGES,
-} from "@/shared/constants/messages";
+  BREAKPOINTS,
+  ANIMATIONS,
+};
 export { PLAN_CONFIGS } from "@/shared/constants/plans";

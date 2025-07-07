@@ -2,7 +2,7 @@
 import React from "react";
 import { useDashboardLayout } from "../../hooks/useDashboardLayout";
 import { useDashboardData } from "../../hooks/useDashboardData";
-import { BOTTOM_NAV_ITEMS } from "@dashboard/utils/dashboardConstants.jsx";
+import { BOTTOM_NAV_ITEMS } from "@dashboard/utils/dashboardConstants.js";
 import {
   getNavigationItemBadge,
   hasNotifications,
@@ -75,7 +75,3 @@ const MobileBottomNav = () => {
 };
 
 export default MobileBottomNav;
-
-
-
-

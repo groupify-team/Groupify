@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { createPortal } from 'react-dom';
-import { useAuth } from "@auth/contexts/AuthContext";
+import { createPortal } from "react-dom";
+import { useAuth } from "@auth/hooks/useAuth";
+
 import { doc, onSnapshot, getDoc } from "firebase/firestore";
 import { db } from "@shared/services/firebase/config";
 import {
@@ -16,7 +17,7 @@ import {
   rejectFriendRequest,
   sendFriendRequest,
   removeFriend,
-  getFriends,
+  // getFriends, // Not used in this component
 } from "@firebase-services/users";
 import toast from "react-hot-toast";
 
@@ -32,8 +33,8 @@ const FriendsSection = () => {
   const [pendingRequests, setPendingRequests] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filteredFriends, setFilteredFriends] = useState([]);
+  // const [searchTerm] = useState(""); // Not currently used, kept for future filtering
+  // const [filteredFriends, setFilteredFriends] = useState([]); // Not used, removed
   const [showFriendRequests, setShowFriendRequests] = useState(true);
 
   // Simple modal state - like before
@@ -198,21 +199,21 @@ const FriendsSection = () => {
     }
   }, [pendingRequests]);
 
-  // Filter friends based on search term
-  useEffect(() => {
-    if (!searchTerm.trim()) {
-      setFilteredFriends(friends);
-    } else {
-      const filtered = friends.filter(
-        (friend) =>
-          friend.displayName
-            ?.toLowerCase()
-            .includes(searchTerm.toLowerCase()) ||
-          friend.email?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      setFilteredFriends(filtered);
-    }
-  }, [friends, searchTerm]);
+  // Filter friends based on search term (not currently implemented in UI)
+  // useEffect(() => {
+  //   if (!searchTerm.trim()) {
+  //     setFilteredFriends(friends);
+  //   } else {
+  //     const filtered = friends.filter(
+  //       (friend) =>
+  //         friend.displayName
+  //           ?.toLowerCase()
+  //           .includes(searchTerm.toLowerCase()) ||
+  //         friend.email?.toLowerCase().includes(searchTerm.toLowerCase())
+  //     );
+  //     setFilteredFriends(filtered);
+  //   }
+  // }, [friends, searchTerm]);
 
   // Handler functions - ALL DEFINED BEFORE USE
   const handleAcceptRequest = async (senderUid) => {
@@ -281,7 +282,7 @@ const FriendsSection = () => {
 
   const handleViewProfile = (friend) => {
     console.log("🔍 handleViewProfile called with:", friend);
-    
+
     // Since this is the friends section, we know they are already friends
     // Set the friend object with proper flags
     const enhancedFriend = {
@@ -289,10 +290,10 @@ const FriendsSection = () => {
       __isFriend: true, // Since they're in the friends list, they are friends
       __isPending: false, // No pending requests since they're already friends
     };
-    
+
     console.log("🚀 Setting enhanced friend:", enhancedFriend);
     console.log("📝 Setting showUserProfileModal to true");
-    
+
     setSelectedUser(enhancedFriend);
     setShowUserProfileModal(true);
   };
@@ -497,25 +498,27 @@ const FriendsSection = () => {
       )}
 
       {/* User Profile Modal - Fixed Props */}
-      {showUserProfileModal && selectedUser && createPortal(
-        <UserProfileModal
-          isOpen={showUserProfileModal}
-          user={selectedUser}
-          currentUserId={currentUser?.uid}
-          // Pass friends array and pending requests for the component's logic
-          friends={friends.map(f => f.uid)} // Convert to array of UIDs
-          pendingRequests={pendingRequests} // Pass pending requests
-          onAddFriend={handleAddFriendDirect}
-          onRemoveFriend={handleRemoveFriend}
-          onCancelRequest={handleCancelRequest}
-          onClose={() => {
-            console.log("🚪 Closing UserProfileModal");
-            setSelectedUser(null);
-            setShowUserProfileModal(false);
-          }}
-        />,
-        document.body
-      )}
+      {showUserProfileModal &&
+        selectedUser &&
+        createPortal(
+          <UserProfileModal
+            isOpen={showUserProfileModal}
+            user={selectedUser}
+            currentUserId={currentUser?.uid}
+            // Pass friends array and pending requests for the component's logic
+            friends={friends.map((f) => f.uid)} // Convert to array of UIDs
+            pendingRequests={pendingRequests} // Pass pending requests
+            onAddFriend={handleAddFriendDirect}
+            onRemoveFriend={handleRemoveFriend}
+            onCancelRequest={handleCancelRequest}
+            onClose={() => {
+              console.log("🚪 Closing UserProfileModal");
+              setSelectedUser(null);
+              setShowUserProfileModal(false);
+            }}
+          />,
+          document.body
+        )}
     </div>
   );
 };

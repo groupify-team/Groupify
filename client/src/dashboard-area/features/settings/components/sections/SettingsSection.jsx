@@ -1,7 +1,7 @@
-// src/dashboard-area/features/settings/components/sections/SettingsSection.jsx
 import React, { useState } from "react";
-import { useAuth } from "@auth/contexts/AuthContext";
-import { useDashboardLayout } from "@dashboard/hooks/useDashboardLayout";
+import { useAuth } from "@auth/hooks/useAuth";
+
+// import { useDashboardLayout } from "@dashboard/hooks/useDashboardLayout"; // Not currently used
 import { useDashboardData } from "@dashboard/hooks/useDashboardData";
 import { useSettings, useExportBackup } from "../../hooks";
 
@@ -24,7 +24,7 @@ import {
   BackupModal,
 } from "../modals";
 
-import { SETTINGS_MODAL_TYPES } from "../../constants/settingsConstants";
+import { SETTINGS_MODAL_TYPES } from "../../constants/settingsConstants.jsx";
 
 const SettingsSection = () => {
   const { currentUser } = useAuth();
@@ -41,9 +41,9 @@ const SettingsSection = () => {
   // Consolidated modal state using the constants
   const [activeModal, setActiveModal] = useState(null);
 
-  const {
-    layout: { isMobile },
-  } = useDashboardLayout();
+  // const {
+  //   layout: { isMobile },
+  // } = useDashboardLayout(); // Not currently used
 
   const {
     userData,

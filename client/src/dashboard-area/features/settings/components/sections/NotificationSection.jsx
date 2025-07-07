@@ -1,7 +1,7 @@
 // src/dashboard-area/features/settings/components/sections/NotificationSection.jsx
 import React from "react";
 import { BellIcon } from "@heroicons/react/24/outline";
-import { NOTIFICATION_SETTINGS } from "../../constants/settingsConstants";
+import { NOTIFICATION_SETTINGS } from "../../constants/settingsConstants.jsx";
 
 const NotificationSection = ({ settings, toggleSetting, settingsLoading }) => {
   return (
@@ -48,12 +48,9 @@ const NotificationSection = ({ settings, toggleSetting, settingsLoading }) => {
                     type="checkbox"
                     className="sr-only peer"
                     checked={
-                      settings.notifications?.[item.id] ??
-                      item.defaultChecked
+                      settings.notifications?.[item.id] ?? item.defaultChecked
                     }
-                    onChange={() =>
-                      toggleSetting("notifications", item.id)
-                    }
+                    onChange={() => toggleSetting("notifications", item.id)}
                     disabled={settingsLoading || isDisabled}
                   />
                   <div className="w-10 h-5 sm:w-11 sm:h-6 bg-gray-200 dark:bg-gray-600 rounded-full peer peer-checked:bg-gradient-to-r peer-checked:from-blue-500 peer-checked:to-indigo-600 transition-all duration-300 shadow-inner"></div>
@@ -69,7 +66,3 @@ const NotificationSection = ({ settings, toggleSetting, settingsLoading }) => {
 };
 
 export default NotificationSection;
-
-
-
-

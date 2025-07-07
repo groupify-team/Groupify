@@ -1,4 +1,6 @@
 /** @type {import('tailwindcss').Config} */
+/* eslint-env node */
+/* eslint-disable no-undef */
 module.exports = {
   content: ["./index.html", "./src/**/*.{js,jsx,ts,tsx}"],
   darkMode: "class", // Enable class-based dark mode
@@ -11,6 +13,9 @@ module.exports = {
         "slide-in-right": "slideInRight 0.3s ease-in-out",
         "pulse-slow": "pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite",
         shimmer: "shimmer 2s infinite",
+        "modal-enter": "modalEnter 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)",
+        "bounce-gentle": "bounceGentle 0.6s ease-out",
+        "scale-in": "scaleIn 0.3s ease-out",
       },
 
       // Custom keyframes
@@ -30,6 +35,19 @@ module.exports = {
         shimmer: {
           "0%": { transform: "translateX(-100%)" },
           "100%": { transform: "translateX(200%)" },
+        },
+        modalEnter: {
+          "0%": { opacity: "0", transform: "scale(0.9) translateY(10px)" },
+          "100%": { opacity: "1", transform: "scale(1) translateY(0)" },
+        },
+        bounceGentle: {
+          "0%": { transform: "scale(0.95)" },
+          "50%": { transform: "scale(1.02)" },
+          "100%": { transform: "scale(1)" },
+        },
+        scaleIn: {
+          "0%": { opacity: "0", transform: "scale(0.9)" },
+          "100%": { opacity: "1", transform: "scale(1)" },
         },
       },
 
@@ -87,13 +105,28 @@ module.exports = {
         "soft-lg":
           "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
       },
+
+      // Custom transition timing functions
+      transitionTimingFunction: {
+        smooth: "cubic-bezier(0.4, 0, 0.2, 1)",
+        spring: "cubic-bezier(0.34, 1.56, 0.64, 1)",
+        "bounce-soft": "cubic-bezier(0.68, -0.55, 0.265, 1.55)",
+      },
+
+      // Custom transition durations
+      transitionDuration: {
+        400: "400ms",
+        600: "600ms",
+        800: "800ms",
+        1200: "1200ms",
+      },
     },
   },
   plugins: [
     require("tailwindcss-animate"),
 
     // Custom plugin for additional utilities
-    function ({ addUtilities, theme }) {
+    function ({ addUtilities }) {
       const newUtilities = {
         ".text-balance": {
           "text-wrap": "balance",

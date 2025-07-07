@@ -4,8 +4,9 @@
  * ALIGNED with exact pricing page values
  */
 
-import { useState, useEffect, useCallback } from "react";
-import { useAuth } from "@/auth-area/contexts/AuthContext";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { useAuth } from "@auth/hooks/useAuth";
+
 import subscriptionService from "@shared/services/subscriptionService";
 import { toast } from "react-hot-toast";
 
@@ -17,32 +18,35 @@ export const usePlanLimits = () => {
   const [recommendations, setRecommendations] = useState([]);
 
   // Core plan limits that match your pricing page EXACTLY
-  const CORE_LIMITS = {
-    free: {
-      trips: 5,
-      photosPerTrip: 30,
-      membersPerTrip: 5,
-      storageGB: 2,
-    },
-    premium: {
-      trips: 50,
-      photosPerTrip: 200, // Updated to match pricing page
-      membersPerTrip: 20,
-      storageGB: 50,
-    },
-    pro: {
-      trips: "unlimited",
-      photosPerTrip: "unlimited",
-      membersPerTrip: "unlimited",
-      storageGB: 500,
-    },
-    enterprise: {
-      trips: "unlimited",
-      photosPerTrip: "unlimited",
-      membersPerTrip: "unlimited",
-      storageGB: "unlimited",
-    },
-  };
+  const CORE_LIMITS = useMemo(
+    () => ({
+      free: {
+        trips: 5,
+        photosPerTrip: 30,
+        membersPerTrip: 5,
+        storageGB: 2,
+      },
+      premium: {
+        trips: 50,
+        photosPerTrip: 200, // Updated to match pricing page
+        membersPerTrip: 20,
+        storageGB: 50,
+      },
+      pro: {
+        trips: "unlimited",
+        photosPerTrip: "unlimited",
+        membersPerTrip: "unlimited",
+        storageGB: 500,
+      },
+      enterprise: {
+        trips: "unlimited",
+        photosPerTrip: "unlimited",
+        membersPerTrip: "unlimited",
+        storageGB: "unlimited",
+      },
+    }),
+    []
+  );
 
   const loadSubscriptionData = useCallback(async () => {
     try {
@@ -66,7 +70,7 @@ export const usePlanLimits = () => {
   }, [currentUser, loadSubscriptionData]);
 
   useEffect(() => {
-    const unsubscribe = subscriptionService.subscribe((event, data) => {
+    const unsubscribe = subscriptionService.subscribe((event) => {
       if (event === "subscriptionUpdated" || event === "usageUpdated") {
         loadSubscriptionData();
       }
@@ -99,7 +103,7 @@ export const usePlanLimits = () => {
           }
           break;
 
-        case "upload_photos":
+        case "upload_photos": {
           const { currentTripPhotos = 0, newPhotoCount = 1 } = additionalData;
 
           if (limits.photosPerTrip !== "unlimited") {
@@ -114,8 +118,9 @@ export const usePlanLimits = () => {
             }
           }
           break;
+        }
 
-        case "upload_storage":
+        case "upload_storage": {
           const { fileSize = 0 } = additionalData;
 
           if (limits.storageGB !== "unlimited") {
@@ -133,8 +138,9 @@ export const usePlanLimits = () => {
             }
           }
           break;
+        }
 
-        case "invite_member":
+        case "invite_member": {
           const { currentMembers = 0, newMemberCount = 1 } = additionalData;
 
           if (limits.membersPerTrip !== "unlimited") {
@@ -149,6 +155,7 @@ export const usePlanLimits = () => {
             }
           }
           break;
+        }
 
         default:
           return { allowed: true };
@@ -233,11 +240,7 @@ export const usePlanLimits = () => {
 
   const showUpgradePrompt = useCallback(
     (reason, options = {}) => {
-      const {
-        title = "Upgrade Required",
-        action = "upgrade",
-        persistent = false,
-      } = options;
+      const { persistent = false } = options;
 
       toast.error(reason, {
         duration: persistent ? 6000 : 4000,
