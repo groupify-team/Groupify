@@ -4,25 +4,63 @@ import { useCallback } from "react";
 export const useAuthAnimations = () => {
   const navigate = useNavigate();
 
-  // Navigate with smooth transition
-  const navigateWithTransition = useCallback((targetPath, options = {}) => {
-    document.body.style.transition = "opacity 0.3s ease-out";
-    document.body.style.opacity = "0";
+  // Enhanced navigation with smooth loading overlay
+  const navigateWithTransition = useCallback(
+    (targetPath, options = {}) => {
+      const { replace = false, showLoadingOverlay = true } = options;
 
-    setTimeout(() => {
-      navigate(targetPath, options);
-    }, 300);
-  }, [navigate]);
+      if (showLoadingOverlay) {
+        // Create and show loading overlay
+        const overlay = document.createElement("div");
+        overlay.className =
+          "fixed inset-0 bg-white dark:bg-gray-900 z-50 flex items-center justify-center transition-opacity duration-300";
+        overlay.style.opacity = "0";
+        overlay.innerHTML = `
+        <div class="flex flex-col items-center space-y-4">
+          <div class="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
+          <p class="text-gray-600 dark:text-gray-400 text-sm">Loading...</p>
+        </div>
+      `;
+        document.body.appendChild(overlay);
 
-  // Smooth page transition with fade
-  const smoothTransition = useCallback((targetPath, delay = 300) => {
-    document.body.style.transition = "opacity 0.3s ease-out";
-    document.body.style.opacity = "0";
+        // Fade in overlay smoothly
+        requestAnimationFrame(() => {
+          overlay.style.opacity = "1";
+        });
 
-    setTimeout(() => {
-      navigate(targetPath);
-    }, delay);
-  }, [navigate]);
+        // Navigate after overlay is visible
+        setTimeout(() => {
+          navigate(targetPath, { replace });
+
+          // Remove overlay after navigation
+          setTimeout(() => {
+            if (overlay && overlay.parentNode) {
+              overlay.style.opacity = "0";
+              setTimeout(() => {
+                if (overlay.parentNode) {
+                  overlay.parentNode.removeChild(overlay);
+                }
+              }, 300);
+            }
+          }, 100);
+        }, 300);
+      } else {
+        // Simple navigation without overlay
+        setTimeout(() => {
+          navigate(targetPath, { replace });
+        }, 150);
+      }
+    },
+    [navigate]
+  );
+
+  // Legacy smooth transition for backward compatibility
+  const smoothTransition = useCallback(
+    (targetPath) => {
+      navigateWithTransition(targetPath, { showLoadingOverlay: true });
+    },
+    [navigateWithTransition]
+  );
 
   // Fade in effect for page load
   const fadeIn = useCallback((duration = 500) => {
@@ -34,6 +72,7 @@ export const useAuthAnimations = () => {
   const resetBodyStyles = useCallback(() => {
     document.body.style.transition = "";
     document.body.style.opacity = "1";
+    document.body.style.transform = "";
   }, []);
 
   // Form shake animation for errors
@@ -53,8 +92,6 @@ export const useAuthAnimations = () => {
     smoothTransition,
     fadeIn,
     resetBodyStyles,
-    shakeForm
+    shakeForm,
   };
 };
-
-

@@ -85,6 +85,7 @@ const AppRoutes = () => {
           path="/"
           element={
             <SuspenseWrapper
+              useSmooth={true}
               fallback={
                 <LoadingSpinner fullPage message="Loading homepage..." />
               }
@@ -99,6 +100,7 @@ const AppRoutes = () => {
           path="/signin"
           element={
             <SuspenseWrapper
+              useSmooth={true}
               fallback={
                 <LoadingSpinner fullPage message="Loading sign in..." />
               }
@@ -111,6 +113,7 @@ const AppRoutes = () => {
           path="/signup"
           element={
             <SuspenseWrapper
+              useSmooth={true}
               fallback={
                 <LoadingSpinner fullPage message="Loading sign up..." />
               }
@@ -122,7 +125,7 @@ const AppRoutes = () => {
         <Route
           path="/confirm-email"
           element={
-            <SuspenseWrapper>
+            <SuspenseWrapper useSmooth={true}>
               <ConfirmEmailPage />
             </SuspenseWrapper>
           }
@@ -130,7 +133,7 @@ const AppRoutes = () => {
         <Route
           path="/forgot-password"
           element={
-            <SuspenseWrapper>
+            <SuspenseWrapper useSmooth={true}>
               <ForgotPasswordPage />
             </SuspenseWrapper>
           }
@@ -138,7 +141,7 @@ const AppRoutes = () => {
         <Route
           path="/reset-password"
           element={
-            <SuspenseWrapper>
+            <SuspenseWrapper useSmooth={true}>
               <ResetPasswordPage />
             </SuspenseWrapper>
           }
@@ -148,7 +151,7 @@ const AppRoutes = () => {
         <Route
           path="/terms"
           element={
-            <SuspenseWrapper>
+            <SuspenseWrapper useSmooth={true}>
               <TermsOfService />
             </SuspenseWrapper>
           }
@@ -156,7 +159,7 @@ const AppRoutes = () => {
         <Route
           path="/privacy-policy"
           element={
-            <SuspenseWrapper>
+            <SuspenseWrapper useSmooth={true}>
               <PrivacyPolicy />
             </SuspenseWrapper>
           }
@@ -164,7 +167,7 @@ const AppRoutes = () => {
         <Route
           path="/contact"
           element={
-            <SuspenseWrapper>
+            <SuspenseWrapper useSmooth={true}>
               <ContactUs />
             </SuspenseWrapper>
           }
@@ -172,7 +175,7 @@ const AppRoutes = () => {
         <Route
           path="/about"
           element={
-            <SuspenseWrapper>
+            <SuspenseWrapper useSmooth={true}>
               <AboutUs />
             </SuspenseWrapper>
           }
@@ -180,7 +183,7 @@ const AppRoutes = () => {
         <Route
           path="/careers"
           element={
-            <SuspenseWrapper>
+            <SuspenseWrapper useSmooth={true}>
               <Careers />
             </SuspenseWrapper>
           }
@@ -188,7 +191,7 @@ const AppRoutes = () => {
         <Route
           path="/help"
           element={
-            <SuspenseWrapper>
+            <SuspenseWrapper useSmooth={true}>
               <HelpCenter />
             </SuspenseWrapper>
           }
@@ -196,7 +199,7 @@ const AppRoutes = () => {
         <Route
           path="/blog"
           element={
-            <SuspenseWrapper>
+            <SuspenseWrapper useSmooth={true}>
               <Blog />
             </SuspenseWrapper>
           }
@@ -204,7 +207,7 @@ const AppRoutes = () => {
         <Route
           path="/features"
           element={
-            <SuspenseWrapper>
+            <SuspenseWrapper useSmooth={true}>
               <Features />
             </SuspenseWrapper>
           }
@@ -212,7 +215,7 @@ const AppRoutes = () => {
         <Route
           path="/pricing"
           element={
-            <SuspenseWrapper>
+            <SuspenseWrapper useSmooth={true}>
               <Pricing />
             </SuspenseWrapper>
           }
@@ -220,7 +223,7 @@ const AppRoutes = () => {
         <Route
           path="/status"
           element={
-            <SuspenseWrapper>
+            <SuspenseWrapper useSmooth={true}>
               <Status />
             </SuspenseWrapper>
           }
@@ -228,7 +231,7 @@ const AppRoutes = () => {
         <Route
           path="/billing"
           element={
-            <SuspenseWrapper>
+            <SuspenseWrapper useSmooth={true}>
               <Billing />
             </SuspenseWrapper>
           }

@@ -255,12 +255,42 @@ const HomePage = () => {
     setShowLaunch(false);
   };
 
-  // ADD SMOOTH NAVIGATION FUNCTIONALITY
+  // Enhanced smooth navigation function
   const handleLinkClick = (to) => {
-    document.body.style.opacity = "0";
+    // Create loading overlay
+    const overlay = document.createElement("div");
+    overlay.className =
+      "fixed inset-0 bg-white dark:bg-gray-900 z-50 flex items-center justify-center transition-opacity duration-300";
+    overlay.style.opacity = "0";
+    overlay.innerHTML = `
+      <div class="flex flex-col items-center space-y-4">
+        <div class="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
+        <p class="text-gray-600 dark:text-gray-400 text-sm">Loading...</p>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+
+    // Fade in overlay
+    requestAnimationFrame(() => {
+      overlay.style.opacity = "1";
+    });
+
+    // Navigate after overlay is visible
     setTimeout(() => {
-      window.location.href = to;
-    }, 200);
+      navigate(to);
+
+      // Remove overlay after navigation
+      setTimeout(() => {
+        if (overlay && overlay.parentNode) {
+          overlay.style.opacity = "0";
+          setTimeout(() => {
+            if (overlay.parentNode) {
+              overlay.parentNode.removeChild(overlay);
+            }
+          }, 300);
+        }
+      }, 100);
+    }, 300);
   };
 
   // ADD THIS CHECK TO SHOW LAUNCH ANIMATION FIRST
@@ -352,7 +382,7 @@ const HomePage = () => {
                       e.preventDefault();
                       handleLinkClick("/signup");
                     }}
-                    className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-md hover:shadow-lg"
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-md hover:shadow-lg smooth-hover focus-visible-enhanced"
                   >
                     Get Started
                   </Link>
@@ -438,7 +468,7 @@ const HomePage = () => {
                       e.preventDefault();
                       handleLinkClick("/signup");
                     }}
-                    className="group inline-flex items-center bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 rounded-xl text-lg font-semibold transition-all duration-300 ease-spring shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95 transform-gpu"
+                    className="group inline-flex items-center bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 rounded-xl text-lg font-semibold transition-all duration-300 ease-spring shadow-xl hover:shadow-2xl smooth-hover focus-visible-enhanced"
                   >
                     Start Organizing Photos
                     <ArrowRightIcon className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
@@ -449,7 +479,7 @@ const HomePage = () => {
                       e.preventDefault();
                       handleLinkClick("/signin");
                     }}
-                    className="inline-flex items-center bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm hover:bg-white dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 px-8 py-4 rounded-xl text-lg font-semibold border border-white/20 dark:border-gray-700/50 transition-all duration-300 ease-smooth hover:shadow-lg hover:scale-105 active:scale-95 transform-gpu"
+                    className="inline-flex items-center bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm hover:bg-white dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 px-8 py-4 rounded-xl text-lg font-semibold border border-white/20 dark:border-gray-700/50 transition-all duration-300 ease-smooth smooth-hover focus-visible-enhanced"
                   >
                     Sign In
                   </Link>
@@ -573,7 +603,7 @@ const HomePage = () => {
               e.preventDefault();
               handleLinkClick("/signup");
             }}
-            className="inline-flex items-center bg-white text-indigo-600 px-8 py-4 rounded-xl text-lg font-semibold hover:bg-gray-50 transition-all duration-200 shadow-xl hover:shadow-2xl hover:scale-105"
+            className="inline-flex items-center bg-white text-indigo-600 px-8 py-4 rounded-xl text-lg font-semibold hover:bg-gray-50 transition-all duration-200 shadow-xl hover:shadow-2xl smooth-hover focus-visible-enhanced"
           >
             Get Started Free
             <ArrowRightIcon className="ml-2 w-5 h-5" />

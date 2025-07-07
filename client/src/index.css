@@ -1244,3 +1244,216 @@ body {
     transform: none;
   }
 }
+
+/* ========================================
+   ENHANCED ROUTE TRANSITION ANIMATIONS
+   ======================================== */
+
+/* Smooth route transitions */
+.route-transition-enter {
+  opacity: 0;
+  transform: translateY(20px) scale(0.98);
+}
+
+.route-transition-enter-active {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  transition: all 400ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.route-transition-exit {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.route-transition-exit-active {
+  opacity: 0;
+  transform: translateY(-20px) scale(0.98);
+  transition: all 300ms cubic-bezier(0.55, 0.055, 0.675, 0.19);
+}
+
+/* Loading overlay transitions */
+.loading-overlay-enter {
+  opacity: 0;
+  backdrop-filter: blur(0px);
+}
+
+.loading-overlay-enter-active {
+  opacity: 1;
+  backdrop-filter: blur(4px);
+  transition: opacity 300ms ease-out, backdrop-filter 300ms ease-out;
+}
+
+.loading-overlay-exit {
+  opacity: 1;
+  backdrop-filter: blur(4px);
+}
+
+.loading-overlay-exit-active {
+  opacity: 0;
+  backdrop-filter: blur(0px);
+  transition: opacity 300ms ease-in, backdrop-filter 300ms ease-in;
+}
+
+/* Enhanced spinner animations */
+.spinner-dual {
+  position: relative;
+}
+
+.spinner-dual::before {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  animation: spin 1.5s linear infinite reverse;
+  opacity: 0.3;
+}
+
+@keyframes spin-reverse {
+  from {
+    transform: rotate(360deg);
+  }
+  to {
+    transform: rotate(0deg);
+  }
+}
+
+/* Page content fade-in animation */
+.page-content-enter {
+  opacity: 0;
+  transform: translateY(30px);
+}
+
+.page-content-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 500ms ease-out, transform 500ms ease-out;
+  transition-delay: 200ms;
+}
+
+/* Button hover enhancements for better UX */
+.smooth-hover {
+  transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.smooth-hover:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.smooth-hover:active {
+  transform: translateY(0);
+  transition-duration: 75ms;
+}
+
+/* Link transition improvements */
+.smooth-link {
+  position: relative;
+  transition: color 200ms ease;
+}
+
+.smooth-link::after {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: currentColor;
+  transition: width 300ms ease;
+}
+
+.smooth-link:hover::after {
+  width: 100%;
+}
+
+/* Loading dots animation */
+.loading-dots {
+  display: flex;
+  space-x: 1px;
+}
+
+.loading-dots > div {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: loading-dot 1.4s infinite both;
+}
+
+.loading-dots > div:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.loading-dots > div:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+@keyframes loading-dot {
+  0%,
+  80%,
+  100% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Improved focus states for accessibility */
+.focus-visible-enhanced:focus-visible {
+  outline: 2px solid #4f46e5;
+  outline-offset: 2px;
+  border-radius: 4px;
+  box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+}
+
+/* END ENHANCED ROUTE TRANSITION ANIMATIONS */
+
+/* ========================================
+   SMOOTH TRANSITIONS IMPLEMENTATION SUMMARY
+   ======================================== */
+
+/*
+ * IMPROVEMENTS MADE FOR SMOOTH TRANSITIONS:
+ * 
+ * 1. ENHANCED ROUTE TRANSITIONS:
+ *    - Added CSS classes for smooth page transitions
+ *    - Replaced abrupt body opacity changes with proper loading overlays
+ *    - Added route-transition-enter/exit animations
+ * 
+ * 2. IMPROVED LOADING STATES:
+ *    - Created smooth loading overlays with blur effects
+ *    - Added dual-spinner animations for better visual feedback
+ *    - Implemented loading-overlay-enter/exit animations
+ * 
+ * 3. ENHANCED USER INTERACTIONS:
+ *    - Added smooth-hover class for better button interactions
+ *    - Implemented focus-visible-enhanced for accessibility
+ *    - Added smooth-link class for better link transitions
+ * 
+ * 4. BETTER VISUAL FEEDBACK:
+ *    - Loading dots animation for progress indication
+ *    - Improved spinner animations with dual rotation
+ *    - Added page-content-enter animations for content appearance
+ * 
+ * 5. COMPONENTS UPDATED:
+ *    - SuspenseWrapper: Added useSmooth prop for better loading
+ *    - AppRoutes: Updated all routes to use smooth loading
+ *    - HomePage: Enhanced all navigation buttons
+ *    - AuthLayout: Added smooth entrance animations
+ *    - LoadingSpinner: Enhanced with dual spinners and animations
+ * 
+ * 6. HOOKS CREATED:
+ *    - useEnhancedNavigation: Centralized smooth navigation
+ *    - useSmoothNavigation: Enhanced navigation with overlays
+ *    - Updated useAuthAnimations: Better auth page transitions
+ *    - Updated usePublicNavigation: Improved public page transitions
+ */
+
+/* END SMOOTH TRANSITIONS IMPLEMENTATION SUMMARY */
