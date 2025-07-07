@@ -1,5 +1,12 @@
-// TripsSection.jsx - Clean Production Version
-import React, { useState } from "react";
+// TripsSection.jsx - Performance Optimized Version
+import React, {
+  useState,
+  useMemo,
+  useCallback,
+  memo,
+  lazy,
+  Suspense,
+} from "react";
 import { useNavigate } from "react-router-dom";
 import { useClickOutside } from "@/shared/hooks/useClickOutside";
 
@@ -29,7 +36,9 @@ import FilterDropdown from "@/dashboard-area/components/ui/FilterDropdown";
 
 // Trip Components
 import TripCard from "@/dashboard-area/features/trips/components/TripCard";
-import CreateTripModal from "@/dashboard-area/features/trips/components/CreateTripModal";
+const CreateTripModal = lazy(() =>
+  import("@/dashboard-area/features/trips/components/CreateTripModal")
+);
 
 // Utils
 import {
@@ -83,14 +92,16 @@ const TripsSection = () => {
   // Local state
   const [showCreateModal, setShowCreateModal] = useState(false);
 
-  // Filtered trips based on search and date filters
-  const filteredTrips = filterTrips(trips, searchTerm, dateFilter);
+  // Memoize filtered trips to prevent unnecessary recalculations
+  const filteredTrips = useMemo(() => {
+    return filterTrips(trips, searchTerm, dateFilter);
+  }, [trips, searchTerm, dateFilter]);
 
   // Click outside ref for filter dropdown
   const filterDropdownRef = useClickOutside(() => closeFilterDropdown());
 
-  // Event handlers
-  const handleCreateTrip = async () => {
+  // Memoized event handlers to prevent unnecessary re-renders
+  const handleCreateTrip = useCallback(async () => {
     try {
       const canCreate = await canUserCreateTrip(currentUser.uid);
       if (!canCreate) {
@@ -106,47 +117,62 @@ const TripsSection = () => {
       console.error("Error checking trip creation limit:", error);
       showErrorMessage("Failed to check trip limit. Please try again.");
     }
-  };
+  }, [currentUser.uid, showErrorMessage]);
 
-  const handleAcceptTripInvite = async (invite) => {
-    try {
-      await acceptTripInvite(invite.id, currentUser.uid);
-      removeTripInvite(invite.id);
-      await refreshTrips();
-      showSuccessMessage("Trip invitation accepted");
-    } catch (error) {
-      console.error("Error accepting trip invite:", error);
-      showErrorMessage("Failed to accept trip invitation");
-    }
-  };
+  const handleAcceptTripInvite = useCallback(
+    async (invite) => {
+      try {
+        await acceptTripInvite(invite.id, currentUser.uid);
+        removeTripInvite(invite.id);
+        await refreshTrips();
+        showSuccessMessage("Trip invitation accepted");
+      } catch (error) {
+        console.error("Error accepting trip invite:", error);
+        showErrorMessage("Failed to accept trip invitation");
+      }
+    },
+    [
+      currentUser.uid,
+      removeTripInvite,
+      refreshTrips,
+      showSuccessMessage,
+      showErrorMessage,
+    ]
+  );
 
-  const handleDeclineTripInvite = async (invite) => {
-    try {
-      await declineTripInvite(invite.id);
-      removeTripInvite(invite.id);
-      showSuccessMessage("Trip invitation declined");
-    } catch (error) {
-      console.error("Error declining trip invite:", error);
-      showErrorMessage("Failed to decline trip invitation");
-    }
-  };
+  const handleDeclineTripInvite = useCallback(
+    async (invite) => {
+      try {
+        await declineTripInvite(invite.id);
+        removeTripInvite(invite.id);
+        showSuccessMessage("Trip invitation declined");
+      } catch (error) {
+        console.error("Error declining trip invite:", error);
+        showErrorMessage("Failed to decline trip invitation");
+      }
+    },
+    [removeTripInvite, showSuccessMessage, showErrorMessage]
+  );
 
-  const handleTripCreated = (newTrip) => {
+  const handleTripCreated = useCallback(() => {
     refreshTrips();
     showSuccessMessage("Trip created successfully!");
-  };
+  }, [refreshTrips, showSuccessMessage]);
 
-  const handleViewTrip = (tripId) => {
-    const tripCard = document.querySelector(`[data-trip-id="${tripId}"]`);
-    if (tripCard) {
-      tripCard.style.transform = "scale(0.95)";
-      tripCard.style.opacity = "0.7";
-    }
+  const handleViewTrip = useCallback(
+    (tripId) => {
+      const tripCard = document.querySelector(`[data-trip-id="${tripId}"]`);
+      if (tripCard) {
+        tripCard.style.transform = "scale(0.95)";
+        tripCard.style.opacity = "0.7";
+      }
 
-    setTimeout(() => {
-      navigate(`/dashboard/trip/${tripId}`);
-    }, 150);
-  };
+      setTimeout(() => {
+        navigate(`/dashboard/trip/${tripId}`);
+      }, 150);
+    },
+    [navigate]
+  );
 
   // Show loading state
   if (loading) {
@@ -455,13 +481,15 @@ const TripsSection = () => {
       </div>
 
       {/* Create Trip Modal */}
-      <CreateTripModal
-        isOpen={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
-        onTripCreated={handleTripCreated}
-      />
+      <Suspense fallback={<div>Loading modal...</div>}>
+        <CreateTripModal
+          isOpen={showCreateModal}
+          onClose={() => setShowCreateModal(false)}
+          onTripCreated={handleTripCreated}
+        />
+      </Suspense>
     </div>
   );
 };
 
-export default TripsSection;
+export default memo(TripsSection);

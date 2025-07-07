@@ -1,7 +1,17 @@
-// ?? Complete Fixed TripDetailView.jsx
+// ?? Performance Optimized TripDetailView.jsx
 
-import React, { useState, Suspense } from "react";
+import React, {
+  useState,
+  Suspense,
+  useMemo,
+  useCallback,
+  memo,
+  lazy,
+} from "react";
 import { useParams, useNavigate } from "react-router-dom";
+
+// Performance monitoring
+import { useRenderTracker } from "@shared/hooks/usePerformanceMonitor";
 
 // Context
 import { useAuth } from "@/auth-area/hooks/useAuth";
@@ -11,16 +21,30 @@ import TripHeader from "./features/header/components/TripHeader";
 import PhotoGallery from "./features/gallery/components/PhotoGallery";
 import TripMembersCard from "./features/members/components/TripMembersCard";
 import InvitePeopleCard from "./features/members/components/InvitePeopleCard";
-import UserProfileModal from "./features/members/components/UserProfileModal";
 import TripStatistics from "./features/statistics/components/TripStatistics";
-import FaceRecognitionCard from "./features/faceRecognition/components/FaceRecognitionCard";
-import FaceRecognitionModal from "./features/faceRecognition/components/FaceRecognitionModal";
-import FaceRecognitionResults from "./features/faceRecognition/components/FaceRecognitionResults";
 
-// Modals
-import PhotoModal from "./components/PhotoModal";
-import AllPhotosModal from "./features/gallery/components/modals/AllPhotosModal";
-import EditTripModal from "./features/header/hooks/EditTripModal";
+// Lazy load heavy components
+const UserProfileModal = lazy(() =>
+  import("./features/members/components/UserProfileModal")
+);
+const FaceRecognitionCard = lazy(() =>
+  import("./features/faceRecognition/components/FaceRecognitionCard")
+);
+const FaceRecognitionModal = lazy(() =>
+  import("./features/faceRecognition/components/FaceRecognitionModal")
+);
+const FaceRecognitionResults = lazy(() =>
+  import("./features/faceRecognition/components/FaceRecognitionResults")
+);
+
+// Lazy load modals
+const PhotoModal = lazy(() => import("./components/PhotoModal"));
+const AllPhotosModal = lazy(() =>
+  import("./features/gallery/components/modals/AllPhotosModal")
+);
+const EditTripModal = lazy(() =>
+  import("./features/header/hooks/EditTripModal")
+);
 
 // Hooks
 import { useTripData } from "./hooks/useTripData";
@@ -40,7 +64,6 @@ const TripDetailView = ({ tripId: propTripId }) => {
   const tripId = propTripId || paramTripId;
   const navigate = useNavigate();
   const { currentUser } = useAuth();
-  // const userId = currentUser?.uid;
 
   // Core trip data and loading
   const {
@@ -54,6 +77,16 @@ const TripDetailView = ({ tripId: propTripId }) => {
     setPhotos,
     setTripMembers,
   } = useTripData(tripId, currentUser?.uid);
+
+  // Performance logging - track what causes re-renders (after data is defined)
+  useRenderTracker("TripDetailView", {
+    tripId,
+    currentUserId: currentUser?.uid,
+    hasTrip: !!trip,
+    photosLength: photos?.length,
+    loading,
+    error: !!error,
+  });
 
   const {
     hasProfile,
@@ -126,29 +159,49 @@ const TripDetailView = ({ tripId: propTripId }) => {
   // Additional handlers
   const [showEditModal, setShowEditModal] = React.useState(false);
 
-  // Helper functions
-  const photoLimitStatus = getPhotoLimitStatus(photos?.length || 0);
-  const remainingPhotoSlots = getRemainingPhotoSlots(photos?.length || 0);
+  // PERFORMANCE: Memoize expensive calculations
+  const photoLimitStatus = useMemo(() => {
+    return getPhotoLimitStatus(photos?.length || 0);
+  }, [photos?.length]);
+
+  const remainingPhotoSlots = useMemo(() => {
+    return getRemainingPhotoSlots(photos?.length || 0);
+  }, [photos?.length]);
 
   const [modalSource, setModalSource] = useState(null);
 
-  const handleTripUpdated = (updatedTrip) => {
-    setTrip(updatedTrip);
-    setShowEditModal(false);
-  };
+  // Memoized event handlers
+  const handleTripUpdated = useCallback(
+    (updatedTrip) => {
+      setTrip(updatedTrip);
+      setShowEditModal(false);
+    },
+    [setTrip]
+  );
 
-  const handleTripDeleted = (deletedTripId) => {
-    setShowEditModal(false);
+  const handleTripDeleted = useCallback(
+    (deletedTripId) => {
+      setShowEditModal(false);
 
-    navigate("/dashboard", {
-      replace: true,
-      state: {
-        deletedTripId: deletedTripId,
-        forceRefresh: true,
-        timestamp: Date.now(),
-      },
-    });
-  };
+      navigate("/dashboard", {
+        replace: true,
+        state: {
+          deletedTripId: deletedTripId,
+          forceRefresh: true,
+          timestamp: Date.now(),
+        },
+      });
+    },
+    [navigate]
+  );
+
+  const handleToggleUploadForm = useCallback(() => {
+    setShowUploadForm(!showUploadForm);
+  }, [showUploadForm, setShowUploadForm]);
+
+  const handleEditTrip = useCallback(() => {
+    setShowEditModal(true);
+  }, []);
 
   // Loading state
   if (loading) {
@@ -213,8 +266,8 @@ const TripDetailView = ({ tripId: propTripId }) => {
           showUploadForm={showUploadForm}
           photoLimitStatus={photoLimitStatus}
           remainingPhotoSlots={remainingPhotoSlots}
-          onEditTrip={() => setShowEditModal(true)}
-          onToggleUploadForm={() => setShowUploadForm(!showUploadForm)}
+          onEditTrip={handleEditTrip}
+          onToggleUploadForm={handleToggleUploadForm}
         />
 
         {/* Mobile Tab Switcher */}
@@ -287,41 +340,53 @@ const TripDetailView = ({ tripId: propTripId }) => {
             />
 
             <div className="face-recognition-wrapper">
-              <FaceRecognitionCard
-                hasProfile={hasProfile}
-                isLoadingProfile={isLoadingProfile}
-                isLoadingFaceRecognition={isProcessingFaces}
-                filterActive={filterActive}
-                filteredPhotos={filteredPhotos}
-                onFindMyPhotos={enhancedHandleFindMyPhotos}
-                onPhotoSelect={setSelectedPhoto}
-                onViewAllResults={() => setShowResultsModal(true)}
-                onClearScan={handleClearScan}
-                lastScanInfo={lastScanInfo}
-              />
+              <Suspense
+                fallback={
+                  <div className="h-32 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse">
+                    Loading face recognition...
+                  </div>
+                }
+              >
+                <FaceRecognitionCard
+                  hasProfile={hasProfile}
+                  isLoadingProfile={isLoadingProfile}
+                  isLoadingFaceRecognition={isProcessingFaces}
+                  filterActive={filterActive}
+                  filteredPhotos={filteredPhotos}
+                  onFindMyPhotos={enhancedHandleFindMyPhotos}
+                  onPhotoSelect={setSelectedPhoto}
+                  onViewAllResults={() => setShowResultsModal(true)}
+                  onClearScan={handleClearScan}
+                  lastScanInfo={lastScanInfo}
+                />
+              </Suspense>
 
-              <FaceRecognitionModal
-                isOpen={showScanModal}
-                hasProfile={hasProfile}
-                isProcessingFaces={isProcessingFaces}
-                faceRecognitionProgress={faceRecognitionProgress}
-                onClose={() => setShowScanModal(false)}
-                onStartFaceRecognition={handleFindMyPhotos}
-                onCancelProcessing={enhancedHandleCancelFaceRecognition}
-                onNavigateToProfile={() => {
-                  setShowScanModal(false);
-                  navigate("/dashboard/settings");
-                }}
-              />
+              <Suspense fallback={<div>Loading modal...</div>}>
+                <FaceRecognitionModal
+                  isOpen={showScanModal}
+                  hasProfile={hasProfile}
+                  isProcessingFaces={isProcessingFaces}
+                  faceRecognitionProgress={faceRecognitionProgress}
+                  onClose={() => setShowScanModal(false)}
+                  onStartFaceRecognition={handleFindMyPhotos}
+                  onCancelProcessing={enhancedHandleCancelFaceRecognition}
+                  onNavigateToProfile={() => {
+                    setShowScanModal(false);
+                    navigate("/dashboard/settings");
+                  }}
+                />
+              </Suspense>
 
-              <FaceRecognitionResults
-                isOpen={showResultsModal}
-                filteredPhotos={filteredPhotos}
-                onClose={() => setShowResultsModal(false)}
-                onPhotoSelect={setSelectedPhoto}
-                onRescan={enhancedHandleFindMyPhotos}
-                onClearScan={handleClearScan}
-              />
+              <Suspense fallback={<div>Loading results...</div>}>
+                <FaceRecognitionResults
+                  isOpen={showResultsModal}
+                  filteredPhotos={filteredPhotos}
+                  onClose={() => setShowResultsModal(false)}
+                  onPhotoSelect={setSelectedPhoto}
+                  onRescan={enhancedHandleFindMyPhotos}
+                  onClearScan={handleClearScan}
+                />
+              </Suspense>
             </div>
 
             {/* Trip Statistics */}
@@ -366,71 +431,79 @@ const TripDetailView = ({ tripId: propTripId }) => {
 
         {/* Rest of your modals remain the same... */}
         {/* Photo Modal */}
-        <PhotoModal
-          photo={selectedPhoto}
-          photos={photos || []}
-          isOpen={!!selectedPhoto}
-          onClose={() => {
-            setSelectedPhoto(null);
-            if (modalSource === "allPhotos") {
-              setShowAllPhotosModal(true);
-            }
-            setModalSource(null);
-          }}
-          onNext={() => navigateToNext(photos || [])}
-          onPrevious={() => navigateToPrevious(photos || [])}
-        />
+        <Suspense fallback={<div>Loading photo modal...</div>}>
+          <PhotoModal
+            photo={selectedPhoto}
+            photos={photos || []}
+            isOpen={!!selectedPhoto}
+            onClose={() => {
+              setSelectedPhoto(null);
+              if (modalSource === "allPhotos") {
+                setShowAllPhotosModal(true);
+              }
+              setModalSource(null);
+            }}
+            onNext={() => navigateToNext(photos || [])}
+            onPrevious={() => navigateToPrevious(photos || [])}
+          />
+        </Suspense>
 
         {/* All Photos Modal */}
-        <AllPhotosModal
-          isOpen={showAllPhotosModal}
-          photos={photos || []}
-          tripId={tripId}
-          maxPhotos={100}
-          isAdmin={isAdmin}
-          onClose={() => setShowAllPhotosModal(false)}
-          onPhotoSelect={(photo) => {
-            setSelectedPhoto(photo);
-            setModalSource("allPhotos");
-            setShowAllPhotosModal(false);
-          }}
-          onPhotoDeleted={(updatedPhotos) => {
-            setPhotos(updatedPhotos);
-          }}
-        />
+        <Suspense fallback={<div>Loading photo gallery...</div>}>
+          <AllPhotosModal
+            isOpen={showAllPhotosModal}
+            photos={photos || []}
+            tripId={tripId}
+            maxPhotos={100}
+            isAdmin={isAdmin}
+            onClose={() => setShowAllPhotosModal(false)}
+            onPhotoSelect={(photo) => {
+              setSelectedPhoto(photo);
+              setModalSource("allPhotos");
+              setShowAllPhotosModal(false);
+            }}
+            onPhotoDeleted={(updatedPhotos) => {
+              setPhotos(updatedPhotos);
+            }}
+          />
+        </Suspense>
 
         {/* Edit Trip Modal */}
-        <EditTripModal
-          isOpen={showEditModal}
-          onClose={() => setShowEditModal(false)}
-          trip={trip}
-          onTripUpdated={handleTripUpdated}
-          onTripDeleted={handleTripDeleted}
-        />
+        <Suspense fallback={<div>Loading edit modal...</div>}>
+          <EditTripModal
+            isOpen={showEditModal}
+            onClose={() => setShowEditModal(false)}
+            trip={trip}
+            onTripUpdated={handleTripUpdated}
+            onTripDeleted={handleTripDeleted}
+          />
+        </Suspense>
 
         {/* User Profile Modal */}
         {selectedUser && (
-          <UserProfileModal
-            user={selectedUser}
-            currentUserId={currentUser?.uid}
-            context="trip"
-            isFriend={selectedUser.__isFriend || false}
-            isPending={selectedUser.__isPending || false}
-            onAddFriend={handleAddFriend}
-            onRemoveFriend={handleRemoveFriend}
-            onCancelRequest={handleCancelFriendRequest}
-            trip={trip}
-            setTrip={setTrip}
-            tripMembers={tripMembers || []}
-            setTripMembers={setTripMembers}
-            isAdmin={isAdmin}
-            onPromoteToAdmin={handlePromoteToAdmin}
-            onDemoteFromAdmin={handleDemoteFromAdmin}
-            onRemoveFromTrip={handleRemoveFromTrip}
-            onInviteToTrip={handleInviteToTrip}
-            onClose={() => setSelectedUser(null)}
-            setSelectedUser={setSelectedUser}
-          />
+          <Suspense fallback={<div>Loading user profile...</div>}>
+            <UserProfileModal
+              user={selectedUser}
+              currentUserId={currentUser?.uid}
+              context="trip"
+              isFriend={selectedUser.__isFriend || false}
+              isPending={selectedUser.__isPending || false}
+              onAddFriend={handleAddFriend}
+              onRemoveFriend={handleRemoveFriend}
+              onCancelRequest={handleCancelFriendRequest}
+              trip={trip}
+              setTrip={setTrip}
+              tripMembers={tripMembers || []}
+              setTripMembers={setTripMembers}
+              isAdmin={isAdmin}
+              onPromoteToAdmin={handlePromoteToAdmin}
+              onDemoteFromAdmin={handleDemoteFromAdmin}
+              onRemoveFromTrip={handleRemoveFromTrip}
+              onInviteToTrip={handleInviteToTrip}
+              onClose={() => setSelectedUser(null)}
+              setSelectedUser={setSelectedUser}
+            />
+          </Suspense>
         )}
 
         {/* Success Notifications */}
@@ -482,4 +555,4 @@ const TripDetailView = ({ tripId: propTripId }) => {
   );
 };
 
-export default TripDetailView;
+export default memo(TripDetailView);
