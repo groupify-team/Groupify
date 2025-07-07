@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { toast } from "react-hot-toast";
 import { uploadPhoto } from "@shared/services/firebase/storage";
-import { useAuth } from "@/auth-area/contexts/AuthContext";
+import { useAuth } from "@/auth-area/hooks/useAuth";
 import { doc, deleteDoc } from "firebase/firestore";
 import { ref, deleteObject } from "firebase/storage";
 import { db, storage } from "@shared/services/firebase/config";

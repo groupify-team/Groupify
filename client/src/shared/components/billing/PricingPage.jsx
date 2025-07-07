@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../../../auth-area/contexts/AuthContext";
+import { useAuth } from "../../../auth-area/hooks/useAuth";
 import { toast } from "react-hot-toast";
 import PublicLayout from "../../../public-area/components/layout/PublicLayout";
 import HeroSection from "../../../public-area/components/ui/HeroSection";

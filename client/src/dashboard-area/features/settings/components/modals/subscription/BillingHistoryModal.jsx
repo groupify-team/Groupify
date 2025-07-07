@@ -677,3 +677,4 @@ const BillingHistoryModal = ({ isOpen, onClose }) => {
 };
 
 export default BillingHistoryModal;
+

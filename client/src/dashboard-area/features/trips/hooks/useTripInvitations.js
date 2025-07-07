@@ -1,4 +1,4 @@
-﻿// client/src/dashboard-area/features/trips/hooks/useTripInvitations.js
+// client/src/dashboard-area/features/trips/hooks/useTripInvitations.js
 import { useState, useEffect } from "react";
 import { toast } from "react-hot-toast";
 import {
@@ -78,3 +78,4 @@ export const useTripInvitations = (userId) => {
     refreshInvites: loadPendingInvites,
   };
 };
+

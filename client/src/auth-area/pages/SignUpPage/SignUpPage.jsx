@@ -123,11 +123,8 @@ const SignUpPage = () => {
           if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
           }
-
           const emailResult = await response.json();
-
           if (emailResult.success) {
-            console.log("Verification email sent successfully");
             toast.success(
               "Account created! Please check your email to verify your account."
             );
@@ -143,14 +140,12 @@ const SignUpPage = () => {
           );
         }
 
-        // Step 3: Determine redirect destination
         let redirectPath = "/confirm-email";
         let redirectState = {
           email: formData.email,
           plan: selectedPlan,
         };
 
-        // If user signed up for a paid plan and should go to billing
         if (
           redirectAfter === "billing" &&
           selectedPlan &&
@@ -163,7 +158,6 @@ const SignUpPage = () => {
           };
         }
 
-        // Navigate with smooth transition
         document.body.style.opacity = "0";
         document.body.style.transition = "opacity 0.3s ease-out";
         setTimeout(() => {
@@ -173,7 +167,6 @@ const SignUpPage = () => {
     } catch (error) {
       console.error("Signup error:", error);
 
-      // Handle specific errors
       if (error.code === "auth/email-already-in-use") {
         toast.error(
           "An account with this email already exists. Please sign in instead."
@@ -186,7 +179,6 @@ const SignUpPage = () => {
     }
   };
 
-  // Handle sign-up errors
   const handleSignUpError = (error) => {
     const errorMessages = {
       "auth/email-already-in-use": "An account with this email already exists",
@@ -199,7 +191,6 @@ const SignUpPage = () => {
     toast.error(errorMessage);
   };
 
-  // Handle Google Sign Up
   const handleGoogleSignUp = async () => {
     if (!agreedToTerms) {
       toast.error("Please agree to the Terms of Service and Privacy Policy");
@@ -210,7 +201,6 @@ const SignUpPage = () => {
       setLoading(true);
       await signInWithGoogle();
 
-      // Handle post-signup redirect for Google users
       if (
         redirectAfter === "billing" &&
         selectedPlan &&
@@ -247,7 +237,6 @@ const SignUpPage = () => {
     }
   };
 
-  // Handle navigation to sign in
   const handleNavigateToSignIn = () => {
     document.body.style.opacity = "0";
     document.body.style.transition = "opacity 0.3s ease-out";
@@ -256,7 +245,6 @@ const SignUpPage = () => {
     }, 300);
   };
 
-  // Calculate password strength using hook
   const passwordStrength = getPasswordStrength(formData.password);
 
   return (

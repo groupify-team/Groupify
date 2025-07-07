@@ -164,3 +164,4 @@ export const getPhotoNavigation = (photos, currentPhotoId) => {
       currentIndex < photos.length - 1 ? photos[currentIndex + 1] : photos[0],
   };
 };
+

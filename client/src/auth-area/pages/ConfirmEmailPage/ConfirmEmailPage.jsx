@@ -1,5 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation, useSearchParams, Link } from "react-router-dom";
+import {
+  useNavigate,
+  useLocation,
+  useSearchParams,
+  Link,
+} from "react-router-dom";
 import { toast } from "react-hot-toast";
 import {
   EnvelopeIcon,
@@ -10,8 +15,6 @@ import {
   ArrowLeftIcon,
   CameraIcon,
 } from "@heroicons/react/24/outline";
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "@firebase-services/config";
 
 // New modular components and hooks
 import AuthLayout from "../../components/layout/AuthLayout";
@@ -20,7 +23,14 @@ import { useAuthAnimations } from "../../hooks/useAuthAnimations";
 
 const ConfirmEmailPage = () => {
   // State
-  const [verificationCode, setVerificationCode] = useState(["", "", "", "", "", ""]);
+  const [verificationCode, setVerificationCode] = useState([
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+  ]);
   const [loading, setLoading] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
   const [timeLeft, setTimeLeft] = useState(120);
@@ -47,7 +57,9 @@ const ConfirmEmailPage = () => {
         // User verified email and needs to go to billing
         toast.success("Email verified! Redirecting to checkout...");
         setTimeout(() => {
-          navigate(`/billing?plan=${billingParams.plan}&billing=${billingParams.billing}`);
+          navigate(
+            `/billing?plan=${billingParams.plan}&billing=${billingParams.billing}`
+          );
         }, 2000);
       } else if (plan && plan !== "free") {
         // User has a plan but no billing redirect (shouldn't happen, but safety)
@@ -87,7 +99,6 @@ const ConfirmEmailPage = () => {
     }
   }, [timeLeft]);
 
-  // Handle resend verification code
   const handleResendCode = async () => {
     if (!email) {
       toast.error("Email address is required");
@@ -96,9 +107,7 @@ const ConfirmEmailPage = () => {
 
     try {
       setResendLoading(true);
-      console.log("Attempting to resend verification email to:", email);
 
-      // Use fetch to call HTTP function
       const response = await fetch(
         "https://us-central1-groupify-77202.cloudfunctions.net/resendVerificationCode",
         {
@@ -107,7 +116,7 @@ const ConfirmEmailPage = () => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            data: { email }
+            data: { email },
           }),
         }
       );
@@ -117,9 +126,8 @@ const ConfirmEmailPage = () => {
       }
 
       const result = await response.json();
-      
+
       if (result.success) {
-        console.log("Resend function result:", result);
         toast.success("Verification code sent! Check your email.");
         setTimeLeft(120);
         setCanResend(false);
@@ -129,46 +137,42 @@ const ConfirmEmailPage = () => {
       }
     } catch (error) {
       console.error("Resend error:", error);
-      
+
       let errorMessage = "Failed to resend code. Please try again.";
-      
-      if (error.message?.includes('already verified')) {
+
+      if (error.message?.includes("already verified")) {
         errorMessage = "Email is already verified! You can now sign in.";
         toast.success(errorMessage);
         setTimeout(() => navigate("/signin"), 1500);
         return;
-      } else if (error.message?.includes('User not found')) {
+      } else if (error.message?.includes("User not found")) {
         errorMessage = "User not found. Please sign up first.";
       } else if (error.message) {
         errorMessage = error.message;
       }
-      
+
       toast.error(errorMessage);
     } finally {
       setResendLoading(false);
     }
   };
 
-  // Enhanced input handling for better UX and mobile support
   const handleInputChange = (index, value) => {
-    // Only allow single digits and numbers
     if (value.length > 1) return;
     if (value && !/^\d$/.test(value)) return;
-    
+
     const newCode = [...verificationCode];
     newCode[index] = value;
     setVerificationCode(newCode);
-    
-    // Auto-focus next input
+
     if (value && index < 5) {
       const nextInput = document.getElementById(`code-${index + 1}`);
       nextInput?.focus();
     }
-    
-    // Auto-submit when all digits are entered
+
     if (value && index === 5) {
       const completeCode = [...newCode];
-      if (completeCode.every(digit => digit !== "")) {
+      if (completeCode.every((digit) => digit !== "")) {
         setTimeout(() => {
           handleVerifyWithCode(completeCode.join(""));
         }, 100);
@@ -176,56 +180,51 @@ const ConfirmEmailPage = () => {
     }
   };
 
-  // Enhanced keydown handling
   const handleKeyDown = (index, e) => {
     if (e.key === "Backspace") {
       if (!verificationCode[index] && index > 0) {
-        // Move to previous input and clear it
         const prevInput = document.getElementById(`code-${index - 1}`);
         const newCode = [...verificationCode];
         newCode[index - 1] = "";
         setVerificationCode(newCode);
         prevInput?.focus();
       } else if (verificationCode[index]) {
-        // Clear current input
         const newCode = [...verificationCode];
         newCode[index] = "";
         setVerificationCode(newCode);
       }
       e.preventDefault();
     } else if (e.key === "Enter") {
-      // Handle Enter key to submit
       const code = verificationCode.join("");
       if (code.length === 6) {
         handleVerifyWithCode(code);
       }
       e.preventDefault();
     } else if (e.key === "ArrowLeft" && index > 0) {
-      // Navigate left
       const prevInput = document.getElementById(`code-${index - 1}`);
       prevInput?.focus();
       e.preventDefault();
     } else if (e.key === "ArrowRight" && index < 5) {
-      // Navigate right
       const nextInput = document.getElementById(`code-${index + 1}`);
       nextInput?.focus();
       e.preventDefault();
     }
   };
 
-  // Handle paste events
   const handlePaste = (e) => {
     e.preventDefault();
-    const pasteData = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
-    
+    const pasteData = e.clipboardData
+      .getData("text")
+      .replace(/\D/g, "")
+      .slice(0, 6);
+
     if (pasteData.length > 0) {
       const newCode = ["", "", "", "", "", ""];
       for (let i = 0; i < Math.min(pasteData.length, 6); i++) {
         newCode[i] = pasteData[i];
       }
       setVerificationCode(newCode);
-      
-      // Focus the next empty input or submit if complete
+
       if (pasteData.length === 6) {
         setTimeout(() => {
           handleVerifyWithCode(pasteData);
@@ -238,7 +237,6 @@ const ConfirmEmailPage = () => {
     }
   };
 
-  // Handle verification with automatic sign-in
   const handleVerifyWithCode = async (code) => {
     if (!email || !code) {
       toast.error("Email and verification code are required");
@@ -247,9 +245,7 @@ const ConfirmEmailPage = () => {
 
     try {
       setLoading(true);
-      console.log("Attempting to verify code:", code, "for email:", email);
 
-      // Step 1: Verify the email code
       const response = await fetch(
         "https://us-central1-groupify-77202.cloudfunctions.net/verifyEmailCode",
         {
@@ -261,17 +257,18 @@ const ConfirmEmailPage = () => {
             data: {
               email: email,
               verificationCode: code,
-            }
+            },
           }),
         }
       );
 
       if (!response.ok) {
-        // Handle different HTTP status codes
         if (response.status === 404) {
           throw new Error("Verification code not found or expired");
         } else if (response.status === 410) {
-          throw new Error("Verification code has expired. Please request a new one.");
+          throw new Error(
+            "Verification code has expired. Please request a new one."
+          );
         } else if (response.status === 412) {
           throw new Error("Verification code has already been used");
         } else if (response.status === 400) {
@@ -282,35 +279,37 @@ const ConfirmEmailPage = () => {
       }
 
       const result = await response.json();
-      
-      if (result.success) {
-        console.log("Verification result:", result);
-        toast.success("Email verified successfully!");
 
-        // Step 2: Sign in the user automatically
+      if (result.success) {
+        toast.success("Email verified successfully!");
         try {
           if (redirectToBilling && billingParams) {
-            // Special handling for billing flow
-            toast.success("Email verified! Please sign in to continue to checkout.");
+            toast.success(
+              "Email verified! Please sign in to continue to checkout."
+            );
             setTimeout(() => {
-              navigate(`/signin?verified=true&redirect=billing&plan=${billingParams.plan}&billing=${billingParams.billing}`);
+              navigate(
+                `/signin?verified=true&redirect=billing&plan=${billingParams.plan}&billing=${billingParams.billing}`
+              );
             }, 1000);
           } else {
-            // Standard flow
             setTimeout(() => {
               navigate(
                 "/signin?verified=true&message=" +
-                  encodeURIComponent("Email verified successfully! You can now sign in.")
+                  encodeURIComponent(
+                    "Email verified successfully! You can now sign in."
+                  )
               );
             }, 1000);
           }
         } catch (signInError) {
           console.error("Auto sign-in failed:", signInError);
-          // Fallback to manual sign-in
           setTimeout(() => {
             navigate(
               "/signin?verified=true&message=" +
-                encodeURIComponent("Email verified successfully! Please sign in to continue.")
+                encodeURIComponent(
+                  "Email verified successfully! Please sign in to continue."
+                )
             );
           }, 1000);
         }
@@ -323,10 +322,14 @@ const ConfirmEmailPage = () => {
       let errorMessage = "Invalid verification code";
 
       if (error.message?.includes("expired")) {
-        errorMessage = "Verification code has expired. Please request a new one.";
+        errorMessage =
+          "Verification code has expired. Please request a new one.";
         setCanResend(true);
         setTimeLeft(0);
-      } else if (error.message?.includes("already verified") || error.message?.includes("already been used")) {
+      } else if (
+        error.message?.includes("already verified") ||
+        error.message?.includes("already been used")
+      ) {
         toast.success("Email is already verified! You can now sign in.");
         setTimeout(() => navigate("/signin"), 1500);
         return;
@@ -336,14 +339,12 @@ const ConfirmEmailPage = () => {
 
       toast.error(errorMessage);
 
-      // Clear the form for retry
       setVerificationCode(["", "", "", "", "", ""]);
     } finally {
       setLoading(false);
     }
   };
 
-  // Handle form submission
   const handleVerify = async (e) => {
     e.preventDefault();
     const code = verificationCode.join("");
@@ -355,19 +356,16 @@ const ConfirmEmailPage = () => {
     await handleVerifyWithCode(code);
   };
 
-  // Format timer display
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
-  // Don't render if no email
   if (!email) {
-    return null; // Will redirect
+    return null;
   }
 
-  // Left side visual content
   const leftContent = (
     <div className="w-full h-full bg-gradient-to-br from-purple-600 via-indigo-600 to-blue-600 flex items-center justify-center p-12 relative overflow-hidden">
       <div className="max-w-md text-center text-white z-10">
@@ -378,10 +376,11 @@ const ConfirmEmailPage = () => {
 
         {/* Title */}
         <h2 className="text-3xl font-bold mb-6">Check your email</h2>
-        
+
         {/* Subtitle */}
         <p className="text-lg mb-8 text-purple-100 leading-relaxed">
-          We've sent a 6-digit verification code to your email address. Enter the code below to verify your account and get started.
+          We've sent a 6-digit verification code to your email address. Enter
+          the code below to verify your account and get started.
         </p>
 
         {/* Email Info */}
@@ -409,7 +408,7 @@ const ConfirmEmailPage = () => {
           ))}
         </div>
       </div>
-      
+
       {/* Background decoration */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-10 left-10 w-32 h-32 bg-white bg-opacity-10 rounded-full blur-xl"></div>
@@ -420,11 +419,7 @@ const ConfirmEmailPage = () => {
   );
 
   return (
-    <AuthLayout
-      layoutType="split"
-      leftContent={leftContent}
-      showHeader={false}
-    >
+    <AuthLayout layoutType="split" leftContent={leftContent} showHeader={false}>
       {/* Form Container */}
       <div className="flex-1 flex flex-col justify-center py-2 sm:py-4 md:py-6 lg:py-8 px-3 sm:px-4 md:px-6 lg:px-12 xl:px-20 2xl:px-24 bg-white dark:bg-gray-900 min-h-0">
         <div className="mx-auto w-full max-w-[280px] sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-md">
@@ -472,7 +467,8 @@ const ConfirmEmailPage = () => {
                     Almost there! 🎯
                   </p>
                   <p className="text-blue-600 dark:text-blue-300 text-sm">
-                    After verifying your email, you'll complete your {billingParams.plan} plan subscription
+                    After verifying your email, you'll complete your{" "}
+                    {billingParams.plan} plan subscription
                   </p>
                 </div>
               </div>
@@ -481,7 +477,10 @@ const ConfirmEmailPage = () => {
 
           {/* Verification Form */}
           <div className="space-y-3 sm:space-y-4 md:space-y-5 text-sm md:text-base">
-            <form onSubmit={handleVerify} className="space-y-4 sm:space-y-5 md:space-y-6">
+            <form
+              onSubmit={handleVerify}
+              className="space-y-4 sm:space-y-5 md:space-y-6"
+            >
               {/* Code Input */}
               <div>
                 <label

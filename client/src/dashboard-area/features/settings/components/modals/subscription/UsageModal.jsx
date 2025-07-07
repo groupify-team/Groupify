@@ -552,7 +552,6 @@ const UsageModal = ({ isOpen, onClose }) => {
               <button
                 onClick={() => {
                   subscriptionService.debug();
-                  console.log("Current usage:", usage);
                 }}
                 className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 font-medium text-sm"
               >
@@ -573,3 +572,4 @@ const UsageModal = ({ isOpen, onClose }) => {
 };
 
 export default UsageModal;
+

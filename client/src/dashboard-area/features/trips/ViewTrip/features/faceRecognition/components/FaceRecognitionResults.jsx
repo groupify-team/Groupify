@@ -573,3 +573,4 @@ const FaceRecognitionResults = ({
 };
 
 export default FaceRecognitionResults;
+

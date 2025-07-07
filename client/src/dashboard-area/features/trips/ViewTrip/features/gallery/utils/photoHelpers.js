@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Photo management utilities and validation helpers
  * Handles URL fixing, photo limits, file validation, and photo statistics
  */
@@ -162,3 +162,4 @@ export const formatFileSize = (bytes) => {
 
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
 };
+

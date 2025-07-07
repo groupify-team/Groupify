@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Hook for photo operations within trip view
  * Handles photo uploads, deletions, selection mode, and photo limit checks
  */
@@ -195,3 +195,4 @@ export const usePhotoOperations = (
     getPhotoLimitStatus,
   };
 };
+

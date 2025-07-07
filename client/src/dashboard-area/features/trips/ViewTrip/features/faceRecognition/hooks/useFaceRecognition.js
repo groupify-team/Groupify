@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Hook for AI face recognition and photo filtering functionality
  * Handles face profile loading, photo matching, and recognition progress tracking
  */
@@ -125,14 +125,14 @@ export const useFaceRecognition = (photos, currentUserId, isMember, tripId) => {
           await createFaceProfile(currentUserId, imageUrls);
           setHasProfile(true);
         } catch (error) {
-          console.error("❌ Failed to auto-load face profile:", error);
+          console.error("? Failed to auto-load face profile:", error);
           setHasProfile(false);
         }
       } else {
         setHasProfile(false);
       }
     } catch (error) {
-      console.error("❌ Error checking for face profile:", error);
+      console.error("? Error checking for face profile:", error);
       setHasProfile(false);
     } finally {
       setIsLoadingProfile(false);
@@ -289,7 +289,7 @@ export const useFaceRecognition = (photos, currentUserId, isMember, tripId) => {
         setTimeout(() => setShowResultsModal(true), 300);
       }
     } catch (error) {
-      console.error("❌ Face recognition error:", error);
+      console.error("? Face recognition error:", error);
       if (error.message.includes("No face profile found")) {
         toast.error(
           "No face profile found. Please create one in your Dashboard first."
@@ -361,3 +361,4 @@ export const useFaceRecognition = (photos, currentUserId, isMember, tripId) => {
     lastScanInfo,
   };
 };
+

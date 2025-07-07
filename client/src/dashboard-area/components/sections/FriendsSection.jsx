@@ -1,5 +1,5 @@
-﻿import React, { useEffect, useState } from "react";
-import { useAuth } from "@auth/contexts/AuthContext";
+import React, { useEffect, useState } from "react";
+import { useAuth } from "@auth/hooks/useAuth";
 import { doc, onSnapshot, getDoc } from "firebase/firestore";
 import { db } from "@shared/services/firebase/config";
 import {
@@ -55,7 +55,7 @@ const FriendsSection = () => {
         const snap = await getDoc(userDocRef);
 
         if (!snap.exists() || !isMounted) {
-          console.warn("⚠️ userDoc does not exist yet:", currentUser.uid);
+          console.warn("?? userDoc does not exist yet:", currentUser.uid);
           setLoading(false);
           return;
         }
@@ -88,7 +88,7 @@ const FriendsSection = () => {
                 });
               }
             } catch (err) {
-              console.error(`❌ Error fetching friend ${fid}:`, err);
+              console.error(`? Error fetching friend ${fid}:`, err);
             }
           }
 
@@ -140,7 +140,7 @@ const FriendsSection = () => {
                   createdAt: data.createdAt,
                 });
               } catch (err) {
-                console.warn("⚠️ Error fetching sender:", data.from, err);
+                console.warn("?? Error fetching sender:", data.from, err);
               }
             }
 
@@ -158,7 +158,7 @@ const FriendsSection = () => {
           unsubscribePendingRequests();
         };
       } catch (error) {
-        console.error("❌ Error setting up listeners:", error);
+        console.error("? Error setting up listeners:", error);
         setLoading(false);
       }
     };
@@ -184,12 +184,12 @@ const FriendsSection = () => {
         // If request is less than 30 seconds old, show notification
         if (timeDiff < 30000) {
           toast(
-            `🔔 New friend request from ${
+            `?? New friend request from ${
               latestRequest.displayName || latestRequest.email
             }!`,
             {
               duration: 5000,
-              icon: "👋",
+              icon: "??",
             }
           );
         }

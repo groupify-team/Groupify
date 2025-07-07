@@ -157,3 +157,4 @@ const PhotoModal = ({ photo, photos, isOpen, onClose, onNext, onPrevious }) => {
 };
 
 export default PhotoModal;
+

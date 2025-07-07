@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Hook for managing trip data, photos, and members in trip detail view
  * Handles data fetching, loading states, and permission checks
  */
@@ -101,3 +101,4 @@ export const useTripData = (tripId, currentUserId) => {
     refreshTripData,
   };
 };
+

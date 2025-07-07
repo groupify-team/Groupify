@@ -1,7 +1,7 @@
 // src/shared/components/billing/BillingPage.jsx - Context-aware billing component
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
-import { useAuth } from "../../../auth-area/contexts/AuthContext";
+import { useAuth } from "../../../auth-area/hooks/useAuth";
 import PublicLayout from "../../../public-area/components/layout/PublicLayout";
 import HeroSection from "../../../public-area/components/ui/HeroSection";
 import navigationService from "../../services/navigationService";

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Hook for generic trip operations and management
  * Handles trip fetching, updating, member management, and photo operations
  */
@@ -156,3 +156,4 @@ export const useTripDetail = (tripId, currentUser) => {
     refetch: fetchTripData,
   };
 };
+

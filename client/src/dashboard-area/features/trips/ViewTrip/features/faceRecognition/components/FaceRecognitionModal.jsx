@@ -358,3 +358,4 @@ const FaceRecognitionModal = ({
 };
 
 export default FaceRecognitionModal;
+

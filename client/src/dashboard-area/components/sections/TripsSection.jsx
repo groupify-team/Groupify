@@ -16,7 +16,7 @@ import {
 } from "@heroicons/react/24/outline";
 
 // Auth Context
-import { useAuth } from "@/auth-area/contexts/AuthContext";
+import { useAuth } from "@/auth-area/hooks/useAuth";
 
 // Dashboard Hooks
 import { useDashboardLayout } from "@/dashboard-area/hooks/useDashboardLayout";
@@ -82,10 +82,10 @@ const TripsSection = () => {
 
   // Local state
   const [showCreateModal, setShowCreateModal] = useState(false);
-  
+
   // Filtered trips based on search and date filters
   const filteredTrips = filterTrips(trips, searchTerm, dateFilter);
-  
+
   // Click outside ref for filter dropdown
   const filterDropdownRef = useClickOutside(() => closeFilterDropdown());
 

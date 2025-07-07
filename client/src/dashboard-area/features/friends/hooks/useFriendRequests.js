@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { useAuth } from "@auth/contexts/AuthContext";
+import { useAuth } from "@auth/hooks/useAuth";
 import { FriendsService } from "../services/friendsService";
 
 export const useFriendRequests = () => {
@@ -171,3 +171,4 @@ export const useFriendRequests = () => {
     loadRequests,
   };
 };
+

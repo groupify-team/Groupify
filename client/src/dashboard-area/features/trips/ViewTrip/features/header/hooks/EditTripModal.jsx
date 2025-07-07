@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 import {
@@ -11,7 +11,7 @@ import {
   TrashIcon,
 } from "@heroicons/react/24/outline";
 import { toast } from "react-hot-toast";
-import { useAuth } from "@auth/contexts/AuthContext";
+import { useAuth } from "@auth/hooks/useAuth";
 import { updateTrip, deleteTrip } from "@shared/services/firebase/trips";
 
 const EditTripModal = ({
@@ -303,7 +303,7 @@ const EditTripModal = ({
                       </div>
                       <div>
                         <h4 className="font-bold text-red-800 dark:text-red-400">
-                          ⚠️ Permanent Deletion
+                          ?? Permanent Deletion
                         </h4>
                         <p className="text-red-700 dark:text-red-300 text-sm">
                           This action cannot be undone
@@ -558,3 +558,4 @@ const EditTripModal = ({
 };
 
 export default EditTripModal;
+
