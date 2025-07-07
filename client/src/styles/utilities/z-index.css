@@ -1,0 +1,219 @@
+/* ========================================
+   Z-INDEX MANAGEMENT SYSTEM
+   Centralized z-index hierarchy with design tokens
+   ======================================== */
+
+@layer base {
+  /* === SYSTEMATIC Z-INDEX OVERRIDES === */
+  /* Using CSS custom properties for consistent layering */
+
+  /* Base content layer */
+  .z-base {
+    z-index: var(--z-base);
+  }
+
+  /* Trip cards and content */
+  .trip-card-container {
+    position: relative;
+    z-index: var(--z-base);
+  }
+
+  /* Dropdowns and filters - Lower priority */
+  .filter-dropdown {
+    position: relative;
+    z-index: var(--z-dropdown) !important;
+  }
+
+  .filter-dropdown .dropdown-menu {
+    z-index: calc(var(--z-dropdown) + 1) !important;
+    position: absolute !important;
+  }
+
+  /* Override arbitrary z-index values */
+  .z-\[50\] {
+    z-index: var(--z-dropdown) !important;
+  }
+  .z-\[60\] {
+    z-index: calc(var(--z-dropdown) + 10) !important;
+  }
+  .z-\[100\] {
+    z-index: var(--z-sticky) !important;
+  }
+  .z-\[200\] {
+    z-index: var(--z-fixed) !important;
+  }
+  .z-\[250\] {
+    z-index: calc(var(--z-fixed) + 50) !important;
+  }
+  .z-\[300\] {
+    z-index: calc(var(--z-fixed) + 100) !important;
+  }
+
+  /* Navigation layers */
+  .z-sticky {
+    z-index: var(--z-sticky);
+  }
+  .z-fixed {
+    z-index: var(--z-fixed);
+  }
+
+  /* Modal layers - Highest priority */
+  .z-modal-backdrop {
+    z-index: var(--z-modal-backdrop);
+  }
+  .z-modal {
+    z-index: var(--z-modal);
+  }
+  .z-popover {
+    z-index: var(--z-popover);
+  }
+  .z-tooltip {
+    z-index: var(--z-tooltip);
+  }
+
+  /* Legacy z-index overrides */
+  .z-\[9999\] {
+    z-index: var(--z-modal-backdrop) !important;
+  }
+  .z-\[10000\] {
+    z-index: var(--z-modal) !important;
+  }
+  .z-\[10001\] {
+    z-index: var(--z-popover) !important;
+  }
+  .z-\[10002\] {
+    z-index: var(--z-tooltip) !important;
+  }
+}
+
+@layer components {
+  /* === SPECIFIC COMPONENT Z-INDEX FIXES === */
+
+  /* Remove problematic stacking contexts */
+  .bg-white\/60.dark\:bg-gray-800\/60.backdrop-blur-lg:has(.filter-dropdown) {
+    position: relative;
+    z-index: auto !important;
+  }
+
+  /* Modal component hierarchy */
+  .modal-backdrop {
+    z-index: var(--z-modal-backdrop) !important;
+  }
+
+  .modal-content {
+    z-index: var(--z-modal) !important;
+  }
+
+  /* Force modal above everything */
+  div[class*="fixed"][class*="inset-0"][class*="bg-black/50"] {
+    z-index: var(--z-modal-backdrop) !important;
+    position: fixed !important;
+  }
+
+  div[class*="fixed"][class*="inset-0"][class*="bg-black/50"] > * {
+    z-index: var(--z-modal) !important;
+  }
+
+  /* Modal dialog targeting */
+  [role="dialog"],
+  .modal,
+  .modal-overlay,
+  div[class*="backdrop-blur-sm"]:has(div[class*="max-w-md"]) {
+    z-index: var(--z-modal-backdrop) !important;
+    position: fixed !important;
+  }
+
+  [role="dialog"] *,
+  .modal *,
+  .modal-overlay *,
+  div[class*="backdrop-blur-sm"]:has(div[class*="max-w-md"]) * {
+    z-index: inherit !important;
+  }
+
+  /* Navigation components */
+  .notifications-dropdown {
+    z-index: calc(var(--z-fixed) + 100);
+  }
+
+  .user-menu-dropdown {
+    z-index: calc(var(--z-fixed) + 50);
+  }
+
+  /* Toast notifications */
+  .Toaster__toast {
+    z-index: calc(var(--z-tooltip) + 10) !important;
+  }
+
+  /* Enhanced loading overlay */
+  .enhanced-loading-overlay {
+    z-index: var(--z-modal-backdrop);
+  }
+}
+
+@layer utilities {
+  /* === MODAL STATE MANAGEMENT === */
+
+  /* When modal is open, suppress other interactive elements */
+  body.modal-open * {
+    position: relative;
+  }
+
+  body.modal-open .filter-dropdown,
+  body.modal-open .bg-white\/60,
+  body.modal-open .dark\:bg-gray-800\/60 {
+    z-index: auto !important;
+  }
+
+  /* Force modals to always be on top */
+  body.modal-open .modal-backdrop,
+  body.modal-open [role="dialog"] {
+    z-index: var(--z-modal-backdrop) !important;
+  }
+
+  /* === DEBUGGING UTILITIES === */
+  .debug-z-index::before {
+    content: "z: " attr(data-z-index);
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: red;
+    color: white;
+    padding: 2px 4px;
+    font-size: 10px;
+    z-index: 99999;
+  }
+
+  /* === ACCESSIBILITY IMPROVEMENTS === */
+
+  /* Ensure focus rings are always visible */
+  *:focus {
+    z-index: calc(var(--z-tooltip) + 100) !important;
+    position: relative;
+  }
+
+  /* Skip link should be highest */
+  .skip-link:focus {
+    z-index: 99999 !important;
+  }
+}
+
+/* === LAYER DOCUMENTATION === */
+/*
+Z-Index Hierarchy:
+--z-base: 1          - Base content, cards, regular elements
+--z-dropdown: 50     - Dropdowns, filters, menus
+--z-sticky: 100      - Sticky navigation, floating elements
+--z-fixed: 200       - Fixed headers, sidebars
+--z-modal-backdrop: 9999  - Modal backdrops, overlays
+--z-modal: 10000     - Modal content, dialogs
+--z-popover: 10001   - Popovers, context menus
+--z-tooltip: 10002   - Tooltips, help text
+
+Usage Guidelines:
+1. Always use CSS custom properties, not hard-coded values
+2. Modal backdrops should use --z-modal-backdrop
+3. Modal content should use --z-modal
+4. Dropdowns should use --z-dropdown
+5. Navigation should use --z-sticky or --z-fixed
+6. Never use z-index values above 10002 except for debugging
+*/

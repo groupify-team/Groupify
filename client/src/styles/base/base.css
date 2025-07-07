@@ -1,0 +1,127 @@
+/* ========================================
+   BASE STYLES
+   Foundational styles using design tokens
+   ======================================== */
+
+@layer base {
+  /* === DOCUMENT & BODY === */
+  html {
+    scroll-behavior: smooth;
+    font-size: 16px;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    line-height: var(--leading-normal);
+    color: var(--color-text-primary);
+    background-color: var(--color-bg-base);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    transition: color var(--duration-normal),
+      background-color var(--duration-normal);
+    overflow-x: hidden;
+  }
+
+  /* === SCROLLBAR STYLES === */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background-color: var(--color-gray-100);
+  }
+
+  .dark ::-webkit-scrollbar-track {
+    background-color: var(--color-gray-800);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: var(--color-gray-400);
+    border-radius: var(--radius-full);
+  }
+
+  .dark ::-webkit-scrollbar-thumb {
+    background-color: var(--color-gray-600);
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: var(--color-gray-500);
+  }
+
+  /* === FOCUS STYLES === */
+  *:focus {
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+  }
+
+  .focus-ring:focus {
+    box-shadow: 0 0 0 2px var(--color-focus-ring),
+      0 0 0 4px var(--color-focus-ring-offset);
+  }
+
+  /* === REDUCED MOTION === */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  /* === TYPOGRAPHY RESETS === */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-weight: 600;
+    line-height: var(--leading-tight);
+    margin: 0;
+  }
+
+  p {
+    margin: 0;
+    line-height: var(--leading-normal);
+  }
+
+  /* === FORM ELEMENTS === */
+  button {
+    cursor: pointer;
+    border: none;
+    background: none;
+    font-family: inherit;
+  }
+
+  button:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+
+  input,
+  textarea,
+  select {
+    font-family: inherit;
+    font-size: inherit;
+    color: inherit;
+  }
+
+  /* === PRINT STYLES === */
+  @media print {
+    .no-print {
+      display: none !important;
+    }
+
+    .print-only {
+      display: block !important;
+    }
+
+    * {
+      color-adjust: exact;
+    }
+  }
+}
