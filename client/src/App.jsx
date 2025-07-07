@@ -9,6 +9,7 @@ import GlobalAccessibilityProvider from "@/shared/components/accessibility/Globa
 // App components
 import FlowController from "@/shared/components/routing/FlowController";
 import AppRoutes from "@/shared/components/routing/AppRoutes";
+import PageTransitionWrapper from "@/shared/components/ui/PageTransitionWrapper";
 
 // Toast notifications
 import { Toaster } from "react-hot-toast";
@@ -26,7 +27,9 @@ function App() {
                 className: "z-[70]",
               }}
             />
-            <AppRoutes />
+            <PageTransitionWrapper>
+              <AppRoutes />
+            </PageTransitionWrapper>
           </FlowController>
         </GlobalAccessibilityProvider>
       </AuthProvider>
