@@ -1,4 +1,4 @@
-﻿import { initializeApp } from "firebase/app";
+import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
@@ -20,7 +20,7 @@ const missingVars = requiredEnvVars.filter(
 
 if (missingVars.length > 0) {
   console.error(
-    "❌ Missing required Firebase environment variables:",
+    "? Missing required Firebase environment variables:",
     missingVars
   );
   throw new Error(`Missing Firebase configuration: ${missingVars.join(", ")}`);
@@ -39,7 +39,7 @@ let app;
 try {
   app = initializeApp(firebaseConfig);
 } catch (error) {
-  console.error("❌ Firebase initialization failed:", error);
+  console.error("? Firebase initialization failed:", error);
   throw error;
 }
 
@@ -49,3 +49,6 @@ export const storage = getStorage(app);
 export const functions = getFunctions(app);
 
 export default app;
+
+
+

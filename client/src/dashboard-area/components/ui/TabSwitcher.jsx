@@ -60,3 +60,6 @@ const TabSwitcher = ({ activeTab, onTabChange, tabs }) => {
 
 export default TabSwitcher;
 
+
+
+

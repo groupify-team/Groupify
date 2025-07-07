@@ -16,3 +16,6 @@ const SuspenseWrapper = memo(({ children, fallback, useSkeleton = false }) => (
 SuspenseWrapper.displayName = "SuspenseWrapper";
 
 export default SuspenseWrapper;
+
+
+

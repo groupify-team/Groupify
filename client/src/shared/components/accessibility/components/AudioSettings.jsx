@@ -59,3 +59,5 @@ const AudioSettings = ({ soundEffects, setSoundEffects, toggleSetting }) => {
 };
 
 export default AudioSettings;
+
+

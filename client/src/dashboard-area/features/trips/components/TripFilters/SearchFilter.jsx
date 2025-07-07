@@ -1,4 +1,4 @@
-﻿// components/TripFilters/SearchFilter.jsx
+// components/TripFilters/SearchFilter.jsx
 import React from 'react';
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 
@@ -18,3 +18,6 @@ const SearchFilter = ({ value, onChange }) => {
 };
 
 export default SearchFilter;
+
+
+

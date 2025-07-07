@@ -1,4 +1,4 @@
-﻿// components/TripList/EmptyTripsState.jsx
+// components/TripList/EmptyTripsState.jsx
 import React from 'react';
 import { MapIcon, PlusIcon } from '@heroicons/react/24/outline';
 
@@ -22,3 +22,6 @@ const EmptyTripsState = ({ onCreateTrip }) => {
 };
 
 export default EmptyTripsState;
+
+
+

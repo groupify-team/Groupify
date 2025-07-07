@@ -74,3 +74,6 @@ export const usePhotoSelection = (tripId, photos, removePhotos) => {
   };
 };
 
+
+
+

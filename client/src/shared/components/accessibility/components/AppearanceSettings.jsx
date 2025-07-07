@@ -61,3 +61,5 @@ const AppearanceSettings = ({ theme, toggleTheme }) => {
 };
 
 export default AppearanceSettings;
+
+

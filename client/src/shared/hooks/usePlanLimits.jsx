@@ -5,7 +5,7 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
-import { useAuth } from "@auth/hooks/useAuth";
+import { useAuth } from "@/auth-area/contexts/AuthContext";
 import subscriptionService from "@shared/services/subscriptionService";
 import { toast } from "react-hot-toast";
 

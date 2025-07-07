@@ -2,7 +2,7 @@ import React, { memo } from "react";
 import { BrowserRouter as Router } from "react-router-dom";
 
 // Core providers
-import { AuthProvider } from "@/auth-area/contexts/AuthProvider";
+import { AuthProvider } from "@/auth-area/contexts/AuthContext";
 import { ThemeProvider } from "@shared/contexts/ThemeContext";
 import GlobalAccessibilityProvider from "@/shared/components/accessibility/GlobalAccessibilityProvider";
 
@@ -41,3 +41,6 @@ function App() {
 }
 
 export default App;
+
+
+

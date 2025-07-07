@@ -9,7 +9,7 @@ import {
 
 import AuthLayout from "../../components/layout/AuthLayout";
 import EnhancedAuthForm from "../../components/ui/EnhancedAuthForm";
-import { useAuth } from "../../hooks/useAuth";
+import { useAuth } from "../../contexts/AuthContext";
 import { useAuthValidation } from "../../hooks/useAuthValidation";
 
 const SignInPage = () => {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, memo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useAuth } from "@/auth-area/hooks/useAuth";
+import { useAuth } from "@/auth-area/contexts/AuthContext";
 import CloudflareTurnstileGate from "@/shared/components/ui/CloudFlareTurnstileGate";
 import LaunchAnimation from "@/auth-area/components/ui/LaunchAnimation";
 import PageLoadingSpinner from "@/shared/components/ui/PageLoadingSpinner";

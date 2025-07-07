@@ -57,3 +57,5 @@ const AuthVisual = ({
 };
 
 export default AuthVisual;
+
+

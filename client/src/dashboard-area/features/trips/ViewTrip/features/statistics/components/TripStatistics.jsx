@@ -255,3 +255,6 @@ const TripStatistics = ({ trip, photos, tripMembers }) => {
 
 export default TripStatistics;
 
+
+
+

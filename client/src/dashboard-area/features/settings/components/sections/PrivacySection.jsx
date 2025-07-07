@@ -65,3 +65,6 @@ const PrivacySection = ({ settings, toggleSetting, settingsLoading }) => {
 
 export default PrivacySection;
 
+
+
+

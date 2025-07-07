@@ -10,7 +10,7 @@ import {
   StarIcon,
   ArrowUpIcon,
 } from "@heroicons/react/24/outline";
-import { useAuth } from "@auth/hooks/useAuth";
+import { useAuth } from "@/auth-area/contexts/AuthContext";
 import { tripsService } from "../services/tripsService";
 import { usePlanLimits } from "../../../../shared/hooks/usePlanLimits";
 
@@ -547,10 +547,10 @@ const CreateTripModal = ({ isOpen, onClose, onTripCreated }) => {
                 What you can do now:
               </h4>
               <ul className="text-blue-700 dark:text-blue-400 text-sm space-y-1">
-                <li>• Upload photos and create shared memories</li>
-                <li>• Use face recognition to find your photos instantly</li>
-                <li>• Invite friends to join and contribute photos</li>
-                <li>• No more searching through endless folders!</li>
+                <li>ï¿½ Upload photos and create shared memories</li>
+                <li>ï¿½ Use face recognition to find your photos instantly</li>
+                <li>ï¿½ Invite friends to join and contribute photos</li>
+                <li>ï¿½ No more searching through endless folders!</li>
               </ul>
             </div>
 
@@ -571,4 +571,3 @@ const CreateTripModal = ({ isOpen, onClose, onTripCreated }) => {
 };
 
 export default CreateTripModal;
-

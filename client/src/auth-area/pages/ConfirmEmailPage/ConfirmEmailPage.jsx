@@ -18,7 +18,7 @@ import {
 
 // New modular components and hooks
 import AuthLayout from "../../components/layout/AuthLayout";
-import { useAuth } from "../../hooks/useAuth";
+import { useAuth } from "../../contexts/AuthContext";
 import { useAuthAnimations } from "../../hooks/useAuthAnimations";
 
 const ConfirmEmailPage = () => {

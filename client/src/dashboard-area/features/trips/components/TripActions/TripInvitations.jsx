@@ -1,4 +1,4 @@
-﻿// components/TripActions/TripInvitations.jsx
+// components/TripActions/TripInvitations.jsx
 import React from 'react';
 import { BellIcon, CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/outline';
 
@@ -44,3 +44,6 @@ const TripInvitations = ({ invitations, onAction }) => {
 };
 
 export default TripInvitations;
+
+
+

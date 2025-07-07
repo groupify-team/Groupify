@@ -286,3 +286,6 @@ const NotificationsDropdown = ({ pendingRequests, tripInvites }) => {
 
 export default NotificationsDropdown;
 
+
+
+
