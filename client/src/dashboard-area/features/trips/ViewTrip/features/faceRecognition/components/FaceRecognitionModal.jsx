@@ -57,7 +57,7 @@ const FaceRecognitionModal = ({
       } else if (percentage === 0) {
         setAnimatedPercentage(0);
       }
-    }, [percentage]);
+    }, [percentage, animatedPercentage]);
 
     return (
       <div className="relative w-36 h-36">
@@ -153,8 +153,8 @@ const FaceRecognitionModal = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[60] animate-fade-in">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-md w-full shadow-2xl border border-gray-200 dark:border-gray-700 animate-scale-in">
+    <div className="modal-backdrop-standard trip-modal-backdrop-enter">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-md w-full shadow-2xl border border-gray-200 dark:border-gray-700 trip-modal-enter cursor-default modal-content-standard">
         {/* Header */}
         <div className="bg-gradient-to-r from-blue-500 to-cyan-500 p-4 rounded-t-2xl">
           <div className="flex items-center justify-between">
@@ -358,7 +358,3 @@ const FaceRecognitionModal = ({
 };
 
 export default FaceRecognitionModal;
-
-
-
-

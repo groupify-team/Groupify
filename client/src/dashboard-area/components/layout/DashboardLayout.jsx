@@ -259,7 +259,7 @@ const DashboardLayout = ({ children }) => {
 
         {/* Main Content */}
         <div
-          className="flex-1 flex flex-col transition-all duration-300 ease-in-out overflow-hidden"
+          className="flex-1 flex flex-col transition-all duration-300 ease-in-out"
           style={{
             marginLeft: !isMobile && sidebarOpen ? "256px" : "0px",
             paddingTop: "56px", // Height of the header
@@ -329,7 +329,7 @@ const DashboardLayout = ({ children }) => {
 
       {/* Main Content */}
       <div
-        className="flex-1 flex flex-col transition-all duration-300 ease-in-out overflow-hidden"
+        className="flex-1 flex flex-col transition-all duration-300 ease-in-out"
         style={{
           marginLeft: !isMobile && sidebarOpen ? "256px" : "0px",
           paddingTop: "56px", // Height of the header

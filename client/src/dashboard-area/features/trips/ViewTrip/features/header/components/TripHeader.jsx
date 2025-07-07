@@ -6,6 +6,7 @@ import {
 } from "@heroicons/react/24/outline";
 
 const TripHeader = ({ trip, photos, tripMembers, isAdmin, onEditTrip }) => {
+  // Note: photos and tripMembers are passed but not used in current implementation
   const formatDateRange = (startDate, endDate) => {
     if (!startDate && !endDate) return null;
 
@@ -130,7 +131,3 @@ const TripHeader = ({ trip, photos, tripMembers, isAdmin, onEditTrip }) => {
 };
 
 export default TripHeader;
-
-
-
-

@@ -149,11 +149,11 @@ const PhotoUploadSection = ({
 
   return (
     <div
-      className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[99999] p-4 animate-fade-in"
+      className="modal-backdrop-standard trip-modal-backdrop-enter"
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-2xl bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20 dark:border-gray-700/50 overflow-hidden animate-slide-in-scale"
+        className="relative w-full max-w-2xl bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20 dark:border-gray-700/50 overflow-hidden trip-modal-enter cursor-default modal-content-standard"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -459,5 +459,6 @@ const PhotoUploadSection = ({
     </div>
   );
 };
+
 
 export default PhotoUploadSection;

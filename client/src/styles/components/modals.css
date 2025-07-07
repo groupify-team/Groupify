@@ -4,6 +4,22 @@
    ======================================== */
 
 @layer components {
+  /* === TOAST NOTIFICATIONS === */
+  .toast-above-modal {
+    z-index: var(--z-toast) !important;
+  }
+
+  /* React Hot Toast specific overrides */
+  .toast-above-modal,
+  .toast-above-modal > div {
+    z-index: var(--z-toast) !important;
+  }
+
+  /* Global toast container override */
+  div[data-testid="toast-container"] {
+    z-index: var(--z-toast) !important;
+  }
+
   /* === MODAL BACKDROP === */
   .modal-backdrop {
     position: fixed;
@@ -16,13 +32,25 @@
     align-items: center;
     justify-content: center;
     padding: var(--space-4);
+    /* Enhanced transitions */
+    transition: opacity var(--duration-normal) var(--ease-out),
+      backdrop-filter var(--duration-normal) var(--ease-out);
+  }
+
+  /* === MODAL ANIMATION STATES === */
+  .modal-backdrop-enter {
+    animation: modalBackdropEnter var(--duration-normal) var(--ease-out);
+  }
+
+  .modal-backdrop-exit {
+    animation: modalBackdropExit var(--duration-normal) var(--ease-in);
   }
 
   .modal-backdrop-dark {
     background: rgba(0, 0, 0, 0.8);
   }
 
-  /* === MODAL CONTENT === */
+  /* === ENHANCED MODAL CONTENT === */
   .modal-content {
     background: var(--color-bg-surface);
     border-radius: var(--radius-xl);
@@ -34,24 +62,78 @@
     overflow-y: auto;
     z-index: var(--z-modal);
     position: relative;
+    /* Enhanced transitions for smoother animations */
+    transition: transform var(--duration-slower) var(--ease-spring),
+      opacity var(--duration-normal) var(--ease-out),
+      box-shadow var(--duration-normal) var(--ease-out);
   }
 
-  /* === MODAL VARIANTS === */
-  .modal-content-glass {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+  /* === MODAL ANIMATION VARIANTS === */
+  .modal-content-enter {
+    animation: modalEnter var(--duration-slower) var(--ease-spring);
   }
 
-  .dark .modal-content-glass {
-    background: rgba(31, 41, 55, 0.95);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+  .modal-content-exit {
+    animation: modalExit var(--duration-normal) var(--ease-in);
   }
 
-  .modal-content-solid {
-    background: var(--color-bg-surface);
-    border: 1px solid var(--color-border-default);
+  .modal-content-slide-scale {
+    animation: modalSlideInScale var(--duration-slower) var(--ease-spring);
+  }
+
+  /* === ENHANCED MODAL CLOSE BUTTON === */
+  .modal-close {
+    width: 2rem;
+    height: 2rem;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-text-secondary);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: all var(--duration-fast) var(--ease-out);
+    /* Enhanced focus and hover states */
+    position: relative;
+    overflow: hidden;
+  }
+
+  .modal-close::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: var(--color-gray-100);
+    border-radius: inherit;
+    transform: scale(0);
+    transition: transform var(--duration-fast) var(--ease-out);
+    z-index: -1;
+  }
+
+  .modal-close:hover::before {
+    transform: scale(1);
+  }
+
+  .modal-close:hover {
+    color: var(--color-text-primary);
+    transform: scale(1.05);
+  }
+
+  .modal-close:active {
+    transform: scale(0.95);
+  }
+
+  .dark .modal-close::before {
+    background: var(--color-gray-800);
+  }
+
+  /* === BACKDROP CLICK HELPER === */
+  .modal-backdrop-clickable {
+    cursor: pointer;
+  }
+
+  .modal-content-protected {
+    cursor: default;
   }
 
   /* === MODAL SIZES === */

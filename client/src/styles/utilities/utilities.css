@@ -337,4 +337,106 @@
   .shadow-3xl {
     box-shadow: var(--shadow-3xl);
   }
+
+  /* === EMERGENCY TOAST OVERRIDE === */
+  /* Force toast messages to appear above modal backdrops */
+  .toast-above-modal,
+  div[aria-live="polite"],
+  div[aria-live="assertive"],
+  div[data-testid="toast-container"],
+  div[data-testid="toast"],
+  .react-hot-toast,
+  .Toaster,
+  .Toaster > div,
+  .Toaster__toast,
+  .Toaster__toast > div,
+  .Toaster__toast--success,
+  .Toaster__toast--error,
+  .Toaster__toast--loading {
+    z-index: 1000000 !important;
+    position: relative !important;
+  }
+
+  /* Force toast positioning context */
+  div[data-testid="toast-container"] {
+    position: fixed !important;
+    top: 20px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    z-index: 1000000 !important;
+  }
+
+  /* === TOAST NOTIFICATIONS ABOVE MODALS === */
+  /* Ensure toast messages appear above modal backdrops */
+  .toast-above-modal,
+  div[data-testid="toast-container"],
+  div[data-testid="toast"],
+  .react-hot-toast,
+  .Toaster,
+  .Toaster > div,
+  .Toaster__toast {
+    z-index: var(--z-toast) !important;
+  }
+
+  /* Force toast positioning above everything */
+  .toast-override {
+    z-index: 999999 !important;
+    position: fixed !important;
+  }
+
+  /* === MODAL BACKDROP - FULL SCREEN COVERAGE === */
+  .modal-backdrop-standard {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    background: rgba(0, 0, 0, 0.6) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    z-index: 999999 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 1rem !important;
+    cursor: pointer !important;
+    margin: 0 !important;
+    border: none !important;
+    outline: none !important;
+  }
+
+  .modal-backdrop-light {
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+
+  .modal-backdrop-heavy {
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  .modal-backdrop-photo {
+    background: rgba(0, 0, 0, 0.95);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+
+  /* === MODAL ANIMATIONS SPECIFIC TO TRIP VIEW === */
+  .trip-modal-enter {
+    animation: modalEnter var(--duration-slower) var(--ease-spring);
+  }
+
+  .trip-modal-backdrop-enter {
+    animation: modalBackdropEnter var(--duration-normal) var(--ease-out);
+  }
+
+  /* === MODAL CONTENT Z-INDEX === */
+  .modal-content-standard {
+    z-index: var(--z-modal);
+    position: relative;
+  }
 }
