@@ -1,9 +1,5 @@
 /**
- * Ultra-Optimized EventDeta// Optimized components - load immediately
-import EventHeader from "./features/header/components/EventHeader";
-import EventMembersCard from "./features/members/components/EventMembersCard";
-import InvitePeopleCard from "./features/members/components/InvitePeopleCard";
-import EventStatistics from "./features/statistics/components/EventStatistics";w with Advanced Performance Techniques
+ * Ultra-Optimized EventDetailView with Advanced Performance Techniques
  *
  * PERFORMANCE OPTIMIZATIONS:
  * 1. Cached Firebase calls with TTL
@@ -46,7 +42,7 @@ import PhotoGallery from "./features/gallery/components/PhotoGallery";
 
 // Lazy load heavy components with preloading
 const UserProfileModal = lazy(() =>
-  import("./features/members/components/UserProfileModal").then((module) => {
+  import("@shared/components/user/UserProfileModal").then((module) => {
     // Preload this component when hovering over member cards
     return { default: module.default };
   })
@@ -71,14 +67,15 @@ const FaceRecognitionResults = lazy(() =>
 
 // Lazy load modals - only when needed
 const PhotoModal = lazy(() => import("./components/PhotoModal"));
+
 const AllPhotosModal = lazy(() =>
   import("./features/gallery/components/modals/AllPhotosModal")
 );
+
 const EditEventModal = lazy(() =>
   import("./features/header/hooks/EditEventModal")
 );
 
-// Hooks
 import { useEventData } from "./hooks/useEventData";
 import { usePhotoOperations } from "./features/gallery/hooks/usePhotoOperations";
 import { useEventMembers } from "./features/members/hooks/useEventMembers";

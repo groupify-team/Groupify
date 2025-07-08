@@ -15,12 +15,12 @@ import {
 } from "firebase/firestore";
 import { db } from "@shared/services/firebase/config";
 import { updateEvent, sendEventInvite } from "@shared/services/firebase/events";
+import { UserService } from "@shared/services/user/UserService";
 import {
-  getFriends,
   getUserProfile,
   sendFriendRequest,
   removeFriend,
-} from "@firebase-services/users";
+} from "@shared/services/firebase/users";
 
 export const useEventMembers = (currentUserId, event, setEvent) => {
   const [friends, setFriends] = useState([]);
@@ -68,7 +68,7 @@ export const useEventMembers = (currentUserId, event, setEvent) => {
     const fetchFriendsAndPending = async () => {
       if (!currentUserId) return;
       try {
-        const userFriends = await getFriends(currentUserId);
+        const userFriends = await UserService.getUserFriends(currentUserId);
         const friendIds = userFriends.map((f) => f.uid);
         setFriends(friendIds);
 

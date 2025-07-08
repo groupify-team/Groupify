@@ -198,9 +198,25 @@ export const eventsService = {
       if (!memberIds || memberIds.length === 0) return [];
 
       const memberProfiles = await Promise.all(
-        memberIds.map((uid) => getUserProfile(uid))
+        memberIds.map(async (uid) => {
+          try {
+            const profile = await getUserProfile(uid);
+            return profile
+              ? {
+                  uid: profile.uid || profile.id || uid,
+                  id: profile.id || profile.uid || uid,
+                  ...profile,
+                }
+              : null;
+          } catch (error) {
+            console.error(`Error fetching member profile ${uid}:`, error);
+            return null;
+          }
+        })
       );
-      return memberProfiles;
+
+      // Filter out null profiles and ensure proper structure
+      return memberProfiles.filter((profile) => profile !== null);
     } catch (error) {
       console.error("Error fetching event members:", error);
       throw error;

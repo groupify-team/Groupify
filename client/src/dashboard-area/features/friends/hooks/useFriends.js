@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@auth/hooks/useAuth";
-
-import { FriendsService } from "../services/friendsService";
+import { UserService } from "@shared/services/user/UserService";
 
 export const useFriends = () => {
   const { currentUser } = useAuth();
@@ -16,7 +15,7 @@ export const useFriends = () => {
     try {
       setLoading(true);
       setError(null);
-      const userFriends = await FriendsService.getUserFriends(currentUser.uid);
+      const userFriends = await UserService.getUserFriends(currentUser.uid);
       setFriends(userFriends);
     } catch (err) {
       console.error("Error loading friends:", err);
@@ -34,11 +33,11 @@ export const useFriends = () => {
 
       try {
         setError(null);
-        await FriendsService.removeFriend(currentUser.uid, friendUserId);
+        await UserService.removeFriend(currentUser.uid, friendUserId);
 
         // Update local state
         setFriends((prev) =>
-          prev.filter((friend) => friend.id !== friendUserId)
+          prev.filter((friend) => friend.uid !== friendUserId)
         );
         return true;
       } catch (err) {
@@ -58,7 +57,7 @@ export const useFriends = () => {
   // Check if user is a friend
   const isFriend = useCallback(
     (userId) => {
-      return friends.some((friend) => friend.id === userId);
+      return friends.some((friend) => friend.uid === userId);
     },
     [friends]
   );

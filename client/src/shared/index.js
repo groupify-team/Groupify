@@ -48,6 +48,15 @@ export const generateId = () => {
   return Date.now().toString(36) + Math.random().toString(36).substr(2);
 };
 
+// Export shared hooks
+export * from "./hooks";
+
+// Export shared services
+export * from "./services";
+
+// Export shared components
+export * from "./components";
+
 // Shared Components and Constants Export
 export * from "./constants";
 export * from "./components/ui/LoadingSpinner";

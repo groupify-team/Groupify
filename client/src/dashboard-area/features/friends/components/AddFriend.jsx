@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { useAuth } from "@auth/hooks/useAuth";
-
-import { findUsersByEmail } from "@firebase-services/users";
+import { UserService } from "@shared/services/user";
 
 import {
   MagnifyingGlassIcon,
@@ -57,7 +56,7 @@ const AddFriend = ({
         return;
       }
 
-      const users = await findUsersByEmail(input.trim());
+      const users = await UserService.findUsersByEmail(input.trim());
       const targetUser = users.find((u) => u.uid !== currentUser.uid);
 
       if (!targetUser) {

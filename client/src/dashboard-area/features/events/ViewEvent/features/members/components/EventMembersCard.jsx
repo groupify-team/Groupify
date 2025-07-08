@@ -1,5 +1,6 @@
 import React from "react";
 import { UserGroupIcon } from "@heroicons/react/24/outline";
+import { EnhancedUserCard } from "@shared/components/user";
 
 const EventMembersCard = ({
   eventMembers,
@@ -7,6 +8,14 @@ const EventMembersCard = ({
   currentUserId,
   onMemberClick,
 }) => {
+  // Debug logging
+  console.log("EventMembersCard props:", {
+    eventMembersCount: eventMembers?.length,
+    eventMembers,
+    eventData: event,
+    currentUserId,
+  });
+
   // Sort members: current user first, then creator, then alphabetical
   const sortedMembers = [...eventMembers].sort((a, b) => {
     // 1. Current user first
@@ -38,6 +47,12 @@ const EventMembersCard = ({
     return aJoinDate - bJoinDate;
   });
 
+  const getMemberRole = (member) => {
+    if (member.uid === event.createdBy) return "creator";
+    if (event.admins?.includes(member.uid)) return "admin";
+    return "member";
+  };
+
   return (
     <div className="relative group">
       <div className="absolute -inset-1 bg-gradient-to-r from-orange-500 to-red-500 rounded-2xl blur opacity-20 group-hover:opacity-30 transition duration-300"></div>
@@ -48,7 +63,7 @@ const EventMembersCard = ({
           </div>
           <div className="text-center sm:text-left">
             <h2 className="text-base sm:text-lg font-bold text-gray-800 dark:text-white flex items-center gap-2 justify-center sm:justify-start">
-              event Members
+              Event Members
               <span className="text-xs font-semibold text-orange-600 dark:text-orange-400 bg-orange-100 dark:bg-orange-900/30 px-2 py-1 rounded-full border border-orange-200 dark:border-orange-800">
                 {eventMembers.length}
               </span>
@@ -70,54 +85,20 @@ const EventMembersCard = ({
           </div>
         ) : (
           <div className="space-y-2 sm:space-y-3 max-h-60 sm:max-h-80 overflow-y-auto scrollbar-thin scrollbar-thumb-orange-300 dark:scrollbar-thumb-orange-700 scrollbar-track-transparent">
-            {sortedMembers.map((member) => (
+            {sortedMembers.map((member, index) => (
               <div
-                key={member.uid}
-                className="group/member flex items-center justify-between p-2 sm:p-3 rounded-lg sm:rounded-xl bg-gradient-to-r from-gray-50/50 to-orange-50/50 dark:from-gray-800/50 dark:to-orange-900/20 hover:from-orange-50 hover:to-orange-100 dark:hover:from-orange-900/30 dark:hover:to-orange-900/40 transition-all duration-300 cursor-pointer border border-gray-200/30 dark:border-gray-700/30 backdrop-blur-sm"
+                key={member.uid || `member-${index}`}
+                className="group/member p-2 sm:p-3 rounded-lg sm:rounded-xl bg-gradient-to-r from-gray-50/50 to-orange-50/50 dark:from-gray-800/50 dark:to-orange-900/20 hover:from-orange-50 hover:to-orange-100 dark:hover:from-orange-900/30 dark:hover:to-orange-900/40 transition-all duration-300 cursor-pointer border border-gray-200/30 dark:border-gray-700/30 backdrop-blur-sm"
                 onClick={() => onMemberClick(member, currentUserId)}
               >
-                <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
-                  <div className="relative flex-shrink-0">
-                    <img
-                      src={
-                        member.photoURL ||
-                        "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg"
-                      }
-                      alt="Avatar"
-                      className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover border-2 border-white dark:border-gray-600 shadow-md"
-                    />
-                    {member.uid === currentUserId && (
-                      <div className="absolute -bottom-0.5 -right-0.5 sm:-bottom-1 sm:-right-1 w-3 h-3 sm:w-4 sm:h-4 bg-green-500 border-2 border-white dark:border-gray-800 rounded-full"></div>
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-gray-800 dark:text-white truncate text-xs sm:text-sm">
-                      {member.displayName || member.email || member.uid}
-                      {member.uid === currentUserId && (
-                        <span className="text-green-600 dark:text-green-400 ml-1">
-                          (You)
-                        </span>
-                      )}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Role Badge */}
-                <div className="flex-shrink-0">
-                  {member.uid === event.createdBy ? (
-                    <span className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-semibold px-2 py-1 rounded-full shadow-sm">
-                      Creator
-                    </span>
-                  ) : event.admins?.includes(member.uid) ? (
-                    <span className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white text-xs font-semibold px-2 py-1 rounded-full shadow-sm">
-                      Admin
-                    </span>
-                  ) : (
-                    <span className="bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 text-xs font-semibold px-2 py-1 rounded-full">
-                      Member
-                    </span>
-                  )}
-                </div>
+                <EnhancedUserCard
+                  user={member}
+                  context="event-member"
+                  role={getMemberRole(member)}
+                  isCurrentUser={member.uid === currentUserId}
+                  size="small"
+                  className="!p-0 !bg-transparent !border-none !shadow-none"
+                />
               </div>
             ))}
           </div>

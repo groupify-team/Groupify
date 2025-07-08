@@ -7,7 +7,7 @@ import { useState, useEffect } from "react";
 import { toast } from "react-hot-toast";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "@shared/services/firebase/config";
-import { getFriends } from "@firebase-services/users";
+import { getFriends } from "@shared/services/firebase/users";
 import { sendEventInvite } from "@shared/services/firebase/events";
 
 export const useInviteFriends = (
@@ -21,19 +21,28 @@ export const useInviteFriends = (
   const [isLoading, setIsLoading] = useState(false);
   const [isInviting, setIsInviting] = useState(false);
 
-  // ?? Load and filter friends (excluding event members)
+  // 🔧 Load and filter friends (excluding event members)
   useEffect(() => {
     const fetchFriends = async () => {
       if (currentUser?.uid) {
         setIsLoading(true);
         try {
+          console.log(
+            "useInviteFriends: Fetching friends for user:",
+            currentUser.uid
+          );
           const results = await getFriends(currentUser.uid);
+          console.log("useInviteFriends: Friends fetched:", results);
+
           const filtered = results.filter(
             (friend) => !excludedUserIds.includes(friend.uid)
           );
+          console.log(
+            `useInviteFriends: Filtered ${results.length} friends down to ${filtered.length} (excluding event members)`
+          );
           setFriends(filtered);
         } catch (error) {
-          console.error("Error fetching friends:", error);
+          console.error("useInviteFriends: Error fetching friends:", error);
           toast.error("Failed to load friends");
         } finally {
           setIsLoading(false);
@@ -43,7 +52,7 @@ export const useInviteFriends = (
     fetchFriends();
   }, [currentUser, excludedUserIds]);
 
-  // ?? Filter by search term
+  // 🔍 Filter by search term
   useEffect(() => {
     const term = searchTerm.toLowerCase();
     setFilteredFriends(
@@ -74,7 +83,7 @@ export const useInviteFriends = (
       const q = query(
         collection(db, "eventInvites"),
         where("eventId", "==", eventId),
-        where("inviteeUid", "==", friend.uid), // or "to" depending on your schema
+        where("inviteeUid", "==", friend.uid),
         where("status", "==", "pending")
       );
 
@@ -88,7 +97,7 @@ export const useInviteFriends = (
             color: "#333",
             border: "1px solid #f59e0b",
           },
-          icon: "??",
+          icon: "⚠️",
         });
         return;
       }
@@ -104,12 +113,13 @@ export const useInviteFriends = (
             "You don't have permission to send invites to this event."
           );
         } else if (inviteError.code === "not-found") {
-          toast.error("event not found or friend doesn't exist.");
+          toast.error("Event not found or friend doesn't exist.");
         } else {
           toast.error(`Failed to send invitation: ${inviteError.message}`);
         }
         return;
       }
+
       // Remove friend from available list (they're now invited)
       setFriends((prev) => prev.filter((f) => f.uid !== friend.uid));
 
@@ -131,7 +141,7 @@ export const useInviteFriends = (
           "Permission denied. You may not have permission to send invites."
         );
       } else if (error.code === "not-found") {
-        toast.error("event not found or user doesn't exist.");
+        toast.error("Event not found or user doesn't exist.");
       } else {
         toast.error("Failed to send invitation. Please try again.");
       }

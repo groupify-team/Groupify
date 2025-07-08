@@ -11,9 +11,13 @@ import {
   CheckCircleIcon,
 } from "@heroicons/react/24/outline";
 import { useAuth } from "@auth/hooks/useAuth";
+import { toast } from "react-hot-toast";
 
 import { eventsService } from "../services/eventsService";
 import { usePlanLimits } from "../../../../shared/hooks/usePlanLimits";
+import { collection, query, where, getDocs } from "firebase/firestore";
+import { db } from "@shared/services/firebase/config";
+import subscriptionService from "@shared/services/subscriptionService";
 
 const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
   const [name, setName] = useState("");
@@ -56,15 +60,41 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
     }
   }, [loading, onClose]);
 
-  // Load event count function
   const loadEventCount = useCallback(async () => {
     try {
-      const count = await eventsService.getUserEventCount(currentUser.uid);
-      setCurrentEventCount(count);
+      if (currentUser?.uid) {
+        // Check subscription service first
+        const subscription = subscriptionService.getCurrentSubscription();
+        const usageFromService = subscription?.usage?.events?.used || 0;
+
+        // Force a fresh query from Firestore
+        const eventsQuery = query(
+          collection(db, "events"),
+          where("members", "array-contains", currentUser.uid)
+        );
+        const querySnapshot = await getDocs(eventsQuery);
+        const actualCount = querySnapshot.size;
+
+        console.log("🔍 Event Count Debug:", {
+          actualFirestoreCount: actualCount,
+          subscriptionServiceCount: usageFromService,
+          currentStateCount: currentEventCount,
+          userId: currentUser.uid,
+          events: querySnapshot.docs.map((doc) => ({
+            id: doc.id,
+            name: doc.data().name,
+            createdBy: doc.data().createdBy,
+            members: doc.data().members,
+          })),
+        });
+
+        setCurrentEventCount(actualCount);
+        subscriptionService.updateUsage({ events: actualCount });
+      }
     } catch (error) {
       console.error("Error loading event count:", error);
     }
-  }, [currentUser]);
+  }, [currentUser, currentEventCount]);
 
   useEffect(() => {
     const handleEscape = (e) => {
@@ -88,21 +118,33 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
 
   useEffect(() => {
     if (isOpen) {
+      // Store current padding right to restore it later
+      const scrollBarWidth =
+        window.innerWidth - document.documentElement.clientWidth;
+      document.body.style.paddingRight = `${scrollBarWidth}px`;
+
       // Add body class to help with z-index management
       document.body.classList.add("modal-open");
-      // Prevent body scroll
+
+      // Prevent body scroll without shifting content
       document.body.style.overflow = "hidden";
+      document.body.style.position = "relative";
     } else {
       // Remove body class
       document.body.classList.remove("modal-open");
-      // Restore body scroll
-      document.body.style.overflow = "unset";
+
+      // Restore body scroll and remove padding
+      document.body.style.overflow = "";
+      document.body.style.paddingRight = "";
+      document.body.style.position = "";
     }
 
     // Cleanup on unmount
     return () => {
       document.body.classList.remove("modal-open");
-      document.body.style.overflow = "unset";
+      document.body.style.overflow = "";
+      document.body.style.paddingRight = "";
+      document.body.style.position = "";
     };
   }, [isOpen]);
 
@@ -146,16 +188,26 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
     }
 
     // Check plan limits before proceeding
-    const limitCheck = canPerformAction("create_event", { currentEventCount });
+    // Only perform this check if the current count is at or exceeding the limit
+    const planFeatures = getPlanFeatures();
+    const planLimit = planFeatures?.events || 5;
 
-    if (!limitCheck.allowed) {
-      if (limitCheck.upgradeRequired) {
-        setShowUpgradePrompt(true);
-        setError(limitCheck.reason);
-        return;
-      } else {
-        setError(limitCheck.reason);
-        return;
+    console.log("Event count check:", { currentEventCount, planLimit }); // Debug log
+
+    if (planLimit !== "unlimited" && currentEventCount >= planLimit) {
+      const limitCheck = canPerformAction("create_event", {
+        currentEventCount,
+      });
+
+      if (!limitCheck.allowed) {
+        if (limitCheck.upgradeRequired) {
+          setShowUpgradePrompt(true);
+          setError(limitCheck.reason);
+          return;
+        } else {
+          setError(limitCheck.reason);
+          return;
+        }
       }
     }
 
@@ -163,14 +215,20 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
       setLoading(true);
       setError(null);
 
-      // Legacy event limit check (keeping for backward compatibility)
-      const canCreate = await eventsService.canUserCreateEvent(currentUser.uid);
-      if (!canCreate) {
-        const currentCount = await eventsService.getUserEventCount(
-          currentUser.uid
-        );
+      const freshCount = currentEventCount;
+
+      // Get plan features
+      const planFeatures = getPlanFeatures();
+      const planLimit = planFeatures?.events || 5;
+
+      console.log("Final count check:", { freshCount, planLimit }); // Debug log
+
+      // Check limits with current data
+      if (planLimit !== "unlimited" && freshCount >= planLimit) {
         setError(
-          `Event limit reached! You can only create ${eventsService.MAX_EVENTS_PER_USER} events. You currently have ${currentCount} events.`
+          `Event limit reached! Your ${
+            planFeatures?.planName || "current"
+          } plan allows ${planLimit} events. You currently have ${freshCount} events.`
         );
         setLoading(false);
         return;
@@ -193,6 +251,18 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
 
       // Store Event name for success modal
       setcreatedEventName(name);
+
+      // Show success toast with remaining events info
+      const remaining =
+        planLimit === "unlimited" ? "unlimited" : planLimit - (freshCount + 1);
+      toast.success(
+        `Event "${name}" created successfully! ${
+          remaining !== "unlimited"
+            ? `(${freshCount + 1}/${planLimit} events)`
+            : ""
+        }`,
+        { duration: 4000 }
+      );
 
       // Reset form
       setName("");
@@ -232,16 +302,16 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
 
   return (
     <div
-      className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in"
+      className="modal-backdrop-standard animate-fade-in"
       onClick={handleClose}
     >
-      <div className="relative w-full max-w-md">
+      <div className="relative w-full max-w-md mx-auto">
         {/* Background blur effect */}
         <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-2xl blur opacity-20"></div>
 
         {/* Modal content */}
         <div
-          className="relative bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20 dark:border-gray-700/50 overflow-hidden animate-slide-in-scale"
+          className="create-event-modal-content bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20 dark:border-gray-700/50 overflow-hidden animate-slide-in-scale"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Compact Header */}
@@ -291,10 +361,14 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
 
                 <div className="flex items-center gap-4">
                   <span className="text-gray-600 dark:text-gray-400">
-                    events: {currentEventCount}/
+                    Events: {currentEventCount}/
                     {planFeatures?.events === "unlimited"
-                      ? "8"
-                      : planFeatures?.events || 0}
+                      ? "∞"
+                      : planFeatures?.events || 5}
+                    {/* Debug info */}
+                    <span className="text-xs text-red-500 ml-2">
+                      (Debug: {currentEventCount})
+                    </span>
                   </span>
 
                   {(isFreePlan || isPremiumPlan) && (
@@ -432,7 +506,7 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <MapPinIcon className="w-4 h-4 text-indigo-500" />
+                  <MapPinIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-indigo-500 pointer-events-none z-10" />
                 </div>
                 <input
                   type="text"
@@ -476,8 +550,8 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
                   Start Date
                 </label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <CalendarIcon className="w-4 h-4 text-green-500" />
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
+                    <CalendarIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-green-500 pointer-events-none z-10" />
                   </div>
                   <input
                     type="date"
@@ -494,8 +568,8 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
                   End Date
                 </label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <CalendarIcon className="w-4 h-4 text-purple-500" />
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
+                    <CalendarIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-purple-500 pointer-events-none z-10" />
                   </div>
                   <input
                     type="date"
@@ -550,7 +624,10 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
 
       {/* Success Modal */}
       {showSuccessModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[60]">
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[60]"
+          style={{ width: "100vw", height: "100vh", overflowY: "auto" }}
+        >
           <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20 dark:border-gray-700/50 p-8 max-w-md w-full text-center animate-slide-in-scale">
             {/* Success Icon */}
             <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
