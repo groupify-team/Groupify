@@ -71,13 +71,24 @@ export const useInviteFriends = (
 
   // Handle friend invitation with all the logic
   const handleInviteFriend = async (friend) => {
+    console.log("🚀 Starting invitation process for friend:", friend);
+
     if (!eventId || !currentUser?.uid) {
+      console.error("❌ Missing event or user information:", {
+        eventId,
+        currentUser: currentUser?.uid,
+      });
       toast.error("Missing event or user information");
       return;
     }
 
     try {
       setIsInviting(true);
+      console.log("📤 Sending invitation:", {
+        eventId,
+        inviterUid: currentUser.uid,
+        inviteeUid: friend.uid,
+      });
 
       // Check if invitation already exists using the correct field names
       const q = query(
@@ -88,8 +99,10 @@ export const useInviteFriends = (
       );
 
       const existing = await getDocs(q);
+      console.log("🔍 Checking for existing invites:", existing.size, "found");
 
       if (!existing.empty) {
+        console.log("⚠️ Friend already has pending invite");
         toast(`${friend.displayName} already has a pending invite.`, {
           style: {
             borderRadius: "10px",
@@ -98,29 +111,40 @@ export const useInviteFriends = (
             border: "1px solid #f59e0b",
           },
           icon: "⚠️",
+          duration: 4000,
         });
         return;
       }
 
       // Send the invitation with better error handling
       try {
+        console.log("📨 Calling sendEventInvite function...");
         await sendEventInvite(eventId, currentUser.uid, friend.uid);
+        console.log("✅ Invitation sent successfully!");
       } catch (inviteError) {
         console.error("Detailed invite error:", inviteError);
 
         if (inviteError.code === "permission-denied") {
           toast.error(
-            "You don't have permission to send invites to this event."
+            "You don't have permission to send invites to this event.",
+            { duration: 5000 }
           );
         } else if (inviteError.code === "not-found") {
-          toast.error("Event not found or friend doesn't exist.");
+          toast.error("Event not found or friend doesn't exist.", {
+            duration: 5000,
+          });
+        } else if (inviteError.message?.includes("limit")) {
+          toast.error(inviteError.message, { duration: 6000 });
         } else {
-          toast.error(`Failed to send invitation: ${inviteError.message}`);
+          toast.error(`Failed to send invitation: ${inviteError.message}`, {
+            duration: 5000,
+          });
         }
         return;
       }
 
       // Remove friend from available list (they're now invited)
+      console.log("🗑️ Removing friend from available list");
       setFriends((prev) => prev.filter((f) => f.uid !== friend.uid));
 
       // Clear search if this was the only result
@@ -128,22 +152,39 @@ export const useInviteFriends = (
         filteredFriends.length === 1 &&
         filteredFriends[0].uid === friend.uid
       ) {
+        console.log("🔍 Clearing search term");
         clearSearch();
       }
 
-      toast.success(`Invitation sent to ${friend.displayName}!`);
+      console.log("🎉 Showing success toast");
+      toast.success(`🎉 Invitation sent to ${friend.displayName}!`, {
+        duration: 4000,
+        style: {
+          borderRadius: "10px",
+          background: "#f0fdf4",
+          color: "#166534",
+          border: "1px solid #22c55e",
+        },
+      });
     } catch (error) {
       console.error("Error sending event invite:", error);
 
-      // Better error handling
+      // Better error handling with more specific messages
       if (error.code === "permission-denied") {
         toast.error(
-          "Permission denied. You may not have permission to send invites."
+          "Permission denied. You may not have permission to send invites.",
+          { duration: 5000 }
         );
       } else if (error.code === "not-found") {
-        toast.error("Event not found or user doesn't exist.");
+        toast.error("Event not found or user doesn't exist.", {
+          duration: 5000,
+        });
+      } else if (error.message?.includes("limit")) {
+        toast.error(error.message, { duration: 6000 });
       } else {
-        toast.error("Failed to send invitation. Please try again.");
+        toast.error("Failed to send invitation. Please try again.", {
+          duration: 5000,
+        });
       }
     } finally {
       setIsInviting(false);

@@ -1,5 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { XMarkIcon } from "@heroicons/react/24/outline";
+import {
+  XMarkIcon,
+  UserPlusIcon,
+  UserMinusIcon,
+  ShieldCheckIcon,
+  StarIcon,
+  HeartIcon,
+  ClockIcon,
+  EllipsisVerticalIcon,
+} from "@heroicons/react/24/outline";
 import { userStatsCache } from "@shared/services/userStatsCache";
 import { toast } from "react-hot-toast";
 
@@ -19,7 +28,6 @@ const UserProfileModal = ({
   // Friend-related props
   onAddFriend,
   onRemoveFriend,
-  onCancelRequest,
   friends = [],
   pendingRequests = [],
 
@@ -42,6 +50,7 @@ const UserProfileModal = ({
   });
   const [loading, setLoading] = useState(false);
   const [confirmAction, setConfirmAction] = useState(null);
+  const [showActionMenu, setShowActionMenu] = useState(false);
 
   // Load user stats when modal opens
   useEffect(() => {
@@ -116,6 +125,7 @@ const UserProfileModal = ({
     try {
       await action();
       onClose();
+      toast.success("Action completed successfully!");
     } catch (error) {
       console.error("Action failed:", error);
       toast.error("Action failed. Please try again.");
@@ -138,150 +148,187 @@ const UserProfileModal = ({
       case "kick":
         await handleAction(() => onRemoveFromEvent(user.uid));
         break;
+      case "invite-to-event":
+        await handleAction(() => onInviteToEvent(user.uid));
+        break;
+      case "leave-event":
+        await handleAction(() => onRemoveFromEvent(currentUserId));
+        break;
+      case "leave-admin":
+        await handleAction(() => onDemoteFromAdmin(currentUserId));
+        break;
       default:
         break;
     }
     setConfirmAction(null);
+    setShowActionMenu(false);
   };
 
-  const handleAddFriendWithCache = async (targetUid) => {
-    try {
-      await onAddFriend?.(targetUid);
-      userStatsCache.invalidateUser(targetUid);
-      userStatsCache.invalidateUser(currentUserId);
-    } catch (error) {
-      console.error("Error adding friend:", error);
-    }
-  };
-
-  const handleRemoveFriendWithCache = async (targetUid) => {
-    try {
-      await onRemoveFriend?.(targetUid);
-      userStatsCache.invalidateUser(targetUid);
-      userStatsCache.invalidateUser(currentUserId);
-    } catch (error) {
-      console.error("Error removing friend:", error);
-    }
-  };
-
+  // Render role badge for event context
   const renderRoleBadge = () => {
     if (context !== "event") return null;
 
     if (isUserCreator) {
       return (
-        <span className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-semibold px-2 py-1 rounded-full shadow-sm">
-          Creator
-        </span>
+        <div className="role-badge">
+          <div className="flex items-center gap-1.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white px-3 py-1.5 rounded-full text-xs font-medium shadow-lg border-2 border-white">
+            <StarIcon className="w-3 h-3" />
+            Creator
+          </div>
+        </div>
       );
     }
 
     if (isUserAdmin) {
       return (
-        <span className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white text-xs font-semibold px-2 py-1 rounded-full shadow-sm">
-          Admin
-        </span>
+        <div className="role-badge">
+          <div className="flex items-center gap-1.5 bg-gradient-to-r from-blue-500 to-cyan-500 text-white px-3 py-1.5 rounded-full text-xs font-medium shadow-lg border-2 border-white">
+            <ShieldCheckIcon className="w-3 h-3" />
+            Admin
+          </div>
+        </div>
       );
     }
 
     if (isEventMember) {
       return (
-        <span className="bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 text-xs font-semibold px-2 py-1 rounded-full">
-          Member
-        </span>
+        <div className="role-badge">
+          <span className="bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 px-3 py-1.5 rounded-full text-xs font-medium border-2 border-white shadow-lg">
+            Member
+          </span>
+        </div>
       );
     }
 
     return null;
   };
 
-  const renderFriendActions = () => {
+  // Render friendship status badge
+  const renderFriendshipStatus = () => {
     if (isOwnProfile) return null;
 
+    if (isFriend) {
+      return (
+        <div className="flex items-center justify-center mb-4">
+          <div className="flex items-center gap-1.5 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 px-4 py-2 rounded-full text-sm font-medium border border-green-200 dark:border-green-800">
+            <HeartIcon className="w-4 h-4" />
+            Friends
+          </div>
+        </div>
+      );
+    }
+
+    if (isPending) {
+      return (
+        <div className="flex items-center justify-center mb-4">
+          <div className="flex items-center gap-1.5 bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-300 px-4 py-2 rounded-full text-sm font-medium border border-yellow-200 dark:border-yellow-800">
+            <ClockIcon className="w-4 h-4" />
+            Pending
+          </div>
+        </div>
+      );
+    }
+
+    return null;
+  };
+
+  // Render friend actions
+  const renderFriendActions = () => {
+    if (isOwnProfile || context === "event") return null;
+
     return (
-      <div className="space-y-3">
-        {isFriend ? (
+      <div className="space-y-2">
+        {!isFriend && !isPending && (
           <button
-            onClick={() => handleRemoveFriendWithCache(user.uid)}
+            onClick={() => handleAction(() => onAddFriend(user.uid))}
             disabled={loading}
-            className="w-full px-4 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-semibold transition-colors duration-200 disabled:opacity-50"
+            className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg font-medium transition-colors disabled:opacity-50"
           >
-            {loading ? "Removing..." : "Remove Friend"}
+            <UserPlusIcon className="w-5 h-5" />
+            Add Friend
           </button>
-        ) : isPending ? (
+        )}
+
+        {isFriend && (
           <button
-            onClick={() => onCancelRequest?.(user.uid)}
+            onClick={() => setConfirmAction("remove-friend")}
             disabled={loading}
-            className="w-full px-4 py-3 bg-slate-600 hover:bg-slate-700 text-white rounded-xl font-semibold transition-colors duration-200 disabled:opacity-50"
+            className="w-full flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-lg font-medium transition-colors disabled:opacity-50"
           >
-            {loading ? "Canceling..." : "Cancel Request"}
-          </button>
-        ) : (
-          <button
-            onClick={() => handleAddFriendWithCache(user.uid)}
-            disabled={loading}
-            className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold transition-colors duration-200 disabled:opacity-50"
-          >
-            {loading ? "Sending..." : "Send Friend Request"}
+            <UserMinusIcon className="w-5 h-5" />
+            Remove Friend
           </button>
         )}
       </div>
     );
   };
 
+  // Render event-specific actions
   const renderEventActions = () => {
     if (context !== "event" || isOwnProfile) return null;
 
     const canManageUser =
       isCurrentUserCreator || (isCurrentUserAdmin && !isUserCreator);
 
-    if (!canManageUser) return null;
-
     return (
-      <div className="space-y-3 mt-4 pt-4 border-t border-slate-600">
-        <h3 className="text-sm font-semibold text-slate-300 mb-2">
-          Event Actions
-        </h3>
+      <div className="space-y-2">
+        {canManageUser && isEventMember && (
+          <div className="relative">
+            <button
+              onClick={() => setShowActionMenu(!showActionMenu)}
+              className="w-full flex items-center justify-center gap-2 bg-slate-600 hover:bg-slate-700 text-white px-4 py-3 rounded-lg font-medium transition-colors"
+            >
+              <EllipsisVerticalIcon className="w-5 h-5" />
+              Manage User
+            </button>
 
-        {isEventMember && (
-          <>
-            {!isUserAdmin && onPromoteToAdmin && (
-              <button
-                onClick={() => setConfirmAction("promote")}
-                disabled={loading}
-                className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold transition-colors duration-200 disabled:opacity-50"
-              >
-                Promote to Admin
-              </button>
-            )}
+            {showActionMenu && (
+              <div className="absolute bottom-full left-0 right-0 mb-2 bg-slate-700 rounded-lg shadow-lg border border-slate-600 overflow-hidden">
+                {!isUserAdmin && (
+                  <button
+                    onClick={() => {
+                      setConfirmAction("promote");
+                      setShowActionMenu(false);
+                    }}
+                    className="w-full text-left px-4 py-3 text-white hover:bg-slate-600 transition-colors"
+                  >
+                    Promote to Admin
+                  </button>
+                )}
 
-            {isUserAdmin && !isUserCreator && onDemoteFromAdmin && (
-              <button
-                onClick={() => setConfirmAction("demote")}
-                disabled={loading}
-                className="w-full px-4 py-3 bg-yellow-600 hover:bg-yellow-700 text-white rounded-xl font-semibold transition-colors duration-200 disabled:opacity-50"
-              >
-                Remove Admin
-              </button>
-            )}
+                {isUserAdmin && !isUserCreator && (
+                  <button
+                    onClick={() => {
+                      setConfirmAction("demote");
+                      setShowActionMenu(false);
+                    }}
+                    className="w-full text-left px-4 py-3 text-white hover:bg-slate-600 transition-colors"
+                  >
+                    Remove Admin
+                  </button>
+                )}
 
-            {!isUserCreator && onRemoveFromEvent && (
-              <button
-                onClick={() => setConfirmAction("kick")}
-                disabled={loading}
-                className="w-full px-4 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-semibold transition-colors duration-200 disabled:opacity-50"
-              >
-                Remove from Event
-              </button>
+                <button
+                  onClick={() => {
+                    setConfirmAction("kick");
+                    setShowActionMenu(false);
+                  }}
+                  className="w-full text-left px-4 py-3 text-red-400 hover:bg-slate-600 transition-colors"
+                >
+                  Remove from Event
+                </button>
+              </div>
             )}
-          </>
+          </div>
         )}
 
         {!isEventMember && onInviteToEvent && (
           <button
             onClick={() => handleAction(() => onInviteToEvent(user.uid))}
             disabled={loading}
-            className="w-full px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-semibold transition-colors duration-200 disabled:opacity-50"
+            className="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-3 rounded-lg font-medium transition-colors disabled:opacity-50"
           >
+            <UserPlusIcon className="w-5 h-5" />
             Invite to Event
           </button>
         )}
@@ -289,46 +336,21 @@ const UserProfileModal = ({
     );
   };
 
-  const renderRelationshipStatus = () => {
-    if (isOwnProfile) return null;
-
-    return (
-      <div className="mb-4">
-        {isFriend ? (
-          <button className="w-full bg-green-600 text-white py-3 px-4 rounded-xl font-semibold text-sm flex items-center justify-center gap-2">
-            <span className="text-lg">✓</span>
-            Friends
-          </button>
-        ) : isPending ? (
-          <button className="w-full bg-yellow-600 text-white py-3 px-4 rounded-xl font-semibold text-sm flex items-center justify-center gap-2">
-            <span className="text-lg">⏳</span>
-            Request Pending
-          </button>
-        ) : (
-          <button className="w-full bg-green-600 text-white py-3 px-4 rounded-xl font-semibold text-sm flex items-center justify-center gap-2">
-            <span className="text-lg">+</span>
-            Add Friend
-          </button>
-        )}
-      </div>
-    );
-  };
-
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-slate-800 rounded-2xl shadow-2xl max-w-sm w-full mx-4 overflow-hidden border border-slate-700">
+    <div className="user-profile-modal modal-backdrop">
+      <div className="user-profile-modal-content">
         {/* Header with Close Button */}
-        <div className="relative p-4">
+        <div className="user-profile-modal-header">
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors p-1 rounded-lg hover:bg-slate-700"
+            className="user-profile-modal-close text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors"
           >
             <XMarkIcon className="w-6 h-6" />
           </button>
         </div>
 
         {/* Profile Section */}
-        <div className="px-6 pb-6">
+        <div className="px-6 pt-6 pb-6">
           {/* Profile Image */}
           <div className="text-center mb-6">
             <div className="relative inline-block">
@@ -339,23 +361,19 @@ const UserProfileModal = ({
                     "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg"
                   }
                   alt="Profile"
-                  className="w-full h-full rounded-full object-cover bg-slate-700"
+                  className="w-full h-full rounded-full object-cover bg-slate-200 dark:bg-slate-700"
                 />
               </div>
-              {renderRoleBadge() && (
-                <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2">
-                  {renderRoleBadge()}
-                </div>
-              )}
+              {renderRoleBadge()}
             </div>
           </div>
 
           {/* User Info */}
           <div className="text-center mb-6">
-            <h2 className="text-xl font-bold text-white mb-1">
+            <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-1">
               {user.displayName || "Unknown User"}
             </h2>
-            <p className="text-slate-400 text-sm break-all mb-3">
+            <p className="text-slate-500 dark:text-slate-400 text-sm break-all mb-4">
               {user.email}
             </p>
 
@@ -363,36 +381,40 @@ const UserProfileModal = ({
             {showStats && (
               <div className="flex justify-center gap-8 mb-4">
                 <div className="text-center">
-                  <div className="w-8 h-8 bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-1">
-                    <span className="text-slate-400 text-xs">📅</span>
+                  <div className="w-8 h-8 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-1">
+                    <span className="text-slate-600 dark:text-slate-400 text-xs">
+                      📅
+                    </span>
                   </div>
-                  <div className="text-2xl font-bold text-white h-8 flex items-center justify-center">
+                  <div className="text-2xl font-bold text-slate-900 dark:text-white h-8 flex items-center justify-center">
                     {userStats.loading ? (
-                      <div className="w-4 h-4 border-2 border-slate-400 border-t-white rounded-full animate-spin"></div>
+                      <div className="w-4 h-4 border-2 border-slate-300 dark:border-slate-400 border-t-blue-500 rounded-full animate-spin"></div>
                     ) : userStats.error ? (
-                      <span className="text-slate-500 text-lg">-</span>
+                      <span className="text-slate-400 text-lg">-</span>
                     ) : (
                       <span className="text-2xl">{userStats.eventsCount}</span>
                     )}
                   </div>
-                  <div className="text-xs text-slate-400 uppercase tracking-wide">
+                  <div className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wide">
                     Events
                   </div>
                 </div>
                 <div className="text-center">
-                  <div className="w-8 h-8 bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-1">
-                    <span className="text-slate-400 text-xs">👥</span>
+                  <div className="w-8 h-8 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-1">
+                    <span className="text-slate-600 dark:text-slate-400 text-xs">
+                      👥
+                    </span>
                   </div>
-                  <div className="text-2xl font-bold text-white h-8 flex items-center justify-center">
+                  <div className="text-2xl font-bold text-slate-900 dark:text-white h-8 flex items-center justify-center">
                     {userStats.loading ? (
-                      <div className="w-4 h-4 border-2 border-slate-400 border-t-white rounded-full animate-spin"></div>
+                      <div className="w-4 h-4 border-2 border-slate-300 dark:border-slate-400 border-t-blue-500 rounded-full animate-spin"></div>
                     ) : userStats.error ? (
-                      <span className="text-slate-500 text-lg">-</span>
+                      <span className="text-slate-400 text-lg">-</span>
                     ) : (
                       <span className="text-2xl">{userStats.friendsCount}</span>
                     )}
                   </div>
-                  <div className="text-xs text-slate-400 uppercase tracking-wide">
+                  <div className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wide">
                     Friends
                   </div>
                 </div>
@@ -401,26 +423,26 @@ const UserProfileModal = ({
           </div>
 
           {/* Relationship Status */}
-          {renderRelationshipStatus()}
+          {renderFriendshipStatus()}
 
           {/* Actions */}
           {showActions && (
-            <>
+            <div className="space-y-3">
               {renderFriendActions()}
               {renderEventActions()}
-            </>
+            </div>
           )}
         </div>
       </div>
 
       {/* Confirmation Dialog */}
       {confirmAction && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-60 p-4">
-          <div className="bg-slate-800 rounded-xl p-6 max-w-sm w-full border border-slate-700">
-            <h3 className="text-lg font-semibold text-white mb-4">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-60 p-4">
+          <div className="bg-white dark:bg-slate-800 rounded-xl p-6 max-w-sm w-full border border-slate-200 dark:border-slate-700 shadow-2xl">
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
               Confirm Action
             </h3>
-            <p className="text-slate-300 mb-6">
+            <p className="text-slate-600 dark:text-slate-300 mb-6">
               {confirmAction === "remove-friend" &&
                 "Are you sure you want to remove this friend?"}
               {confirmAction === "promote" &&
@@ -429,11 +451,17 @@ const UserProfileModal = ({
                 "Are you sure you want to remove admin privileges from this user?"}
               {confirmAction === "kick" &&
                 "Are you sure you want to remove this user from the event?"}
+              {confirmAction === "invite-to-event" &&
+                "Are you sure you want to invite this user to the event?"}
+              {confirmAction === "leave-event" &&
+                "Are you sure you want to leave this event?"}
+              {confirmAction === "leave-admin" &&
+                "Are you sure you want to give up your admin privileges?"}
             </p>
             <div className="flex gap-3">
               <button
                 onClick={() => setConfirmAction(null)}
-                className="flex-1 px-4 py-2 bg-slate-600 hover:bg-slate-700 text-white rounded-lg font-medium transition-colors"
+                className="flex-1 px-4 py-2 bg-slate-200 hover:bg-slate-300 dark:bg-slate-600 dark:hover:bg-slate-700 text-slate-900 dark:text-white rounded-lg font-medium transition-colors"
               >
                 Cancel
               </button>

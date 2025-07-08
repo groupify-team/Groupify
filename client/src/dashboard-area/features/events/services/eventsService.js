@@ -295,7 +295,7 @@ export const eventsService = {
 
   getMemberLimitForPlan(plan) {
     const limits = {
-      free: 5,
+      free: 8,
       premium: 20,
       pro: "unlimited",
       enterprise: "unlimited",
@@ -492,7 +492,7 @@ export const eventsService = {
     free: {
       events: 5,
       photosPerEvent: 30,
-      membersPerEvent: 5,
+      membersPerEvent: 8,
       storage: 2 * 1024 * 1024 * 1024, // 2GB
     },
     premium: {

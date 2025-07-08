@@ -42,19 +42,40 @@ const InviteFriendDropdown = ({
     friends,
   });
 
-  const { memberLimit, canAddMoreMembers } = useEventMemberLimits(
-    eventId,
-    currentMemberCount
-  );
+  const {
+    planLimits,
+    canInviteMore,
+    limitStatus: memberLimitStatus,
+    remainingSlots: memberRemainingSlots,
+    isFreePlan,
+    isPremiumPlan,
+  } = useEventMemberLimits(eventId, currentMemberCount);
 
-  // Create mock values for missing functions
-  const limitStatus = canAddMoreMembers ? "ok" : "full";
-  const remainingSlots = canAddMoreMembers
-    ? memberLimit - currentMemberCount
-    : 0;
-  const planLimits = { membersPerEvent: memberLimit };
-  const isFreePlan = memberLimit <= 10;
-  const isPremiumPlan = memberLimit > 10 && memberLimit <= 50;
+  // Get values for backward compatibility
+  const canAddMoreMembers = canInviteMore;
+  const limitStatus =
+    memberLimitStatus === "full"
+      ? "full"
+      : canAddMoreMembers
+      ? "ok"
+      : "warning";
+  const remainingSlots = memberRemainingSlots;
+
+  // Debug logging to understand member limits
+  console.log("🔍 Member Limit Debug:", {
+    eventId,
+    currentMemberCount,
+    planLimits,
+    canInviteMore,
+    canAddMoreMembers,
+    memberLimitStatus,
+    limitStatus,
+    remainingSlots,
+    isFreePlan,
+    isPremiumPlan,
+    membersPerEvent: planLimits?.membersPerEvent,
+    calculation: `${currentMemberCount} + 1 <= ${planLimits?.membersPerEvent}`,
+  });
 
   // Get initials for avatar fallback
   const getInitials = (name) => {
@@ -69,12 +90,17 @@ const InviteFriendDropdown = ({
 
   // Enhanced invite friend handler with plan validation
   const handleEnhancedInviteFriend = async (friend) => {
+    console.log("🎯 handleEnhancedInviteFriend called with:", friend);
+    console.log("🎯 canAddMoreMembers:", canAddMoreMembers);
+
     // Check if we can invite (simple check based on member limit)
     if (!canAddMoreMembers) {
+      console.log("❌ Cannot add more members, showing upgrade prompt");
       setShowUpgradePrompt(true);
       return;
     }
 
+    console.log("✅ Can add more members, proceeding with invitation...");
     // Proceed with invitation using the hook's handler
     await handleInviteFriend(friend);
   };
@@ -121,26 +147,6 @@ const InviteFriendDropdown = ({
           </div>
         </div>
       ) : null}
-
-      {/* Member Count Progress */}
-      {/* {formattedLimits?.members && (
-  <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
-    <div className="flex justify-between items-center text-xs mb-2">
-      <span className="text-gray-600 dark:text-gray-400">
-        {formattedLimits.members.formatted}
-      </span>
-      <span className="font-medium text-emerald-600 dark:text-emerald-400">
-        {formattedLimits.members.percentage}%
-      </span>
-    </div>
-    <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-1.5">
-      <div
-        className="bg-gradient-to-r from-emerald-500 to-teal-500 h-1.5 rounded-full transition-all duration-300"
-        style={{ width: `${formattedLimits.members.percentage}%` }}
-      ></div>
-    </div>
-  </div>
-)} */}
 
       {/* Search Input */}
       <div className="relative">

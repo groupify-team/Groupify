@@ -6,11 +6,7 @@ import { eventsService } from "../../../../services/eventsService";
  * Enhanced hook for event member invitation validation with comprehensive plan limits
  * Handles member limits per event and upgrade prompts
  */
-export const useEventMemberLimits = (
-  eventId,
-  currentMemberCount = 0,
-  eventData = null
-) => {
+export const useEventMemberLimits = (eventId, currentMemberCount = 0) => {
   const {
     canPerformAction,
     enforceLimit,
@@ -59,7 +55,7 @@ export const useEventMemberLimits = (
             reason: memberCheck.reason,
             type: "member_limit",
             currentUsage: currentMemberCount,
-            limit: planLimits.membersPerTrip,
+            limit: planLimits.membersPerEvent,
             additionalNeeded: inviteeCount,
           };
         }
@@ -85,29 +81,40 @@ export const useEventMemberLimits = (
   // Check if can invite more members
   const canInviteMembers = useCallback(
     (count = 1) => {
-      if (planLimits.membersPerTrip === "unlimited") return true;
-      return currentMemberCount + count <= planLimits.membersPerTrip;
+      const result =
+        planLimits.membersPerEvent === "unlimited" ||
+        currentMemberCount + count <= planLimits.membersPerEvent;
+
+      console.log("🔍 canInviteMembers check:", {
+        count,
+        currentMemberCount,
+        membersPerEvent: planLimits.membersPerEvent,
+        calculation: `${currentMemberCount} + ${count} <= ${planLimits.membersPerEvent}`,
+        result,
+      });
+
+      return result;
     },
-    [currentMemberCount, planLimits.membersPerTrip]
+    [currentMemberCount, planLimits.membersPerEvent]
   );
 
   // Get remaining member slots
   const getRemainingMemberSlots = useCallback(() => {
-    if (planLimits.membersPerTrip === "unlimited") return "unlimited";
-    return Math.max(0, planLimits.membersPerTrip - currentMemberCount);
-  }, [currentMemberCount, planLimits.membersPerTrip]);
+    if (planLimits.membersPerEvent === "unlimited") return "unlimited";
+    return Math.max(0, planLimits.membersPerEvent - currentMemberCount);
+  }, [currentMemberCount, planLimits.membersPerEvent]);
 
   // Get member limit status
   const getMemberLimitStatus = useCallback(() => {
-    if (planLimits.membersPerTrip === "unlimited") return "unlimited";
+    if (planLimits.membersPerEvent === "unlimited") return "unlimited";
 
     const remaining = getRemainingMemberSlots();
-    const percentage = (currentMemberCount / planLimits.membersPerTrip) * 100;
+    const percentage = (currentMemberCount / planLimits.membersPerEvent) * 100;
 
     if (remaining === 0) return "full";
     if (percentage >= 80) return "warning";
     return "normal";
-  }, [currentMemberCount, planLimits.membersPerTrip, getRemainingMemberSlots]);
+  }, [currentMemberCount, planLimits.membersPerEvent, getRemainingMemberSlots]);
 
   // Invite a single member with validation
   const inviteMember = useCallback(
@@ -282,7 +289,7 @@ export const useEventMemberLimits = (
     if (currentPlan === "free") {
       suggestions.push({
         targetPlan: "premium",
-        benefit: `Increase from ${CORE_LIMITS.free.membersPerTrip} to ${CORE_LIMITS.premium.membersPerTrip} members per trip`,
+        benefit: `Increase from ${CORE_LIMITS.free.membersPerEvent} to ${CORE_LIMITS.premium.membersPerEvent} members per event`,
         price: "$9.99/month",
         highlight: "4x more members",
       });
@@ -291,7 +298,7 @@ export const useEventMemberLimits = (
     if (currentPlan === "free" || currentPlan === "premium") {
       suggestions.push({
         targetPlan: "pro",
-        benefit: "Unlimited members per trip",
+        benefit: "Unlimited members per event",
         price: "$19.99/month",
         highlight: "Build large groups",
       });

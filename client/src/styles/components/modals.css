@@ -255,4 +255,77 @@
       width: 100%;
     }
   }
+
+  /* === USER PROFILE MODAL === */
+  .user-profile-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: var(--z-modal-content);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+  }
+
+  .user-profile-modal-content {
+    position: relative;
+    background: white;
+    border-radius: 1rem;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    max-width: 24rem;
+    width: 100%;
+    border: 1px solid rgb(226 232 240);
+    overflow: hidden;
+  }
+
+  .dark .user-profile-modal-content {
+    background: rgb(30 41 59);
+    border-color: rgb(51 65 85);
+  }
+
+  .user-profile-modal-close {
+    position: absolute !important;
+    top: 1rem !important;
+    right: 1rem !important;
+    z-index: 10 !important;
+    border-radius: 9999px !important;
+    padding: 0.5rem !important;
+    transition: all 0.2s ease-in-out !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+    backdrop-filter: blur(4px) !important;
+  }
+
+  .user-profile-modal-close:hover {
+    background: rgba(255, 255, 255, 0.2) !important;
+    transform: scale(1.05) !important;
+  }
+
+  .dark .user-profile-modal-close:hover {
+    background: rgba(51, 65, 85, 0.8) !important;
+  }
+
+  /* Prevent layout shifts during animations */
+  .user-profile-modal-close svg {
+    width: 1.5rem !important;
+    height: 1.5rem !important;
+    flex-shrink: 0 !important;
+  }
+
+  /* Ensure proper stacking context */
+  .user-profile-modal-header {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Role badge positioning */
+  .user-profile-modal .role-badge {
+    position: absolute;
+    bottom: -0.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2;
+  }
 }

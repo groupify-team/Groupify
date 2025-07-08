@@ -189,7 +189,6 @@ const EventDetailView = ({ eventId: propeventId }) => {
     error,
     setEvent,
     setPhotos,
-    setEventMembers,
   } = useEventData(eventId, currentUser?.uid);
 
   // Performance logging - track what causes re-renders (after data is defined)
@@ -254,14 +253,15 @@ const EventDetailView = ({ eventId: propeventId }) => {
   );
 
   const {
+    friends,
     selectedUser,
     showSuccess,
     cancelSuccess,
+    pendingFriendRequests,
     setSelectedUser,
     handleMemberClick,
     handleAddFriend,
     handleRemoveFriend,
-    handleCancelFriendRequest,
     handleInviteToEvent,
     handlePromoteToAdmin,
     handleDemoteFromAdmin,
@@ -561,25 +561,20 @@ const EventDetailView = ({ eventId: propeventId }) => {
         {selectedUser && (
           <Suspense fallback={<div>Loading user profile...</div>}>
             <UserProfileModal
+              isOpen={!!selectedUser}
               user={selectedUser}
               currentUserId={currentUser?.uid}
               context="event"
-              isFriend={selectedUser.__isFriend || false}
-              isPending={selectedUser.__isPending || false}
+              friends={friends || []}
+              pendingRequests={pendingFriendRequests || []}
               onAddFriend={handleAddFriend}
               onRemoveFriend={handleRemoveFriend}
-              onCancelRequest={handleCancelFriendRequest}
               event={event}
-              setEvent={setEvent}
-              eventMembers={eventMembers || []}
-              setEventMembers={setEventMembers}
-              isAdmin={isAdmin}
               onPromoteToAdmin={handlePromoteToAdmin}
               onDemoteFromAdmin={handleDemoteFromAdmin}
               onRemoveFromEvent={handleRemoveFromEvent}
               onInviteToEvent={handleInviteToEvent}
               onClose={() => setSelectedUser(null)}
-              setSelectedUser={setSelectedUser}
             />
           </Suspense>
         )}

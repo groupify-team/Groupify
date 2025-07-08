@@ -51,7 +51,6 @@ const PerformanceTestSuite = {
     const end = performance.now();
     const loadTime = end - start;
 
-    console.log(`🚀 Initial Load Time: ${loadTime.toFixed(2)}ms`);
     return loadTime;
   },
 
@@ -73,7 +72,6 @@ const PerformanceTestSuite = {
     const end = performance.now();
     const renderTime = end - start;
 
-    console.log(`📸 Photo Rendering Time: ${renderTime.toFixed(2)}ms`);
     return renderTime;
   },
 
@@ -103,7 +101,6 @@ const PerformanceTestSuite = {
     const end = performance.now();
     const modalTime = end - start;
 
-    console.log(`🔍 Modal Open Time: ${modalTime.toFixed(2)}ms`);
     return modalTime;
   },
 
@@ -123,7 +120,6 @@ const PerformanceTestSuite = {
     const end = performance.now();
     const navTime = end - start;
 
-    console.log(`⚡ Navigation Time: ${navTime.toFixed(2)}ms`);
     return navTime;
   },
 
@@ -140,7 +136,6 @@ const PerformanceTestSuite = {
     const end = performance.now();
     const cacheTime = end - start;
 
-    console.log(`💾 Cache Access Time: ${cacheTime.toFixed(2)}ms`);
     return cacheTime;
   },
 
