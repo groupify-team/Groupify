@@ -21,7 +21,6 @@ const PhotoUploadSection = ({
 }) => {
   const {
     validatePhotoUpload,
-    canUploadMore,
     getRemainingPhotoSlots,
     getPhotoLimitStatus,
     getFormattedLimits,

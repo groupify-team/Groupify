@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import PublicLayout from "../../components/layout/PublicLayout";
 import HeroSection from "../../components/ui/HeroSection";
@@ -598,7 +598,7 @@ const HelpCenter = () => {
             Browse by Category
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredCategories.map((category, index) => (
+            {filteredCategories.map((category) => (
               <HelpCategoryCard
                 key={category.title}
                 category={category}

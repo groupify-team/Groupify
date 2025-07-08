@@ -29,16 +29,13 @@ const InviteFriendDropdown = ({
     isInviting,
     setSearchTerm,
     clearSearch,
-    handleInviteFriend,
   } = useInviteFriends(currentUser, eventId, excludedUserIds);
 
   const {
-    canInviteMore,
     limitStatus,
     remainingSlots,
     getFormattedLimits,
     getMemberUpgradeSuggestions,
-    isApproachingMemberLimit,
     getInvitationPreview,
     inviteMember,
     planLimits,

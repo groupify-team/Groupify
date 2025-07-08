@@ -1,7 +1,6 @@
 import { useState, useCallback, useMemo } from "react";
 import { usePlanLimits } from "@shared/hooks/usePlanLimits";
 import { toast } from "react-hot-toast";
-import { eventsService } from "../../../services/eventsService";
 
 /** S
  * Enhanced hook for photo upload validation with comprehensive plan limits
@@ -10,7 +9,6 @@ import { eventsService } from "../../../services/eventsService";
 export const usePhotoUploadLimits = (eventId, currentPhotoCount = 0) => {
   const {
     canPerformAction,
-    enforceLimit,
     getUsageInfo,
     showUpgradePrompt,
     subscription,
@@ -143,7 +141,13 @@ export const usePhotoUploadLimits = (eventId, currentPhotoCount = 0) => {
         setIsValidating(false);
       }
     },
-    [canPerformAction, currentPhotoCount, planLimits, showUpgradePrompt]
+    [
+      canPerformAction,
+      currentPhotoCount,
+      planLimits,
+      showUpgradePrompt,
+      validateSingleFile,
+    ]
   );
 
   // Validate single file
