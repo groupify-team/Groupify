@@ -1,15 +1,15 @@
 // src/tests/setup.js
-import '@testing-library/jest-dom';
+import "@testing-library/jest-dom";
 
 // Mock Firebase config based on your actual file structure
-jest.mock('@shared/services/firebase/config.js', () => ({
+jest.mock("@shared/services/firebase/config.js", () => ({
   db: {},
   auth: {},
   storage: {},
 }));
 
 // Mock Firebase services
-jest.mock('@shared/services/firebase/users.js', () => ({
+jest.mock("@shared/services/firebase/users.js", () => ({
   createUserProfile: jest.fn(),
   getUserProfile: jest.fn(),
   updateUserProfile: jest.fn(),
@@ -18,14 +18,14 @@ jest.mock('@shared/services/firebase/users.js', () => ({
   acceptFriendRequest: jest.fn(),
 }));
 
-jest.mock('@shared/services/firebase/trips.js', () => ({
-  createTrip: jest.fn(),
-  getTrips: jest.fn(),
-  updateTrip: jest.fn(),
-  deleteTrip: jest.fn(),
+jest.mock("@shared/services/firebase/events.js", () => ({
+  createEvent: jest.fn(),
+  getEvents: jest.fn(),
+  updateEvent: jest.fn(),
+  deleteEvent: jest.fn(),
 }));
 
-jest.mock('@shared/services/firebase/storage.js', () => ({
+jest.mock("@shared/services/firebase/storage.js", () => ({
   uploadPhoto: jest.fn(),
   deletePhoto: jest.fn(),
   getPhotoURL: jest.fn(),
@@ -41,13 +41,13 @@ const localStorageMock = {
   length: 0,
 };
 
-Object.defineProperty(window, 'localStorage', {
+Object.defineProperty(window, "localStorage", {
   value: localStorageMock,
   writable: true,
 });
 
 // Mock react-hot-toast
-jest.mock('react-hot-toast', () => ({
+jest.mock("react-hot-toast", () => ({
   toast: {
     success: jest.fn(),
     error: jest.fn(),
@@ -58,10 +58,10 @@ jest.mock('react-hot-toast', () => ({
 }));
 
 // Mock react-router-dom
-jest.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom'),
+jest.mock("react-router-dom", () => ({
+  ...jest.requireActual("react-router-dom"),
   useNavigate: () => jest.fn(),
-  useLocation: () => ({ pathname: '/', search: '', hash: '', state: null }),
+  useLocation: () => ({ pathname: "/", search: "", hash: "", state: null }),
   useParams: () => ({}),
 }));
 
@@ -73,13 +73,13 @@ global.ResizeObserver = jest.fn().mockImplementation(() => ({
 }));
 
 // Mock URL.createObjectURL
-global.URL.createObjectURL = jest.fn(() => 'mocked-url');
+global.URL.createObjectURL = jest.fn(() => "mocked-url");
 global.URL.revokeObjectURL = jest.fn();
 
 // Mock matchMedia
-Object.defineProperty(window, 'matchMedia', {
+Object.defineProperty(window, "matchMedia", {
   writable: true,
-  value: jest.fn().mockImplementation(query => ({
+  value: jest.fn().mockImplementation((query) => ({
     matches: false,
     media: query,
     onchange: null,
@@ -103,8 +103,8 @@ const originalError = console.error;
 beforeAll(() => {
   console.error = (...args) => {
     if (
-      typeof args[0] === 'string' &&
-      args[0].includes('Warning: ReactDOM.render is deprecated')
+      typeof args[0] === "string" &&
+      args[0].includes("Warning: ReactDOM.render is deprecated")
     ) {
       return;
     }

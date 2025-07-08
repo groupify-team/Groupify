@@ -47,7 +47,7 @@ const SettingsSection = () => {
 
   const {
     userData,
-    trips,
+    events,
     friends,
     hasProfile,
     profilePhotos,
@@ -138,7 +138,7 @@ const SettingsSection = () => {
   };
 
   const dataSectionProps = {
-    trips,
+    events,
     friends,
     profilePhotos,
     hasProfile,

@@ -70,17 +70,17 @@ class UserStatsCache {
         friendsCount = (userData.friends || []).length;
       }
 
-      // Fetch trips count
-      const tripsQuery = query(
-        collection(db, "trips"),
+      // Fetch events count
+      const eventsQuery = query(
+        collection(db, "events"),
         where("members", "array-contains", userId)
       );
-      const tripsSnap = await getDocs(tripsQuery);
-      const tripsCount = tripsSnap.size;
+      const eventsSnap = await getDocs(eventsQuery);
+      const eventsCount = eventsSnap.size;
 
       return {
         friendsCount,
-        tripsCount,
+        eventsCount,
         loading: false,
         error: false,
       };
@@ -88,7 +88,7 @@ class UserStatsCache {
       console.error("❌ Error fetching user stats:", error);
       return {
         friendsCount: 0,
-        tripsCount: 0,
+        eventsCount: 0,
         loading: false,
         error: true,
       };

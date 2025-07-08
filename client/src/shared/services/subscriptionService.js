@@ -83,9 +83,9 @@ class SubscriptionService {
   getPlanFeatures(planName) {
     const features = {
       free: {
-        trips: 5,
-        photosPerTrip: 30,
-        membersPerTrip: 5,
+        events: 5,
+        photosPerEvent: 30,
+        membersPerEvent: 5,
         storage: "2GB",
         storageBytes: 2 * 1024 * 1024 * 1024,
         aiRecognition: "basic",
@@ -97,9 +97,9 @@ class SubscriptionService {
         quality: "standard",
       },
       premium: {
-        trips: 50,
-        photosPerTrip: 200,
-        membersPerTrip: 20,
+        events: 50,
+        photosPerEvent: 200,
+        membersPerEvent: 20,
         storage: "50GB",
         storageBytes: 50 * 1024 * 1024 * 1024,
         aiRecognition: "advanced",
@@ -111,9 +111,9 @@ class SubscriptionService {
         quality: "high",
       },
       pro: {
-        trips: "unlimited",
-        photosPerTrip: "unlimited",
-        membersPerTrip: "unlimited",
+        events: "unlimited",
+        photosPerEvent: "unlimited",
+        membersPerEvent: "unlimited",
         storage: "500GB",
         storageBytes: 500 * 1024 * 1024 * 1024,
 
@@ -126,9 +126,9 @@ class SubscriptionService {
         quality: "original",
       },
       enterprise: {
-        trips: "unlimited",
-        photosPerTrip: "unlimited",
-        membersPerTrip: "unlimited",
+        events: "unlimited",
+        photosPerEvent: "unlimited",
+        membersPerEvent: "unlimited",
         storage: "unlimited",
         storageBytes: Number.MAX_SAFE_INTEGER,
         aiRecognition: "enterprise",
@@ -148,19 +148,19 @@ class SubscriptionService {
     const features = this.getPlanFeatures(planData.plan);
     const storedUsage = this.getStoredUsage();
 
-    const tripsUsed = storedUsage.trips || 0;
+    const eventsUsed = storedUsage.events || 0;
     const photosUsed = storedUsage.photos || 0;
     const storageUsed = storedUsage.storage || 0;
 
-    const tripsPercentage =
-      features.trips === "unlimited"
+    const eventsPercentage =
+      features.events === "unlimited"
         ? 0
-        : Math.min((tripsUsed / features.trips) * 100, 100);
+        : Math.min((eventsUsed / features.events) * 100, 100);
 
     const photosPercentage =
-      features.photosPerTrip === "unlimited"
+      features.photosPerEvent === "unlimited"
         ? 0
-        : Math.min((photosUsed / features.photosPerTrip) * 100, 100);
+        : Math.min((photosUsed / features.photosPerEvent) * 100, 100);
 
     const storagePercentage =
       features.storageBytes === Number.MAX_SAFE_INTEGER
@@ -168,23 +168,23 @@ class SubscriptionService {
         : Math.min((storageUsed / features.storageBytes) * 100, 100);
 
     return {
-      trips: {
-        used: tripsUsed,
-        limit: features.trips,
-        percentage: tripsPercentage,
+      events: {
+        used: eventsUsed,
+        limit: features.events,
+        percentage: eventsPercentage,
         remaining:
-          features.trips === "unlimited"
+          features.events === "unlimited"
             ? "unlimited"
-            : Math.max(0, features.trips - tripsUsed),
+            : Math.max(0, features.events - eventsUsed),
       },
       photos: {
         used: photosUsed,
-        limit: features.photosPerTrip,
+        limit: features.photosPerEvent,
         percentage: photosPercentage,
         remaining:
-          features.photosPerTrip === "unlimited"
+          features.photosPerEvent === "unlimited"
             ? "unlimited"
-            : Math.max(0, features.photosPerTrip - photosUsed),
+            : Math.max(0, features.photosPerEvent - photosUsed),
       },
       storage: {
         used: storageUsed,
@@ -217,7 +217,7 @@ class SubscriptionService {
     }
 
     return {
-      trips: 0,
+      events: 0,
       photos: 0,
       storage: 0,
     };
@@ -495,15 +495,16 @@ class SubscriptionService {
     const usage = currentUsage || subscription.usage;
 
     switch (feature) {
-      case "trips":
+      case "events":
         return (
-          features.trips !== "unlimited" && usage.trips.used >= features.trips
+          features.events !== "unlimited" &&
+          usage.events.used >= features.events
         );
 
       case "photos":
         return (
-          features.photosPerTrip !== "unlimited" &&
-          usage.photos.used >= features.photosPerTrip
+          features.photosPerEvent !== "unlimited" &&
+          usage.photos.used >= features.photosPerEvent
         );
 
       case "storage":
@@ -524,20 +525,20 @@ class SubscriptionService {
 
     if (
       !usage ||
-      (usage.trips.used === 0 &&
+      (usage.events.used === 0 &&
         usage.photos.used === 0 &&
         usage.storage.used === 0)
     ) {
       return recommendations;
     }
 
-    if (usage.trips.percentage > 80) {
+    if (usage.events.percentage > 80) {
       recommendations.push({
-        type: "trips",
-        urgency: usage.trips.percentage > 95 ? "high" : "medium",
+        type: "events",
+        urgency: usage.events.percentage > 95 ? "high" : "medium",
         message: `You've used ${Math.round(
-          usage.trips.percentage
-        )}% of your trip limit`,
+          usage.events.percentage
+        )}% of your event limit`,
         action: "upgrade_plan",
       });
     }
@@ -580,6 +581,3 @@ class SubscriptionService {
 const subscriptionService = new SubscriptionService();
 
 export default subscriptionService;
-
-
-

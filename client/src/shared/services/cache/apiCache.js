@@ -7,7 +7,7 @@ class ApiCache {
   constructor() {
     this.cache = new Map();
     this.ttl = {
-      trips: 5 * 60 * 1000, // 5 minutes
+      events: 5 * 60 * 1000, // 5 minutes
       photos: 3 * 60 * 1000, // 3 minutes
       users: 10 * 60 * 1000, // 10 minutes
       default: 2 * 60 * 1000, // 2 minutes
@@ -101,7 +101,7 @@ class ApiCache {
       if (
         key.includes(`users:${userId}`) ||
         key.includes(`${userId}:`) ||
-        key.includes(`trips:${userId}`) ||
+        key.includes(`events:${userId}`) ||
         key.includes(`photos:${userId}`) ||
         key.includes(`friends:${userId}`) ||
         key.includes(`user_${userId}`)

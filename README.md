@@ -1,4 +1,4 @@
-# 📸 Groupify - Smart Photo Sharing for Group Trips
+# 📸 Groupify - Smart Photo Sharing for Group Events
 
 ![React](https://img.shields.io/badge/React-19.1.0-blue?logo=react)
 ![Firebase](https://img.shields.io/badge/Firebase-11.7.3-ffca28?logo=firebase)
@@ -20,17 +20,17 @@
 
 ---
 
-Groupify is a modern web app that helps groups of friends upload, manage, and share photos from trips — using **face recognition** to automatically deliver personalized galleries.
+Groupify is a modern web app that helps groups of friends upload, manage, and share photos from events — using **face recognition** to automatically deliver personalized galleries.
 
-Built with **React**, **Vite**, and **Firebase**, the app supports trip creation, friend management, photo uploads, and more.
+Built with **React**, **Vite**, and **Firebase**, the app supports Event creation, friend management, photo uploads, and more.
 
 ---
 
 ## ✨ Features
 
 - User authentication (sign up / log in / reset password)
-- Create and join trips
-- Upload and browse trip-specific photos
+- Create and join events
+- Upload and browse event-specific photos
 - Add and manage friends
 - Dashboard with real-time updates
 - Personalized gallery (coming soon)
@@ -199,19 +199,19 @@ Groupify
 │  │  │     ├─ authService.js
 │  │  │     └─ validationService.js
 │  │  ├─ components
-│  │  │  ├─ TripActions
-│  │  │  │  ├─ BulkTripActions.jsx
+│  │  │  ├─ EventActions
+│  │  │  │  ├─ BulkEventActions.jsx
 │  │  │  │  ├─ index.jsx
-│  │  │  │  └─ TripInvitations.jsx
-│  │  │  ├─ TripFilters
+│  │  │  │  └─ EventInvitations.jsx
+│  │  │  ├─ EventFilters
 │  │  │  │  ├─ DateFilter.jsx
 │  │  │  │  ├─ index.jsx
 │  │  │  │  ├─ SearchFilter.jsx
 │  │  │  │  └─ StatusFilter.jsx
-│  │  │  └─ TripList
-│  │  │     ├─ EmptyTripsState.jsx
+│  │  │  └─ EventList
+│  │  │     ├─ EmptyEventsState.jsx
 │  │  │     ├─ index.jsx
-│  │  │     └─ TripGrid.jsx
+│  │  │     └─ EventGrid.jsx
 │  │  ├─ dashboard-area
 │  │  │  ├─ components
 │  │  │  │  ├─ layout
@@ -221,7 +221,7 @@ Groupify
 │  │  │  │  │  └─ MobileBottomNav.jsx
 │  │  │  │  ├─ sections
 │  │  │  │  │  ├─ FriendsSection.jsx
-│  │  │  │  │  └─ TripsSection.jsx
+│  │  │  │  │  └─ EventsSection.jsx
 │  │  │  │  ├─ SettingsModal.jsx
 │  │  │  │  ├─ ui
 │  │  │  │  │  ├─ FilterDropdown.jsx
@@ -299,23 +299,23 @@ Groupify
 │  │  │  │  │  │  ├─ deleteAccountService.js
 │  │  │  │  │  │  └─ settingsService.js
 │  │  │  │  │  └─ utils
-│  │  │  │  └─ trips
+│  │  │  │  └─ events
 │  │  │  │     ├─ components
-│  │  │  │     │  ├─ CreateTripModal.jsx
-│  │  │  │     │  └─ TripCard.jsx
+│  │  │  │     │  ├─ createEventModal.jsx
+│  │  │  │     │  └─ EventCard.jsx
 │  │  │  │     ├─ hooks
 │  │  │  │     │  ├─ usePerformanceMonitoring.js
-│  │  │  │     │  ├─ useTripDetail.js
-│  │  │  │     │  ├─ useTripInvitations.js
-│  │  │  │     │  └─ useTrips.js
+│  │  │  │     │  ├─ useEventDetail.js
+│  │  │  │     │  ├─ useEventInvitations.js
+│  │  │  │     │  └─ useEvents.js
 │  │  │  │     ├─ index.js
 │  │  │  │     ├─ services
-│  │  │  │     │  └─ tripsService.js
+│  │  │  │     │  └─ eventsService.js
 │  │  │  │     ├─ utils
-│  │  │  │     │  ├─ tripConstants.js
-│  │  │  │     │  ├─ tripHelpers.js
-│  │  │  │     │  └─ tripValidation.js
-│  │  │  │     └─ ViewTrip
+│  │  │  │     │  ├─ eventConstants.js
+│  │  │  │     │  ├─ eventHelpers.js
+│  │  │  │     │  └─ eventValidation.js
+│  │  │  │     └─ ViewEvent
 │  │  │  │        ├─ components
 │  │  │  │        │  └─ PhotoModal.jsx
 │  │  │  │        ├─ features
@@ -338,30 +338,30 @@ Groupify
 │  │  │  │        │  │  │  ├─ usePhotoModal.js
 │  │  │  │        │  │  │  ├─ usePhotoOperations.js
 │  │  │  │        │  │  │  ├─ usePhotoSelection.js
-│  │  │  │        │  │  │  └─ useTripPhotos.js
+│  │  │  │        │  │  │  └─ useEventPhotos.js
 │  │  │  │        │  │  └─ utils
 │  │  │  │        │  │     └─ photoHelpers.js
 │  │  │  │        │  ├─ header
 │  │  │  │        │  │  ├─ components
-│  │  │  │        │  │  │  └─ TripHeader.jsx
+│  │  │  │        │  │  │  └─ EventHeader.jsx
 │  │  │  │        │  │  └─ hooks
-│  │  │  │        │  │     └─ EditTripModal.jsx
+│  │  │  │        │  │     └─ EditEventModal.jsx
 │  │  │  │        │  ├─ members
 │  │  │  │        │  │  ├─ components
 │  │  │  │        │  │  │  ├─ InviteFriendDropdown.jsx
 │  │  │  │        │  │  │  ├─ InvitePeopleCard.jsx
-│  │  │  │        │  │  │  ├─ TripMembersCard.jsx
+│  │  │  │        │  │  │  ├─ EventMembersCard.jsx
 │  │  │  │        │  │  │  └─ UserProfileModal.jsx
 │  │  │  │        │  │  └─ hooks
 │  │  │  │        │  │     ├─ useFriendship.js
 │  │  │  │        │  │     ├─ useInviteFriends.js
-│  │  │  │        │  │     └─ useTripMembers.js
+│  │  │  │        │  │     └─ useEventMembers.js
 │  │  │  │        │  └─ statistics
 │  │  │  │        │     └─ components
-│  │  │  │        │        └─ TripStatistics.jsx
+│  │  │  │        │        └─ EventStatistics.jsx
 │  │  │  │        ├─ hooks
-│  │  │  │        │  └─ useTripData.js
-│  │  │  │        └─ TripDetailView.jsx
+│  │  │  │        │  └─ useEventData.js
+│  │  │  │        └─ EventDetailView.jsx
 │  │  │  ├─ hooks
 │  │  │  │  ├─ useDashboardData.js
 │  │  │  │  ├─ useDashboardLayout.js
@@ -455,7 +455,7 @@ Groupify
 │  │  │  │  │  ├─ config.js
 │  │  │  │  │  ├─ faceProfiles.js
 │  │  │  │  │  ├─ storage.js
-│  │  │  │  │  ├─ trips.js
+│  │  │  │  │  ├─ events.js
 │  │  │  │  │  └─ users.js
 │  │  │  │  ├─ navigationService.js
 │  │  │  │  ├─ notificationHelper.js
@@ -467,7 +467,7 @@ Groupify
 │  │     ├─ api
 │  │     │  └─ userServices.test.js
 │  │     ├─ components
-│  │     │  └─ TripCard.test.js
+│  │     │  └─ EventCard.test.js
 │  │     ├─ database
 │  │     │  └─ firestoreQueries.test.js
 │  │     ├─ setup.js

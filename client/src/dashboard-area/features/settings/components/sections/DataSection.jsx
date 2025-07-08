@@ -4,7 +4,7 @@ import { SparklesIcon, TrashIcon } from "@heroicons/react/24/outline";
 import QuickStatsCard from "../widgets/QuickStatsCard";
 
 const DataSection = ({
-  trips,
+  events,
   friends,
   profilePhotos,
   hasProfile,
@@ -26,7 +26,7 @@ const DataSection = ({
 
       {/* Stats Grid */}
       <QuickStatsCard
-        trips={trips}
+        events={events}
         friends={friends}
         profilePhotos={profilePhotos}
         hasProfile={hasProfile}

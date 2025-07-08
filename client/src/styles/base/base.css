@@ -26,13 +26,14 @@
   /* === TOAST NOTIFICATIONS GLOBAL === */
   /* Ensure toast notifications always appear above modal backdrops */
   [data-testid="toast-container"] {
-    z-index: var(--z-toast) !important;
+    z-index: 1000001 !important;
   }
 
   /* React Hot Toast emergency override */
   .react-hot-toast > div,
-  div[style*="z-index"] {
-    z-index: 1000000 !important;
+  div[style*="z-index"]:not(.modal-backdrop):not([role="dialog"]) {
+    z-index: 1000001 !important;
+    position: fixed !important;
   }
 
   /* === SCROLLBAR STYLES === */

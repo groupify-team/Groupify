@@ -352,9 +352,10 @@
   .Toaster__toast > div,
   .Toaster__toast--success,
   .Toaster__toast--error,
-  .Toaster__toast--loading {
-    z-index: 1000000 !important;
-    position: relative !important;
+  .Toaster__toast--loading,
+  div[style*="z-index"] {
+    z-index: 1000001 !important;
+    position: fixed !important;
   }
 
   /* Force toast positioning context */
@@ -425,12 +426,12 @@
     -webkit-backdrop-filter: blur(8px);
   }
 
-  /* === MODAL ANIMATIONS SPECIFIC TO TRIP VIEW === */
-  .trip-modal-enter {
+  /* === MODAL ANIMATIONS SPECIFIC TO event view === */
+  .event-modal-enter {
     animation: modalEnter var(--duration-slower) var(--ease-spring);
   }
 
-  .trip-modal-backdrop-enter {
+  .event-modal-backdrop-enter {
     animation: modalBackdropEnter var(--duration-normal) var(--ease-out);
   }
 

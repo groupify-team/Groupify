@@ -32,7 +32,7 @@ const PrivacySection = ({ settings, toggleSetting, settingsLoading }) => {
           <div key={item.id} className="group">
             <label className="flex items-center justify-between py-2 sm:py-3 px-3 sm:px-4 bg-white/60 dark:bg-gray-700/40 rounded-lg hover:bg-white/80 dark:hover:bg-gray-700/60 transition-all duration-200 cursor-pointer border border-transparent hover:border-green-200 dark:hover:border-green-600/30">
               <div className="flex items-center gap-2 sm:gap-3 flex-1">
-                {item.icon}
+                <item.icon />
                 <div>
                   <span className="text-xs sm:text-sm lg:text-base font-medium text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white transition-colors block">
                     {item.label}

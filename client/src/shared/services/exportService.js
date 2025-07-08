@@ -27,7 +27,7 @@ export class ExportService {
         },
         userData: {},
         settings: {},
-        trips: [],
+        events: [],
         photos: [],
         friends: [],
         friendRequests: [],
@@ -49,13 +49,13 @@ export class ExportService {
         exportData.settings = { error: "Could not access settings" };
       }
 
-      // Get user's trips
-      const tripsQuery = query(
-        collection(db, "trips"),
+      // Get user's events
+      const eventsQuery = query(
+        collection(db, "events"),
         where("members", "array-contains", userId)
       );
-      const tripsSnapshot = await getDocs(tripsQuery);
-      exportData.trips = tripsSnapshot.docs.map((doc) => ({
+      const eventsSnapshot = await getDocs(eventsQuery);
+      exportData.events = eventsSnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       }));
@@ -131,7 +131,7 @@ export class ExportService {
 
       // Calculate statistics
       exportData.statistics = {
-        totalTrips: exportData.trips.length,
+        totalevents: exportData.events.length,
         totalPhotos: exportData.photos.length,
         totalFriends: exportData.friends.length,
         pendingFriendRequests:
@@ -249,18 +249,18 @@ export class ExportService {
   /**
    * Export data in CSV format for spreadsheet apps
    * @param {string} userId - User ID
-   * @param {string} dataType - Type of data to export ('trips', 'photos', 'friends')
+   * @param {string} dataType - Type of data to export ('events', 'photos', 'friends')
    */
-  static async exportToCSV(userId, dataType = "trips") {
+  static async exportToCSV(userId, dataType = "events") {
     try {
       const exportData = await this.exportUserData(userId);
       let csvData = "";
       let filename = "";
 
       switch (dataType) {
-        case "trips":
-          csvData = this.convertTripsToCSV(exportData.trips);
-          filename = `groupify-trips-${
+        case "events":
+          csvData = this.converteventsToCSV(exportData.events);
+          filename = `groupify-events-${
             new Date().toISOString().split("T")[0]
           }.csv`;
           break;
@@ -320,7 +320,7 @@ export class ExportService {
 
   static countRecords(data) {
     return (
-      (data.trips?.length || 0) +
+      (data.events?.length || 0) +
       (data.photos?.length || 0) +
       (data.friends?.length || 0) +
       (data.friendRequests?.sent?.length || 0) +
@@ -339,8 +339,8 @@ export class ExportService {
     return hash.toString(36);
   }
 
-  static convertTripsToCSV(trips) {
-    if (!trips || trips.length === 0) return "No trips data available";
+  static converteventsToCSV(events) {
+    if (!events || events.length === 0) return "No events data available";
 
     const headers = [
       "ID",
@@ -353,20 +353,20 @@ export class ExportService {
       "Members Count",
       "Photos Count",
     ];
-    const rows = trips.map((trip) => [
-      trip.id,
-      trip.name || "",
-      trip.description || "",
-      trip.startDate
-        ? new Date(trip.startDate.seconds * 1000).toLocaleDateString()
+    const rows = events.map((event) => [
+      event.id,
+      event.name || "",
+      event.description || "",
+      event.startDate
+        ? new Date(event.startDate.seconds * 1000).toLocaleDateString()
         : "",
-      trip.endDate
-        ? new Date(trip.endDate.seconds * 1000).toLocaleDateString()
+      event.endDate
+        ? new Date(event.endDate.seconds * 1000).toLocaleDateString()
         : "",
-      trip.location || "",
-      trip.createdBy || "",
-      trip.members?.length || 0,
-      trip.photos?.length || 0,
+      event.location || "",
+      event.createdBy || "",
+      event.members?.length || 0,
+      event.photos?.length || 0,
     ]);
 
     return [headers, ...rows]
@@ -381,7 +381,7 @@ export class ExportService {
       "ID",
       "Filename",
       "Upload Date",
-      "Trip ID",
+      "event ID",
       "Uploaded By",
       "File Size",
       "Tags Count",
@@ -392,7 +392,7 @@ export class ExportService {
       photo.uploadedAt
         ? new Date(photo.uploadedAt.seconds * 1000).toLocaleDateString()
         : "",
-      photo.tripId || "",
+      photo.eventId || "",
       photo.uploadedBy || "",
       photo.fileSize || "",
       photo.tags?.length || 0,

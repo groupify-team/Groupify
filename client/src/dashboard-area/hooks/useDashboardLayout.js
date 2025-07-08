@@ -22,7 +22,7 @@ export const useDashboardLayout = () => {
     DEFAULT_STATE.activeSection
   );
   const [currentView, setCurrentView] = useState(DEFAULT_STATE.currentView);
-  const [selectedTripId, setSelectedTripId] = useState(null);
+  const [selectedeventId, setSelectedeventId] = useState(null);
 
   // Responsive states
   const [isMobile, setIsMobile] = useState(isMobileDevice());
@@ -32,9 +32,9 @@ export const useDashboardLayout = () => {
   const [showMobileUserMenu, setShowMobileUserMenu] = useState(false);
 
   // Dropdown states
-  const [tripsDropdownOpen, setTripsDropdownOpen] = useState(false);
-  const [visibleTripsCount, setVisibleTripsCount] = useState(
-    DEFAULT_STATE.visibleTripsCount
+  const [eventsDropdownOpen, seteventsDropdownOpen] = useState(false);
+  const [visibleeventsCount, setVisibleeventsCount] = useState(
+    DEFAULT_STATE.visibleeventsCount
   );
   const [filterDropdownOpen, setFilterDropdownOpen] = useState(false);
   const [notificationsDropdownOpen, setNotificationsDropdownOpen] =
@@ -42,12 +42,12 @@ export const useDashboardLayout = () => {
 
   // Tab states for mobile sections
   const [friendsActiveTab, setFriendsActiveTab] = useState("friends"); // "friends" or "requests"
-  const [tripsActiveTab, setTripsActiveTab] = useState("trips"); // "trips" or "invitations"
+  const [eventsActiveTab, seteventsActiveTab] = useState("events"); // "events" or "invitations"
 
   // Desktop section expansion states
   const [showDesktopRequests, setShowDesktopRequests] = useState(true);
   const [desktopRequestsExpanded, setDesktopRequestsExpanded] = useState(true);
-  const [tripInvitesExpanded, setTripInvitesExpanded] = useState(false);
+  const [eventInvitesExpanded, setEventInvitesExpanded] = useState(false);
 
   // Search and filter states
   const [searchTerm, setSearchTerm] = useState(DEFAULT_STATE.searchTerm);
@@ -88,13 +88,13 @@ export const useDashboardLayout = () => {
       setActiveSection("friends");
     } else if (path.includes("/dashboard/settings")) {
       setActiveSection("settings");
-    } else if (path.includes("/dashboard/trip/")) {
-      setActiveSection("trips");
-      setCurrentView("trip");
-      const tripId = path.split("/").pop();
-      setSelectedTripId(tripId);
-    } else if (path.includes("/dashboard/trips") || path === "/dashboard") {
-      setActiveSection("trips");
+    } else if (path.includes("/dashboard/event/")) {
+      setActiveSection("events");
+      setCurrentView("event");
+      const eventId = path.split("/").pop();
+      setSelectedeventId(eventId);
+    } else if (path.includes("/dashboard/events") || path === "/dashboard") {
+      setActiveSection("events");
       setCurrentView("home");
     }
   }, [location.pathname]);
@@ -136,7 +136,7 @@ export const useDashboardLayout = () => {
   const navigateToSection = (sectionId) => {
     setActiveSection(sectionId);
     setCurrentView("home");
-    setSelectedTripId(null);
+    setSelectedeventId(null);
 
     navigate(`/dashboard/${sectionId}`);
 
@@ -146,15 +146,15 @@ export const useDashboardLayout = () => {
     }
   };
 
-  const navigateToTrip = (tripId) => {
-    setCurrentView("trip");
-    setSelectedTripId(tripId);
-    setTripsDropdownOpen(false);
+  const navigateToEvent = (eventId) => {
+    setCurrentView("event");
+    setSelectedeventId(eventId);
+    seteventsDropdownOpen(false);
 
-    // Navigate to the trip route
-    navigate(`/dashboard/trip/${tripId}`);
+    // Navigate to the event route
+    navigate(`/dashboard/event/${eventId}`);
 
-    // Close sidebar on mobile when navigating to trip
+    // Close sidebar on mobile when navigating to event
     if (isMobile) {
       setSidebarOpen(false);
     }
@@ -162,10 +162,10 @@ export const useDashboardLayout = () => {
 
   const navigateBackToDashboard = () => {
     setCurrentView("home");
-    setSelectedTripId(null);
+    setSelectedeventId(null);
 
-    // Navigate back to trips section
-    navigate("/dashboard/trips");
+    // Navigate back to events section
+    navigate("/dashboard/events");
 
     // Close sidebar on mobile when going back
     if (isMobile) {
@@ -195,17 +195,17 @@ export const useDashboardLayout = () => {
   /**
    * Dropdown actions
    */
-  const toggleTripsDropdown = () => {
-    setTripsDropdownOpen((prev) => !prev);
-    setVisibleTripsCount(DEFAULT_STATE.visibleTripsCount); // Reset to show first 5 trips
+  const toggleeventsDropdown = () => {
+    seteventsDropdownOpen((prev) => !prev);
+    setVisibleeventsCount(DEFAULT_STATE.visibleeventsCount); // Reset to show first 5 events
   };
 
-  const closeTripsDropdown = () => {
-    setTripsDropdownOpen(false);
+  const closeeventsDropdown = () => {
+    seteventsDropdownOpen(false);
   };
 
-  const showMoreTrips = () => {
-    setVisibleTripsCount((prev) => prev + 5);
+  const showMoreevents = () => {
+    setVisibleeventsCount((prev) => prev + 5);
   };
 
   const toggleFilterDropdown = () => {
@@ -242,8 +242,8 @@ export const useDashboardLayout = () => {
     setFriendsActiveTab(tab);
   };
 
-  const switchTripsTab = (tab) => {
-    setTripsActiveTab(tab);
+  const switcheventsTab = (tab) => {
+    seteventsActiveTab(tab);
   };
 
   /**
@@ -253,8 +253,8 @@ export const useDashboardLayout = () => {
     setDesktopRequestsExpanded((prev) => !prev);
   };
 
-  const toggleTripInvites = () => {
-    setTripInvitesExpanded((prev) => !prev);
+  const toggleEventInvites = () => {
+    setEventInvitesExpanded((prev) => !prev);
   };
 
   const toggleDesktopRequestsVisibility = () => {
@@ -291,7 +291,7 @@ export const useDashboardLayout = () => {
   /**
    * Utility functions
    */
-  const isViewingTrip = () => currentView === "trip" && selectedTripId;
+  const isViewingEvent = () => currentView === "event" && selectedeventId;
 
   const shouldShowMobileNav = () => isMobile;
 
@@ -327,7 +327,7 @@ export const useDashboardLayout = () => {
    * Close all dropdowns - useful for navigation or cleanup
    */
   const closeAllDropdowns = () => {
-    setTripsDropdownOpen(false);
+    seteventsDropdownOpen(false);
     setFilterDropdownOpen(false);
     setNotificationsDropdownOpen(false);
     setShowMobileUserMenu(false);
@@ -346,15 +346,15 @@ export const useDashboardLayout = () => {
       sidebarOpen,
       activeSection,
       currentView,
-      selectedTripId,
+      selectedeventId,
       isMobile,
       windowWidth,
     },
 
     // Dropdown states
     dropdowns: {
-      tripsDropdownOpen,
-      visibleTripsCount,
+      eventsDropdownOpen,
+      visibleeventsCount,
       filterDropdownOpen,
       notificationsDropdownOpen,
       showMobileUserMenu,
@@ -363,14 +363,14 @@ export const useDashboardLayout = () => {
     // Tab states
     tabs: {
       friendsActiveTab,
-      tripsActiveTab,
+      eventsActiveTab,
     },
 
     // Desktop expansion states
     desktop: {
       showDesktopRequests,
       desktopRequestsExpanded,
-      tripInvitesExpanded,
+      eventInvitesExpanded,
     },
 
     // Search and filter states
@@ -382,7 +382,7 @@ export const useDashboardLayout = () => {
     // Navigation actions
     navigation: {
       navigateToSection,
-      navigateToTrip,
+      navigateToEvent,
       navigateBackToDashboard,
     },
 
@@ -395,9 +395,9 @@ export const useDashboardLayout = () => {
 
     // Dropdown actions
     dropdownActions: {
-      toggleTripsDropdown,
-      closeTripsDropdown,
-      showMoreTrips,
+      toggleeventsDropdown,
+      closeeventsDropdown,
+      showMoreevents,
       toggleFilterDropdown,
       closeFilterDropdown,
       toggleNotificationsDropdown,
@@ -414,13 +414,13 @@ export const useDashboardLayout = () => {
     // Tab actions
     tabActions: {
       switchFriendsTab,
-      switchTripsTab,
+      switcheventsTab,
     },
 
     // Desktop section actions
     desktopActions: {
       toggleDesktopRequests,
-      toggleTripInvites,
+      toggleEventInvites,
       toggleDesktopRequestsVisibility,
     },
 
@@ -435,7 +435,7 @@ export const useDashboardLayout = () => {
 
     // Utility functions
     utils: {
-      isViewingTrip,
+      isViewingEvent,
       shouldShowMobileNav,
       shouldShowDesktopSidebar,
       getLayoutClasses,

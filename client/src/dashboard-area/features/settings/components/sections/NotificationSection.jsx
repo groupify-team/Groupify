@@ -33,7 +33,7 @@ const NotificationSection = ({ settings, toggleSetting, settingsLoading }) => {
                 }`}
               >
                 <div className="flex items-center gap-2 sm:gap-3 flex-1">
-                  {item.icon}
+                  <item.icon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600 dark:text-gray-400" />
                   <div>
                     <span className="text-xs sm:text-sm lg:text-base font-medium text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white transition-colors block">
                       {item.label}

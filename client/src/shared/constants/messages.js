@@ -10,12 +10,12 @@ export const TOAST_MESSAGES = {
 
   // Dashboard-specific messages
   dashboard: {
-    tripCreated: "Trip created successfully!",
+    eventCreated: "Event Created Successfully!",
     friendRequestSent: "Friend request sent successfully!",
     friendRequestAccepted: "Friend request accepted",
     friendRequestDeclined: "Friend request declined",
-    tripInviteAccepted: "Trip invitation accepted",
-    tripInviteDeclined: "Trip invitation declined",
+    eventInviteAccepted: "Event invitation accepted",
+    eventInviteDeclined: "Event invitation declined",
   },
 
   // Settings-specific messages (will be moved from settings constants)
@@ -58,8 +58,8 @@ export const ERROR_MESSAGES = {
     sendingFriendRequest: "Failed to send friend request",
     acceptingFriendRequest: "Failed to accept friend request",
     decliningFriendRequest: "Failed to decline friend request",
-    tripLimitReached: (current, max) =>
-      `Trip limit reached! You can only create ${max} trips. You currently have ${current} trips.`,
+    eventLimitReached: (current, max) =>
+      `Event limit reached! You can only create ${max} events. You currently have ${current} events.`,
   },
 
   // Settings-specific errors (will be moved from settings constants)

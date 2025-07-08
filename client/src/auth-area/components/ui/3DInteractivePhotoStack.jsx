@@ -24,11 +24,11 @@ const PhotoStack3D = () => {
   const containerRef = useRef(null);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
-  // Photo data with different trip categories
+  // Photo data with different event categories
   const photos = [
     {
       id: 1,
-      trip: "Dubai",
+      event: "Dubai",
       type: "landmark",
       icon: <Buildings size={32} color="white" weight="bold" />,
       color: "from-yellow-500 to-orange-400",
@@ -39,7 +39,7 @@ const PhotoStack3D = () => {
     },
     {
       id: 2,
-      trip: "New York",
+      event: "New York",
       type: "landmark",
       icon: <Bank size={32} color="white" weight="bold" />,
       color: "from-indigo-600 to-blue-500",
@@ -50,7 +50,7 @@ const PhotoStack3D = () => {
     },
     {
       id: 3,
-      trip: "Rio de Janeiro",
+      event: "Rio de Janeiro",
       type: "landscape",
       icon: <TreePalm size={32} color="white" weight="bold" />,
       color: "from-green-500 to-lime-400",
@@ -61,7 +61,7 @@ const PhotoStack3D = () => {
     },
     {
       id: 4,
-      trip: "London",
+      event: "London",
       type: "group",
       icon: <UsersThree size={32} color="white" weight="bold" />,
       color: "from-red-500 to-pink-400",
@@ -72,7 +72,7 @@ const PhotoStack3D = () => {
     },
     {
       id: 5,
-      trip: "Beijing",
+      event: "Beijing",
       type: "historic",
       icon: <Buildings size={32} color="white" weight="bold" />,
       color: "from-orange-500 to-yellow-400",
@@ -83,7 +83,7 @@ const PhotoStack3D = () => {
     },
     {
       id: 6,
-      trip: "Cairo",
+      event: "Cairo",
       type: "historic",
       icon: <Bank size={32} color="white" weight="bold" />,
       color: "from-yellow-600 to-amber-500",
@@ -94,7 +94,7 @@ const PhotoStack3D = () => {
     },
     {
       id: 7,
-      trip: "Sydney",
+      event: "Sydney",
       type: "architecture",
       icon: <Buildings size={32} color="white" weight="bold" />,
       color: "from-cyan-500 to-blue-400",
@@ -105,7 +105,7 @@ const PhotoStack3D = () => {
     },
     {
       id: 8,
-      trip: "San Francisco",
+      event: "San Francisco",
       type: "landmark",
       icon: <MapPin size={32} color="white" weight="bold" />,
       color: "from-rose-500 to-pink-400",
@@ -189,11 +189,11 @@ const PhotoStack3D = () => {
           break;
 
         case "organizing":
-          // Group by trip/location - CENTERED
-          const tripGroups = { Paris: 0, Tokyo: 1, Rome: 2, Bali: 3 };
-          const groupIndex = tripGroups[photo.trip] || 0;
+          // Group by event/location - CENTERED
+          const eventGroups = { Paris: 0, Tokyo: 1, Rome: 2, Bali: 3 };
+          const groupIndex = eventGroups[photo.event] || 0;
           const positionInGroup = photos
-            .filter((p) => p.trip === photo.trip)
+            .filter((p) => p.event === photo.event)
             .indexOf(photo);
           const groupX = (groupIndex - 1.5) * 80; // Reduced from 100
           const groupY = positionInGroup * 12; // Reduced from 15
@@ -302,10 +302,10 @@ const PhotoStack3D = () => {
             >
               {/* Photo Content */}
               <div className="relative w-full h-full p-3 flex flex-col justify-between">
-                {/* Top Section - Trip Name */}
+                {/* Top Section - Event name */}
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-semibold text-white/90 bg-black/20 px-2 py-1 rounded-full backdrop-blur-sm">
-                    {photo.trip}
+                    {photo.event}
                   </span>
                   {photo.people > 0 && (
                     <div className="flex items-center space-x-1">
@@ -419,7 +419,7 @@ const PhotoStack3D = () => {
           ></div>
           <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
             {animationPhase === "scattered" && "Photos Scattered"}
-            {animationPhase === "organizing" && "AI Organizing by Trip"}
+            {animationPhase === "organizing" && "AI Organizing by event"}
             {animationPhase === "detecting" && "Face Detection Active"}
             {animationPhase === "sharing" && "Ready to Share"}
           </span>
@@ -460,8 +460,3 @@ const PhotoStack3D = () => {
 };
 
 export default PhotoStack3D;
-
-
-
-
-

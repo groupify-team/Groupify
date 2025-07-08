@@ -72,18 +72,18 @@ export const useDashboardNavigation = () => {
   );
 
   /**
-   * Navigate to a specific trip
+   * Navigate to a specific event
    */
-  const navigateToTrip = useCallback(
-    (tripId, tripData = null, options = {}) => {
+  const navigateToEvent = useCallback(
+    (eventId, eventData = null, options = {}) => {
       const { withTransition = true, updateHistory = true } = options;
 
       const navigationEntry = {
-        type: "trip",
-        tripId,
-        tripData,
+        type: "event",
+        eventId,
+        eventData,
         timestamp: Date.now(),
-        view: "trip",
+        view: "event",
       };
 
       if (updateHistory) {
@@ -94,13 +94,13 @@ export const useDashboardNavigation = () => {
       setBreadcrumbs([
         {
           label: "Dashboard",
-          action: () => navigateToSection("trips", { resetView: true }),
+          action: () => navigateToSection("events", { resetView: true }),
         },
         {
-          label: "Trips",
-          action: () => navigateToSection("trips", { resetView: true }),
+          label: "events",
+          action: () => navigateToSection("events", { resetView: true }),
         },
-        { label: tripData?.name || `Trip ${tripId}`, action: null },
+        { label: eventData?.name || `event ${eventId}`, action: null },
       ]);
 
       if (withTransition) {
@@ -242,15 +242,15 @@ export const useDashboardNavigation = () => {
   useEffect(() => {
     const handlePopState = (event) => {
       if (event.state?.dashboardNavigation) {
-        const { type, sectionId, tripId } = event.state.dashboardNavigation;
+        const { type, sectionId, eventId } = event.state.dashboardNavigation;
 
         if (type === "section") {
           navigateToSection(sectionId, {
             updateHistory: false,
             withTransition: false,
           });
-        } else if (type === "trip") {
-          navigateToTrip(tripId, null, {
+        } else if (type === "event") {
+          navigateToEvent(eventId, null, {
             updateHistory: false,
             withTransition: false,
           });
@@ -260,7 +260,7 @@ export const useDashboardNavigation = () => {
 
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
-  }, [navigateToSection, navigateToTrip]);
+  }, [navigateToSection, navigateToEvent]);
 
   /**
    * Update URL without navigation
@@ -347,14 +347,14 @@ export const useDashboardNavigation = () => {
     const sectionNavigations = navigationHistory.filter(
       (entry) => entry.type === "section"
     ).length;
-    const tripNavigations = navigationHistory.filter(
-      (entry) => entry.type === "trip"
+    const eventNavigations = navigationHistory.filter(
+      (entry) => entry.type === "event"
     ).length;
 
     return {
       totalNavigations,
       sectionNavigations,
-      tripNavigations,
+      eventNavigations,
       currentIndex: currentHistoryIndex,
       canGoBack: canNavigateBack(),
       canGoForward: canNavigateForward(),
@@ -379,7 +379,7 @@ export const useDashboardNavigation = () => {
 
       if (event.key === "Escape" && breadcrumbs.length > 0) {
         event.preventDefault();
-        navigateToSection("trips", { resetView: true });
+        navigateToSection("events", { resetView: true });
         setBreadcrumbs([]);
       }
     };
@@ -439,7 +439,7 @@ export const useDashboardNavigation = () => {
 
     navigate: {
       toSection: navigateToSection,
-      toTrip: navigateToTrip,
+      toEvent: navigateToEvent,
       back: navigateBack,
       forward: navigateForward,
       toExternalPage: navigateToExternalPage,
@@ -484,7 +484,3 @@ export const useDashboardNavigation = () => {
 };
 
 export default useDashboardNavigation;
-
-
-
-

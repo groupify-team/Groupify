@@ -27,7 +27,7 @@ export const createUserProfile = async (uid, userData) => {
         gender: userData.gender || "male", // default fallback
         ...userData,
         createdAt,
-        trips: [],
+        events: [],
         photoCount: 0,
         friends: [],
       });
@@ -224,7 +224,6 @@ export const cleanupInvalidFriends = async (uid) => {
           const friendData = friendDoc.data();
           const friendsFriends = friendData.friends || [];
 
-          // ✅ CHECK MUTUAL FRIENDSHIP
           if (friendsFriends.includes(uid)) {
             validFriendIds.push(friendId);
           } else {
@@ -232,12 +231,9 @@ export const cleanupInvalidFriends = async (uid) => {
         } else {
         }
       } catch (error) {
-        console.error(`❌ Error checking friend ${friendId}:`, error);
-        // Don't include this friend if there's an error
+        console.error(`Error checking friend ${friendId}:`, error);
       }
     }
-
-    // Update user document with only valid, mutual friend IDs
     if (validFriendIds.length !== friendIds.length) {
       await updateDoc(userRef, {
         friends: validFriendIds,
@@ -246,7 +242,7 @@ export const cleanupInvalidFriends = async (uid) => {
     }
     return validFriendIds;
   } catch (error) {
-    console.error("❌ Error cleaning up friends:", error);
+    console.error("Error cleaning up friends:", error);
     throw error;
   }
 };
@@ -344,36 +340,36 @@ export const removeFriend = async (uid, friendUid) => {
   }
 };
 
-// Add user to trip members
-export const addUserToTrip = async (uid, tripId) => {
+// Add user to event members
+export const addUserToEvent = async (uid, eventId) => {
   try {
     const userRef = doc(db, "users", uid);
     await updateDoc(userRef, {
-      trips: arrayUnion(tripId),
+      events: arrayUnion(eventId),
       updatedAt: new Date().toISOString(),
     });
   } catch (error) {
-    console.error("❌ Error adding user to trip:", error);
+    console.error("❌ Error adding user to event:", error);
     throw error;
   }
 };
 
-// Remove user from trip members
-export const removeUserFromTrip = async (uid, tripId) => {
+// Remove user from event members
+export const removeUserFromEvent = async (uid, eventId) => {
   try {
     const userRef = doc(db, "users", uid);
     await updateDoc(userRef, {
-      trips: arrayRemove(tripId),
+      events: arrayRemove(eventId),
       updatedAt: new Date().toISOString(),
     });
   } catch (error) {
-    console.error("❌ Error removing user from trip:", error);
+    console.error("❌ Error removing user from event:", error);
     throw error;
   }
 };
 
-// Clean up user trips array (remove non-existent trips)
-export const cleanupUserTrips = async (uid) => {
+// Clean up user events array (remove non-existent events)
+export const cleanupUserevents = async (uid) => {
   try {
     const userRef = doc(db, "users", uid);
     const userDoc = await getDoc(userRef);
@@ -384,132 +380,132 @@ export const cleanupUserTrips = async (uid) => {
     }
 
     const userData = userDoc.data();
-    const userTripIds = userData.trips || [];
+    const usereventIds = userData.events || [];
 
-    if (userTripIds.length === 0) {
+    if (usereventIds.length === 0) {
       return;
     }
 
-    // Check which trips actually exist
-    const validTripIds = [];
+    // Check which events actually exist
+    const valideventIds = [];
 
-    for (const tripId of userTripIds) {
-      const tripRef = doc(db, "trips", tripId);
-      const tripDoc = await getDoc(tripRef);
+    for (const eventId of usereventIds) {
+      const eventRef = doc(db, "events", eventId);
+      const eventDoc = await getDoc(eventRef);
 
-      if (tripDoc.exists()) {
-        validTripIds.push(tripId);
+      if (eventDoc.exists()) {
+        valideventIds.push(eventId);
       }
     }
 
-    // Update user's trips array with only valid trips
-    if (validTripIds.length !== userTripIds.length) {
+    // Update user's events array with only valid events
+    if (valideventIds.length !== usereventIds.length) {
       await updateDoc(userRef, {
-        trips: validTripIds,
+        events: valideventIds,
         updatedAt: new Date().toISOString(),
       });
     }
 
-    return validTripIds;
+    return valideventIds;
   } catch (error) {
-    console.error("❌ Error cleaning up user trips:", error);
+    console.error("❌ Error cleaning up user events:", error);
     throw error;
   }
 };
 
-// Get user's actual trips (with validation)
-export const getUserTripsWithValidation = async (uid) => {
+// Get user's actual events (with validation)
+export const getUserEventsWithValidation = async (uid) => {
   try {
-    // First clean up any stale trip references
-    const validTripIds = await cleanupUserTrips(uid);
+    // First clean up any stale event references
+    const valideventIds = await cleanupUserevents(uid);
 
-    if (!validTripIds || validTripIds.length === 0) {
+    if (!valideventIds || valideventIds.length === 0) {
       return [];
     }
 
-    // Fetch the actual trip documents
-    const trips = [];
+    // Fetch the actual event documents
+    const events = [];
 
-    for (const tripId of validTripIds) {
+    for (const eventId of valideventIds) {
       try {
-        const tripRef = doc(db, "trips", tripId);
-        const tripDoc = await getDoc(tripRef);
+        const eventRef = doc(db, "events", eventId);
+        const eventDoc = await getDoc(eventRef);
 
-        if (tripDoc.exists()) {
-          trips.push({
-            id: tripDoc.id,
-            ...tripDoc.data(),
+        if (eventDoc.exists()) {
+          events.push({
+            id: eventDoc.id,
+            ...eventDoc.data(),
           });
         } else {
           console.warn(
-            `⚠️ Trip document ${tripId} not found, but was in user's array`
+            `⚠️ event document ${eventId} not found, but was in user's array`
           );
         }
       } catch (error) {
-        console.error(`❌ Error fetching trip ${tripId}:`, error);
+        console.error(`Error fetching event ${eventId}:`, error);
       }
     }
 
-    return trips;
+    return events;
   } catch (error) {
-    console.error("❌ Error getting user trips with validation:", error);
+    console.error("❌ Error getting user events with validation:", error);
 
-    // Fallback: try to get trips without validation
+    // Fallback: try to get events without validation
     try {
       const userRef = doc(db, "users", uid);
       const userDoc = await getDoc(userRef);
 
       if (userDoc.exists()) {
         const userData = userDoc.data();
-        const tripIds = userData.trips || [];
+        const eventIds = userData.events || [];
 
-        const trips = [];
-        for (const tripId of tripIds) {
+        const events = [];
+        for (const eventId of eventIds) {
           try {
-            const tripRef = doc(db, "trips", tripId);
-            const tripDoc = await getDoc(tripRef);
+            const eventRef = doc(db, "events", eventId);
+            const eventDoc = await getDoc(eventRef);
 
-            if (tripDoc.exists()) {
-              trips.push({
-                id: tripDoc.id,
-                ...tripDoc.data(),
+            if (eventDoc.exists()) {
+              events.push({
+                id: eventDoc.id,
+                ...eventDoc.data(),
               });
             }
-          } catch (tripError) {
-            console.warn(`⚠️ Could not fetch trip ${tripId}:`, tripError);
+          } catch (eventError) {
+            console.warn(`⚠️ Could not fetch event ${eventId}:`, eventError);
           }
         }
 
-        return trips;
+        return events;
       }
     } catch (fallbackError) {
-      console.error("❌ Fallback trip retrieval also failed:", fallbackError);
+      console.error("❌ Fallback event retrieval also failed:", fallbackError);
     }
 
     return [];
   }
 };
 
-// Remove trip from ALL users who have it
-export const removeTripFromAllUsers = async (tripId) => {
+// Remove event from ALL users who have it
+export const removeEventFromAllUsers = async (eventId) => {
   try {
-    // Query all users who have this trip in their trips array
+    // Query all users who have this event in their events array
     const usersRef = collection(db, "users");
-    const q = query(usersRef, where("trips", "array-contains", tripId));
+    const q = query(usersRef, where("events", "array-contains", eventId));
     const querySnapshot = await getDocs(q);
 
     if (querySnapshot.empty) {
       return;
     }
 
-    // Remove the trip from each user's trips array
+    // Remove the event from each user's events array
     const updatePromises = [];
 
     querySnapshot.forEach((userDoc) => {
       const userRef = doc(db, "users", userDoc.id);
       updatePromises.push(
         updateDoc(userRef, {
-          trips: arrayRemove(tripId),
+          events: arrayRemove(eventId),
           updatedAt: new Date().toISOString(),
         })
       );
@@ -517,7 +513,7 @@ export const removeTripFromAllUsers = async (tripId) => {
 
     await Promise.all(updatePromises);
   } catch (error) {
-    console.error("❌ Error removing trip from users:", error);
+    console.error("❌ Error removing event from users:", error);
     throw error;
   }
 };
@@ -540,6 +536,3 @@ export const updateUserPhotoCount = async (uid, increment = 1) => {
     throw error;
   }
 };
-
-
-

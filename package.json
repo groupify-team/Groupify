@@ -1,0 +1,31 @@
+{
+  "name": "groupify",
+  "version": "1.0.0",
+  "description": "Social photo sharing and event management application",
+  "private": true,
+  "scripts": {
+    "dev": "npm run dev --prefix client",
+    "build": "npm run build --prefix client",
+    "start": "npm run start --prefix client",
+    "functions:serve": "cd functions && npm run serve",
+    "functions:deploy": "cd functions && npm run deploy",
+    "deploy": "firebase deploy",
+    "deploy:hosting": "firebase deploy --only hosting",
+    "deploy:functions": "firebase deploy --only functions",
+    "deploy:firestore": "firebase deploy --only firestore",
+    "deploy:storage": "firebase deploy --only storage",
+    "serve": "firebase serve",
+    "install-all": "npm install && cd client && npm install && cd ../functions && npm install"
+  },
+  "workspaces": [
+    "client",
+    "functions"
+  ],
+  "devDependencies": {
+    "firebase-tools": "^13.20.2"
+  },
+  "dependencies": {
+    "firebase": "^11.10.0",
+    "firebase-admin": "^13.4.0"
+  }
+}

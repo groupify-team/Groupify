@@ -12,8 +12,8 @@
     z-index: var(--z-base);
   }
 
-  /* Trip cards and content */
-  .trip-card-container {
+  /* event cards and content */
+  .event-card-container {
     position: relative;
     z-index: var(--z-base);
   }

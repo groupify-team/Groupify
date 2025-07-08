@@ -317,8 +317,8 @@ const Features = () => {
       comingSoon: false,
     },
     {
-      category: "ai", 
-      title: "Smart Face Profile Creation",
+      category: "ai",
+      title: "Smart Object Detection",
       description:
         "Create face profiles using guided Smart Face Scan or upload 2-5 photos for optimal AI training.",
       icon: CameraIcon,
@@ -336,14 +336,12 @@ const Features = () => {
     // SHARING & COLLABORATION (Actually Implemented)
     {
       category: "sharing",
-      title: "Trip Collaboration",
+      title: "Collaborative Event Albums",
       description:
-        "Create shared trip albums where friends can contribute photos based on your plan limits.",
+        "Create shared event albums where everyone can contribute photos and relive memories together.",
       icon: UserGroupIcon,
       details: [
-        "Free: Up to 5 members per trip",
-        "Premium: Up to 20 members per trip", 
-        "Pro: Unlimited members per trip",
+        "Invite unlimited friends and family",
         "Real-time photo contributions",
         "Member permission management",
       ],
@@ -357,11 +355,10 @@ const Features = () => {
         "Send friend requests, manage connections, and control who can find you with privacy settings.",
       icon: UsersIcon,
       details: [
-        "Send and receive friend requests",
-        "Search visibility controls",
-        "Privacy-aware friend discovery",
-        "Mutual friend connections",
-        "Friend invitation to trips",
+        "Password-protected sharing",
+        "Expiring links for temporary access",
+        "Download permissions control",
+        "View-only or full access options",
       ],
       premium: false,
       comingSoon: false,
@@ -370,16 +367,15 @@ const Features = () => {
     // ORGANIZATION (Actually Implemented)
     {
       category: "organization",
-      title: "Trip-Based Organization",
+      title: "Intelligent Auto-Tagging",
       description:
-        "Organize photos by trips with automatic date sorting and metadata preservation.",
-      icon: FolderIcon,
+        "Automatically tag photos based on content, location, people, and events for effortless organization.",
+      icon: TagIcon,
       details: [
-        "Trip creation with location autocomplete",
-        "Automatic photo date sorting",
-        "Photo metadata preservation",
-        "Trip statistics and insights",
-        "Batch photo operations",
+        "Automatic location tagging via GPS",
+        "Event and occasion recognition",
+        "Custom tag suggestions",
+        "Batch tagging tools",
       ],
       premium: false,
       comingSoon: false,
@@ -391,11 +387,10 @@ const Features = () => {
         "Upload photos up to 10MB in JPEG, PNG, GIF formats with plan-based limits.",
       icon: PhotoIcon,
       details: [
-        "10MB maximum file size",
-        "JPEG, PNG, GIF format support",
-        "Plan-based photo limits per trip",
-        "Progressive image loading",
-        "Batch upload capabilities",
+        "Chronological photo timeline",
+        "Memory notifications and reminders",
+        "Year-in-review compilations",
+        "Anniversary and birthday highlights",
       ],
       premium: false,
       comingSoon: false,
@@ -441,11 +436,10 @@ const Features = () => {
         "Export your data in multiple formats including complete JSON export and CSV options.",
       icon: DocumentArrowDownIcon,
       details: [
-        "Complete data export (JSON format)",
-        "Trip data export (CSV)",
-        "Photo metadata export (CSV)",
-        "Friends data export (CSV)",
-        "Original quality photo downloads",
+        "Individual photo privacy settings",
+        "Album-level access controls",
+        "Friend permission management",
+        "Anonymous viewing options",
       ],
       premium: false,
       comingSoon: false,
@@ -459,11 +453,10 @@ const Features = () => {
         "Flexible storage plans from 2GB free to 500GB Pro with automatic usage tracking.",
       icon: CloudIcon,
       details: [
-        "Free: 2GB storage, 5 trips, 30 photos/trip",
-        "Premium: 50GB storage, 50 trips, 200 photos/trip",
-        "Pro: 500GB storage, unlimited trips/photos",
-        "Real-time usage monitoring",
-        "Automatic plan limit enforcement",
+        "iOS, Android, and web apps",
+        "Real-time cross-device sync",
+        "Offline photo access",
+        "Progressive photo loading",
       ],
       premium: false,
       comingSoon: false,
@@ -601,52 +594,27 @@ const Features = () => {
   );
 
   return (
-    <LayoutWrapper>
-      {/* Uncomment and adjust based on your actual layout component */}
-      {/* <PublicLayout
-        headerType="public"
-        headerProps={{ ...headerProps, handleSmoothNavigation }}
-        footerType="extended"
-        footerProps={{
-          customText: "© 2025 Groupify. Powerful features, simple experience.",
-          handleSmoothNavigation,
-        }}
-      > */}
-      
+    <PublicLayout
+      headerType="public"
+      headerProps={{ ...headerProps, handleSmoothNavigation }}
+      footerType="extended"
+      footerProps={{
+        customText: "© 2025 Groupify. Powerful features, simple experience.",
+        handleSmoothNavigation,
+      }}
+    >
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 text-white py-16 px-4">
-        <div className="max-w-4xl mx-auto text-center">
-          <div className="flex items-center justify-center gap-3 mb-6">
-            <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-              <SparklesIcon className="w-6 h-6 text-white" />
-            </div>
-            <span className="bg-white/20 px-4 py-2 rounded-full text-sm font-medium">
-              Powerful Features
-            </span>
-          </div>
-          <h1 className="text-4xl sm:text-5xl font-bold mb-4">
-            Everything You Need to Organize Your Photos
-          </h1>
-          <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
-            From AI-powered face recognition to secure sharing, discover all the features that make Groupify the smartest way to manage your memories.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
-            <button
-              onClick={handleGetStarted}
-              className="inline-flex items-center justify-center bg-white text-indigo-600 px-6 py-3 sm:px-8 sm:py-4 rounded-xl text-base sm:text-lg font-semibold hover:bg-gray-50 transition-all duration-200 shadow-xl hover:shadow-2xl hover:scale-105"
-            >
-              Get Started Free
-              <ArrowRightIcon className="ml-2 w-5 h-5" />
-            </button>
-            <a
-              href="/pricing"
-              className="inline-flex items-center justify-center bg-white/20 backdrop-blur-sm text-white px-6 py-3 sm:px-8 sm:py-4 rounded-xl text-base sm:text-lg font-semibold border border-white/30 hover:bg-white/30 transition-all duration-200"
-            >
-              View Pricing
-            </a>
-          </div>
-        </div>
-      </div>
+      <HeroSection
+        badge={{ icon: SparklesIcon, text: "Powerful Features" }}
+        title="Everything You Need to Organize Your Photos"
+        description="From AI-powered face recognition to secure sharing, discover all the features that make Groupify the smartest way to manage your memories."
+        primaryCTA={{
+          text: "Get Started Free",
+          onClick: handleGetStarted,
+          icon: ArrowRightIcon,
+        }}
+        variant="features"
+      />
 
       {/* Stats Section */}
       <StatsSection stats={stats} isLoaded={isLoaded} />
@@ -666,11 +634,10 @@ const Features = () => {
       {/* CTA Section */}
       <CallToActionSection handleGetStarted={handleGetStarted} />
 
-      {/* Uncomment and adjust based on your actual modal component */}
-      {/* <AccessibilityModal {...accessibilityModalProps} /> */}
-      
-      {/* </PublicLayout> */}
-    </LayoutWrapper>
+      {/* Settings Modal*/}
+
+      <AccessibilityModal {...accessibilityModalProps} />
+    </PublicLayout>
   );
 };
 

@@ -21,27 +21,27 @@ export const usePlanLimits = () => {
   const CORE_LIMITS = useMemo(
     () => ({
       free: {
-        trips: 5,
-        photosPerTrip: 30,
-        membersPerTrip: 5,
+        events: 5,
+        photosPerEvent: 30,
+        membersPerEvent: 5,
         storageGB: 2,
       },
       premium: {
-        trips: 50,
-        photosPerTrip: 200, // Updated to match pricing page
-        membersPerTrip: 20,
+        events: 50,
+        photosPerEvent: 200, // Updated to match pricing page
+        membersPerEvent: 20,
         storageGB: 50,
       },
       pro: {
-        trips: "unlimited",
-        photosPerTrip: "unlimited",
-        membersPerTrip: "unlimited",
+        events: "unlimited",
+        photosPerEvent: "unlimited",
+        membersPerEvent: "unlimited",
         storageGB: 500,
       },
       enterprise: {
-        trips: "unlimited",
-        photosPerTrip: "unlimited",
-        membersPerTrip: "unlimited",
+        events: "unlimited",
+        photosPerEvent: "unlimited",
+        membersPerEvent: "unlimited",
         storageGB: "unlimited",
       },
     }),
@@ -88,32 +88,32 @@ export const usePlanLimits = () => {
       const limits = CORE_LIMITS[subscription.plan] || CORE_LIMITS.free;
 
       switch (action) {
-        case "create_trip":
+        case "create_event":
           if (
-            limits.trips !== "unlimited" &&
-            additionalData.currentTripCount >= limits.trips
+            limits.events !== "unlimited" &&
+            additionalData.currentEventCount >= limits.events
           ) {
             return {
               allowed: false,
-              reason: `Trip limit reached (${limits.trips} trips)`,
+              reason: `Event limit reached (${limits.events} events)`,
               upgradeRequired: true,
-              currentUsage: additionalData.currentTripCount,
-              limit: limits.trips,
+              currentUsage: additionalData.currentEventCount,
+              limit: limits.events,
             };
           }
           break;
 
         case "upload_photos": {
-          const { currentTripPhotos = 0, newPhotoCount = 1 } = additionalData;
+          const { currentEventPhotos = 0, newPhotoCount = 1 } = additionalData;
 
-          if (limits.photosPerTrip !== "unlimited") {
-            if (currentTripPhotos + newPhotoCount > limits.photosPerTrip) {
+          if (limits.photosPerEvent !== "unlimited") {
+            if (currentEventPhotos + newPhotoCount > limits.photosPerEvent) {
               return {
                 allowed: false,
-                reason: `Trip photo limit reached (${limits.photosPerTrip} photos per trip)`,
+                reason: `event photo limit reached (${limits.photosPerEvent} photos per event)`,
                 upgradeRequired: true,
-                currentUsage: currentTripPhotos,
-                limit: limits.photosPerTrip,
+                currentUsage: currentEventPhotos,
+                limit: limits.photosPerEvent,
               };
             }
           }
@@ -143,14 +143,14 @@ export const usePlanLimits = () => {
         case "invite_member": {
           const { currentMembers = 0, newMemberCount = 1 } = additionalData;
 
-          if (limits.membersPerTrip !== "unlimited") {
-            if (currentMembers + newMemberCount > limits.membersPerTrip) {
+          if (limits.membersPerEvent !== "unlimited") {
+            if (currentMembers + newMemberCount > limits.membersPerEvent) {
               return {
                 allowed: false,
-                reason: `Member limit reached (${limits.membersPerTrip} members per trip)`,
+                reason: `Member limit reached (${limits.membersPerEvent} members per event)`,
                 upgradeRequired: true,
                 currentUsage: currentMembers,
-                limit: limits.membersPerTrip,
+                limit: limits.membersPerEvent,
               };
             }
           }
@@ -176,29 +176,29 @@ export const usePlanLimits = () => {
     const limits = CORE_LIMITS[subscription.plan] || CORE_LIMITS.free;
 
     return {
-      trips: {
-        used: usage.trips?.used || 0,
-        limit: limits.trips,
+      events: {
+        used: usage.events?.used || 0,
+        limit: limits.events,
         percentage:
-          limits.trips === "unlimited"
+          limits.events === "unlimited"
             ? 0
-            : Math.round(((usage.trips?.used || 0) / limits.trips) * 100),
+            : Math.round(((usage.events?.used || 0) / limits.events) * 100),
         remaining:
-          limits.trips === "unlimited"
+          limits.events === "unlimited"
             ? "unlimited"
-            : Math.max(0, limits.trips - (usage.trips?.used || 0)),
+            : Math.max(0, limits.events - (usage.events?.used || 0)),
       },
       photos: {
         used: usage.photos.used,
-        limit: limits.photosPerTrip,
+        limit: limits.photosPerEvent,
         percentage:
-          limits.photosPerTrip === "unlimited"
+          limits.photosPerEvent === "unlimited"
             ? 0
-            : Math.round((usage.photos.used / limits.photosPerTrip) * 100),
+            : Math.round((usage.photos.used / limits.photosPerEvent) * 100),
         remaining:
-          limits.photosPerTrip === "unlimited"
+          limits.photosPerEvent === "unlimited"
             ? "unlimited"
-            : Math.max(0, limits.photosPerTrip - usage.photos.used),
+            : Math.max(0, limits.photosPerEvent - usage.photos.used),
       },
       storage: {
         used: usage.storage.used,
@@ -285,9 +285,9 @@ export const usePlanLimits = () => {
 
     return {
       ...subscription.features,
-      trips: limits.trips,
-      photosPerTrip: limits.photosPerTrip,
-      membersPerTrip: limits.membersPerTrip,
+      events: limits.events,
+      photosPerEvent: limits.photosPerEvent,
+      membersPerEvent: limits.membersPerEvent,
       storageGB: limits.storageGB,
     };
   }, [subscription, CORE_LIMITS]);
@@ -314,12 +314,12 @@ export const usePlanLimits = () => {
       const limits = CORE_LIMITS[subscription.plan] || CORE_LIMITS.free;
 
       switch (feature) {
-        case "unlimited_trips":
-          return limits.trips === "unlimited";
+        case "unlimited_events":
+          return limits.events === "unlimited";
         case "unlimited_photos":
-          return limits.photosPerTrip === "unlimited";
+          return limits.photosPerEvent === "unlimited";
         case "unlimited_members":
-          return limits.membersPerTrip === "unlimited";
+          return limits.membersPerEvent === "unlimited";
         case "unlimited_storage":
           return limits.storageGB === "unlimited";
         case "ai_recognition":
@@ -352,10 +352,10 @@ export const usePlanLimits = () => {
       suggestions.push({
         targetPlan: "premium",
         benefits: [
-          "50 trips (vs 5)",
-          "200 photos per trip (vs 30)",
+          "50 events (vs 5)",
+          "200 photos per event (vs 30)",
           "50GB storage (vs 2GB)",
-          "20 members per trip (vs 5)",
+          "20 members per event (vs 5)",
         ],
         price: "$9.99/month",
       });
@@ -365,10 +365,10 @@ export const usePlanLimits = () => {
       suggestions.push({
         targetPlan: "pro",
         benefits: [
-          "Unlimited trips",
-          "Unlimited photos per trip",
+          "Unlimited events",
+          "Unlimited photos per event",
           "500GB storage",
-          "Unlimited members per trip",
+          "Unlimited members per event",
         ],
         price: "$19.99/month",
       });
@@ -383,11 +383,11 @@ export const usePlanLimits = () => {
 
     const approachingLimits = [];
 
-    if (usageInfo.trips.percentage > 80) {
+    if (usageInfo.events.percentage > 80) {
       approachingLimits.push({
-        type: "trips",
-        percentage: usageInfo.trips.percentage,
-        message: `You've used ${usageInfo.trips.used} of ${usageInfo.trips.limit} trips`,
+        type: "events",
+        percentage: usageInfo.events.percentage,
+        message: `You've used ${usageInfo.events.used} of ${usageInfo.events.limit} events`,
       });
     }
 

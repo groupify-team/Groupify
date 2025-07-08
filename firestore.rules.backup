@@ -57,26 +57,26 @@ service cloud.firestore {
       allow delete: if request.auth != null && request.auth.uid == resource.data.to;
     }
     
-    // Trip invites collection
-match /tripInvites/{inviteId} {
+    // Event invites collection
+match /eventInvites/{inviteId} {
   allow read, write: if request.auth != null && 
     (resource.data.inviterUid == request.auth.uid || 
-     get(/databases/$(database)/documents/trips/$(resource.data.tripId)).data.admins.hasAny([request.auth.uid]) ||
-     get(/databases/$(database)/documents/trips/$(resource.data.tripId)).data.createdBy == request.auth.uid);
+     get(/databases/$(database)/documents/events/$(resource.data.eventId)).data.admins.hasAny([request.auth.uid]) ||
+     get(/databases/$(database)/documents/events/$(resource.data.eventId)).data.createdBy == request.auth.uid);
   allow create: if request.auth != null && 
     request.auth.uid == request.resource.data.inviterUid;
 }
     
-    // Trips rules
-    match /trips/{tripId} {
+    // Events rules
+    match /events/{eventId} {
       allow read: if request.auth != null;
       allow create: if request.auth != null && request.auth.uid == request.resource.data.createdBy;
       allow update: if request.auth != null && request.auth.uid in resource.data.members;
       allow delete: if request.auth != null && request.auth.uid == resource.data.createdBy;
     }
     
-    // Add this rule for tripPhotos collection
-    match /tripPhotos/{photoId} {
+    // Add this rule for eventPhotos collection
+    match /eventPhotos/{photoId} {
       allow read: if request.auth != null;
       allow create: if request.auth != null && request.auth.uid == request.resource.data.uploadedBy;
       allow update, delete: if request.auth != null && request.auth.uid == resource.data.uploadedBy;

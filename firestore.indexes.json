@@ -1,7 +1,7 @@
 {
   "indexes": [
     {
-      "collectionGroup": "trips",
+      "collectionGroup": "events",
       "queryScope": "COLLECTION",
       "fields": [
         {
@@ -15,15 +15,15 @@
       ]
     },
     {
-      "collectionGroup": "trips",
-      "queryScope": "COLLECTION", 
+      "collectionGroup": "events",
+      "queryScope": "COLLECTION",
       "fields": [
         {
           "fieldPath": "members",
           "arrayConfig": "CONTAINS"
         },
         {
-          "fieldPath": "createdAt", 
+          "fieldPath": "createdAt",
           "order": "DESCENDING"
         }
       ]
@@ -47,7 +47,7 @@
       ]
     },
     {
-      "collectionGroup": "tripInvites",
+      "collectionGroup": "eventInvites",
       "queryScope": "COLLECTION",
       "fields": [
         {

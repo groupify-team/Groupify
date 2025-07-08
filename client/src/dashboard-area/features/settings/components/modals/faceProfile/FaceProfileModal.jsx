@@ -510,7 +510,7 @@ const FaceProfileModal = ({ isOpen, onClose, onProfileCreated }) => {
 
               {/* PhotoUpload Component with constraints */}
               <PhotoUpload
-                tripId="face-profile" // Dummy tripId for face profile uploads
+                eventId="face-profile" // Dummy eventId for face profile uploads
                 onPhotoUploaded={handlePhotosUploaded}
                 maxPhotos={5}
                 currentPhotoCount={uploadedPhotos.length} // Pass actual count, not 0

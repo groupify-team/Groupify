@@ -1,6 +1,6 @@
 /**
  * ADVANCED PERFORMANCE TESTING SUITE
- * Test the ultra-optimized TripDetailView performance
+ * Test the ultra-optimized EventDetailView performance
  */
 
 // Performance Test Configuration
@@ -32,14 +32,14 @@ const PerformanceTestSuite = {
     // Wait for the main content to load
     await new Promise((resolve) => {
       const observer = new MutationObserver(() => {
-        const tripHeader = document.querySelector(
-          '[data-testid="trip-header"]'
+        const EventHeader = document.querySelector(
+          '[data-testid="event-header"]'
         );
         const photoGallery = document.querySelector(
           '[data-testid="photo-gallery"]'
         );
 
-        if (tripHeader && photoGallery) {
+        if (EventHeader && photoGallery) {
           observer.disconnect();
           resolve();
         }

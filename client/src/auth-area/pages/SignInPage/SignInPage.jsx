@@ -258,7 +258,7 @@ const SignInPage = () => {
 
         {/* Subtitle */}
         <p className="text-lg mb-8 text-purple-100 leading-relaxed">
-          Upload photos from your trips and let our AI automatically find the
+          Upload photos from your events and let our AI automatically find the
           ones with you in them. Share albums with friends and never lose track
           of your memories again.
         </p>

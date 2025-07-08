@@ -29,7 +29,10 @@ export default defineConfig({
         __dirname,
         "./src/dashboard-area/features/photos"
       ),
-      "@trips": path.resolve(__dirname, "./src/dashboard-area/features/trips"),
+      "@events": path.resolve(
+        __dirname,
+        "./src/dashboard-area/features/events"
+      ),
       "@settings": path.resolve(
         __dirname,
         "./src/dashboard-area/features/settings"
@@ -43,26 +46,26 @@ export default defineConfig({
       "@dashboard/hooks": path.resolve(__dirname, "./src/dashboard-area/hooks"),
       "@dashboard/utils": path.resolve(__dirname, "./src/dashboard-area/utils"),
 
-      // Trip viewing (complex nested feature)
-      "@trip-view": path.resolve(
+      // event viewing (complex nested feature)
+      "@event-view": path.resolve(
         __dirname,
-        "./src/dashboard-area/features/trips/ViewTrip"
+        "./src/dashboard-area/features/events/ViewEvent"
       ),
       "@face-recognition": path.resolve(
         __dirname,
-        "./src/dashboard-area/features/trips/ViewTrip/features/faceRecognition"
+        "./src/dashboard-area/features/events/ViewEvent/features/faceRecognition"
       ),
       "@gallery": path.resolve(
         __dirname,
-        "./src/dashboard-area/features/trips/ViewTrip/features/gallery"
+        "./src/dashboard-area/features/events/ViewEvent/features/gallery"
       ),
-      "@trip-members": path.resolve(
+      "@event-members": path.resolve(
         __dirname,
-        "./src/dashboard-area/features/trips/ViewTrip/features/members"
+        "./src/dashboard-area/features/events/ViewEvent/features/members"
       ),
-      "@trip-statistics": path.resolve(
+      "@event-statistics": path.resolve(
         __dirname,
-        "./src/dashboard-area/features/trips/ViewTrip/features/statistics"
+        "./src/dashboard-area/features/events/ViewEvent/features/statistics"
       ),
 
       // Auth area components

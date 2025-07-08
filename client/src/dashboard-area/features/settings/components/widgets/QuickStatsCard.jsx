@@ -7,12 +7,12 @@ import {
   SparklesIcon,
 } from "@heroicons/react/24/outline";
 
-const QuickStatsCard = ({ trips, friends, profilePhotos, hasProfile }) => {
+const QuickStatsCard = ({ events, friends, profilePhotos, hasProfile }) => {
   const stats = [
     {
-      id: "trips",
-      label: "Trips",
-      value: trips.length,
+      id: "events",
+      label: "events",
+      value: events.length,
       icon: MapIcon,
       gradient: "from-blue-500 to-indigo-600",
       bgGradient:
@@ -74,7 +74,7 @@ const QuickStatsCard = ({ trips, friends, profilePhotos, hasProfile }) => {
 
   const getTotalActivity = () => {
     return (
-      trips.length + friends.length + (hasProfile ? profilePhotos.length : 0)
+      events.length + friends.length + (hasProfile ? profilePhotos.length : 0)
     );
   };
 
@@ -162,7 +162,7 @@ const QuickStatsCard = ({ trips, friends, profilePhotos, hasProfile }) => {
               {hasProfile
                 ? "100%"
                 : Math.round(
-                    (((trips.length > 0 ? 1 : 0) +
+                    (((events.length > 0 ? 1 : 0) +
                       (friends.length > 0 ? 1 : 0)) /
                       3) *
                       100
@@ -178,7 +178,7 @@ const QuickStatsCard = ({ trips, friends, profilePhotos, hasProfile }) => {
                   hasProfile
                     ? 100
                     : Math.round(
-                        (((trips.length > 0 ? 1 : 0) +
+                        (((events.length > 0 ? 1 : 0) +
                           (friends.length > 0 ? 1 : 0)) /
                           3) *
                           100
@@ -220,14 +220,14 @@ const QuickStatsCard = ({ trips, friends, profilePhotos, hasProfile }) => {
           </p>
         </div>
 
-        {/* Trip Activity */}
+        {/* event activity */}
         <div className="bg-white/50 dark:bg-gray-700/30 rounded-lg p-4 border border-gray-200/30 dark:border-gray-600/30">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Trip Explorer
+              event Explorer
             </span>
             <span className="text-xs text-gray-500 dark:text-gray-400">
-              {Math.min(Math.round((trips.length / 5) * 100), 100)}%
+              {Math.min(Math.round((events.length / 5) * 100), 100)}%
             </span>
           </div>
           <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
@@ -235,16 +235,16 @@ const QuickStatsCard = ({ trips, friends, profilePhotos, hasProfile }) => {
               className="h-2 rounded-full bg-gradient-to-r from-purple-500 to-pink-600 transition-all duration-500"
               style={{
                 width: `${Math.min(
-                  Math.round((trips.length / 5) * 100),
+                  Math.round((events.length / 5) * 100),
                   100
                 )}%`,
               }}
             />
           </div>
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-            {trips.length >= 5
+            {events.length >= 5
               ? "Travel expert!"
-              : `${5 - trips.length} more to level up`}
+              : `${5 - events.length} more to level up`}
           </p>
         </div>
       </div>
@@ -257,7 +257,7 @@ const QuickStatsCard = ({ trips, friends, profilePhotos, hasProfile }) => {
               🎉 Welcome to Groupify!
             </p>
             <p className="text-xs text-blue-600 dark:text-blue-400">
-              Start by creating your first trip or adding friends to begin your
+              Start by creating your first event or adding friends to begin your
               journey.
             </p>
           </div>
@@ -272,7 +272,7 @@ const QuickStatsCard = ({ trips, friends, profilePhotos, hasProfile }) => {
             </p>
             <p className="text-xs text-purple-600 dark:text-purple-400">
               Add a face profile to enable automatic photo recognition in your
-              trips!
+              events!
             </p>
           </div>
         </div>

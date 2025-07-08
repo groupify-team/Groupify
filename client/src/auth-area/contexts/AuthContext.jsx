@@ -78,7 +78,7 @@ export function AuthProvider({ children }) {
       ) {
         subscriptionService.updateUsage({
           initialized: true,
-          trips: 0,
+          events: 0,
           photos: 0,
           storage: 0,
           albums: 0,
@@ -156,7 +156,7 @@ export function AuthProvider({ children }) {
               createdAt: new Date().toISOString(),
             },
             usage: {
-              trips: 0,
+              events: 0,
               photos: 0,
               storage: 0,
               albums: 0,
@@ -276,7 +276,7 @@ export function AuthProvider({ children }) {
             createdAt: new Date().toISOString(),
           },
           usage: {
-            trips: 0,
+            events: 0,
             photos: 0,
             storage: 0,
             albums: 0,

@@ -4,7 +4,7 @@ const DashboardModalsContext = createContext();
 
 export const DashboardModalsProvider = ({ children }) => {
   // Main feature modals
-  const [showCreateTripModal, setShowCreateTripModal] = useState(false);
+  const [showcreateEventModal, setShowcreateEventModal] = useState(false);
   const [showAddFriendModal, setShowAddFriendModal] = useState(false);
   const [showFaceProfileModal, setShowFaceProfileModal] = useState(false);
   const [showEditProfileModal, setShowEditProfileModal] = useState(false);
@@ -43,8 +43,8 @@ export const DashboardModalsProvider = ({ children }) => {
   /**
    * Main feature modal actions
    */
-  const openCreateTripModal = () => setShowCreateTripModal(true);
-  const closeCreateTripModal = () => setShowCreateTripModal(false);
+  const opencreateEventModal = () => setShowcreateEventModal(true);
+  const closecreateEventModal = () => setShowcreateEventModal(false);
 
   const openAddFriendModal = () => {
     setShowAddFriendModal(true);
@@ -157,7 +157,7 @@ export const DashboardModalsProvider = ({ children }) => {
   const contextValue = {
     // Modal states
     modals: {
-      showCreateTripModal,
+      showcreateEventModal,
       showAddFriendModal,
       showFaceProfileModal,
       showEditProfileModal,
@@ -194,9 +194,9 @@ export const DashboardModalsProvider = ({ children }) => {
     },
 
     // Main modal actions
-    createTrip: {
-      open: openCreateTripModal,
-      close: closeCreateTripModal,
+    createEvent: {
+      open: opencreateEventModal,
+      close: closecreateEventModal,
     },
     addFriend: {
       open: openAddFriendModal,

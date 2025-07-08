@@ -8,7 +8,7 @@ export const PLAN_CONFIGS = {
     photos: "500",
     price: "$0",
     billing: "Forever",
-    features: ["Basic AI recognition", "2 trip albums", "Share with 3 friends"],
+    features: ["Basic AI recognition", "2 event albums", "Share with 3 friends"],
   },
   pro: {
     name: "Pro Plan",
@@ -55,19 +55,19 @@ export const BILLING_CYCLES = {
 // Plan Limits
 export const PLAN_LIMITS = {
   free: {
-    trips: 2,
+    events: 2,
     friends: 3,
     storage: 2 * 1024 * 1024 * 1024, // 2GB in bytes
     photos: 500,
   },
   pro: {
-    trips: 50,
+    events: 50,
     friends: 20,
     storage: 50 * 1024 * 1024 * 1024, // 50GB in bytes
     photos: 10000,
   },
   family: {
-    trips: -1, // unlimited
+    events: -1, // unlimited
     friends: -1, // unlimited
     storage: 250 * 1024 * 1024 * 1024, // 250GB in bytes
     photos: 50000,

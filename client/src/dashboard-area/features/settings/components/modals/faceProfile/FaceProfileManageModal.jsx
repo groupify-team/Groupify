@@ -1,5 +1,5 @@
 // features/face-recognition/components/FaceProfileManageModal.jsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   XMarkIcon,
   CheckCircleIcon,
@@ -19,7 +19,7 @@ import {
   deleteFaceProfile,
   getFaceProfile,
   getProfilePhotos,
-} from "@/dashboard-area/features/trips/ViewTrip/features/faceRecognition/service/faceRecognitionService";
+} from "@/dashboard-area/features/events/ViewEvent/features/faceRecognition/service/faceRecognitionService";
 import { deleteFaceProfileFromStorage } from "@firebase-services/faceProfiles";
 import { uploadPhoto } from "@firebase-services/storage";
 
@@ -37,9 +37,9 @@ const FaceProfileManageModal = ({ isOpen, onClose, onProfileUpdated }) => {
     if (isOpen && currentUser?.uid) {
       loadProfileData();
     }
-  }, [isOpen, currentUser]);
+  }, [isOpen, currentUser, loadProfileData]);
 
-  const loadProfileData = () => {
+  const loadProfileData = useCallback(() => {
     try {
       const currentProfile = getFaceProfile(currentUser.uid);
       const photos = getProfilePhotos(currentUser.uid);
@@ -48,15 +48,15 @@ const FaceProfileManageModal = ({ isOpen, onClose, onProfileUpdated }) => {
     } catch (error) {
       console.error("❌ Error loading profile data:", error);
     }
-  };
+  }, [currentUser]);
 
   // Helper function for uploading files using your existing uploadPhoto function
   const uploadProfilePhotos = async (files, userId) => {
-    const uploadPromises = files.map(async (file, index) => {
-      // Create a temporary tripId for face profile uploads or use a special identifier
-      const tempTripId = `face-profile-${userId}`;
+    const uploadPromises = files.map(async (file) => {
+      // Create a temporary eventId for face profile uploads or use a special identifier
+      const tempeventId = `face-profile-${userId}`;
 
-      const uploadedPhoto = await uploadPhoto(file, tempTripId, userId, {
+      const uploadedPhoto = await uploadPhoto(file, tempeventId, userId, {
         originalName: file.name,
         size: file.size,
         type: file.type,
