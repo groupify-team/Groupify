@@ -30,11 +30,11 @@ import {
   DocumentArrowDownIcon,
 } from "@heroicons/react/24/outline";
 
-// Import required components and hooks
-// Note: These imports should be adjusted based on your actual file structure
+
 import { usePublicNavigation } from "../../hooks/usePublicNavigation";
-// import PublicLayout from "../components/layout/PublicLayout";
-// import AccessibilityModal from "../components/modals/AccessibilityModal";
+import PublicLayout from "../../components/layout/PublicLayout";
+import AccessibilityModal from "../../../shared/components/accessibility/AccessibilityModal";
+import HeroSection from "../../components/ui/HeroSection";
 
 // Extract components for better organization
 const StatsSection = ({ stats, isLoaded }) => (
