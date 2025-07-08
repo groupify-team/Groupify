@@ -101,62 +101,65 @@ const ConfirmEmailPage = () => {
   }, [timeLeft]);
 
   const handleResendCode = async () => {
-    if (!email) {
-      toast.error("Email address is required");
-      return;
-    }
+  if (!email) {
+    toast.error("Email address is required");
+    return;
+  }
 
-    try {
-      setResendLoading(true);
+  try {
+    setResendLoading(true);
 
-      const response = await fetch(
-        "https://us-central1-groupify-77202.cloudfunctions.net/resendVerificationCode",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
+    const response = await fetch(
+      "https://us-central1-groupify-77202.cloudfunctions.net/sendVerificationEmail", // Changed from resendVerificationCode
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          data: { 
+            email,
+            name: "User" // sendVerificationEmail requires a name parameter
           },
-          body: JSON.stringify({
-            data: { email },
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        }),
       }
+    );
 
-      const result = await response.json();
-
-      if (result.success) {
-        toast.success("Verification code sent! Check your email.");
-        setTimeLeft(120);
-        setCanResend(false);
-        setVerificationCode(["", "", "", "", "", ""]);
-      } else {
-        throw new Error(result.message || "Failed to resend code");
-      }
-    } catch (error) {
-      console.error("Resend error:", error);
-
-      let errorMessage = "Failed to resend code. Please try again.";
-
-      if (error.message?.includes("already verified")) {
-        errorMessage = "Email is already verified! You can now sign in.";
-        toast.success(errorMessage);
-        setTimeout(() => navigate("/signin"), 1500);
-        return;
-      } else if (error.message?.includes("User not found")) {
-        errorMessage = "User not found. Please sign up first.";
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-
-      toast.error(errorMessage);
-    } finally {
-      setResendLoading(false);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-  };
+
+    const result = await response.json();
+
+    if (result.success) {
+      toast.success("Verification code sent! Check your email.");
+      setTimeLeft(120);
+      setCanResend(false);
+      setVerificationCode(["", "", "", "", "", ""]);
+    } else {
+      throw new Error(result.message || "Failed to resend code");
+    }
+  } catch (error) {
+    console.error("Resend error:", error);
+
+    let errorMessage = "Failed to resend code. Please try again.";
+
+    if (error.message?.includes("already verified")) {
+      errorMessage = "Email is already verified! You can now sign in.";
+      toast.success(errorMessage);
+      setTimeout(() => navigate("/signin"), 1500);
+      return;
+    } else if (error.message?.includes("User not found")) {
+      errorMessage = "User not found. Please sign up first.";
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+
+    toast.error(errorMessage);
+  } finally {
+    setResendLoading(false);
+  }
+};
 
   const handleInputChange = (index, value) => {
     if (value.length > 1) return;
@@ -576,12 +579,12 @@ const ConfirmEmailPage = () => {
             {/* Footer */}
             <p className="mt-4 sm:mt-5 md:mt-6 text-center text-xs sm:text-sm text-gray-600 dark:text-gray-400">
               Need help?{" "}
-              <a
-                href="mailto:support@groupify.com"
+              <Link
+                to="/contact"
                 className="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
               >
                 Contact Support
-              </a>
+              </Link>
             </p>
           </div>
         </div>

@@ -4,6 +4,7 @@ import {
   query,
   where,
   getDocs,
+  getDoc,
   doc,
   deleteDoc,
   writeBatch,
@@ -31,7 +32,6 @@ export class DeleteAccountService {
     const userId = currentUser.uid;
 
     try {
-      await this.reauthenticateUser(currentUser, password);
 
       const finalExport = await this.createFinalExport(userId);
 
@@ -300,7 +300,7 @@ export class DeleteAccountService {
     return lastSignIn < fiveMinutesAgo;
   }
 
-  /**
+    /**
    * Get summary of data that will be deleted
    * @param {string} userId - User ID
    * @returns {Promise<Object>} Deletion summary
@@ -333,7 +333,8 @@ export class DeleteAccountService {
       summary.photos = photosSnapshot.size;
 
       // Count friends
-      const userDoc = await getDocs(doc(db, "users", userId));
+      const userDocRef = doc(db, "users", userId);
+      const userDoc = await getDoc(userDocRef);
       if (userDoc.exists()) {
         summary.friends = userDoc.data().friends?.length || 0;
       }
@@ -356,11 +357,13 @@ export class DeleteAccountService {
       summary.friendRequests = sentSnapshot.size + receivedSnapshot.size;
 
       // Check settings
-      const settingsDoc = await getDocs(doc(db, "userSettings", userId));
+      const settingsDocRef = doc(db, "userSettings", userId);
+      const settingsDoc = await getDoc(settingsDocRef);
       summary.settings = settingsDoc.exists();
 
       // Check face profile
-      const faceProfileDoc = await getDocs(doc(db, "faceProfiles", userId));
+      const faceProfileDocRef = doc(db, "faceProfiles", userId);
+      const faceProfileDoc = await getDoc(faceProfileDocRef);
       summary.faceProfile = faceProfileDoc.exists();
 
       return summary;
