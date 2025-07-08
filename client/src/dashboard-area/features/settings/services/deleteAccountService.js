@@ -32,7 +32,6 @@ export class DeleteAccountService {
     const userId = currentUser.uid;
 
     try {
-      await this.reauthenticateUser(currentUser, password);
 
       const finalExport = await this.createFinalExport(userId);
 

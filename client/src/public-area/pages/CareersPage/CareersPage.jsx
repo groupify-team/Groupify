@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import PublicLayout from "../../components/layout/PublicLayout";
 import HeroSection from "../../components/ui/HeroSection";
 import { usePublicNavigation } from "../../hooks/usePublicNavigation";
@@ -324,24 +325,48 @@ const ApplicationModal = ({ job, onClose }) => {
 
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
-    if (file && file.size <= 10 * 1024 * 1024) {
-      // 10MB limit
+    if (file) {
+      // Check file type
+      const allowedTypes = [
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      ];
+      
+      if (!allowedTypes.includes(file.type)) {
+        toast.error("Please upload a PDF, DOC, or DOCX file", {
+          duration: 3000,
+          style: {
+            background: "#EF4444",
+            color: "#fff",
+            padding: "12px",
+            borderRadius: "8px",
+            fontSize: "13px",
+          },
+        });
+        return;
+      }
+
+      // Check file size (10MB limit)
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error("File size must be less than 10MB", {
+          duration: 3000,
+          style: {
+            background: "#EF4444",
+            color: "#fff",
+            padding: "12px",
+            borderRadius: "8px",
+            fontSize: "13px",
+          },
+        });
+        return;
+      }
+
       setCvFile(file);
-      toast.success(`CV uploaded: ${file.name}`, {
+      toast.success(`CV uploaded successfully: ${file.name}`, {
         duration: 2000,
         style: {
           background: "#10B981",
-          color: "#fff",
-          padding: "12px",
-          borderRadius: "8px",
-          fontSize: "13px",
-        },
-      });
-    } else {
-      toast.error("File size must be less than 10MB", {
-        duration: 3000,
-        style: {
-          background: "#EF4444",
           color: "#fff",
           padding: "12px",
           borderRadius: "8px",
@@ -590,9 +615,9 @@ const ApplicationModal = ({ job, onClose }) => {
                   onChange={handleFileUpload}
                   className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                   id="cv-upload"
+                  key={cvFile ? cvFile.name : 'empty'} // Force re-render when file changes
                 />
                 <div className="flex items-center justify-center w-full h-24 sm:h-28 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:border-indigo-500 dark:hover:border-indigo-400 transition-all duration-200 bg-gray-50 dark:bg-gray-700/50 hover:bg-indigo-50 dark:hover:bg-indigo-900/20">
-                  <div>
                     {cvFile ? (
                       <div className="flex flex-row items-center">
                         <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
@@ -614,7 +639,7 @@ const ApplicationModal = ({ job, onClose }) => {
                           <p className="text-sm font-medium text-green-700 dark:text-green-400 mb-1">
                             File Selected
                           </p>
-                          <p className="text-xs text-gray-600 dark:text-gray-400 truncate">
+                          <p className="text-xs text-gray-600 dark:text-gray-400 truncate max-w-[200px]">
                             {cvFile.name}
                           </p>
                           <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
@@ -655,7 +680,6 @@ const ApplicationModal = ({ job, onClose }) => {
                   </div>
                 </div>
               </div>
-            </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -745,6 +769,7 @@ const ApplicationModal = ({ job, onClose }) => {
 };
 
 const Careers = () => {
+  const navigate = useNavigate();
   const { handleGetStarted, headerProps, accessibilityModalProps } =
     usePublicNavigation();
   const [showApplicationModal, setShowApplicationModal] = useState(false);
@@ -754,6 +779,18 @@ const Careers = () => {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
+
+  // Navigation handlers
+  const handleScrollToPositions = () => {
+    const element = document.getElementById("open-positions");
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
+  const handleNavigateToAbout = () => {
+    navigate("/about");
+  };
 
   const jobListings = [
     {
@@ -983,11 +1020,11 @@ const Careers = () => {
         description="Join our passionate team and help millions of people organize and share their most precious memories. We're building something amazing, and we want you to be part of it."
         primaryCTA={{
           text: "View Open Positions",
-          href: "#open-positions",
+          onClick: handleScrollToPositions,
         }}
         secondaryCTA={{
           text: "Learn About Us",
-          href: "/about",
+          onClick: handleNavigateToAbout,
         }}
         variant="careers"
       />
