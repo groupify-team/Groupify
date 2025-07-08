@@ -14,7 +14,7 @@ import { toast } from "react-hot-toast";
 const PhotoUploadSection = ({
   isOpen,
   onClose,
-  tripId,
+  eventId,
   currentPhotoCount = 0,
   onUploadComplete = () => {},
   onUploadStart = () => {},
@@ -34,7 +34,7 @@ const PhotoUploadSection = ({
     planLimits,
     isFreePlan,
     isPremiumPlan,
-  } = usePhotoUploadLimits(tripId, currentPhotoCount);
+  } = usePhotoUploadLimits(eventId, currentPhotoCount);
 
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
@@ -211,8 +211,11 @@ const PhotoUploadSection = ({
                       Photo Limit Reached
                     </h3>
                     <p className="text-red-700 dark:text-red-300 text-sm">
-                      This trip has reached the maximum of {maxPhotos} photos.
-                      Please delete some photos before uploading new ones.
+                      This event has reached the maximum of{" "}
+                      {planLimits.photosPerEvent} photos.
+                      {isFreePlan || isPremiumPlan
+                        ? " Upgrade to add more photos!"
+                        : " Delete some photos to upload new ones."}
                     </p>
                   </div>
                   {(isFreePlan || isPremiumPlan) && (
@@ -237,7 +240,7 @@ const PhotoUploadSection = ({
                     </h3>
                     <p className="text-yellow-700 dark:text-yellow-300 text-sm">
                       Only {remainingSlots} photo slots remaining out of{" "}
-                      {planLimits.photosPerTrip}.
+                      {planLimits.photosPerEvent}.
                       {isApproachingPhotoLimit &&
                         " Consider upgrading for more space!"}
                     </p>

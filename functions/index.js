@@ -15,30 +15,30 @@ const cors = require("cors")({
 // Enhanced plan limits validation
 const PLAN_LIMITS = {
   free: {
-    trips: 5,
-    photosPerTrip: 30,
-    membersPerTrip: 5,
+    events: 5,
+    photosPerEvent: 30,
+    membersPerEvent: 5,
     storageGB: 2,
     storageBytes: 2 * 1024 * 1024 * 1024,
   },
   premium: {
-    trips: 50,
-    photosPerTrip: 200,
-    membersPerTrip: 20,
+    events: 50,
+    photosPerEvent: 200,
+    membersPerEvent: 20,
     storageGB: 50,
     storageBytes: 50 * 1024 * 1024 * 1024,
   },
   pro: {
-    trips: "unlimited",
-    photosPerTrip: "unlimited",
-    membersPerTrip: "unlimited",
+    events: "unlimited",
+    photosPerEvent: "unlimited",
+    membersPerEvent: "unlimited",
     storageGB: 500,
     storageBytes: 500 * 1024 * 1024 * 1024,
   },
   enterprise: {
-    trips: "unlimited",
-    photosPerTrip: "unlimited",
-    membersPerTrip: "unlimited",
+    events: "unlimited",
+    photosPerEvent: "unlimited",
+    membersPerEvent: "unlimited",
     storageGB: "unlimited",
     storageBytes: Number.MAX_SAFE_INTEGER,
   },
@@ -67,14 +67,14 @@ async function getUserPlan(userId) {
 // Utility function to get user's current usage
 async function getUserUsage(userId) {
   try {
-    // Get trip count
-    const tripsQuery = await admin
+    // Get event count
+    const eventsQuery = await admin
       .firestore()
-      .collection("trips")
+      .collection("events")
       .where("members", "array-contains", userId)
       .get();
 
-    const tripCount = tripsQuery.size;
+    const eventCount = eventsQuery.size;
 
     // Get total photos and storage usage
     let totalPhotos = 0;
@@ -82,11 +82,11 @@ async function getUserUsage(userId) {
 
     const batch = admin.firestore().batch();
 
-    for (const tripDoc of tripsQuery.docs) {
+    for (const eventDoc of eventsQuery.docs) {
       const photosQuery = await admin
         .firestore()
-        .collection("trips")
-        .doc(tripDoc.id)
+        .collection("events")
+        .doc(eventDoc.id)
         .collection("photos")
         .get();
 
@@ -100,13 +100,13 @@ async function getUserUsage(userId) {
     }
 
     return {
-      trips: tripCount,
+      events: eventCount,
       photos: totalPhotos,
       storage: totalStorage,
     };
   } catch (error) {
     console.error("Error getting user usage:", error);
-    return { trips: 0, photos: 0, storage: 0 };
+    return { events: 0, photos: 0, storage: 0 };
   }
 }
 
@@ -125,15 +125,15 @@ exports.validatePhotoUpload = onRequest(
 
       const {
         userId,
-        tripId,
+        eventId,
         photoCount = 1,
         totalFileSize = 0,
       } = req.body.data || req.body;
 
-      if (!userId || !tripId) {
+      if (!userId || !eventId) {
         res.status(400).json({
           success: false,
-          message: "User ID and Trip ID are required",
+          message: "User ID and Event ID are required",
         });
         return;
       }
@@ -143,33 +143,33 @@ exports.validatePhotoUpload = onRequest(
         const userPlan = await getUserPlan(userId);
         const planLimits = PLAN_LIMITS[userPlan] || PLAN_LIMITS.free;
 
-        // Get trip data to check current photo count
-        const tripDoc = await admin
+        // Get event data to check current photo count
+        const eventDoc = await admin
           .firestore()
-          .collection("trips")
-          .doc(tripId)
+          .collection("events")
+          .doc(eventId)
           .get();
 
-        if (!tripDoc.exists) {
+        if (!eventDoc.exists) {
           res.status(404).json({
             success: false,
-            message: "Trip not found",
+            message: "Event not found",
           });
           return;
         }
 
-        const tripData = tripDoc.data();
-        const currentTripPhotos = tripData.photoCount || 0;
+        const eventData = eventDoc.data();
+        const currentEventPhotos = eventData.photoCount || 0;
 
-        // Check per-trip photo limit
-        if (planLimits.photosPerTrip !== "unlimited") {
-          if (currentTripPhotos + photoCount > planLimits.photosPerTrip) {
+        // Check per-event photo limit
+        if (planLimits.photosPerEvent !== "unlimited") {
+          if (currentEventPhotos + photoCount > planLimits.photosPerEvent) {
             res.status(403).json({
               success: false,
-              message: `Trip photo limit exceeded! Your ${userPlan} plan allows ${planLimits.photosPerTrip} photos per trip. This trip currently has ${currentTripPhotos} photos.`,
-              errorCode: "TRIP_PHOTO_LIMIT_EXCEEDED",
-              currentUsage: currentTripPhotos,
-              limit: planLimits.photosPerTrip,
+              message: `Event photo limit exceeded! Your ${userPlan} plan allows ${planLimits.photosPerEvent} photos per event. This event currently has ${currentEventPhotos} photos.`,
+              errorCode: "EVENT_PHOTO_LIMIT_EXCEEDED",
+              currentUsage: currentEventPhotos,
+              limit: planLimits.photosPerEvent,
               plan: userPlan,
             });
             return;
@@ -204,9 +204,9 @@ exports.validatePhotoUpload = onRequest(
           success: true,
           message: "Photo upload validation passed",
           remainingPhotos:
-            planLimits.photosPerTrip === "unlimited"
+            planLimits.photosPerEvent === "unlimited"
               ? "unlimited"
-              : planLimits.photosPerTrip - currentTripPhotos,
+              : planLimits.photosPerEvent - currentEventPhotos,
           remainingStorage:
             planLimits.storageBytes === Number.MAX_SAFE_INTEGER
               ? "unlimited"
@@ -236,12 +236,12 @@ exports.validateMemberInvitation = onRequest(
         return;
       }
 
-      const { userId, tripId, inviteeCount = 1 } = req.body.data || req.body;
+      const { userId, eventId, inviteeCount = 1 } = req.body.data || req.body;
 
-      if (!userId || !tripId) {
+      if (!userId || !eventId) {
         res.status(400).json({
           success: false,
-          message: "User ID and Trip ID are required",
+          message: "User ID and Event ID are required",
         });
         return;
       }
@@ -251,34 +251,34 @@ exports.validateMemberInvitation = onRequest(
         const userPlan = await getUserPlan(userId);
         const planLimits = PLAN_LIMITS[userPlan] || PLAN_LIMITS.free;
 
-        // Get trip data to check current member count
-        const tripDoc = await admin
+        // Get event data to check current member count
+        const eventDoc = await admin
           .firestore()
-          .collection("trips")
-          .doc(tripId)
+          .collection("events")
+          .doc(eventId)
           .get();
 
-        if (!tripDoc.exists) {
+        if (!eventDoc.exists) {
           res.status(404).json({
             success: false,
-            message: "Trip not found",
+            message: "Event not found",
           });
           return;
         }
 
-        const tripData = tripDoc.data();
-        const currentMembers = tripData.members || [];
+        const eventData = eventDoc.data();
+        const currentMembers = eventData.members || [];
         const currentMemberCount = currentMembers.length;
 
         // Check member limit
-        if (planLimits.membersPerTrip !== "unlimited") {
-          if (currentMemberCount + inviteeCount > planLimits.membersPerTrip) {
+        if (planLimits.membersPerEvent !== "unlimited") {
+          if (currentMemberCount + inviteeCount > planLimits.membersPerEvent) {
             res.status(403).json({
               success: false,
-              message: `Member limit exceeded! Your ${userPlan} plan allows ${planLimits.membersPerTrip} members per trip. This trip currently has ${currentMemberCount} members.`,
+              message: `Member limit exceeded! Your ${userPlan} plan allows ${planLimits.membersPerEvent} members per event. This event currently has ${currentMemberCount} members.`,
               errorCode: "MEMBER_LIMIT_EXCEEDED",
               currentUsage: currentMemberCount,
-              limit: planLimits.membersPerTrip,
+              limit: planLimits.membersPerEvent,
               plan: userPlan,
             });
             return;
@@ -290,9 +290,9 @@ exports.validateMemberInvitation = onRequest(
           success: true,
           message: "Member invitation validation passed",
           remainingSlots:
-            planLimits.membersPerTrip === "unlimited"
+            planLimits.membersPerEvent === "unlimited"
               ? "unlimited"
-              : planLimits.membersPerTrip - currentMemberCount,
+              : planLimits.membersPerEvent - currentMemberCount,
         });
       } catch (error) {
         console.error("Error validating member invitation:", error);
@@ -305,8 +305,8 @@ exports.validateMemberInvitation = onRequest(
   }
 );
 
-// Enhanced trip creation validation function
-exports.validateTripCreation = onRequest(
+// Enhanced event creation validation function
+exports.validateEventCreation = onRequest(
   {
     memory: "256MiB",
     timeoutSeconds: 60,
@@ -333,19 +333,19 @@ exports.validateTripCreation = onRequest(
         const userPlan = await getUserPlan(userId);
         const planLimits = PLAN_LIMITS[userPlan] || PLAN_LIMITS.free;
 
-        // Get user's current trip count
+        // Get user's current event count
         const userUsage = await getUserUsage(userId);
-        const currentTripCount = userUsage.trips;
+        const currentEventCount = userUsage.events;
 
-        // Check trip limit
-        if (planLimits.trips !== "unlimited") {
-          if (currentTripCount >= planLimits.trips) {
+        // Check event limit
+        if (planLimits.events !== "unlimited") {
+          if (currentEventCount >= planLimits.events) {
             res.status(403).json({
               success: false,
-              message: `Trip limit reached! Your ${userPlan} plan allows ${planLimits.trips} trips. You currently have ${currentTripCount} trips.`,
-              errorCode: "TRIP_LIMIT_EXCEEDED",
-              currentUsage: currentTripCount,
-              limit: planLimits.trips,
+              message: `Event limit reached! Your ${userPlan} plan allows ${planLimits.events} events. You currently have ${currentEventCount} events.`,
+              errorCode: "EVENT_LIMIT_EXCEEDED",
+              currentUsage: currentEventCount,
+              limit: planLimits.events,
               plan: userPlan,
             });
             return;
@@ -355,14 +355,14 @@ exports.validateTripCreation = onRequest(
         // Validation passed
         res.status(200).json({
           success: true,
-          message: "Trip creation validation passed",
-          remainingTrips:
-            planLimits.trips === "unlimited"
+          message: "Event creation validation passed",
+          remainingEvents:
+            planLimits.events === "unlimited"
               ? "unlimited"
-              : planLimits.trips - currentTripCount,
+              : planLimits.events - currentEventCount,
         });
       } catch (error) {
-        console.error("Error validating trip creation:", error);
+        console.error("Error validating event creation:", error);
         res.status(500).json({
           success: false,
           message: `Validation failed: ${error.message}`,
@@ -372,8 +372,8 @@ exports.validateTripCreation = onRequest(
   }
 );
 
-// Enhanced trip invitation acceptance with plan validation
-exports.acceptTripInvitation = onRequest(
+// Enhanced event invitation acceptance with plan validation
+exports.acceptEventInvitation = onRequest(
   {
     memory: "256MiB",
     timeoutSeconds: 60,
@@ -399,7 +399,7 @@ exports.acceptTripInvitation = onRequest(
         // Get the invitation details
         const invitationDoc = await admin
           .firestore()
-          .collection("tripInvitations")
+          .collection("eventInvitations")
           .doc(invitationId)
           .get();
 
@@ -427,74 +427,75 @@ exports.acceptTripInvitation = onRequest(
         const planLimits = PLAN_LIMITS[userPlan] || PLAN_LIMITS.free;
         const userUsage = await getUserUsage(userId);
 
-        // Check if user has reached their trip limit
+        // Check if user has reached their event limit
         if (
-          planLimits.trips !== "unlimited" &&
-          userUsage.trips >= planLimits.trips
+          planLimits.events !== "unlimited" &&
+          userUsage.events >= planLimits.events
         ) {
           res.status(403).json({
             success: false,
-            message: `Trip limit reached! Your ${userPlan} plan allows ${planLimits.trips} trips. You currently have ${userUsage.trips} trips. Upgrade your plan to accept more invitations.`,
-            errorCode: "TRIP_LIMIT_EXCEEDED",
-            currentTripCount: userUsage.trips,
-            tripLimit: planLimits.trips,
+            message: `Event limit reached! Your ${userPlan} plan allows ${planLimits.events} events. You currently have ${userUsage.events} events. Upgrade your plan to accept more invitations.`,
+            errorCode: "EVENT_LIMIT_EXCEEDED",
+            currentEventCount: userUsage.events,
+            eventLimit: planLimits.events,
             userPlan: userPlan,
           });
           return;
         }
 
-        // Get the trip to check member limits
-        const tripDoc = await admin
+        // Get the event to check member limits
+        const eventDoc = await admin
           .firestore()
-          .collection("trips")
-          .doc(invitation.tripId)
+          .collection("events")
+          .doc(invitation.eventId)
           .get();
 
-        if (!tripDoc.exists) {
+        if (!eventDoc.exists) {
           res.status(404).json({
             success: false,
-            message: "Trip not found",
+            message: "Event not found",
           });
           return;
         }
 
-        const trip = tripDoc.data();
-        const currentMembers = trip.members || [];
+        const event = eventDoc.data();
+        const currentMembers = event.members || [];
 
         // Check if user is already a member
         if (currentMembers.includes(userId)) {
           res.status(400).json({
             success: false,
-            message: "User is already a member of this trip",
+            message: "User is already a member of this event",
           });
           return;
         }
 
-        // Get trip creator's plan to check member limits
-        const tripCreatorPlan = await getUserPlan(trip.createdBy);
-        const tripPlanLimits = PLAN_LIMITS[tripCreatorPlan] || PLAN_LIMITS.free;
+        // Get event creator's plan to check member limits
+        const eventCreatorPlan = await getUserPlan(event.createdBy);
+        const eventPlanLimits =
+          PLAN_LIMITS[eventCreatorPlan] || PLAN_LIMITS.free;
 
-        // Check if adding this member would exceed the trip's member limit
+        // Check if adding this member would exceed the event's member limit
         if (
-          tripPlanLimits.membersPerTrip !== "unlimited" &&
-          currentMembers.length >= tripPlanLimits.membersPerTrip
+          eventPlanLimits.membersPerEvent !== "unlimited" &&
+          currentMembers.length >= eventPlanLimits.membersPerEvent
         ) {
           res.status(403).json({
             success: false,
-            message: `Cannot join trip. The trip creator's ${tripCreatorPlan} plan allows only ${tripPlanLimits.membersPerTrip} members per trip.`,
-            errorCode: "TRIP_MEMBER_LIMIT_EXCEEDED",
+            message: `Cannot join event. The event creator's ${eventCreatorPlan} plan allows only ${eventPlanLimits.membersPerEvent} members per event.`,
+            errorCode: "EVENT_MEMBER_LIMIT_EXCEEDED",
             currentMembers: currentMembers.length,
-            memberLimit: tripPlanLimits.membersPerTrip,
-            tripCreatorPlan: tripCreatorPlan,
+            memberLimit: eventPlanLimits.membersPerEvent,
+            eventCreatorPlan: eventCreatorPlan,
           });
           return;
         }
 
         // Use a transaction to ensure data consistency
         await admin.firestore().runTransaction(async (transaction) => {
-          // Add user to trip members
+          // Add user to event members
           transaction.update(
-            admin.firestore().collection("trips").doc(invitation.tripId),
+            admin.firestore().collection("events").doc(invitation.eventId),
             {
               members: admin.firestore.FieldValue.arrayUnion(userId),
               memberCount: currentMembers.length + 1,
@@ -504,7 +505,7 @@ exports.acceptTripInvitation = onRequest(
 
           // Update invitation status
           transaction.update(
-            admin.firestore().collection("tripInvitations").doc(invitationId),
+            admin.firestore().collection("eventInvitations").doc(invitationId),
             {
               status: "accepted",
               acceptedAt: admin.firestore.FieldValue.serverTimestamp(),
@@ -512,12 +513,12 @@ exports.acceptTripInvitation = onRequest(
             }
           );
 
-          // Update user's trip count in their profile
+          // Update user's event count in their profile
           transaction.update(
             admin.firestore().collection("users").doc(userId),
             {
-              tripCount: userUsage.trips + 1,
-              lastTripJoined: admin.firestore.FieldValue.serverTimestamp(),
+              eventCount: userUsage.events + 1,
+              lastEventJoined: admin.firestore.FieldValue.serverTimestamp(),
             }
           );
         });
@@ -525,11 +526,11 @@ exports.acceptTripInvitation = onRequest(
         res.status(200).json({
           success: true,
           message: "Invitation accepted successfully",
-          tripId: invitation.tripId,
-          newTripCount: userUsage.trips + 1,
+          eventId: invitation.eventId,
+          newEventCount: userUsage.events + 1,
         });
       } catch (error) {
-        console.error("Error accepting trip invitation:", error);
+        console.error("Error accepting event invitation:", error);
         res.status(500).json({
           success: false,
           message: `Failed to accept invitation: ${error.message}`,
@@ -552,13 +553,13 @@ exports.uploadPhotoWithValidation = onRequest(
         return;
       }
 
-      const { userId, tripId, photoData, fileName, fileSize } =
+      const { userId, eventId, photoData, fileName, fileSize } =
         req.body.data || req.body;
 
-      if (!userId || !tripId || !photoData || !fileName) {
+      if (!userId || !eventId || !photoData || !fileName) {
         res.status(400).json({
           success: false,
-          message: "User ID, Trip ID, photo data, and file name are required",
+          message: "User ID, Event ID, photo data, and file name are required",
         });
         return;
       }
@@ -568,41 +569,41 @@ exports.uploadPhotoWithValidation = onRequest(
         const userPlan = await getUserPlan(userId);
         const planLimits = PLAN_LIMITS[userPlan] || PLAN_LIMITS.free;
 
-        // Get trip data
-        const tripDoc = await admin
+        // Get event data
+        const eventDoc = await admin
           .firestore()
-          .collection("trips")
-          .doc(tripId)
+          .collection("events")
+          .doc(eventId)
           .get();
 
-        if (!tripDoc.exists) {
+        if (!eventDoc.exists) {
           res.status(404).json({
             success: false,
-            message: "Trip not found",
+            message: "Event not found",
           });
           return;
         }
 
-        const tripData = tripDoc.data();
+        const eventData = eventDoc.data();
 
-        // Check if user is a member of the trip
-        if (!tripData.members || !tripData.members.includes(userId)) {
+        // Check if user is a member of the event
+        if (!eventData.members || !eventData.members.includes(userId)) {
           res.status(403).json({
             success: false,
-            message: "User is not a member of this trip",
+            message: "User is not a member of this event",
           });
           return;
         }
 
-        const currentTripPhotos = tripData.photoCount || 0;
+        const currentEventPhotos = eventData.photoCount || 0;
 
-        // Validate against per-trip photo limit
-        if (planLimits.photosPerTrip !== "unlimited") {
-          if (currentTripPhotos >= planLimits.photosPerTrip) {
+        // Validate against per-event photo limit
+        if (planLimits.photosPerEvent !== "unlimited") {
+          if (currentEventPhotos >= planLimits.photosPerEvent) {
             res.status(403).json({
               success: false,
-              message: `Trip photo limit exceeded! Your ${userPlan} plan allows ${planLimits.photosPerTrip} photos per trip.`,
-              errorCode: "TRIP_PHOTO_LIMIT_EXCEEDED",
+              message: `Event photo limit exceeded! Your ${userPlan} plan allows ${planLimits.photosPerEvent} photos per event.`,
+              errorCode: "EVENT_PHOTO_LIMIT_EXCEEDED",
             });
             return;
           }
@@ -626,8 +627,8 @@ exports.uploadPhotoWithValidation = onRequest(
         // Create photo document
         const photoRef = admin
           .firestore()
-          .collection("trips")
-          .doc(tripId)
+          .collection("events")
+          .doc(eventId)
           .collection("photos")
           .doc();
         const photoId = photoRef.id;
@@ -645,9 +646,9 @@ exports.uploadPhotoWithValidation = onRequest(
             // In real implementation, add: storageUrl, thumbnailUrl, etc.
           });
 
-          // Update trip photo count
+          // Update event photo count
           transaction.update(
-            admin.firestore().collection("trips").doc(tripId),
+            admin.firestore().collection("events").doc(eventId),
             {
               photoCount: admin.firestore.FieldValue.increment(1),
               lastPhotoUpload: admin.firestore.FieldValue.serverTimestamp(),
@@ -660,7 +661,7 @@ exports.uploadPhotoWithValidation = onRequest(
           success: true,
           message: "Photo uploaded successfully",
           photoId: photoId,
-          newPhotoCount: currentTripPhotos + 1,
+          newPhotoCount: currentEventPhotos + 1,
         });
       } catch (error) {
         console.error("Error uploading photo:", error);
@@ -727,10 +728,10 @@ exports.getUserPlanInfo = onRequest(
           plan: userPlan,
           limits: planLimits,
           usage: {
-            trips: calculateUsageInfo(userUsage.trips, planLimits.trips),
+            events: calculateUsageInfo(userUsage.events, planLimits.events),
             photos: calculateUsageInfo(
               userUsage.photos,
-              planLimits.photosPerTrip
+              planLimits.photosPerEvent
             ),
             storage: {
               ...calculateUsageInfo(userUsage.storage, planLimits.storageBytes),
@@ -745,11 +746,11 @@ exports.getUserPlanInfo = onRequest(
         };
 
         // Add upgrade recommendations
-        if (result.usage.trips.percentage > 80) {
+        if (result.usage.events.percentage > 80) {
           result.recommendations.push({
-            type: "trips",
-            urgency: result.usage.trips.percentage > 95 ? "high" : "medium",
-            message: `You've used ${result.usage.trips.percentage}% of your trip limit`,
+            type: "events",
+            urgency: result.usage.events.percentage > 95 ? "high" : "medium",
+            message: `You've used ${result.usage.events.percentage}% of your event limit`,
           });
         }
 
@@ -789,8 +790,8 @@ function formatBytes(bytes, decimals = 2) {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i];
 }
 
-// Enhanced trip invitation with member limit validation
-exports.sendTripInvitationWithValidation = onRequest(
+// Enhanced event invitation with member limit validation
+exports.sendEventInvitationWithValidation = onRequest(
   {
     memory: "256MiB",
     timeoutSeconds: 60,
@@ -802,38 +803,38 @@ exports.sendTripInvitationWithValidation = onRequest(
         return;
       }
 
-      const { tripId, inviterUserId, inviteeUserId, inviteeEmail } =
+      const { eventId, inviterUserId, inviteeUserId, inviteeEmail } =
         req.body.data || req.body;
 
-      if (!tripId || !inviterUserId || (!inviteeUserId && !inviteeEmail)) {
+      if (!eventId || !inviterUserId || (!inviteeUserId && !inviteeEmail)) {
         res.status(400).json({
           success: false,
           message:
-            "Trip ID, inviter user ID, and invitee identifier are required",
+            "Event ID, inviter user ID, and invitee identifier are required",
         });
         return;
       }
 
       try {
-        // Get trip data
-        const tripDoc = await admin
+        // Get event data
+        const eventDoc = await admin
           .firestore()
-          .collection("trips")
-          .doc(tripId)
+          .collection("events")
+          .doc(eventId)
           .get();
 
-        if (!tripDoc.exists) {
+        if (!eventDoc.exists) {
           res.status(404).json({
             success: false,
-            message: "Trip not found",
+            message: "Event not found",
           });
           return;
         }
 
-        const tripData = tripDoc.data();
+        const eventData = eventDoc.data();
 
         // Check if inviter is a member or admin
-        if (!tripData.members || !tripData.members.includes(inviterUserId)) {
+        if (!eventData.members || !eventData.members.includes(inviterUserId)) {
           res.status(403).json({
             success: false,
             message: "You must be a member to send invitations",
@@ -841,22 +842,22 @@ exports.sendTripInvitationWithValidation = onRequest(
           return;
         }
 
-        // Get trip creator's plan to check member limits
-        const creatorPlan = await getUserPlan(tripData.createdBy);
+        // Get event creator's plan to check member limits
+        const creatorPlan = await getUserPlan(eventData.createdBy);
         const planLimits = PLAN_LIMITS[creatorPlan] || PLAN_LIMITS.free;
-        const currentMemberCount = tripData.members
-          ? tripData.members.length
+        const currentMemberCount = eventData.members
+          ? eventData.members.length
           : 0;
 
         // Check member limit
-        if (planLimits.membersPerTrip !== "unlimited") {
-          if (currentMemberCount >= planLimits.membersPerTrip) {
+        if (planLimits.membersPerEvent !== "unlimited") {
+          if (currentMemberCount >= planLimits.membersPerEvent) {
             res.status(403).json({
               success: false,
-              message: `Member limit reached! The trip creator's ${creatorPlan} plan allows ${planLimits.membersPerTrip} members per trip.`,
+              message: `Member limit reached! The event creator's ${creatorPlan} plan allows ${planLimits.membersPerEvent} members per event.`,
               errorCode: "MEMBER_LIMIT_EXCEEDED",
               currentMembers: currentMemberCount,
-              limit: planLimits.membersPerTrip,
+              limit: planLimits.membersPerEvent,
               creatorPlan: creatorPlan,
             });
             return;
@@ -866,13 +867,13 @@ exports.sendTripInvitationWithValidation = onRequest(
         // Create invitation
         const invitationRef = admin
           .firestore()
-          .collection("tripInvitations")
+          .collection("eventInvitations")
           .doc();
         const invitationId = invitationRef.id;
 
         await invitationRef.set({
           id: invitationId,
-          tripId: tripId,
+          eventId: eventId,
           inviterUserId: inviterUserId,
           inviteeUserId: inviteeUserId || null,
           inviteeEmail: inviteeEmail || null,
@@ -886,12 +887,12 @@ exports.sendTripInvitationWithValidation = onRequest(
           message: "Invitation sent successfully",
           invitationId: invitationId,
           remainingSlots:
-            planLimits.membersPerTrip === "unlimited"
+            planLimits.membersPerEvent === "unlimited"
               ? "unlimited"
-              : planLimits.membersPerTrip - currentMemberCount - 1,
+              : planLimits.membersPerEvent - currentMemberCount - 1,
         });
       } catch (error) {
-        console.error("Error sending trip invitation:", error);
+        console.error("Error sending event invitation:", error);
         res.status(500).json({
           success: false,
           message: `Failed to send invitation: ${error.message}`,

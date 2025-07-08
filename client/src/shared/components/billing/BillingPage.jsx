@@ -70,7 +70,7 @@ const BillingPage = () => {
       photos: "10,000",
       features: [
         "Advanced AI face recognition",
-        "Unlimited trip albums",
+        "Unlimited event albums",
         "Share with up to 20 friends",
         "Priority email support",
         "Photo editing tools",

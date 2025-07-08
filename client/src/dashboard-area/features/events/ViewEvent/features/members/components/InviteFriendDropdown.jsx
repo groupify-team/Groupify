@@ -9,9 +9,9 @@ import {
   ShieldExclamationIcon,
 } from "@heroicons/react/24/outline";
 import { useInviteFriends } from "../hooks/useInviteFriends";
-import { useTripMemberLimits } from "../hooks/useTripMemberLimits";
+import { useEventMemberLimits } from "../hooks/useEventMemberLimits";
 
-// 🧩 Enhanced component for inviting friends to a trip with plan validation
+// 🧩 Enhanced component for inviting friends to a event with plan validation
 const InviteFriendDropdown = ({
   currentUser,
   eventId,
@@ -30,7 +30,24 @@ const InviteFriendDropdown = ({
     setSearchTerm,
     clearSearch,
     handleInviteFriend,
-  } = useInviteFriends(currentUser, tripId, excludedUserIds);
+  } = useInviteFriends(currentUser, eventId, excludedUserIds);
+
+  const {
+    canInviteMore,
+    limitStatus,
+    remainingSlots,
+    getFormattedLimits,
+    getMemberUpgradeSuggestions,
+    isApproachingMemberLimit,
+    getInvitationPreview,
+    inviteMember,
+    planLimits,
+    isFreePlan,
+    isPremiumPlan,
+  } = useEventMemberLimits(eventId, currentMemberCount);
+
+  const formattedLimits = getFormattedLimits();
+  const upgradeSuggestions = getMemberUpgradeSuggestions();
 
   // Get initials for avatar fallback
   const getInitials = (name) => {
@@ -73,7 +90,7 @@ const InviteFriendDropdown = ({
                 Member Limit Reached
               </h4>
               <p className="text-red-700 dark:text-red-300 text-xs">
-                Maximum {planLimits.membersPerTrip} members allowed.
+                Maximum {planLimits.membersPerEvent} members allowed.
                 {isFreePlan || isPremiumPlan ? " Upgrade for more!" : ""}
               </p>
             </div>
@@ -320,8 +337,8 @@ const InviteFriendDropdown = ({
               <div className="text-center mb-4">
                 <p className="text-gray-700 dark:text-gray-300 text-sm mb-2">
                   You've reached your member limit of{" "}
-                  <strong>{planLimits.membersPerTrip} members</strong> for this
-                  trip.
+                  <strong>{planLimits.membersPerEvent} members</strong> for this
+                  event.
                 </p>
                 <p className="text-gray-600 dark:text-gray-400 text-xs">
                   Upgrade your plan to invite more friends!
