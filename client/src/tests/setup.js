@@ -1,56 +1,117 @@
+// src/tests/setup.js
 import '@testing-library/jest-dom';
 
-// Fix TextEncoder/TextDecoder for Node.js environment
-import { TextEncoder, TextDecoder } from 'util';
-
-global.TextEncoder = TextEncoder;
-global.TextDecoder = TextDecoder;
-
-// Mock Firebase
-jest.mock('@firebase-services/config.js', () => ({
+// Mock Firebase config based on your actual file structure
+jest.mock('@shared/services/firebase/config.js', () => ({
   db: {},
   auth: {},
   storage: {},
-  functions: {}
 }));
 
-// Mock Firebase Auth
-jest.mock('firebase/auth', () => ({
-  getAuth: jest.fn(),
-  signInWithEmailAndPassword: jest.fn(),
-  createUserWithEmailAndPassword: jest.fn(),
-  signOut: jest.fn(),
-  onAuthStateChanged: jest.fn()
+// Mock Firebase services
+jest.mock('@shared/services/firebase/users.js', () => ({
+  createUserProfile: jest.fn(),
+  getUserProfile: jest.fn(),
+  updateUserProfile: jest.fn(),
+  getFriends: jest.fn(),
+  sendFriendRequest: jest.fn(),
+  acceptFriendRequest: jest.fn(),
 }));
 
-// Mock environment variables
-process.env.VITE_FIREBASE_API_KEY = 'test-api-key';
-process.env.VITE_FIREBASE_AUTH_DOMAIN = 'test.firebaseapp.com';
-process.env.VITE_FIREBASE_PROJECT_ID = 'test-project';
-process.env.VITE_FIREBASE_STORAGE_BUCKET = 'test.appspot.com';
-process.env.VITE_FIREBASE_MESSAGING_SENDER_ID = '123456789';
-process.env.VITE_FIREBASE_APP_ID = 'test-app-id';
+jest.mock('@shared/services/firebase/trips.js', () => ({
+  createTrip: jest.fn(),
+  getTrips: jest.fn(),
+  updateTrip: jest.fn(),
+  deleteTrip: jest.fn(),
+}));
 
-// Mock IntersectionObserver (often needed for components)
-global.IntersectionObserver = jest.fn(() => ({
-  disconnect: jest.fn(),
+jest.mock('@shared/services/firebase/storage.js', () => ({
+  uploadPhoto: jest.fn(),
+  deletePhoto: jest.fn(),
+  getPhotoURL: jest.fn(),
+}));
+
+// Mock localStorage
+const localStorageMock = {
+  getItem: jest.fn(),
+  setItem: jest.fn(),
+  removeItem: jest.fn(),
+  clear: jest.fn(),
+  key: jest.fn(),
+  length: 0,
+};
+
+Object.defineProperty(window, 'localStorage', {
+  value: localStorageMock,
+  writable: true,
+});
+
+// Mock react-hot-toast
+jest.mock('react-hot-toast', () => ({
+  toast: {
+    success: jest.fn(),
+    error: jest.fn(),
+    loading: jest.fn(),
+    dismiss: jest.fn(),
+  },
+  __esModule: true,
+}));
+
+// Mock react-router-dom
+jest.mock('react-router-dom', () => ({
+  ...jest.requireActual('react-router-dom'),
+  useNavigate: () => jest.fn(),
+  useLocation: () => ({ pathname: '/', search: '', hash: '', state: null }),
+  useParams: () => ({}),
+}));
+
+// Global test utilities
+global.ResizeObserver = jest.fn().mockImplementation(() => ({
   observe: jest.fn(),
   unobserve: jest.fn(),
+  disconnect: jest.fn(),
 }));
 
-// Mock window.matchMedia (for responsive components)
+// Mock URL.createObjectURL
+global.URL.createObjectURL = jest.fn(() => 'mocked-url');
+global.URL.revokeObjectURL = jest.fn();
+
+// Mock matchMedia
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
   value: jest.fn().mockImplementation(query => ({
     matches: false,
     media: query,
     onchange: null,
-    addListener: jest.fn(), // deprecated
-    removeListener: jest.fn(), // deprecated
+    addListener: jest.fn(),
+    removeListener: jest.fn(),
     addEventListener: jest.fn(),
     removeEventListener: jest.fn(),
     dispatchEvent: jest.fn(),
   })),
 });
 
+// Mock IntersectionObserver
+global.IntersectionObserver = jest.fn().mockImplementation(() => ({
+  observe: jest.fn(),
+  unobserve: jest.fn(),
+  disconnect: jest.fn(),
+}));
 
+// Console error suppression for cleaner test output
+const originalError = console.error;
+beforeAll(() => {
+  console.error = (...args) => {
+    if (
+      typeof args[0] === 'string' &&
+      args[0].includes('Warning: ReactDOM.render is deprecated')
+    ) {
+      return;
+    }
+    originalError.call(console, ...args);
+  };
+});
+
+afterAll(() => {
+  console.error = originalError;
+});

@@ -10,9 +10,9 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "jest",
+    "test:pricing": "jest src/tests/pricing-plan-enforcement.test.js",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage",
-    "test:ci": "jest --ci --coverage --watchAll=false"
+    "test:coverage": "jest --coverage"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -69,7 +69,7 @@
     "eslint-plugin-react-refresh": "^0.4.19",
     "globals": "^16.0.0",
     "identity-obj-proxy": "^3.0.0",
-    "jest": "^30.0.0",
+    "jest": "^30.0.4",
     "jest-environment-jsdom": "^30.0.0",
     "postcss": "^8.5.3",
     "tailwindcss": "^3.4.1",

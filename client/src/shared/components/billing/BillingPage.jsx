@@ -1,6 +1,6 @@
-// src/shared/components/billing/BillingPage.jsx - Context-aware billing component
+// src/shared/components/billing/BillingPage.jsx - Professional billing component
 import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation, Link } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@auth/hooks/useAuth";
 
 import PublicLayout from "../../../public-area/components/layout/PublicLayout";
@@ -27,6 +27,7 @@ const BillingPage = () => {
   const location = useLocation();
 
   const [loading, setLoading] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(true);
   const [cardNumber, setCardNumber] = useState("");
   const [expiryDate, setExpiryDate] = useState("");
   const [cvv, setCvv] = useState("");
@@ -50,14 +51,14 @@ const BillingPage = () => {
 
   // Get plan and billing cycle from URL
   const urlParams = new URLSearchParams(location.search);
-  const selectedPlan = urlParams.get("plan") || "pro";
+  const selectedPlan = urlParams.get("plan") || "premium";
   const billingCycle =
     urlParams.get("billing") || urlParams.get("cycle") || "monthly";
 
   // Plan details with both monthly and yearly pricing
   const planDetails = {
-    pro: {
-      name: "Pro",
+    premium: {
+      name: "Premium",
       monthly: { price: 9.99, yearlyPrice: 99.99 },
       yearly: {
         price: 99.99,
@@ -69,14 +70,14 @@ const BillingPage = () => {
       photos: "10,000",
       features: [
         "Advanced AI face recognition",
-        "Unlimited event albums",
+        "Unlimited trip albums",
         "Share with up to 20 friends",
         "Priority email support",
         "Photo editing tools",
       ],
     },
-    family: {
-      name: "Family",
+    pro: {
+      name: "Pro",
       monthly: { price: 19.99, yearlyPrice: 199.99 },
       yearly: {
         price: 199.99,
@@ -84,55 +85,86 @@ const BillingPage = () => {
         savings: 39.89,
         savingsPercent: 17,
       },
-      storage: "250GB",
-      photos: "50,000",
+      storage: "500GB",
+      photos: "Unlimited",
       features: [
         "Premium AI face recognition",
         "Unlimited event albums",
         "Share with unlimited friends",
         "24/7 priority support",
-        "Family account management",
-        "Custom photo books",
+        "Professional photo prints",
+        "Video storage & organization",
       ],
     },
   };
 
-  const currentPlan = planDetails[selectedPlan] || planDetails.pro;
+  const currentPlan = planDetails[selectedPlan] || planDetails.premium;
   const isYearly = billingCycle === "yearly";
   const currentPrice = isYearly ? currentPlan.yearly : currentPlan.monthly;
 
   // Initialize component
   useEffect(() => {
-    // Check authentication
-    if (!currentUser) {
-      toast.error("Please sign in to access billing");
-      navigationService.navigateBack(navigate, { fallbackPath: "/signin" });
-      return;
-    }
+    const initializeComponent = async () => {
+      try {
+        // Check authentication
+        if (!currentUser) {
+          toast.error("Please sign in to access billing");
+          navigate("/signin", { replace: true });
+          return;
+        }
 
-    // Get navigation context and subscription data
-    const context = navigationService.getContext();
-    const subscription = subscriptionService.getCurrentSubscription();
+        // Get navigation context and subscription data
+        const context = navigationService.getContext();
+        const subscription = subscriptionService.getCurrentSubscription();
 
-    setNavigationContext(context);
-    setCurrentSubscription(subscription);
+        setNavigationContext(context);
+        setCurrentSubscription(subscription);
 
-    // Scroll to top
-    window.scrollTo(0, 0);
+        // Scroll to top
+        window.scrollTo(0, 0);
 
-    // Log navigation context for debugging
-    if (context) {
-      console.log("Navigation context available:", context);
-    }
+        // Clear form on mount
+        setCardNumber("");
+        setExpiryDate("");
+        setCvv("");
+        setNameOnCard("");
+        setValidationErrors({});
+
+        // Small delay to ensure all data is loaded
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      } catch (error) {
+        console.error("Error initializing billing page:", error);
+      } finally {
+        setIsInitializing(false);
+      }
+    };
+
+    initializeComponent();
   }, [currentUser, navigate]);
 
   // Check for plan conflicts
-  const hasConflict =
-    currentSubscription && currentSubscription.plan === selectedPlan;
+  const hasConflict = currentSubscription?.plan === selectedPlan;
   const needsToCancelFirst =
     currentSubscription &&
     currentSubscription.plan !== "free" &&
     currentSubscription.plan !== selectedPlan;
+
+  // Navigation handlers
+  const handleBackToPricing = () => {
+    navigate("/pricing", { replace: true });
+  };
+
+  const handleBackNavigation = () => {
+    const from = urlParams.get("from");
+
+    if (from === "pricing") {
+      navigate("/pricing", { replace: true });
+    } else if (navigationContext?.origin === "dashboard-settings") {
+      navigate("/dashboard/settings", { replace: true });
+    } else {
+      navigate("/pricing", { replace: true });
+    }
+  };
 
   // Card validation functions
   const getCardType = (number) => {
@@ -275,7 +307,7 @@ const BillingPage = () => {
 
     if (needsToCancelFirst) {
       toast.error(
-        `Please cancel your current ${currentSubscription.plan} plan before purchasing another one.`
+        `Please cancel your current ${currentSubscription.plan} plan first.`
       );
       return;
     }
@@ -302,8 +334,8 @@ const BillingPage = () => {
 
     try {
       // Simulate payment processing with progress
-      const duration = 6000;
-      const intervalTime = 50;
+      const duration = 4000;
+      const intervalTime = 100;
       const steps = duration / intervalTime;
       const progressIncrement = 100 / steps;
 
@@ -312,9 +344,7 @@ const BillingPage = () => {
         setPaymentProgress(Math.min(i * progressIncrement, 100));
       }
 
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
-      // Update subscription via service
+      // Update subscription
       subscriptionService.updateSubscription({
         plan: selectedPlan.toLowerCase(),
         billing: billingCycle,
@@ -327,32 +357,35 @@ const BillingPage = () => {
     } catch (error) {
       setPaymentStatus("failure");
       console.error("Payment processing error:", error);
+      toast.error("Payment failed. Please try again.");
     } finally {
       setLoading(false);
     }
-  };
-
-  // Handle back navigation
-  const handleBackNavigation = () => {
-    navigationService.navigateBack(navigate, {
-      fallbackPath: "/pricing",
-    });
   };
 
   // Handle successful payment completion
   const handlePaymentSuccess = () => {
     setShowPaymentModal(false);
 
-    // Use navigation service to return to origin
-    navigationService.handleSubscriptionSuccess(navigate, {
-      plan: currentPlan.name,
-      action: "subscription",
-      message: `Successfully subscribed to ${currentPlan.name} plan!`,
-    });
+    // Navigate based on origin
+    const from = urlParams.get("from");
+    if (from === "pricing") {
+      navigate("/dashboard", { replace: true });
+    } else if (navigationContext?.origin === "dashboard-settings") {
+      navigate("/dashboard/settings", { replace: true });
+    } else {
+      navigate("/dashboard", { replace: true });
+    }
+
+    toast.success(`Successfully subscribed to ${currentPlan.name} plan!`);
   };
 
-  if (!currentUser) {
-    return null;
+  if (!currentUser || isInitializing) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      </div>
+    );
   }
 
   return (
@@ -364,31 +397,31 @@ const BillingPage = () => {
       }}
     >
       {/* Navigation Breadcrumb */}
-      {navigationContext && (
-        <div className="bg-white/40 dark:bg-gray-800/40 backdrop-blur-sm border-b border-gray-200/50 dark:border-gray-700/50">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-            <button
-              onClick={handleBackNavigation}
-              className="inline-flex items-center text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
-            >
-              <ArrowLeftIcon className="w-4 h-4 mr-2" />
-              Back to{" "}
-              {navigationContext.origin === "dashboard-settings"
-                ? "Settings"
-                : "Previous Page"}
-            </button>
-          </div>
+      <div className="bg-white/40 dark:bg-gray-800/40 backdrop-blur-sm border-b border-gray-200/50 dark:border-gray-700/50">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+          <button
+            onClick={handleBackNavigation}
+            className="inline-flex items-center text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
+          >
+            <ArrowLeftIcon className="w-4 h-4 mr-2" />
+            Back to{" "}
+            {navigationContext?.origin === "dashboard-settings"
+              ? "Settings"
+              : "Pricing"}
+          </button>
         </div>
-      )}
+      </div>
 
       {/* Hero Section */}
       <HeroSection
         badge={{ icon: CreditCardIcon, text: "Secure Checkout" }}
         title="Complete Your Subscription"
-        description={`Hello ${currentUser?.displayName}, you're upgrading to ${currentPlan.name}`}
+        description={`Hello ${
+          currentUser?.displayName || currentUser?.email
+        }, you're upgrading to ${currentPlan.name}`}
         primaryCTA={{
           text: "Back to Pricing",
-          action: handleBackNavigation,
+          action: handleBackToPricing,
           variant: "secondary",
         }}
       />
@@ -396,12 +429,39 @@ const BillingPage = () => {
       {/* Main Content */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         {/* Plan Conflict Messages */}
-        <ConflictMessages
-          hasConflict={hasConflict}
-          needsToCancelFirst={needsToCancelFirst}
-          currentPlan={currentPlan}
-          currentSubscription={currentSubscription}
-        />
+        {hasConflict && (
+          <div className="mb-6 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl p-4">
+            <div className="flex items-center gap-3">
+              <ExclamationTriangleIcon className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
+              <div>
+                <h3 className="font-semibold text-yellow-800 dark:text-yellow-200">
+                  You already have this plan
+                </h3>
+                <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                  You already have the {currentPlan.name} plan. Check your
+                  dashboard for current subscription details.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {needsToCancelFirst && (
+          <div className="mb-6 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-xl p-4">
+            <div className="flex items-center gap-3">
+              <ExclamationTriangleIcon className="w-6 h-6 text-orange-600 dark:text-orange-400" />
+              <div>
+                <h3 className="font-semibold text-orange-800 dark:text-orange-200">
+                  Cancel your current plan first
+                </h3>
+                <p className="text-sm text-orange-700 dark:text-orange-300">
+                  Please cancel your current {currentSubscription?.plan} plan
+                  before purchasing another one.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
           {/* Payment Form */}
@@ -438,8 +498,7 @@ const BillingPage = () => {
               billingCycle={billingCycle}
               currentPrice={currentPrice}
               isYearly={isYearly}
-              navigationContext={navigationContext}
-              handleBackNavigation={handleBackNavigation}
+              handleBackToPricing={handleBackToPricing}
             />
           </div>
         </div>
@@ -464,13 +523,11 @@ const BillingPage = () => {
         showInfoModal={showInfoModal}
         setShowInfoModal={setShowInfoModal}
       />
-
       <PayPalModal
         showPayPalModal={showPayPalModal}
         setShowPayPalModal={setShowPayPalModal}
         setPaymentMethod={setPaymentMethod}
       />
-
       <ApplePayModal
         showApplePayModal={showApplePayModal}
         setShowApplePayModal={setShowApplePayModal}
@@ -478,55 +535,6 @@ const BillingPage = () => {
       />
     </PublicLayout>
   );
-};
-
-// Conflict Messages Component
-const ConflictMessages = ({
-  hasConflict,
-  needsToCancelFirst,
-  currentPlan,
-  currentSubscription,
-}) => {
-  if (hasConflict) {
-    return (
-      <div className="mb-6 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl p-4">
-        <div className="flex items-center gap-3">
-          <ExclamationTriangleIcon className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
-          <div>
-            <h3 className="font-semibold text-yellow-800 dark:text-yellow-200">
-              You already have this plan
-            </h3>
-            <p className="text-sm text-yellow-700 dark:text-yellow-300">
-              You already have the {currentPlan.name} plan. Check your settings
-              for current subscription details.
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (needsToCancelFirst) {
-    return (
-      <div className="mb-6 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-xl p-4">
-        <div className="flex items-center gap-3">
-          <ExclamationTriangleIcon className="w-6 h-6 text-orange-600 dark:text-orange-400" />
-          <div>
-            <h3 className="font-semibold text-orange-800 dark:text-orange-200">
-              Cancel your current plan first
-            </h3>
-            <p className="text-sm text-orange-700 dark:text-orange-300">
-              Please cancel your current {currentSubscription?.plan} plan before
-              purchasing another one. You can do this from your dashboard
-              settings.
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  return null;
 };
 
 // Card Logo Component
@@ -638,7 +646,7 @@ const PaymentForm = ({
 
     {/* Payment Method Selection */}
     <div className="mb-6">
-      <div className="grid grid-cols-3 gap-2 sm:gap-3 md:grid-cols-3">
+      <div className="grid grid-cols-3 gap-2 sm:gap-3">
         <button
           type="button"
           onClick={() => setPaymentMethod("card")}
@@ -849,7 +857,7 @@ const OrderSummary = ({
   currentPlan,
   currentPrice,
   isYearly,
-  handleBackNavigation,
+  handleBackToPricing,
 }) => (
   <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-2xl border border-white/20 dark:border-gray-700/50 p-6 sm:p-8 sticky top-8">
     <div className="flex items-center justify-between mb-6">
@@ -857,7 +865,7 @@ const OrderSummary = ({
         Order Summary
       </h3>
       <button
-        onClick={handleBackNavigation}
+        onClick={handleBackToPricing}
         className="inline-flex items-center px-3 py-1.5 text-sm bg-indigo-100 dark:bg-indigo-900/30 hover:bg-indigo-200 dark:hover:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 rounded-lg transition-colors gap-1"
       >
         <svg
@@ -935,10 +943,10 @@ const OrderSummary = ({
       <h4 className="font-semibold text-gray-900 dark:text-white mb-3">
         What's included:
       </h4>
-      <ul className="space-y-2">
+      <ul className="space-y-2 sm:space-y-3">
         {currentPlan.features.map((feature, index) => (
           <li key={index} className="flex items-start">
-            <CheckIcon className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5 mr-2" />
+            <CheckIcon className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 flex-shrink-0 mt-0.5 mr-2" />
             <span className="text-sm text-gray-600 dark:text-gray-400">
               {feature}
             </span>
@@ -1123,7 +1131,7 @@ const PaymentModal = ({
               className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-6 py-4 rounded-xl text-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
             >
               <HomeIcon className="w-5 h-5" />
-              Continue
+              Continue to Dashboard
             </button>
           </div>
         )}

@@ -11,8 +11,8 @@ export default {
     "^@pages/(.*)$": "<rootDir>/src/pages/$1",
     "^@shared/(.*)$": "<rootDir>/src/shared/$1",
     "^@tests/(.*)$": "<rootDir>/src/tests/$1",
-    "^@auth/(.*)$": "<rootDir>/src/features/auth/$1",
-    "^@dashboard/(.*)$": "<rootDir>/src/features/dashboard/$1",
+    "^@auth/(.*)$": "<rootDir>/src/auth-area/$1",
+    "^@dashboard/(.*)$": "<rootDir>/src/dashboard-area/$1",
     "^@face-recognition/(.*)$": "<rootDir>/src/features/face-recognition/$1",
     "^@friends/(.*)$": "<rootDir>/src/features/friends/$1",
     "^@photos/(.*)$": "<rootDir>/src/features/photos/$1",
@@ -34,7 +34,6 @@ export default {
     "!src/**/*.test.{js,jsx}",
   ],
   moduleDirectories: ["node_modules", "<rootDir>/src"],
-
   globals: {
     TextEncoder: TextEncoder,
     TextDecoder: TextDecoder,
