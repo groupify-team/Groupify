@@ -33,7 +33,7 @@ const FaceProfileCard = ({
           </h3>
           <p className="text-sm sm:text-base lg:text-lg text-gray-600 dark:text-gray-300 mb-4 sm:mb-5 lg:mb-6 max-w-md mx-auto px-4">
             Upload 2-10 clear photos of yourself to enable automatic photo
-            recognition in your trips
+            recognition in your events
           </p>
           <button
             onClick={onOpenSetup}
@@ -73,7 +73,7 @@ const FaceProfileCard = ({
                   </p>
                   <p className="text-xs sm:text-sm text-green-600 dark:text-green-400">
                     Your face profile enables automatic photo recognition across
-                    all your trips and albums for seamless photo organization.
+                    all your events and albums for seamless photo organization.
                   </p>
                 </div>
               </div>
@@ -135,7 +135,7 @@ const FaceProfileCard = ({
                 </li>
                 <li className="flex items-center gap-2">
                   <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
-                  <span>Trip photo organization</span>
+                  <span>event photo organization</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
@@ -182,7 +182,7 @@ const FaceProfileCard = ({
                 <p className="text-xs sm:text-sm text-amber-700 dark:text-amber-300">
                   For best results, ensure your profile photos show clear,
                   well-lit faces from different angles. This improves
-                  recognition accuracy across all your trips.
+                  recognition accuracy across all your events.
                 </p>
               </div>
             </div>

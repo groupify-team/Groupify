@@ -16,7 +16,7 @@ export default {
     "^@face-recognition/(.*)$": "<rootDir>/src/features/face-recognition/$1",
     "^@friends/(.*)$": "<rootDir>/src/features/friends/$1",
     "^@photos/(.*)$": "<rootDir>/src/features/photos/$1",
-    "^@trips/(.*)$": "<rootDir>/src/features/trips/$1",
+    "^@events/(.*)$": "<rootDir>/src/features/events/$1",
     "^@settings/(.*)$": "<rootDir>/src/features/settings/$1",
     "^@notifications/(.*)$": "<rootDir>/src/features/notifications/$1",
   },

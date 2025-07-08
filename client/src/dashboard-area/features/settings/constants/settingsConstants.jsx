@@ -188,9 +188,9 @@ export const NOTIFICATION_SETTINGS = [
     defaultChecked: true,
   },
   {
-    id: "tripUpdates",
-    label: "Trip Updates",
-    description: "Get notified about trip activities and changes",
+    id: "eventUpdates",
+    label: "Event Updates",
+    description: "Get notified about event activities and changes",
     icon: () => (
       <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center shadow-sm">
         <MapIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white" />
@@ -263,7 +263,7 @@ export const PRIVACY_SETTINGS = [
 export const DEFAULT_USER_SETTINGS = {
   notifications: {
     emailNotifications: true,
-    tripUpdates: true,
+    eventUpdates: true,
     photoRecognition: true,
   },
   privacy: {
@@ -329,7 +329,7 @@ export const SETTINGS_MODAL_TYPES = {
 // Export data types
 export const EXPORT_DATA_TYPES = {
   COMPLETE: "complete",
-  TRIPS: "trips",
+  events: "events",
   PHOTOS: "photos",
   FRIENDS: "friends",
 };

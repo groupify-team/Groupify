@@ -4,10 +4,10 @@
  */
 
 import {
-  getTrip as getTrip_original,
-  updateTrip as updateTrip_original,
-} from "../firebase/trips";
-import { getTripPhotos as getTripPhotos_original } from "../firebase/storage";
+  getEvent as getEvent_original,
+  updateEvent as updateEvent_original,
+} from "../firebase/events";
+import { getEventPhotos as getEventPhotos_original } from "../firebase/storage";
 import { getUserProfile as getUserProfile_original } from "../firebase/users";
 import {
   getCachedData,
@@ -16,42 +16,42 @@ import {
   invalidateCacheType,
 } from "./apiCache";
 
-// === TRIPS ===
-export const getTrip = async (tripId) => {
+// === events ===
+export const getEvent = async (eventId) => {
   // Check cache first
-  const cached = getCachedData("trips", tripId);
+  const cached = getCachedData("events", eventId);
   if (cached) return cached;
 
   // Fetch from Firebase
-  const trip = await getTrip_original(tripId);
+  const event = await getEvent_original(eventId);
 
   // Cache the result
-  setCachedData("trips", tripId, trip);
+  setCachedData("events", eventId, event);
 
-  return trip;
+  return event;
 };
 
-export const updateTrip = async (tripId, updates) => {
+export const updateEvent = async (eventId, updates) => {
   // Update in Firebase
-  const result = await updateTrip_original(tripId, updates);
+  const result = await updateEvent_original(eventId, updates);
 
-  // Invalidate cache for this trip
-  invalidateCache("trips", tripId);
+  // Invalidate cache for this event
+  invalidateCache("events", eventId);
 
   return result;
 };
 
 // === PHOTOS ===
-export const getTripPhotos = async (tripId) => {
+export const getEventPhotos = async (eventId) => {
   // Check cache first
-  const cached = getCachedData("photos", tripId);
+  const cached = getCachedData("photos", eventId);
   if (cached) return cached;
 
   // Fetch from Firebase
-  const photos = await getTripPhotos_original(tripId);
+  const photos = await getEventPhotos_original(eventId);
 
   // Cache the result
-  setCachedData("photos", tripId, photos);
+  setCachedData("photos", eventId, photos);
 
   return photos;
 };
@@ -104,9 +104,9 @@ export const getBatchUserProfiles = async (userIds) => {
 };
 
 // === CACHE MANAGEMENT ===
-export const refreshTripCache = (tripId) => {
-  invalidateCache("trips", tripId);
-  invalidateCache("photos", tripId);
+export const refreshEventCache = (eventId) => {
+  invalidateCache("events", eventId);
+  invalidateCache("photos", eventId);
 };
 
 export const refreshUserCache = (userId) => {
@@ -114,10 +114,7 @@ export const refreshUserCache = (userId) => {
 };
 
 export const clearAllCaches = () => {
-  invalidateCacheType("trips");
+  invalidateCacheType("events");
   invalidateCacheType("photos");
   invalidateCacheType("users");
 };
-
-
-

@@ -7,7 +7,7 @@ import subscriptionService from "../subscriptionService";
 /**
  * Upload a photo to Firebase Storage and save metadata to Firestore
  * @param {File} file - The file to upload
- * @param {string} tripId - The ID of the trip
+ * @param {string} eventId - The ID of the event
  * @param {string} userId - The ID of the user uploading
  * @param {object} metadata - Additional metadata to store
  * @param {function} onProgress - Callback for upload progress (percent)
@@ -15,7 +15,7 @@ import subscriptionService from "../subscriptionService";
  */
 export const uploadPhoto = (
   file,
-  tripId,
+  eventId,
   userId,
   metadata = {},
   onProgress
@@ -25,11 +25,18 @@ export const uploadPhoto = (
       // PLAN VALIDATION BEFORE UPLOAD
       const subscription = subscriptionService.getCurrentSubscription();
       const usage = subscription.usage;
-      
+
       // Check storage limit using exact subscription service values
       if (subscription.features.storageBytes !== Number.MAX_SAFE_INTEGER) {
-        if (usage.storage.used + file.size > subscription.features.storageBytes) {
-          reject(new Error(`Storage limit exceeded! You've used ${usage.storage.usedFormatted} of ${subscription.features.storage}. Upgrade your ${subscription.plan} plan for more storage.`));
+        if (
+          usage.storage.used + file.size >
+          subscription.features.storageBytes
+        ) {
+          reject(
+            new Error(
+              `Storage limit exceeded! You've used ${usage.storage.usedFormatted} of ${subscription.features.storage}. Upgrade your ${subscription.plan} plan for more storage.`
+            )
+          );
           return;
         }
       }
@@ -37,13 +44,19 @@ export const uploadPhoto = (
       // Check if file is too large (10MB limit regardless of plan)
       const maxFileSize = 10 * 1024 * 1024; // 10MB
       if (file.size > maxFileSize) {
-        reject(new Error(`File too large! Maximum file size is 10MB. Your file is ${subscriptionService.formatBytes(file.size)}.`));
+        reject(
+          new Error(
+            `File too large! Maximum file size is 10MB. Your file is ${subscriptionService.formatBytes(
+              file.size
+            )}.`
+          )
+        );
         return;
       }
 
       const fileExtension = file.name.split(".").pop();
       const fileName = `${uuidv4()}.${fileExtension}`;
-      const storagePath = `photos/${tripId}/${fileName}`;
+      const storagePath = `photos/${eventId}/${fileName}`;
       const storageRef = ref(storage, storagePath);
 
       const uploadTask = uploadBytesResumable(storageRef, file);
@@ -75,32 +88,28 @@ export const uploadPhoto = (
               filePath: storagePath,
               downloadURL,
               uploadedBy: userId,
-              tripId,
+              eventId,
               uploadedAt: new Date().toISOString(),
               size: file.size, // CRITICAL: Store file size for usage tracking
               originalName: metadata.originalName || file.name,
               type: file.type,
-              // Plan information at time of upload
               planAtUpload: subscription.plan,
               ...metadata,
             };
 
-            // Add to both collections for proper trip organization
-            const [photoDocRef, tripPhotoDocRef] = await Promise.all([
+            const [photoDocRef, eventPhotoDocRef] = await Promise.all([
               addDoc(collection(db, "photos"), photoData),
-              addDoc(collection(db, "tripPhotos"), photoData),
+              addDoc(collection(db, "eventPhotos"), photoData),
             ]);
 
-            // UPDATE USAGE STATISTICS after successful upload
             subscriptionService.updateUsage({
               photos: usage.photos.used + 1,
-              storage: usage.storage.used + file.size
+              storage: usage.storage.used + file.size,
             });
 
-            // Return photo data with IDs
             resolve({
               id: photoDocRef.id,
-              tripPhotoId: tripPhotoDocRef.id,
+              eventPhotoId: eventPhotoDocRef.id,
               ...photoData,
             });
           } catch (err) {
@@ -116,14 +125,11 @@ export const uploadPhoto = (
   });
 };
 
-/**
- * Get all photos for a specific trip
- */
-export const getTripPhotos = async (tripId) => {
+export const getEventPhotos = async (eventId) => {
   try {
     const photosQuery = query(
       collection(db, "photos"),
-      where("tripId", "==", tripId)
+      where("eventId", "==", eventId)
     );
 
     const querySnapshot = await getDocs(photosQuery);
@@ -140,7 +146,7 @@ export const getTripPhotos = async (tripId) => {
       (a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt)
     );
   } catch (error) {
-    console.error("Error getting trip photos:", error);
+    console.error("Error getting event photos:", error);
     throw error;
   }
 };
@@ -177,65 +183,89 @@ export const getUserPhotos = async (userId) => {
 /**
  * Validate multiple file uploads before processing
  * @param {Array} files - Array of files to validate
- * @param {string} tripId - Trip ID for context
- * @param {number} currentTripPhotoCount - Current photos in trip
+ * @param {string} eventId - event ID for context
+ * @param {number} currentEventPhotoCount - Current photos in event
  * @returns {Object} Validation result
  */
-export const validateFileUploads = async (files, tripId, currentTripPhotoCount = 0) => {
+export const validateFileUploads = async (
+  files,
+  eventId,
+  currentEventPhotoCount = 0
+) => {
   try {
     const subscription = subscriptionService.getCurrentSubscription();
     const usage = subscription.usage;
-    
+
     // Calculate total file size
     const totalFileSize = files.reduce((sum, file) => sum + file.size, 0);
-    
-    // Check per-trip photo limit
-    const photosPerTripLimit = subscription.features.photosPerTrip;
-    if (photosPerTripLimit !== 'unlimited') {
-      if (currentTripPhotoCount + files.length > photosPerTripLimit) {
+
+    // Check per-event photo limit
+    const photosPerEventLimit = subscription.features.photosPerEvent;
+    if (photosPerEventLimit !== "unlimited") {
+      if (currentEventPhotoCount + files.length > photosPerEventLimit) {
         return {
           allowed: false,
-          reason: `Trip photo limit exceeded! Your ${subscription.plan} plan allows ${photosPerTripLimit} photos per trip. You currently have ${currentTripPhotoCount} photos.`,
-          type: 'trip_photo_limit',
-          currentUsage: currentTripPhotoCount,
-          limit: photosPerTripLimit
+          reason: `event photo limit exceeded! Your ${subscription.plan} plan allows ${photosPerEventLimit} photos per event. You currently have ${currentEventPhotoCount} photos.`,
+          type: "Event_photo_limit",
+          currentUsage: currentEventPhotoCount,
+          limit: photosPerEventLimit,
         };
       }
     }
 
     // Check storage limit
     if (subscription.features.storageBytes !== Number.MAX_SAFE_INTEGER) {
-      if (usage.storage.used + totalFileSize > subscription.features.storageBytes) {
+      if (
+        usage.storage.used + totalFileSize >
+        subscription.features.storageBytes
+      ) {
         return {
           allowed: false,
-          reason: `Storage limit exceeded! You've used ${usage.storage.usedFormatted} of ${subscription.features.storage}. These files need ${subscriptionService.formatBytes(totalFileSize)} more space.`,
-          type: 'storage_limit',
+          reason: `Storage limit exceeded! You've used ${
+            usage.storage.usedFormatted
+          } of ${
+            subscription.features.storage
+          }. These files need ${subscriptionService.formatBytes(
+            totalFileSize
+          )} more space.`,
+          type: "storage_limit",
           currentUsage: usage.storage.used,
           limit: subscription.features.storageBytes,
-          additionalNeeded: totalFileSize
+          additionalNeeded: totalFileSize,
         };
       }
     }
 
     // Check individual file sizes
-    const oversizedFiles = files.filter(file => file.size > 10 * 1024 * 1024); // 10MB
+    const oversizedFiles = files.filter((file) => file.size > 10 * 1024 * 1024); // 10MB
     if (oversizedFiles.length > 0) {
       return {
         allowed: false,
-        reason: `${oversizedFiles.length} file(s) exceed the 10MB size limit: ${oversizedFiles.map(f => f.name).join(', ')}`,
-        type: 'file_size_limit',
-        oversizedFiles: oversizedFiles.map(f => ({ name: f.name, size: subscriptionService.formatBytes(f.size) }))
+        reason: `${
+          oversizedFiles.length
+        } file(s) exceed the 10MB size limit: ${oversizedFiles
+          .map((f) => f.name)
+          .join(", ")}`,
+        type: "file_size_limit",
+        oversizedFiles: oversizedFiles.map((f) => ({
+          name: f.name,
+          size: subscriptionService.formatBytes(f.size),
+        })),
       };
     }
 
     // Check file types
-    const invalidFiles = files.filter(file => !file.type.startsWith('image/'));
+    const invalidFiles = files.filter(
+      (file) => !file.type.startsWith("image/")
+    );
     if (invalidFiles.length > 0) {
       return {
         allowed: false,
-        reason: `${invalidFiles.length} file(s) are not images: ${invalidFiles.map(f => f.name).join(', ')}`,
-        type: 'file_type_invalid',
-        invalidFiles: invalidFiles.map(f => ({ name: f.name, type: f.type }))
+        reason: `${invalidFiles.length} file(s) are not images: ${invalidFiles
+          .map((f) => f.name)
+          .join(", ")}`,
+        type: "file_type_invalid",
+        invalidFiles: invalidFiles.map((f) => ({ name: f.name, type: f.type })),
       };
     }
 
@@ -245,7 +275,7 @@ export const validateFileUploads = async (files, tripId, currentTripPhotoCount =
     return {
       allowed: false,
       reason: "Failed to validate uploads. Please try again.",
-      type: 'validation_error'
+      type: "validation_error",
     };
   }
 };
@@ -253,30 +283,36 @@ export const validateFileUploads = async (files, tripId, currentTripPhotoCount =
 /**
  * Batch upload multiple photos with progress tracking
  * @param {Array} files - Array of files to upload
- * @param {string} tripId - Trip ID
+ * @param {string} eventId - event ID
  * @param {string} userId - User ID
  * @param {function} onProgress - Progress callback
  * @param {function} onFileComplete - Individual file completion callback
  * @returns {Promise<Array>} Array of uploaded photo data
  */
-export const batchUploadPhotos = async (files, tripId, userId, onProgress, onFileComplete) => {
+export const batchUploadPhotos = async (
+  files,
+  eventId,
+  userId,
+  onProgress,
+  onFileComplete
+) => {
   const uploadedPhotos = [];
   const errors = [];
-  
+
   try {
     // Pre-validate all files
-    const validation = await validateFileUploads(files, tripId);
+    const validation = await validateFileUploads(files, eventId);
     if (!validation.allowed) {
       throw new Error(validation.reason);
     }
 
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
-      
+
       try {
         const uploadedPhoto = await uploadPhoto(
           file,
-          tripId,
+          eventId,
           userId,
           {
             originalName: file.name,
@@ -284,7 +320,7 @@ export const batchUploadPhotos = async (files, tripId, userId, onProgress, onFil
             type: file.type,
             lastModified: file.lastModified,
             batchIndex: i,
-            batchTotal: files.length
+            batchTotal: files.length,
           },
           (percent) => {
             // Calculate overall progress
@@ -296,16 +332,15 @@ export const batchUploadPhotos = async (files, tripId, userId, onProgress, onFil
         );
 
         uploadedPhotos.push(uploadedPhoto);
-        
+
         if (onFileComplete) {
           onFileComplete(uploadedPhoto, i + 1, files.length);
         }
-        
       } catch (error) {
         console.error(`Error uploading file ${file.name}:`, error);
         errors.push({
           fileName: file.name,
-          error: error.message
+          error: error.message,
         });
       }
     }
@@ -330,25 +365,25 @@ export const batchUploadPhotos = async (files, tripId, userId, onProgress, onFil
 export const calculateUserStorageUsage = async (userId) => {
   try {
     const userPhotos = await getUserPhotos(userId);
-    
+
     const totalSize = userPhotos.reduce((sum, photo) => {
       return sum + (photo.size || 0);
     }, 0);
-    
+
     const photoCount = userPhotos.length;
-    
+
     return {
       totalSize,
       totalSizeFormatted: subscriptionService.formatBytes(totalSize),
       photoCount,
-      photos: userPhotos.map(photo => ({
+      photos: userPhotos.map((photo) => ({
         id: photo.id,
         fileName: photo.fileName || photo.originalName,
         size: photo.size || 0,
         sizeFormatted: subscriptionService.formatBytes(photo.size || 0),
         uploadedAt: photo.uploadedAt,
-        tripId: photo.tripId
-      }))
+        eventId: photo.eventId,
+      })),
     };
   } catch (error) {
     console.error("Error calculating storage usage:", error);
@@ -370,35 +405,33 @@ export const deletePhoto = async (photoId, userId) => {
       where("id", "==", photoId),
       where("uploadedBy", "==", userId)
     );
-    
+
     const photoSnapshot = await getDocs(photoQuery);
     if (photoSnapshot.empty) {
       throw new Error("Photo not found or access denied");
     }
-    
+
     const photoData = photoSnapshot.docs[0].data();
     const photoSize = photoData.size || 0;
-    
+
     // Delete from both collections
     await Promise.all([
       deleteDoc(doc(db, "photos", photoId)),
-      deleteDoc(doc(db, "tripPhotos", photoData.tripPhotoId))
+      deleteDoc(doc(db, "eventPhotos", photoData.eventPhotoId)),
     ]);
-    
+
     // Update usage statistics
     const subscription = subscriptionService.getCurrentSubscription();
     const usage = subscription.usage;
-    
+
     subscriptionService.updateUsage({
       photos: Math.max(0, usage.photos.used - 1),
-      storage: Math.max(0, usage.storage.used - photoSize)
+      storage: Math.max(0, usage.storage.used - photoSize),
     });
-    
+
     return true;
   } catch (error) {
     console.error("Error deleting photo:", error);
     throw error;
   }
 };
-
-

@@ -334,9 +334,9 @@ const Features = () => {
     },
     {
       category: "sharing",
-      title: "Collaborative Trip Albums",
+      title: "Collaborative Event Albums",
       description:
-        "Create shared trip albums where everyone can contribute photos and relive memories together.",
+        "Create shared event albums where everyone can contribute photos and relive memories together.",
       icon: UserGroupIcon,
       details: [
         "Invite unlimited friends and family",

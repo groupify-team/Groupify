@@ -71,7 +71,7 @@ export const useExportBackup = () => {
 
   // Export specific data type as CSV
   const exportCSV = useCallback(
-    async (dataType = "trips") => {
+    async (dataType = "events") => {
       if (!currentUser?.uid) {
         setError("User not authenticated");
         return false;

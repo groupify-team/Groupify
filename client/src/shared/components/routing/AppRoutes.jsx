@@ -63,11 +63,11 @@ const Billing = React.lazy(() =>
 const Dashboard = React.lazy(() =>
   import("@/dashboard-area/pages/DashboardPage")
 );
-const TripsSection = React.lazy(() =>
-  import("@/dashboard-area/components/sections/TripsSection")
+const EventsSection = React.lazy(() =>
+  import("@/dashboard-area/components/sections/EventsSection")
 );
-const TripDetailView = React.lazy(() =>
-  import("@/dashboard-area/features/trips/ViewTrip/TripDetailView")
+const EventDetailView = React.lazy(() =>
+  import("@/dashboard-area/features/events/ViewEvent/EventDetailView")
 );
 const SettingsSection = React.lazy(() =>
   import("@settings/components/sections/SettingsSection")
@@ -255,23 +255,23 @@ const AppRoutes = () => {
             index
             element={
               <SuspenseWrapper useSkeleton={true}>
-                <TripsSection />
+                <EventsSection />
               </SuspenseWrapper>
             }
           />
           <Route
-            path="trips"
+            path="events"
             element={
               <SuspenseWrapper useSkeleton={true}>
-                <TripsSection />
+                <EventsSection />
               </SuspenseWrapper>
             }
           />
           <Route
-            path="trip/:tripId"
+            path="event/:eventId"
             element={
               <SuspenseWrapper useSkeleton={true}>
-                <TripDetailView />
+                <EventDetailView />
               </SuspenseWrapper>
             }
           />

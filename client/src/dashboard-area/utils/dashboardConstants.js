@@ -25,10 +25,10 @@ import { TOAST_MESSAGES, ERROR_MESSAGES } from "@/shared/constants/messages";
 // Navigation Configuration
 export const NAVIGATION_ITEMS = [
   {
-    id: "trips",
-    name: "My Trips",
+    id: "events",
+    name: "My events",
     icon: MapIcon,
-    href: "/dashboard/trips",
+    href: "/dashboard/events",
     description: "View and manage your travel memories",
   },
   {
@@ -49,7 +49,7 @@ export const NAVIGATION_ITEMS = [
 
 // Filter Options
 export const FILTER_OPTIONS = [
-  { value: "all", label: "All Trips" },
+  { value: "all", label: "All Events" },
   { value: "recent", label: "Recent" },
   { value: "favorites", label: "Favorites" },
   { value: "shared", label: "Shared" },
@@ -57,8 +57,8 @@ export const FILTER_OPTIONS = [
 
 // Default Dashboard State
 export const DEFAULT_STATE = {
-  currentView: "trips",
-  selectedTrip: null,
+  currentView: "events",
+  selectedEvent: null,
   filterOption: "all",
   searchQuery: "",
   showCreateModal: false,
@@ -97,7 +97,7 @@ export const USER_MENU_ITEMS = [
 
 // Bottom Navigation Items (Mobile)
 export const BOTTOM_NAV_ITEMS = [
-  { id: "trips", name: "Trips", icon: MapIcon },
+  { id: "events", name: "events", icon: MapIcon },
   { id: "friends", name: "Friends", icon: UserPlusIcon },
   { id: "settings", name: "Settings", icon: Cog6ToothIcon },
 ];

@@ -46,7 +46,7 @@ const DashboardHeader = ({
   sidebarOpen,
   isMobile,
 }) => {
-  const { userData, pendingRequests, tripInvites } = useDashboardData();
+  const { userData, pendingRequests, eventInvites } = useDashboardData();
 
   // Try to use new layout system, fallback to props
   let layoutData = null;
@@ -82,7 +82,7 @@ const DashboardHeader = ({
   const mobileUserMenuRef = useRef(null);
 
   const totalNotifications =
-    (pendingRequests?.length || 0) + (tripInvites?.length || 0);
+    (pendingRequests?.length || 0) + (eventInvites?.length || 0);
 
   // Close dropdowns when clicking outside (only for local state)
   useEffect(() => {
@@ -184,7 +184,7 @@ const DashboardHeader = ({
           {shouldShowCenterLogo() && (
             <div
               className="hidden sm:flex lg:hidden items-center gap-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg p-2 transition-colors"
-              onClick={() => navigateToSection && navigateToSection("trips")}
+              onClick={() => navigateToSection && navigateToSection("events")}
             >
               <div className="w-8 h-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
                 <CameraIcon className="w-5 h-5 text-white" />
@@ -274,10 +274,10 @@ const DashboardHeader = ({
                             </div>
                           ))}
 
-                          {/* Trip Invitations */}
-                          {tripInvites?.map((invite, index) => (
+                          {/* event Invitations */}
+                          {eventInvites?.map((invite, index) => (
                             <div
-                              key={`trip-${index}`}
+                              key={`event-${index}`}
                               className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
                             >
                               <div className="flex items-center gap-3">
@@ -286,7 +286,7 @@ const DashboardHeader = ({
                                 </div>
                                 <div className="flex-1">
                                   <p className="text-sm font-medium text-gray-900 dark:text-white">
-                                    Trip invitation: {invite.tripName}
+                                    event invitation: {invite.eventName}
                                   </p>
                                   <p className="text-xs text-gray-500 dark:text-gray-400">
                                     From {invite.inviterName}
@@ -407,7 +407,3 @@ const DashboardHeader = ({
 };
 
 export default DashboardHeader;
-
-
-
-

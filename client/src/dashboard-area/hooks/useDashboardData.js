@@ -1,4 +1,4 @@
-// useDashboardData.js - COMPLETE FIXED VERSION with Trip Deletion Handler
+// useDashboardData.js - COMPLETE FIXED VERSION with event Deletion Handler
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom"; // ? ADDED
 import { useAuth } from "@auth/hooks/useAuth";
@@ -7,16 +7,16 @@ import {
   getFriends,
   getPendingFriendRequests,
   getUserProfile,
-} from "@firebase-services/users";
+} from "@/shared/services/firebase/users";
 import {
-  getUserTrips,
+  getUserEvents,
   getPendingInvites,
-} from "@shared/services/firebase/trips";
+} from "@shared/services/firebase/events";
 import {
   hasFaceProfile,
   getProfilePhotos,
   createFaceProfile,
-} from "@face-recognition/service/faceRecognitionService";
+} from "@/dashboard-area/features/events/ViewEvent/features/faceRecognition/service/faceRecognitionService";
 import { getFaceProfileFromStorage } from "@shared/services/firebase/faceProfiles";
 import { ERROR_MESSAGES } from "@/shared/constants/messages";
 
@@ -64,10 +64,10 @@ export const useDashboardData = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [userData, setUserData] = useState(null);
-  const [trips, setTrips] = useState([]);
+  const [events, setevents] = useState([]);
   const [friends, setFriends] = useState([]);
   const [pendingRequests, setPendingRequests] = useState([]);
-  const [tripInvites, setTripInvites] = useState([]);
+  const [eventInvites, setEventInvites] = useState([]);
   const [hasProfile, setHasProfile] = useState(false);
   const [profilePhotos, setProfilePhotos] = useState([]);
   const [isLoadingProfile, setIsLoadingProfile] = useState(false);
@@ -80,8 +80,8 @@ export const useDashboardData = () => {
   const updateFromGlobalData = useCallback((data) => {
     if (!data) return;
     setUserData(data.userProfile);
-    setTrips(data.userTrips);
-    setTripInvites(data.pendingInvites);
+    setevents(data.userevents);
+    setEventInvites(data.pendingInvites);
     setFriends(data.friendsData);
     setPendingRequests(data.friendRequests);
     setLoading(false);
@@ -193,9 +193,9 @@ export const useDashboardData = () => {
 
       const loadOperation = async () => {
         // Load data in parallel
-        const [userProfile, userTrips, pendingInvites] = await Promise.all([
+        const [userProfile, userevents, pendingInvites] = await Promise.all([
           getUserProfile(currentUser.uid),
-          getUserTrips(currentUser.uid),
+          getUserEvents(currentUser.uid),
           getPendingInvites(currentUser.uid),
         ]);
 
@@ -220,7 +220,7 @@ export const useDashboardData = () => {
 
         const result = {
           userProfile,
-          userTrips,
+          userevents,
           pendingInvites,
           friendsData,
           friendRequests,
@@ -265,17 +265,19 @@ export const useDashboardData = () => {
     showErrorMessage,
   ]);
 
-  // ? NEW: Function to immediately remove trip from state
-  const removeTripFromState = useCallback((tripId) => {
-    setTrips((currentTrips) => {
-      const updatedTrips = currentTrips.filter((trip) => trip.id !== tripId);
-      return updatedTrips;
+  // ? NEW: Function to immediately remove event from state
+  const removeEventFromState = useCallback((eventId) => {
+    setevents((currentevents) => {
+      const updatedevents = currentevents.filter(
+        (event) => event.id !== eventId
+      );
+      return updatedevents;
     });
 
     // Also update global data if it exists
-    if (globalData && globalData.userTrips) {
-      globalData.userTrips = globalData.userTrips.filter(
-        (trip) => trip.id !== tripId
+    if (globalData && globalData.userevents) {
+      globalData.userevents = globalData.userevents.filter(
+        (event) => event.id !== eventId
       );
       // Notify other subscribers
       notifySubscribers(globalData);
@@ -283,18 +285,18 @@ export const useDashboardData = () => {
   }, []);
 
   // Refresh functions
-  const refreshTrips = useCallback(async () => {
+  const refreshevents = useCallback(async () => {
     if (!currentUser?.uid) return;
     try {
-      const updatedTrips = await getUserTrips(currentUser.uid);
-      setTrips(updatedTrips);
+      const updatedevents = await getUserEvents(currentUser.uid);
+      setevents(updatedevents);
 
       // Update global data
       if (globalData) {
-        globalData.userTrips = updatedTrips;
+        globalData.userevents = updatedevents;
       }
     } catch (error) {
-      console.error("? Error refreshing trips:", error);
+      console.error("? Error refreshing events:", error);
     }
   }, [currentUser?.uid]);
 
@@ -334,18 +336,18 @@ export const useDashboardData = () => {
     setProfilePhotos(photos);
   }, []);
 
-  const addTrip = useCallback((newTrip) => {
-    setTrips((prev) => [newTrip, ...prev]);
+  const addEvent = useCallback((newEvent) => {
+    setevents((prev) => [newEvent, ...prev]);
   }, []);
 
-  const removeTrip = useCallback((tripId) => {
-    setTrips((prev) => prev.filter((trip) => trip.id !== tripId));
+  const removeEvent = useCallback((eventId) => {
+    setevents((prev) => prev.filter((event) => event.id !== eventId));
   }, []);
 
-  const updateTrip = useCallback((tripId, updatedData) => {
-    setTrips((prev) =>
-      prev.map((trip) =>
-        trip.id === tripId ? { ...trip, ...updatedData } : trip
+  const updateEvent = useCallback((eventId, updatedData) => {
+    setevents((prev) =>
+      prev.map((event) =>
+        event.id === eventId ? { ...event, ...updatedData } : event
       )
     );
   }, []);
@@ -368,12 +370,12 @@ export const useDashboardData = () => {
     );
   }, []);
 
-  const addTripInvite = useCallback((invite) => {
-    setTripInvites((prev) => [...prev, invite]);
+  const addEventInvite = useCallback((invite) => {
+    setEventInvites((prev) => [...prev, invite]);
   }, []);
 
-  const removeTripInvite = useCallback((inviteId) => {
-    setTripInvites((prev) => prev.filter((invite) => invite.id !== inviteId));
+  const removeEventInvite = useCallback((inviteId) => {
+    setEventInvites((prev) => prev.filter((invite) => invite.id !== inviteId));
   }, []);
 
   const manualRefresh = useCallback(() => {
@@ -386,29 +388,24 @@ export const useDashboardData = () => {
     loadDashboardData();
   }, [loadDashboardData]);
 
-  // ? NEW: Effect to handle navigation state (trip deletions, etc.)
+  // ? NEW: Effect to handle navigation state (event deletions, etc.)
   useEffect(() => {
     const state = location.state;
 
-    if (state && state.deletedTripId) {
-      // Immediately remove from state
-      removeTripFromState(state.deletedTripId);
+    if (state && state.deletedeventId) {
+      removeEventFromState(state.deletedeventId);
 
-      // Clear the navigation state to prevent re-processing
       navigate(location.pathname, {
         replace: true,
-        state: { ...state, deletedTripId: null },
+        state: { ...state, deletedeventId: null },
       });
 
-      // Show success message
-      showSuccessMessage("Trip deleted successfully!");
+      showSuccessMessage("event deleted successfully!");
     }
 
-    // Handle force refresh if needed
-    if (state && state.forceRefresh && !state.deletedTripId) {
-      refreshTrips();
+    if (state && state.forceRefresh && !state.deletedeventId) {
+      refreshevents();
 
-      // Clear the state
       navigate(location.pathname, {
         replace: true,
         state: null,
@@ -416,10 +413,10 @@ export const useDashboardData = () => {
     }
   }, [
     location.state,
-    removeTripFromState,
+    removeEventFromState,
     navigate,
     location.pathname,
-    refreshTrips,
+    refreshevents,
     showSuccessMessage,
   ]);
 
@@ -477,10 +474,10 @@ export const useDashboardData = () => {
   return {
     // Data states
     userData,
-    trips,
+    events,
     friends,
     pendingRequests,
-    tripInvites,
+    eventInvites,
     hasProfile,
     profilePhotos,
 
@@ -494,23 +491,23 @@ export const useDashboardData = () => {
     showError,
 
     // Data actions
-    refreshTrips,
+    refreshevents,
     refreshFriends,
     refreshPendingRequests,
     loadFaceProfile,
 
     // State updaters
-    addTrip,
-    removeTrip,
-    updateTrip,
+    addEvent,
+    removeEvent,
+    updateEvent,
     addFriend,
     removeFriend,
     addPendingRequest,
     removePendingRequest,
-    addTripInvite,
-    removeTripInvite,
+    addEventInvite,
+    removeEventInvite,
     updateFaceProfile,
-    removeTripFromState, // ? NEW: Added to exports
+    removeEventFromState, // ? NEW: Added to exports
 
     // Message actions
     showSuccessMessage,

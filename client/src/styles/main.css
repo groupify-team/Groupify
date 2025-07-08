@@ -1,8 +1,3 @@
-/* ========================================
-   GROUPIFY DESIGN SYSTEM
-   Modern, maintainable CSS architecture
-   ======================================== */
-
 /* === ACCESSIBILITY IMPORT === */
 @import "../shared/components/accessibility/styles/accessibility.css";
 
@@ -608,49 +603,3 @@
 .Toaster__toast--loading {
   background: var(--color-info) !important;
 }
-
-/* ========================================
-   DESIGN SYSTEM DOCUMENTATION
-   ======================================== */
-
-/*
-Design System Architecture:
-
-1. DESIGN TOKENS (tokens.css)
-   - CSS custom properties for all design decisions
-   - Colors, spacing, typography, shadows, z-index
-   - Semantic token mappings for theming
-
-2. BASE LAYER (base.css, animations.css)
-   - Document-level styles
-   - Reset and normalize styles
-   - Core animations and keyframes
-
-3. COMPONENTS LAYER
-   - Reusable component patterns
-   - Button variants, modal patterns, form elements
-   - Layout components and navigation
-
-4. UTILITIES LAYER
-   - Single-purpose utility classes
-   - Glass morphism effects, hover states
-   - Responsive utilities and helpers
-
-5. LEGACY COMPATIBILITY
-   - Bridges old class names to new system
-   - Gradual migration path
-   - Maintains existing functionality
-
-Benefits:
-- Maintainable and scalable
-- Consistent design language
-- Better performance through reduced duplication
-- Easy theming and customization
-- Improved developer experience
-
-Migration Path:
-1. All new components should use the new design system
-2. Existing components can gradually migrate
-3. Legacy classes are mapped to maintain compatibility
-4. Remove legacy mappings once migration is complete
-*/

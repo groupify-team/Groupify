@@ -62,12 +62,12 @@ const ExportModal = ({
           </button>
 
           <button
-            onClick={() => handleExportCSV("trips")}
+            onClick={() => handleExportCSV("events")}
             disabled={exportLoading}
             className="w-full flex items-center justify-center gap-3 p-3 bg-green-500 hover:bg-green-600 disabled:bg-green-300 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors"
           >
             <span>🗺️</span>
-            <span>Trips Data (CSV)</span>
+            <span>events Data (CSV)</span>
           </button>
 
           <button

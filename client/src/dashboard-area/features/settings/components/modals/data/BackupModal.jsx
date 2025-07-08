@@ -45,7 +45,7 @@ const BackupModal = ({
             🔒 What's included:
           </h4>
           <ul className="text-sm text-blue-800 dark:text-blue-400 space-y-1">
-            <li>• All your trips and photos</li>
+            <li>• all your events and photos</li>
             <li>• Friends and settings data</li>
             <li>• Face recognition profile</li>
             <li>• Backup verification data</li>

@@ -41,7 +41,7 @@ export const BundleAnalyzer = {
     const estimates = {
       "auth-area": "~15KB (was ~45KB)",
       "dashboard-area": "~60KB (code split)",
-      "trips-features": "~35KB (consolidated)",
+      "events-features": "~35KB (consolidated)",
       settings: "~20KB (lazy loaded)",
       shared: "~25KB (optimized)",
       "total-initial": "~85KB (was ~180KB)",

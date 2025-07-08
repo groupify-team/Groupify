@@ -27,7 +27,7 @@ const DashboardSkeleton = () => {
 
       {/* Content Sections */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Trips Section Skeleton */}
+        {/* events Section Skeleton */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-32"></div>

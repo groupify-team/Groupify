@@ -22,17 +22,18 @@ import {
 const DashboardSidebar = ({ sidebarOpen, onSidebarClose, onLogoutClick }) => {
   const navigate = useNavigate();
   const {
-    layout: { activeSection, currentView, selectedTripId, isMobile },
-    dropdowns: { tripsDropdownOpen, visibleTripsCount },
+    layout: { activeSection, currentView, selectedeventId, isMobile },
+    dropdowns: { eventsDropdownOpen, visibleeventsCount },
     navigation: { navigateToSection, navigateBackToDashboard },
     sidebar: { close: closeSidebar },
-    dropdownActions: { toggleTripsDropdown, showMoreTrips },
-    utils: { isViewingTrip },
+    dropdownActions: { toggleeventsDropdown, showMoreevents },
+    utils: { isViewingEvent },
   } = useDashboardLayout();
 
-  const { userData, trips, pendingRequests, tripInvites } = useDashboardData();
+  const { userData, events, pendingRequests, eventInvites } =
+    useDashboardData();
   const {
-    navigate: { toTrip: _navigateToTrip },
+    navigate: { toEvent: _navigateToEvent },
   } = useDashboardNavigation();
 
   const currentUser = userData; // Assuming userData contains current user info
@@ -102,8 +103,8 @@ const DashboardSidebar = ({ sidebarOpen, onSidebarClose, onLogoutClick }) => {
         </div>
       </div>
 
-      {/* Back Button when viewing trip */}
-      {isViewingTrip() && (
+      {/* Back Button when viewing event */}
+      {isViewingEvent() && (
         <div className="p-4 border-b border-gray-200/50 dark:border-gray-700/50">
           <button
             onClick={() => {
@@ -128,13 +129,13 @@ const DashboardSidebar = ({ sidebarOpen, onSidebarClose, onLogoutClick }) => {
             const badge = getNavigationItemBadge(
               item.id,
               pendingRequests,
-              tripInvites,
-              trips
+              eventInvites,
+              events
             );
             const hasNotification = hasNotifications(
               item.id,
               pendingRequests,
-              tripInvites
+              eventInvites
             );
 
             return (
@@ -171,12 +172,12 @@ const DashboardSidebar = ({ sidebarOpen, onSidebarClose, onLogoutClick }) => {
                     )}
                   </button>
 
-                  {/* Dropdown arrow for trips */}
+                  {/* Dropdown arrow for events */}
                   {item.hasDropdown && (
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        toggleTripsDropdown();
+                        toggleeventsDropdown();
                       }}
                       className={`ml-1 p-2 rounded-lg transition-all duration-200 ${
                         isActive
@@ -186,7 +187,7 @@ const DashboardSidebar = ({ sidebarOpen, onSidebarClose, onLogoutClick }) => {
                     >
                       <div
                         className={`transition-all duration-300 ease-in-out ${
-                          tripsDropdownOpen
+                          eventsDropdownOpen
                             ? "rotate-90 scale-110"
                             : "scale-100"
                         }`}
@@ -197,54 +198,54 @@ const DashboardSidebar = ({ sidebarOpen, onSidebarClose, onLogoutClick }) => {
                   )}
                 </div>
 
-                {/* Trips Dropdown */}
-                {item.id === "trips" && (
+                {/* events Dropdown */}
+                {item.id === "events" && (
                   <div
                     className={`overflow-hidden transition-all duration-700 ease-in-out ${
-                      tripsDropdownOpen
+                      eventsDropdownOpen
                         ? "max-h-96 opacity-100"
                         : "max-h-0 opacity-0"
                     }`}
                   >
                     <div className="mt-2 ml-4 pl-4 border-l-2 border-gray-200 dark:border-gray-600">
-                      {trips.length === 0 ? (
+                      {events.length === 0 ? (
                         <div className="py-2 px-3 text-sm text-gray-500 dark:text-gray-400">
-                          No trips yet
+                          No events yet
                         </div>
                       ) : (
                         <>
-                          {trips.slice(0, visibleTripsCount).map((trip) => (
+                          {events.slice(0, visibleeventsCount).map((event) => (
                             <button
-                              key={trip.id}
+                              key={event.id}
                               onClick={() => {
                                 // Use direct navigation instead of the hook function
-                                navigate(`/dashboard/trip/${trip.id}`, {
+                                navigate(`/dashboard/event/${event.id}`, {
                                   replace: true,
                                 });
                                 if (isMobile) closeSidebar();
                               }}
                               className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300 mb-1 transform hover:scale-105 ${
-                                selectedTripId === trip.id
+                                selectedeventId === event.id
                                   ? "bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400"
                                   : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700/50"
                               }`}
                             >
-                              <div className="truncate">{trip.name}</div>
-                              {trip.location && (
+                              <div className="truncate">{event.name}</div>
+                              {event.location && (
                                 <div className="text-xs text-gray-500 dark:text-gray-500 truncate">
-                                  ?? {trip.location}
+                                  ?? {event.location}
                                 </div>
                               )}
                             </button>
                           ))}
 
-                          {trips.length > visibleTripsCount && (
+                          {events.length > visibleeventsCount && (
                             <button
-                              onClick={showMoreTrips}
+                              onClick={showMoreevents}
                               className="w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors"
                             >
                               + Show{" "}
-                              {Math.min(5, trips.length - visibleTripsCount)}{" "}
+                              {Math.min(5, events.length - visibleeventsCount)}{" "}
                               more
                             </button>
                           )}

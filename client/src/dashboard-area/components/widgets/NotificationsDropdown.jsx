@@ -13,20 +13,20 @@ import {
   rejectFriendRequest,
 } from "@firebase-services/users";
 import {
-  acceptTripInvite,
-  declineTripInvite,
-} from "@shared/services/firebase/trips";
+  acceptEventInvite,
+  declineEventInvite,
+} from "@shared/services/firebase/events";
 import {
   formatNotificationMessage,
   getRelativeTime,
 } from "@dashboard/utils/dashboardHelpers";
 
-const NotificationsDropdown = ({ pendingRequests, tripInvites }) => {
+const NotificationsDropdown = ({ pendingRequests, eventInvites }) => {
   const { currentUser } = useAuth();
   const {
-    refreshTrips,
+    refreshevents,
     removePendingRequest,
-    removeTripInvite,
+    removeEventInvite,
     showSuccessMessage,
     showErrorMessage,
   } = useDashboardData();
@@ -60,14 +60,14 @@ const NotificationsDropdown = ({ pendingRequests, tripInvites }) => {
         },
       ],
     })),
-    ...tripInvites.map((invite) => ({
-      id: `trip-invite-${invite.id}`,
-      type: "trip_invite",
-      title: "Trip Invitation",
+    ...eventInvites.map((invite) => ({
+      id: `event-invite-${invite.id}`,
+      type: "event_invite",
+      title: "Event Invitation",
       message: formatNotificationMessage({
-        type: "trip_invite",
+        type: "event_invite",
         inviterName: invite.inviterName,
-        tripName: invite.tripName,
+        eventName: invite.eventName,
       }),
       avatar:
         invite.inviterPhoto ||
@@ -78,12 +78,12 @@ const NotificationsDropdown = ({ pendingRequests, tripInvites }) => {
         {
           label: "Accept",
           type: "accept",
-          action: () => handleAcceptTripInvite(invite),
+          action: () => handleAcceptEventInvite(invite),
         },
         {
           label: "Decline",
           type: "decline",
-          action: () => handleDeclineTripInvite(invite),
+          action: () => handleDeclineEventInvite(invite),
         },
       ],
     })),
@@ -118,26 +118,26 @@ const NotificationsDropdown = ({ pendingRequests, tripInvites }) => {
     }
   };
 
-  const handleAcceptTripInvite = async (invite) => {
+  const handleAcceptEventInvite = async (invite) => {
     try {
-      await acceptTripInvite(invite.id, currentUser.uid);
-      removeTripInvite(invite.id);
-      await refreshTrips();
-      showSuccessMessage("Trip invitation accepted");
+      await acceptEventInvite(invite.id, currentUser.uid);
+      removeEventInvite(invite.id);
+      await refreshevents();
+      showSuccessMessage("Event invitation accepted");
     } catch (error) {
-      console.error("Error accepting trip invite:", error);
-      showErrorMessage("Failed to accept trip invitation");
+      console.error("Error accepting event invite:", error);
+      showErrorMessage("Failed to accept Event invitation");
     }
   };
 
-  const handleDeclineTripInvite = async (invite) => {
+  const handleDeclineEventInvite = async (invite) => {
     try {
-      await declineTripInvite(invite.id);
-      removeTripInvite(invite.id);
-      showSuccessMessage("Trip invitation declined");
+      await declineEventInvite(invite.id);
+      removeEventInvite(invite.id);
+      showSuccessMessage("Event invitation declined");
     } catch (error) {
-      console.error("Error declining trip invite:", error);
-      showErrorMessage("Failed to decline trip invitation");
+      console.error("Error declining event invite:", error);
+      showErrorMessage("Failed to decline Event invitation");
     }
   };
 
@@ -145,7 +145,7 @@ const NotificationsDropdown = ({ pendingRequests, tripInvites }) => {
     switch (type) {
       case "friend_request":
         return "??";
-      case "trip_invite":
+      case "event_invite":
         return "??";
       default:
         return "??";
@@ -156,7 +156,7 @@ const NotificationsDropdown = ({ pendingRequests, tripInvites }) => {
     switch (type) {
       case "friend_request":
         return "from-blue-500 to-indigo-600";
-      case "trip_invite":
+      case "event_invite":
         return "from-purple-500 to-pink-600";
       default:
         return "from-gray-500 to-gray-600";

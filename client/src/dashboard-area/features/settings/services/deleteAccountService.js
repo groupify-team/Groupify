@@ -73,7 +73,9 @@ export class DeleteAccountService {
   static async createFinalExport(userId) {
     try {
       // Import ExportService dynamically to avoid circular dependencies
-      const { ExportService } = await import("../../../../shared/services/exportService");
+      const { ExportService } = await import(
+        "../../../../shared/services/exportService"
+      );
       return await ExportService.exportUserData(userId);
     } catch (error) {
       console.warn("Could not create final export:", error);
@@ -149,38 +151,38 @@ export class DeleteAccountService {
 
     await executeBatchIfNeeded();
 
-    // Handle trips - delete if user is creator, remove from members if not
-    const tripsQuery = query(
-      collection(db, "trips"),
+    // Handle events - delete if user is creator, remove from members if not
+    const eventsQuery = query(
+      collection(db, "events"),
       where("members", "array-contains", userId)
     );
-    const tripsSnapshot = await getDocs(tripsQuery);
+    const eventsSnapshot = await getDocs(eventsQuery);
 
-    for (const tripDoc of tripsSnapshot.docs) {
-      const tripData = tripDoc.data();
+    for (const eventDoc of eventsSnapshot.docs) {
+      const eventData = eventDoc.data();
 
-      if (tripData.createdBy === userId) {
-        // User is trip creator - delete entire trip
-        batch.delete(tripDoc.ref);
+      if (eventData.createdBy === userId) {
+        // User is event creator - delete entire event
+        batch.delete(eventDoc.ref);
         batchCount++;
 
-        // Also delete all trip invites for this trip
-        const tripInvitesQuery = query(
-          collection(db, "tripInvites"),
-          where("tripId", "==", tripDoc.id)
+        // Also delete all event invites for this event
+        const eventInvitesQuery = query(
+          collection(db, "eventInvites"),
+          where("eventId", "==", eventDoc.id)
         );
-        const tripInvitesSnapshot = await getDocs(tripInvitesQuery);
+        const eventInvitesSnapshot = await getDocs(eventInvitesQuery);
 
-        tripInvitesSnapshot.docs.forEach((inviteDoc) => {
+        eventInvitesSnapshot.docs.forEach((inviteDoc) => {
           batch.delete(inviteDoc.ref);
           batchCount++;
         });
       } else {
         // User is just a member - remove from members array
-        const updatedMembers = tripData.members.filter(
+        const updatedMembers = eventData.members.filter(
           (member) => member !== userId
         );
-        batch.update(tripDoc.ref, {
+        batch.update(eventDoc.ref, {
           members: updatedMembers,
           updatedAt: new Date(),
         });
@@ -190,13 +192,13 @@ export class DeleteAccountService {
       await executeBatchIfNeeded();
     }
 
-    // Delete trip invites sent by or to the user
+    // Delete event invites sent by or to the user
     const sentInvitesQuery = query(
-      collection(db, "tripInvites"),
+      collection(db, "eventInvites"),
       where("inviterUid", "==", userId)
     );
     const receivedInvitesQuery = query(
-      collection(db, "tripInvites"),
+      collection(db, "eventInvites"),
       where("inviteeUid", "==", userId)
     );
 
@@ -306,7 +308,7 @@ export class DeleteAccountService {
   static async getDeletionSummary(userId) {
     try {
       const summary = {
-        trips: 0,
+        events: 0,
         photos: 0,
         friends: 0,
         friendRequests: 0,
@@ -314,13 +316,13 @@ export class DeleteAccountService {
         faceProfile: false,
       };
 
-      // Count trips
-      const tripsQuery = query(
-        collection(db, "trips"),
+      // Count events
+      const eventsQuery = query(
+        collection(db, "events"),
         where("members", "array-contains", userId)
       );
-      const tripsSnapshot = await getDocs(tripsQuery);
-      summary.trips = tripsSnapshot.size;
+      const eventsSnapshot = await getDocs(eventsQuery);
+      summary.events = eventsSnapshot.size;
 
       // Count photos
       const photosQuery = query(
@@ -368,7 +370,3 @@ export class DeleteAccountService {
     }
   }
 }
-
-
-
-

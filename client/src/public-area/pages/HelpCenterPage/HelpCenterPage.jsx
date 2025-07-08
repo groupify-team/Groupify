@@ -379,7 +379,7 @@ const HelpCenter = () => {
       title: "Getting Started",
       description: "Learn the basics of using Groupify",
       articles: [
-        "How to create your first trip",
+        "How to create your first event",
         "Uploading your first photos",
         "Setting up your profile",
         "Understanding the dashboard",
@@ -402,11 +402,11 @@ const HelpCenter = () => {
     {
       icon: UserGroupIcon,
       title: "Sharing & Collaboration",
-      description: "Share trips and photos with friends",
+      description: "Share Events and photos with friends",
       articles: [
-        "Inviting friends to trips",
+        "Inviting friends to events",
         "Setting sharing permissions",
-        "Managing trip collaborators",
+        "Managing event collaborators",
         "Downloading shared photos",
       ],
     },
@@ -452,54 +452,54 @@ const HelpCenter = () => {
   const getArticleContent = (category, article) => {
     const articles = {
       "Getting Started": {
-        "How to create your first trip":
-          "Creating your first trip is easy! Follow these steps:\n\n1. **Sign in to your account** - Make sure you're logged into Groupify\n\n2. **Click 'Create New Trip'** - You'll find this button on your dashboard\n\n3. **Enter trip details** - Add a name, dates, and location for your trip\n\n4. **Add a description** - Write a brief description of your trip\n\n5. **Set privacy settings** - Choose who can see and contribute to your trip\n\n6. **Upload your first photos** - Start adding photos to bring your trip to life!\n\nTip: You can always edit trip details later by clicking the settings icon on your trip page.",
+        "How to create your first event":
+          "Creating your first event is easy! Follow these steps:\n\n1. **Sign in to your account** - Make sure you're logged into Groupify\n\n2. **Click 'Create New Event'** - You'll find this button on your dashboard\n\n3. **Enter event details** - Add a name, dates, and location for your event\n\n4. **Add a description** - Write a brief description of your event\n\n5. **Set privacy settings** - Choose who can see and contribute to your event\n\n6. **Upload your first photos** - Start adding photos to bring your event to life!\n\nTip: You can always edit event details later by clicking the settings icon on your event page.",
         "Uploading your first photos":
-          "Ready to upload your memories? Here's how:\n\n1. **Open your trip** - Navigate to the trip where you want to add photos\n\n2. **Click 'Upload Photos'** - Look for the camera icon or upload button\n\n3. **Select your photos** - Choose photos from your device or drag and drop them\n\n4. **Wait for processing** - Our AI will analyze your photos for face recognition\n\n5. **Add captions** - Optionally add descriptions to your photos\n\n6. **Organize by date** - Photos are automatically sorted by date taken\n\nSupported formats: JPEG, PNG, HEIC, and RAW files up to 50MB each.",
+          "Ready to upload your memories? Here's how:\n\n1. **open your event** - Navigate to the event where you want to add photos\n\n2. **Click 'Upload Photos'** - Look for the camera icon or upload button\n\n3. **Select your photos** - Choose photos from your device or drag and drop them\n\n4. **Wait for processing** - Our AI will analyze your photos for face recognition\n\n5. **Add captions** - Optionally add descriptions to your photos\n\n6. **Organize by date** - Photos are automatically sorted by date taken\n\nSupported formats: JPEG, PNG, HEIC, and RAW files up to 50MB each.",
         "Setting up your profile":
-          "Make your profile yours with these steps:\n\n1. **Go to Profile Settings** - Click your avatar in the top right corner\n\n2. **Upload a profile photo** - This helps friends recognize you in shared trips\n\n3. **Update your display name** - Choose how you want to appear to others\n\n4. **Set your preferences** - Configure notification and privacy settings\n\n5. **Add contact information** - Make it easy for friends to find and invite you\n\n6. **Choose your timezone** - Ensure photos are displayed with correct timestamps\n\nYour profile information helps improve the AI's ability to find you in photos!",
+          "Make your profile yours with these steps:\n\n1. **Go to Profile Settings** - Click your avatar in the top right corner\n\n2. **Upload a profile photo** - This helps friends recognize you in Shared Events\n\n3. **Update your display name** - Choose how you want to appear to others\n\n4. **Set your preferences** - Configure notification and privacy settings\n\n5. **Add contact information** - Make it easy for friends to find and invite you\n\n6. **Choose your timezone** - Ensure photos are displayed with correct timestamps\n\nYour profile information helps improve the AI's ability to find you in photos!",
         "Understanding the dashboard":
-          "Your dashboard is mission control for all your trips:\n\n**Recent Trips** - Quick access to your latest adventures\n\n**Photo Statistics** - See how many photos you've uploaded and organized\n\n**Shared Trips** - View trips that friends have shared with you\n\n**Quick Actions** - Create new trips or upload photos directly\n\n**Search** - Find specific trips or photos across your entire collection\n\n**Notifications** - Stay updated on shared trip activity\n\nThe dashboard adapts to your usage patterns, showing the most relevant information first.",
+          "Your dashboard is mission control for all your events:\n\n**Recent Events** - Quick access to your latest adventures\n\n**Photo Statistics** - See how many photos you've uploaded and organized\n\n**Shared Events** - View events that friends have shared with you\n\n**Quick Actions** - Create New Events or upload photos directly\n\n**Search** - Find specific events or photos across your entire collection\n\n**Notifications** - Stay updated on shared event activity\n\nThe dashboard adapts to your usage patterns, showing the most relevant information first.",
       },
       "AI Face Recognition": {
         "How face recognition works":
           "Our AI face recognition technology works through advanced machine learning:\n\n**Feature Detection** - The AI identifies unique facial features like eye spacing, nose shape, and jawline\n\n**Pattern Learning** - As you upload more photos, the system learns to recognize you better\n\n**Matching Algorithm** - Photos are compared against learned patterns to find matches\n\n**Confidence Scoring** - Each match receives a confidence score to ensure accuracy\n\n**Privacy Protection** - All processing happens securely on our encrypted servers\n\nThe more photos you upload, the smarter our AI becomes at finding you!",
         "Training the AI with your photos":
-          "Help our AI recognize you better:\n\n1. **Upload diverse photos** - Include photos from different angles and lighting\n\n2. **Confirm correct matches** - When the AI finds you, confirm it's correct\n\n3. **Correct mistakes** - If the AI misidentifies someone, let us know\n\n4. **Add profile photos** - Clear profile photos help train the system\n\n5. **Be patient** - The AI improves with each photo you upload\n\n6. **Use consistent tagging** - Tag yourself consistently across different trips\n\nRemember: The AI learns from your feedback to provide better results over time.",
+          "Help our AI recognize you better:\n\n1. **Upload diverse photos** - Include photos from different angles and lighting\n\n2. **Confirm correct matches** - When the AI finds you, confirm it's correct\n\n3. **Correct mistakes** - If the AI misidentifies someone, let us know\n\n4. **Add profile photos** - Clear profile photos help train the system\n\n5. **Be patient** - The AI improves with each photo you upload\n\n6. **Use consistent tagging** - Tag yourself consistently across different events\n\nRemember: The AI learns from your feedback to provide better results over time.",
         "Improving recognition accuracy":
           "Get the best results from face recognition:\n\n**Photo Quality Tips:**\n- Use high-resolution photos when possible\n- Ensure faces are clearly visible and well-lit\n- Avoid heavily filtered or edited photos for training\n\n**Feedback Helps:**\n- Always confirm or correct AI suggestions\n- Report false positives to improve accuracy\n- Tag yourself in group photos\n\n**Best Practices:**\n- Upload photos chronologically when possible\n- Include photos from different time periods\n- Add photos where you look different (haircuts, glasses, etc.)\n\nAccuracy improves significantly after uploading 20-30 photos!",
         "Privacy and face data":
           "Your privacy is our top priority:\n\n**Data Encryption** - All facial recognition data is encrypted at rest and in transit\n\n**No Third-Party Sharing** - We never share your biometric data with external companies\n\n**User Control** - You can disable face recognition or delete your face data anytime\n\n**Secure Processing** - Recognition happens on secure, isolated servers\n\n**Data Retention** - Face recognition data is deleted when you delete your account\n\n**Opt-Out Anytime** - Disable face recognition in your privacy settings\n\nYou maintain full control over how your facial recognition data is used.",
       },
       "Sharing & Collaboration": {
-        "Inviting friends to trips":
-          "Share your adventures with friends:\n\n1. **Open your trip** - Navigate to the trip you want to share\n\n2. **Click 'Share Trip'** - Look for the share icon in the trip header\n\n3. **Enter email addresses** - Add your friends' email addresses\n\n4. **Set permissions** - Choose 'View Only' or 'Can Contribute'\n\n5. **Add a message** - Include a personal note with your invitation\n\n6. **Send invitations** - Your friends will receive email invitations\n\nFriends can accept invitations and start viewing or contributing immediately!",
+        "Inviting friends to events":
+          "Share your adventures with friends:\n\n1. **open your event** - Navigate to the event you want to share\n\n2. **Click 'Share Event'** - Look for the share icon in the event header\n\n3. **Enter email addresses** - Add your friends' email addresses\n\n4. **Set permissions** - Choose 'View Only' or 'Can Contribute'\n\n5. **Add a message** - Include a personal note with your invitation\n\n6. **Send invitations** - Your friends will receive email invitations\n\nFriends can accept invitations and start viewing or contributing immediately!",
         "Setting sharing permissions":
-          "Control who can do what with your trips:\n\n**View Only** - Friends can see photos but can't add or edit\n\n**Can Contribute** - Friends can upload photos and add comments\n\n**Co-Owner** - Full access including inviting others and trip settings\n\n**Public Link** - Generate a link for easy sharing (view only)\n\n**Password Protection** - Add password protection to public links\n\n**Expiring Links** - Set expiration dates for temporary access\n\nYou can change permissions anytime from the trip settings menu.",
-        "Managing trip collaborators":
-          "Keep track of who has access to your trips:\n\n**View Contributors** - See everyone with access to your trip\n\n**Change Permissions** - Upgrade or downgrade user access levels\n\n**Remove Access** - Remove someone's access to your trip\n\n**Pending Invitations** - See who hasn't accepted invitations yet\n\n**Activity Log** - Track who uploaded what and when\n\n**Notification Settings** - Control when you're notified about trip activity\n\nManage all collaborators from the 'People' tab in your trip settings.",
+          "Control who can do what with your events:\n\n**View Only** - Friends can see photos but can't add or edit\n\n**Can Contribute** - Friends can upload photos and add comments\n\n**Co-Owner** - Full access including inviting others and event settings\n\n**Public Link** - Generate a link for easy sharing (view only)\n\n**Password Protection** - Add password protection to public links\n\n**Expiring Links** - Set expiration dates for temporary access\n\nYou can change permissions anytime from the event settings menu.",
+        "Managing event collaborators":
+          "Keep track of who has access to your events:\n\n**View Contributors** - See everyone with access to your event\n\n**Change Permissions** - Upgrade or downgrade user access levels\n\n**Remove Access** - Remove someone's access to your event\n\n**Pending Invitations** - See who hasn't accepted invitations yet\n\n**Activity Log** - Track who uploaded what and when\n\n**Notification Settings** - Control when you're notified about event activity\n\nManage all collaborators from the 'People' tab in your event settings.",
         "Downloading shared photos":
-          "Save photos from shared trips:\n\n**Individual Photos** - Click any photo and select 'Download'\n\n**Multiple Selection** - Select multiple photos and download as a zip\n\n**Entire Trip** - Download all photos from a trip at once\n\n**Original Quality** - Photos are downloaded in their original resolution\n\n**Organized Folders** - Downloads are organized by date and trip\n\n**Batch Download** - Use our desktop app for faster bulk downloads\n\nAll downloads maintain original photo metadata and quality.",
+          "Save photos from shared events:\n\n**Individual Photos** - Click any photo and select 'Download'\n\n**Multiple Selection** - Select multiple photos and download as a zip\n\n**entire event** - Download all photos from a event at once\n\n**Original Quality** - Photos are downloaded in their original resolution\n\n**Organized Folders** - Downloads are organized by date and event\n\n**Batch Download** - Use our desktop app for faster bulk downloads\n\nAll downloads maintain original photo metadata and quality.",
       },
       "Account Settings": {
         "Changing your password":
           "Keep your account secure with a strong password:\n\n1. **Go to Account Settings** - Click your profile, then 'Settings'\n\n2. **Select 'Security'** - Navigate to the security section\n\n3. **Click 'Change Password'** - Find the password change option\n\n4. **Enter current password** - Verify your identity\n\n5. **Create new password** - Use a strong, unique password\n\n6. **Confirm changes** - Save your new password\n\nPassword Requirements:\n- At least 8 characters long\n- Include uppercase and lowercase letters\n- Contains numbers and special characters",
         "Updating profile information":
-          "Keep your profile current:\n\n**Personal Information:**\n- Update your display name\n- Change your email address\n- Add or update your bio\n\n**Profile Photo:**\n- Upload a clear, recent photo\n- This helps with AI recognition\n- Appears when you're tagged in shared trips\n\n**Contact Preferences:**\n- Set your timezone\n- Choose notification preferences\n- Update contact information\n\n**Privacy Settings:**\n- Control who can find you\n- Manage search visibility\n- Set default sharing preferences",
+          "Keep your profile current:\n\n**Personal Information:**\n- Update your display name\n- Change your email address\n- Add or update your bio\n\n**Profile Photo:**\n- Upload a clear, recent photo\n- This helps with AI recognition\n- Appears when you're tagged in Shared Events\n\n**Contact Preferences:**\n- Set your timezone\n- Choose notification preferences\n- Update contact information\n\n**Privacy Settings:**\n- Control who can find you\n- Manage search visibility\n- Set default sharing preferences",
         "Managing privacy settings":
-          "Control your privacy on Groupify:\n\n**Profile Visibility:**\n- Choose who can find your profile\n- Control search discoverability\n- Manage friend suggestions\n\n**Trip Privacy:**\n- Set default privacy for new trips\n- Control who can invite you\n- Manage notification preferences\n\n**Face Recognition:**\n- Enable or disable AI face detection\n- Control automatic tagging\n- Manage facial recognition data\n\n**Data Sharing:**\n- Control analytics participation\n- Manage third-party integrations\n- Set communication preferences",
+          "Control your privacy on Groupify:\n\n**Profile Visibility:**\n- Choose who can find your profile\n- Control search discoverability\n- Manage friend suggestions\n\n**event privacy:**\n- Set default privacy for new events\n- Control who can invite you\n- Manage notification preferences\n\n**Face Recognition:**\n- Enable or disable AI face detection\n- Control automatic tagging\n- Manage facial recognition data\n\n**Data Sharing:**\n- Control analytics participation\n- Manage third-party integrations\n- Set communication preferences",
         "Deleting your account":
-          "If you need to delete your account:\n\n**Before You Delete:**\n- Download any photos you want to keep\n- Notify collaborators on shared trips\n- Consider deactivating temporarily instead\n\n**Deletion Process:**\n1. Go to Account Settings > Security\n2. Scroll to 'Delete Account'\n3. Enter your password to confirm\n4. Choose data retention preferences\n5. Confirm deletion\n\n**What Happens:**\n- All your photos are permanently deleted\n- Shared trips transfer to other owners\n- Account recovery is not possible\n\n**Alternative:** Consider deactivating your account temporarily instead.",
+          "If you need to delete your account:\n\n**Before You Delete:**\n- Download any photos you want to keep\n- Notify collaborators on shared events\n- Consider deactivating temporarily instead\n\n**Deletion Process:**\n1. Go to Account Settings > Security\n2. Scroll to 'Delete Account'\n3. Enter your password to confirm\n4. Choose data retention preferences\n5. Confirm deletion\n\n**What Happens:**\n- All your photos are permanently deleted\n- Shared Events transfer to other owners\n- Account recovery is not possible\n\n**Alternative:** Consider deactivating your account temporarily instead.",
       },
       "Privacy & Security": {
         "How we protect your photos":
           "Your photos are safe with enterprise-grade security:\n\n**Encryption at Rest** - All photos encrypted with AES-256 encryption\n\n**Encrypted Transmission** - HTTPS/TLS for all data transfers\n\n**Secure Storage** - Photos stored in ISO 27001 certified data centers\n\n**Access Controls** - Strict employee access controls and monitoring\n\n**Regular Backups** - Multiple geographically distributed backups\n\n**Security Audits** - Regular third-party security assessments\n\n**Incident Response** - 24/7 security monitoring and response team\n\nYour photos are protected by the same security standards used by major financial institutions.",
         "Understanding privacy controls":
-          "Take control of your privacy:\n\n**Trip Level Privacy:**\n- Private: Only you can see\n- Shared: Only invited people can access\n- Public Link: Anyone with link can view\n\n**Photo Level Privacy:**\n- Hide specific photos from shared trips\n- Control who can download your photos\n- Manage photo tagging permissions\n\n**Profile Privacy:**\n- Control search visibility\n- Manage who can invite you\n- Set communication preferences\n\n**Face Recognition:**\n- Enable/disable automatic face detection\n- Control AI training participation\n- Delete face recognition data\n\nAdjust all privacy settings from your account preferences.",
+          "Take control of your privacy:\n\n**event level Privacy:**\n- Private: Only you can see\n- Shared: Only invited people can access\n- Public Link: Anyone with link can view\n\n**Photo Level Privacy:**\n- Hide specific photos from shared events\n- Control who can download your photos\n- Manage photo tagging permissions\n\n**Profile Privacy:**\n- Control search visibility\n- Manage who can invite you\n- Set communication preferences\n\n**Face Recognition:**\n- Enable/disable automatic face detection\n- Control AI training participation\n- Delete face recognition data\n\nAdjust all privacy settings from your account preferences.",
         "Two-factor authentication":
           "Add an extra layer of security:\n\n**Setup Process:**\n1. Go to Settings > Security\n2. Click 'Enable 2FA'\n3. Scan QR code with authenticator app\n4. Enter verification code\n5. Save backup codes safely\n\n**Recommended Apps:**\n- Google Authenticator\n- Authy\n- Microsoft Authenticator\n\n**Backup Codes:**\n- Save backup codes in a secure location\n- Each code can only be used once\n- Generate new codes if needed\n\n**Recovery:**\n- Use backup codes if you lose your device\n- Contact support for account recovery\n\nWe strongly recommend enabling 2FA for account security.",
         "Data export and deletion":
-          "You own your data - export or delete it anytime:\n\n**Data Export:**\n- Download all your photos in original quality\n- Export trip information and metadata\n- Get a copy of your account data\n- Receive data in standard formats\n\n**Export Process:**\n1. Go to Settings > Data & Privacy\n2. Click 'Export My Data'\n3. Choose what to include\n4. Receive download link via email\n5. Download within 7 days\n\n**Data Deletion:**\n- Delete individual photos or trips\n- Remove specific data types\n- Complete account deletion\n\n**Deletion Timeline:**\n- Immediate removal from your account\n- Complete deletion from backups within 30 days\n- Some data may be retained for legal compliance",
+          "You own your data - export or delete it anytime:\n\n**Data Export:**\n- Download all your photos in original quality\n- Export event information and metadata\n- Get a copy of your account data\n- Receive data in standard formats\n\n**Export Process:**\n1. Go to Settings > Data & Privacy\n2. Click 'Export My Data'\n3. Choose what to include\n4. Receive download link via email\n5. Download within 7 days\n\n**Data Deletion:**\n- Delete individual photos or events\n- Remove specific data types\n- Complete account deletion\n\n**Deletion Timeline:**\n- Immediate removal from your account\n- Complete deletion from backups within 30 days\n- Some data may be retained for legal compliance",
       },
       Troubleshooting: {
         "Photos not uploading":
@@ -507,7 +507,7 @@ const HelpCenter = () => {
         "Face recognition not working":
           "Improve face recognition performance:\n\n**Common Issues:**\n- Poor photo quality or lighting\n- Face partially obscured\n- Heavily filtered photos\n- Very old or low-resolution images\n\n**Troubleshooting Steps:**\n1. Upload clearer photos of yourself\n2. Confirm correct AI suggestions\n3. Add profile photos\n4. Check privacy settings\n5. Wait for AI training to complete\n\n**Optimization Tips:**\n- Upload at least 10-15 clear photos\n- Include photos from different angles\n- Use recent, high-quality images\n- Avoid heavily edited photos\n\n**Reset Face Recognition:**\n- Go to Settings > Privacy\n- Clear face recognition data\n- Re-upload training photos\n\nThe AI improves with more training data!",
         "Sharing issues":
-          "Fix problems with sharing trips:\n\n**Invitation Problems:**\n- Check recipient's email address\n- Ask them to check spam folder\n- Resend invitation from trip settings\n- Try sharing via public link instead\n\n**Access Issues:**\n- Verify sharing permissions\n- Check if trip is still shared\n- Ensure recipient has account\n- Try removing and re-adding access\n\n**Permission Problems:**\n- Review collaborator permissions\n- Update access levels as needed\n- Check trip privacy settings\n- Verify owner permissions\n\n**Link Sharing Issues:**\n- Regenerate public link\n- Check link expiration\n- Verify password protection\n- Test link in incognito mode\n\n**Contact Support:**\nIf issues persist, contact us with specific error messages.",
+          "Fix problems with sharing events:\n\n**Invitation Problems:**\n- Check recipient's email address\n- Ask them to check spam folder\n- Resend invitation from event settings\n- Try sharing via public link instead\n\n**Access Issues:**\n- Verify sharing permissions\n- Check if event is still shared\n- Ensure recipient has account\n- Try removing and re-adding access\n\n**Permission Problems:**\n- Review collaborator permissions\n- Update access levels as needed\n- Check event privacy settings\n- Verify owner permissions\n\n**Link Sharing Issues:**\n- Regenerate public link\n- Check link expiration\n- Verify password protection\n- Test link in incognito mode\n\n**Contact Support:**\nIf issues persist, contact us with specific error messages.",
         "Performance problems":
           "Optimize Groupify performance:\n\n**Slow Loading:**\n- Check internet connection speed\n- Clear browser cache\n- Disable unnecessary browser extensions\n- Close other tabs/applications\n\n**Photo Processing:**\n- Large photos take longer to process\n- AI analysis requires processing time\n- Upload during off-peak hours\n- Be patient with batch uploads\n\n**Mobile Performance:**\n- Close other apps\n- Restart your device\n- Update the app\n- Clear app cache\n- Check available storage\n\n**Browser Optimization:**\n- Use latest Chrome, Firefox, or Safari\n- Enable hardware acceleration\n- Disable ad blockers temporarily\n- Try different browser\n\n**Network Issues:**\n- Use WiFi instead of mobile data\n- Avoid peak usage times\n- Check for network restrictions\n- Try different network",
       },
@@ -528,7 +528,7 @@ const HelpCenter = () => {
     {
       question: "Is my data safe and private?",
       answer:
-        "Absolutely! We use enterprise-grade encryption to protect your photos and data. Your photos are stored securely in the cloud with multiple backups. We never share your personal photos with third parties, and you maintain full control over who can see your trips and photos.",
+        "Absolutely! We use enterprise-grade encryption to protect your photos and data. Your photos are stored securely in the cloud with multiple backups. We never share your personal photos with third parties, and you maintain full control over who can see your events and photos.",
     },
     {
       question: "Can I use Groupify offline?",
@@ -543,7 +543,7 @@ const HelpCenter = () => {
     {
       question: "Can I export my photos?",
       answer:
-        "Yes! You can download individual photos, entire trips, or export all your data at any time. Go to Settings > Data Export to download your photos in their original quality.",
+        "Yes! You can download individual photos, entire events, or export all your data at any time. Go to Settings > Data Export to download your photos in their original quality.",
     },
     {
       question: "What photo formats are supported?",
@@ -551,14 +551,14 @@ const HelpCenter = () => {
         "We support all major photo formats including JPEG, PNG, HEIC, and RAW files. Videos are also supported in MP4, MOV, and AVI formats.",
     },
     {
-      question: "How do I invite friends to my trip?",
+      question: "How do I invite friends to my event?",
       answer:
-        "Open your trip, click the 'Share' button, and enter your friends' email addresses. They'll receive an invitation to view and contribute to your trip. You can set permissions for each person (view-only or full access).",
+        "open your event, click the 'Share' button, and enter your friends' email addresses. They'll receive an invitation to view and contribute to your event. You can set permissions for each person (view-only or full access).",
     },
     {
-      question: "Can I delete photos from shared trips?",
+      question: "Can I delete photos from shared events?",
       answer:
-        "Trip owners and users with full access can delete photos. If you only have view access, you can't delete photos, but you can hide them from your personal view.",
+        "Event owners and users with full access can delete photos. If you only have view access, you can't delete photos, but you can hide them from your personal view.",
     },
   ];
 

@@ -6,38 +6,37 @@ import { PLAN_CONFIGS, FILTER_OPTIONS } from "./dashboardConstants.js";
  */
 export const getFilterLabel = (value) => {
   const option = FILTER_OPTIONS.find((opt) => opt.value === value);
-  return option ? option.label : "📁 All Trips";
+  return option ? option.label : "📁 All Events";
 };
 
-export const filterTrips = (trips, searchTerm, dateFilter) => {
-  // Handle edge cases
-  if (!trips || !Array.isArray(trips)) return [];
+export const filterevents = (events, searchTerm, dateFilter) => {
+  if (!events || !Array.isArray(events)) return [];
   if (!searchTerm || typeof searchTerm !== "string") searchTerm = "";
 
-  return trips.filter((trip) => {
-    if (!trip) return false;
+  return events.filter((event) => {
+    if (!event) return false;
 
     const matchesSearch =
-      trip.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (trip.location &&
-        trip.location.toLowerCase().includes(searchTerm.toLowerCase()));
+      event.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (event.location &&
+        event.location.toLowerCase().includes(searchTerm.toLowerCase()));
 
     if (!matchesSearch) return false;
 
     if (dateFilter === "all") return true;
 
     const now = new Date();
-    const tripDate = trip.startDate ? new Date(trip.startDate) : null;
+    const eventDate = event.startDate ? new Date(event.startDate) : null;
 
     switch (dateFilter) {
       case "upcoming":
-        return tripDate && tripDate > now;
+        return eventDate && eventDate > now;
       case "past":
-        return tripDate && tripDate < now;
+        return eventDate && eventDate < now;
       case "recent": {
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(now.getDate() - 30);
-        return tripDate && tripDate > thirtyDaysAgo;
+        return eventDate && eventDate > thirtyDaysAgo;
       }
       default:
         return true;
@@ -127,25 +126,25 @@ export const shouldShowSidebar = () => {
 export const getNavigationItemBadge = (
   itemId,
   pendingRequests,
-  tripInvites,
-  trips
+  eventInvites,
+  events
 ) => {
   switch (itemId) {
     case "friends":
       return pendingRequests.length;
-    case "trips":
-      return trips.length;
+    case "events":
+      return events.length;
     default:
       return 0;
   }
 };
 
-export const hasNotifications = (itemId, pendingRequests, tripInvites) => {
+export const hasNotifications = (itemId, pendingRequests, eventInvites) => {
   switch (itemId) {
     case "friends":
       return pendingRequests.length > 0;
-    case "trips":
-      return tripInvites.length > 0;
+    case "events":
+      return eventInvites.length > 0;
     default:
       return false;
   }
@@ -338,15 +337,15 @@ export const formatNotificationMessage = (notification) => {
       return `${
         notification.senderName || notification.senderEmail
       } wants to be your friend`;
-    case "trip_invite":
-      return `${notification.inviterName} invited you to "${notification.tripName}"`;
-    case "trip_update":
-      return `Trip "${notification.tripName}" has been updated`;
+    case "event_invite":
+      return `${notification.inviterName} invited you to "${notification.eventName}"`;
+    case "event_update":
+      return `event "${notification.eventName}" has been updated`;
     default:
       return notification.message || "You have a new notification";
   }
 };
 
-export const getTotalNotificationCount = (pendingRequests, tripInvites) => {
-  return (pendingRequests?.length || 0) + (tripInvites?.length || 0);
+export const getTotalNotificationCount = (pendingRequests, eventInvites) => {
+  return (pendingRequests?.length || 0) + (eventInvites?.length || 0);
 };

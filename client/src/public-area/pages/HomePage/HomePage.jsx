@@ -264,7 +264,7 @@ const HomePage = () => {
       icon: CameraIcon,
       title: "Smart Photo Organization",
       description:
-        "Upload and automatically organize trip photos with intelligent categorization and tagging.",
+        "Upload and automatically organize event photos with intelligent categorization and tagging.",
     },
     {
       icon: SparklesIcon,
@@ -276,7 +276,7 @@ const HomePage = () => {
       icon: UserGroupIcon,
       title: "Collaborative Sharing",
       description:
-        "Share trips with friends and family. Everyone can contribute photos and memories.",
+        "Share Events with friends and family. Everyone can contribute photos and memories.",
     },
     {
       icon: ShareIcon,
@@ -290,7 +290,7 @@ const HomePage = () => {
     "Never lose track of your photos again",
     "Find yourself in group shots effortlessly",
     "Share memories with loved ones instantly",
-    "Organize trips automatically",
+    "Organize events automatically",
     "Access from any device",
     "Privacy-focused and secure",
   ];
@@ -372,7 +372,7 @@ const HomePage = () => {
                 <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-gray-900 dark:text-white mb-6">
                   <span className="block">Share Your</span>
                   <span className="block bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 bg-clip-text text-transparent">
-                    Trip Memories
+                    Event Memories
                   </span>
                 </h1>
 

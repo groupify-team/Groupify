@@ -67,17 +67,17 @@ const PricingPage = () => {
       price: { monthly: 0, yearly: 0 },
       badge: null,
       features: [
-        "Up to 5 trips", // UPDATED to match CORE_LIMITS
-        "Up to 30 photos per trip", // UPDATED to match CORE_LIMITS
+        "Up to 5 events", // UPDATED to match CORE_LIMITS
+        "Up to 30 photos per event", // UPDATED to match CORE_LIMITS
         "2GB total storage", // UPDATED to match CORE_LIMITS
-        "Up to 5 members per trip", // UPDATED to match CORE_LIMITS
+        "Up to 5 members per event", // UPDATED to match CORE_LIMITS
         "Basic AI face recognition",
         "Mobile app access",
         "Standard photo quality",
         "Email support",
       ],
       limitations: [
-        "Limited trips and photos",
+        "Limited events and photos",
         "Basic recognition accuracy",
         "No advanced features",
       ],
@@ -91,10 +91,10 @@ const PricingPage = () => {
       price: { monthly: 9.99, yearly: 99.99 },
       badge: "Most Popular",
       features: [
-        "Up to 50 trips", // UPDATED to match CORE_LIMITS
-        "Up to 200 photos per trip", // UPDATED to match CORE_LIMITS
+        "Up to 50 events", // UPDATED to match CORE_LIMITS
+        "Up to 200 photos per event", // UPDATED to match CORE_LIMITS
         "50GB total storage", // UPDATED to match CORE_LIMITS
-        "Up to 20 members per trip", // UPDATED to match CORE_LIMITS
+        "Up to 20 members per event", // UPDATED to match CORE_LIMITS
         "Advanced AI face recognition",
         "Mobile & desktop apps",
         "High-quality photo processing",
@@ -110,14 +110,14 @@ const PricingPage = () => {
     },
     {
       name: "Pro", // RENAMED from "Family"
-      description: "Perfect for unlimited trips and maximum storage",
+      description: "Perfect for unlimited events and maximum storage",
       price: { monthly: 19.99, yearly: 199.99 },
       badge: "Best Value",
       features: [
-        "Unlimited trips", // UPDATED to match CORE_LIMITS
-        "Unlimited photos per trip", // UPDATED to match CORE_LIMITS
+        "Unlimited events", // UPDATED to match CORE_LIMITS
+        "Unlimited photos per event", // UPDATED to match CORE_LIMITS
         "500GB total storage", // UPDATED to match CORE_LIMITS
-        "Unlimited members per trip", // UPDATED to match CORE_LIMITS
+        "Unlimited members per event", // UPDATED to match CORE_LIMITS
         "Premium AI face recognition",
         "All apps & platforms",
         "Original quality photos",

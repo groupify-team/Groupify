@@ -15,7 +15,7 @@ const UserProfileModal = ({
 }) => {
   const [userStats, setUserStats] = useState({
     friendsCount: 0,
-    tripsCount: 0,
+    eventsCount: 0,
     loading: true,
     error: false
   });
@@ -44,7 +44,7 @@ const UserProfileModal = ({
         if (isMounted) {
           setUserStats({
             friendsCount: 0,
-            tripsCount: 0,
+            eventsCount: 0,
             loading: false,
             error: true
           });
@@ -142,11 +142,11 @@ const UserProfileModal = ({
                   ) : userStats.error ? (
                     <span className="text-slate-500 text-lg">-</span>
                   ) : (
-                    <span className="text-2xl">{userStats.tripsCount}</span>
+                    <span className="text-2xl">{userStats.eventsCount}</span>
                   )}
                 </div>
                 <div className="text-xs text-slate-400 uppercase tracking-wide">
-                  TRIPS
+                  events
                 </div>
               </div>
               <div className="text-center">

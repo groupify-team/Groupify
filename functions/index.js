@@ -16,7 +16,20 @@ const cors = require("cors")({
 });
 const axios = require("axios");
 
-admin.initializeApp();
+let adminConfig = {};
+if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+  // Use service account key if running locally
+  const serviceAccountPath = path.resolve(
+    __dirname,
+    process.env.GOOGLE_APPLICATION_CREDENTIALS
+  );
+  if (fs.existsSync(serviceAccountPath)) {
+    adminConfig.credential = require("firebase-admin").credential.cert(
+      require(serviceAccountPath)
+    );
+  }
+}
+admin.initializeApp(adminConfig);
 
 // Set global options for all functions in this file
 setGlobalOptions({
@@ -189,7 +202,7 @@ exports.sendVerificationEmail = onRequest(
   }
 );
 
-exports.acceptTripInvitation = onRequest(
+exports.acceptEventInvitation = onRequest(
   {
     memory: "256MiB",
     timeoutSeconds: 60,
@@ -215,7 +228,7 @@ exports.acceptTripInvitation = onRequest(
         // Get the invitation details
         const invitationDoc = await admin
           .firestore()
-          .collection("tripInvitations")
+          .collection("EventInvitations")
           .doc(invitationId)
           .get();
 
@@ -238,14 +251,14 @@ exports.acceptTripInvitation = onRequest(
           return;
         }
 
-        // Get user's current trip count
-        const userTripsQuery = await admin
+        // Get user's current event count
+        const usereventsQuery = await admin
           .firestore()
-          .collection("trips")
+          .collection("events")
           .where("members", "array-contains", userId)
           .get();
 
-        const currentTripCount = userTripsQuery.size;
+        const currentEventCount = usereventsQuery.size;
 
         // Get user's subscription plan (you'll need to implement this based on your user data structure)
         const userDoc = await admin
@@ -259,86 +272,95 @@ exports.acceptTripInvitation = onRequest(
 
         // Define plan limits (matching your pricing page)
         const planLimits = {
-          free: { trips: 5 },
-          premium: { trips: 50 },
-          pro: { trips: "unlimited" },
-          enterprise: { trips: "unlimited" }
+          free: { events: 5 },
+          premium: { events: 50 },
+          pro: { events: "unlimited" },
+          enterprise: { events: "unlimited" },
         };
 
-        const tripLimit = planLimits[userPlan]?.trips || planLimits.free.trips;
+        const eventLimit =
+          planLimits[userPlan]?.events || planLimits.free.events;
 
-        // Check if user has reached their trip limit
-        if (tripLimit !== "unlimited" && currentTripCount >= tripLimit) {
+        // Check if user has reached their event limit
+        if (eventLimit !== "unlimited" && currentEventCount >= eventLimit) {
           res.status(403).json({
             success: false,
-            message: `Trip limit reached! Your ${userPlan} plan allows ${tripLimit} trips. You currently have ${currentTripCount} trips. Upgrade your plan to accept more invitations.`,
-            errorCode: "TRIP_LIMIT_EXCEEDED",
-            currentTripCount,
-            tripLimit,
-            userPlan
+            message: `Event limit reached! Your ${userPlan} plan allows ${eventLimit} events. You currently have ${currentEventCount} events. Upgrade your plan to accept more invitations.`,
+            errorCode: "EVENT_LIMIT_EXCEEDED",
+            currentEventCount,
+            eventLimit,
+            userPlan,
           });
           return;
         }
 
-        // Get the trip to check member limits
-        const tripDoc = await admin
+        // Get the event to check member limits
+        const eventDoc = await admin
           .firestore()
-          .collection("trips")
-          .doc(invitation.tripId)
+          .collection("events")
+          .doc(invitation.eventId)
           .get();
 
-        if (!tripDoc.exists) {
+        if (!eventDoc.exists) {
           res.status(404).json({
             success: false,
-            message: "Trip not found",
+            message: "event not found",
           });
           return;
         }
 
-        const trip = tripDoc.data();
-        const currentMembers = trip.members || [];
+        const event = eventDoc.data();
+        const currentMembers = event.members || [];
 
         // Check if user is already a member
         if (currentMembers.includes(userId)) {
           res.status(400).json({
             success: false,
-            message: "User is already a member of this trip",
+            message: "User is already a member of this event",
           });
           return;
         }
 
         // Use a transaction to ensure data consistency
         await admin.firestore().runTransaction(async (transaction) => {
-          // Add user to trip members
-          transaction.update(admin.firestore().collection("trips").doc(invitation.tripId), {
-            members: admin.firestore.FieldValue.arrayUnion(userId),
-            memberCount: currentMembers.length + 1,
-            updatedAt: admin.firestore.FieldValue.serverTimestamp()
-          });
+          // Add user to event members
+          transaction.update(
+            admin.firestore().collection("events").doc(invitation.eventId),
+            {
+              members: admin.firestore.FieldValue.arrayUnion(userId),
+              memberCount: currentMembers.length + 1,
+              updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            }
+          );
 
           // Update invitation status
-          transaction.update(admin.firestore().collection("tripInvitations").doc(invitationId), {
-            status: "accepted",
-            acceptedAt: admin.firestore.FieldValue.serverTimestamp(),
-            updatedAt: admin.firestore.FieldValue.serverTimestamp()
-          });
+          transaction.update(
+            admin.firestore().collection("EventInvitations").doc(invitationId),
+            {
+              status: "accepted",
+              acceptedAt: admin.firestore.FieldValue.serverTimestamp(),
+              updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            }
+          );
 
-          // Update user's trip count in their profile (for caching purposes)
-          transaction.update(admin.firestore().collection("users").doc(userId), {
-            tripCount: currentTripCount + 1,
-            lastTripJoined: admin.firestore.FieldValue.serverTimestamp()
-          });
+          // Update user's event count in their profile (for caching purposes)
+          transaction.update(
+            admin.firestore().collection("users").doc(userId),
+            {
+              eventCount: currentEventCount + 1,
+              lastEventJoined: admin.firestore.FieldValue.serverTimestamp(),
+            }
+          );
         });
 
         res.status(200).json({
           success: true,
           message: "Invitation accepted successfully",
-          tripId: invitation.tripId,
-          newTripCount: currentTripCount + 1
+          eventId: invitation.eventId,
+          newEventCount: currentEventCount + 1,
         });
-
       } catch (error) {
-        console.error("Error accepting trip invitation:", error);
+        console.error("Error accepting event invitation:", error);
         res.status(500).json({
           success: false,
           message: `Failed to accept invitation: ${error.message}`,

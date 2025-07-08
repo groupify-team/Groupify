@@ -17,12 +17,12 @@ import {
 } from "@heroicons/react/24/outline";
 
 const PhotoUpload = ({
-  tripId,
+  eventId,
   onPhotoUploaded,
   maxPhotos = Infinity,
   currentPhotoCount = 0,
   title = "Upload Photos",
-  subtitle = "Add memories to your trip",
+  subtitle = "Add memories to your event",
   acceptedFormats = "JPG, PNG, GIF",
   maxFileSize = "10MB",
   showLimitWarning = false,
@@ -58,17 +58,17 @@ const PhotoUpload = ({
   const getActualLimits = () => {
     if (!planFeatures) {
       return {
-        photosPerTrip: maxPhotos === Infinity ? 30 : maxPhotos, // Default free limit
+        photosPerEvent: maxPhotos === Infinity ? 30 : maxPhotos, // Default free limit
         totalPhotos: Infinity,
         storage: 2 * 1024 * 1024 * 1024, // 2GB default
         remainingSlots: Math.max(0, 30 - currentPhotoCount),
       };
     }
 
-    const photosPerTrip =
-      planFeatures.photosPerTrip === "unlimited"
+    const photosPerEvent =
+      planFeatures.photosPerEvent === "unlimited"
         ? Infinity
-        : planFeatures.photosPerTrip;
+        : planFeatures.photosPerEvent;
     const totalPhotos =
       planFeatures.photos === "unlimited" ? Infinity : planFeatures.photos;
     const storage = planFeatures.storageBytes;
@@ -76,10 +76,10 @@ const PhotoUpload = ({
     // Calculate remaining slots based on the most restrictive limit
     let remainingSlots = Infinity;
 
-    if (photosPerTrip !== Infinity) {
+    if (photosPerEvent !== Infinity) {
       remainingSlots = Math.min(
         remainingSlots,
-        Math.max(0, photosPerTrip - currentPhotoCount)
+        Math.max(0, photosPerEvent - currentPhotoCount)
       );
     }
 
@@ -91,7 +91,7 @@ const PhotoUpload = ({
     }
 
     return {
-      photosPerTrip,
+      photosPerEvent,
       totalPhotos,
       storage,
       remainingSlots: remainingSlots === Infinity ? Infinity : remainingSlots,
@@ -120,7 +120,7 @@ const PhotoUpload = ({
 
     // Check photo count limits
     const photoCheck = canPerformAction("upload_photos", {
-      tripPhotoCount: currentPhotoCount,
+      eventPhotoCount: currentPhotoCount,
       newPhotoCount: selectedFiles.length,
     });
 
@@ -235,7 +235,7 @@ const PhotoUpload = ({
     // Final plan limit enforcement
     if (
       !enforceLimit("upload_photos", {
-        tripPhotoCount: currentPhotoCount,
+        eventPhotoCount: currentPhotoCount,
         newPhotoCount: selectedFiles.length,
       })
     ) {
@@ -268,7 +268,7 @@ const PhotoUpload = ({
 
         const uploadedPhoto = await uploadPhoto(
           file,
-          tripId,
+          eventId,
           currentUser.uid,
           {
             originalName: file.name,
@@ -437,25 +437,25 @@ const PhotoUpload = ({
               </div>
             )}
 
-            {/* Trip Photos Progress */}
-            {planFeatures?.photosPerTrip !== "unlimited" && (
+            {/* event photos Progress */}
+            {planFeatures?.photosPerEvent !== "unlimited" && (
               <div className="space-y-1">
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-gray-600 dark:text-gray-400">
-                    Trip Photos
+                    event photos
                   </span>
                   <span className="font-medium text-gray-700 dark:text-gray-300">
-                    {currentPhotoCount}/{planFeatures?.photosPerTrip || 0}
+                    {currentPhotoCount}/{planFeatures?.photosPerEvent || 0}
                   </span>
                 </div>
                 <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
                   <div
                     className={`h-1.5 rounded-full transition-all duration-300 ${
-                      currentPhotoCount / (planFeatures?.photosPerTrip || 1) >
+                      currentPhotoCount / (planFeatures?.photosPerEvent || 1) >
                       0.9
                         ? "bg-red-500"
                         : currentPhotoCount /
-                            (planFeatures?.photosPerTrip || 1) >
+                            (planFeatures?.photosPerEvent || 1) >
                           0.75
                         ? "bg-yellow-500"
                         : "bg-green-500"
@@ -463,7 +463,7 @@ const PhotoUpload = ({
                     style={{
                       width: `${Math.min(
                         (currentPhotoCount /
-                          (planFeatures?.photosPerTrip || 1)) *
+                          (planFeatures?.photosPerEvent || 1)) *
                           100,
                         100
                       )}%`,
@@ -741,7 +741,7 @@ const PhotoUpload = ({
                     Upgrade to Pro
                   </h4>
                   <ul className="text-purple-700 dark:text-purple-400 text-sm space-y-1">
-                    <li>• Unlimited trips and photos</li>
+                    <li>• Unlimited events and photos</li>
                     <li>• 500GB storage</li>
                     <li>• Advanced AI recognition</li>
                     <li>• Priority support</li>
@@ -753,7 +753,7 @@ const PhotoUpload = ({
                     Upgrade to Premium
                   </h4>
                   <ul className="text-blue-700 dark:text-blue-400 text-sm space-y-1">
-                    <li>• 50 trips with 500 photos each</li>
+                    <li>• 50 events with 500 photos each</li>
                     <li>• 50GB storage</li>
                     <li>• Advanced features</li>
                     <li>• Video support</li>
