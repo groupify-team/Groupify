@@ -34,9 +34,13 @@ const AccessibilityModal = ({ isOpen, onClose, theme, toggleTheme }) => {
       };
       root.style.fontSize = fontSizeMap[accessibilitySettings.fontSize] || "16px";
 
-      // Apply high contrast
+      // Apply high contrast with proper dark mode detection
       if (accessibilitySettings.highContrast) {
         root.classList.add("high-contrast-mode");
+        // Ensure dark mode class is also present if theme is dark
+        if (theme === 'dark') {
+          root.classList.add("dark");
+        }
       } else {
         root.classList.remove("high-contrast-mode");
       }
@@ -48,7 +52,7 @@ const AccessibilityModal = ({ isOpen, onClose, theme, toggleTheme }) => {
         root.classList.remove("reduce-motion");
       }
     }
-  }, [isOpen, accessibilitySettings.fontSize, accessibilitySettings.highContrast, accessibilitySettings.reducedMotion, accessibilitySettings.isInitialized]);
+  }, [isOpen, accessibilitySettings.fontSize, accessibilitySettings.highContrast, accessibilitySettings.reducedMotion, accessibilitySettings.isInitialized, theme]);
 
   if (!isOpen) return null;
 

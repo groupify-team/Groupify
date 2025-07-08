@@ -161,57 +161,60 @@ const SignInPage = () => {
   };
 
   const handleResendVerification = async () => {
-    try {
-      const response = await fetch(
-        "https://us-central1-groupify-77202.cloudfunctions.net/resendVerificationCode",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
+  try {
+    const response = await fetch(
+      "https://us-central1-groupify-77202.cloudfunctions.net/sendVerificationEmail", // Changed from resendVerificationCode
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          data: { 
+            email: formData.email,
+            name: "User" // sendVerificationEmail requires a name parameter
           },
-          body: JSON.stringify({
-            data: { email: formData.email },
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        }),
       }
+    );
 
-      const result = await response.json();
-
-      if (result.success) {
-        toast.success("Verification email sent! Check your inbox.");
-
-        // Navigate to the confirmation page with email parameter
-        setTimeout(() => {
-          navigate(
-            `/confirm-email?email=${encodeURIComponent(formData.email)}`
-          );
-        }, 1500);
-      } else {
-        throw new Error(result.message || "Failed to send email");
-      }
-    } catch (error) {
-      console.error("Resend error:", error);
-
-      // Handle specific error messages from the HTTP function
-      let errorMessage = "Failed to resend email. Please try again.";
-
-      if (error.message?.includes("already verified")) {
-        toast.success("Your email is already verified! Try signing in again.");
-        setShowVerificationAlert(false);
-        return;
-      } else if (error.message?.includes("User not found")) {
-        errorMessage = "User not found. Please sign up first.";
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-
-      toast.error(errorMessage);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-  };
+
+    const result = await response.json();
+
+    if (result.success) {
+      toast.success("Verification email sent! Check your inbox.");
+
+      // Navigate to the confirmation page with email parameter
+      setTimeout(() => {
+        navigate(
+          `/confirm-email?email=${encodeURIComponent(formData.email)}`
+        );
+      }, 1500);
+    } else {
+      throw new Error(result.message || "Failed to send email");
+    }
+  } catch (error) {
+    console.error("Resend error:", error);
+
+    // Handle specific error messages from the HTTP function
+    let errorMessage = "Failed to resend email. Please try again.";
+
+    if (error.message?.includes("already verified")) {
+      toast.success("Your email is already verified! Try signing in again.");
+      setShowVerificationAlert(false);
+      return;
+    } else if (error.message?.includes("User not found")) {
+      errorMessage = "User not found. Please sign up first.";
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+
+    toast.error(errorMessage);
+  }
+};
 
   const formConfig = {
     submitText: loading ? "Signing in..." : "Sign in",
