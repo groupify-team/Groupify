@@ -139,7 +139,7 @@ const EventStatistics = ({ event, photos, eventMembers }) => {
               </span>
             </div>
             <p className="text-xl font-bold text-purple-900 dark:text-purple-200">
-              {EventMembers.length}
+              {eventMembers.length}
             </p>
             <p className="text-xs text-purple-600 dark:text-purple-400">
               in this event
