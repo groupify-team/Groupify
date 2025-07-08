@@ -23,7 +23,7 @@ export const usePlanLimits = () => {
       free: {
         events: 5,
         photosPerEvent: 30,
-        membersPerEvent: 5,
+        membersPerEvent: 8,
         storageGB: 2,
       },
       premium: {

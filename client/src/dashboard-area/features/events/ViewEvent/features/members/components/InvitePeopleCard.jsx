@@ -33,6 +33,7 @@ const InvitePeopleCard = ({
             currentUser={currentUser}
             eventId={eventId}
             excludedUserIds={eventMembers}
+            currentMemberCount={eventMembers?.length || 0}
             onFriendClick={onFriendClick}
           />
         </div>

@@ -15,12 +15,12 @@ import {
 } from "firebase/firestore";
 import { db } from "@shared/services/firebase/config";
 import { updateEvent, sendEventInvite } from "@shared/services/firebase/events";
+import { UserService } from "@shared/services/user/UserService";
 import {
-  getFriends,
   getUserProfile,
   sendFriendRequest,
   removeFriend,
-} from "@firebase-services/users";
+} from "@shared/services/firebase/users";
 
 export const useEventMembers = (currentUserId, event, setEvent) => {
   const [friends, setFriends] = useState([]);
@@ -68,7 +68,7 @@ export const useEventMembers = (currentUserId, event, setEvent) => {
     const fetchFriendsAndPending = async () => {
       if (!currentUserId) return;
       try {
-        const userFriends = await getFriends(currentUserId);
+        const userFriends = await UserService.getUserFriends(currentUserId);
         const friendIds = userFriends.map((f) => f.uid);
         setFriends(friendIds);
 
@@ -84,19 +84,43 @@ export const useEventMembers = (currentUserId, event, setEvent) => {
   }, [currentUserId]);
 
   const handleMemberClick = async (member) => {
+    console.log("🔍 handleMemberClick called with member:", member);
+    console.log("🔍 Current user ID:", currentUserId);
+
+    if (!member || !currentUserId) {
+      console.error("❌ Missing member or currentUserId");
+      return;
+    }
+
     try {
       const isFriendNow = friends.includes(member.uid);
       const status = await checkFriendStatus(currentUserId, member.uid);
       const isPendingNow = status === "pending";
 
-      setSelectedUser({
+      console.log("🔍 Member relationship status:", {
+        memberUid: member.uid,
+        isFriend: isFriendNow,
+        isPending: isPendingNow,
+        status,
+      });
+
+      const enhancedMember = {
         ...member,
         __isFriend: isFriendNow,
         __isPending: isPendingNow,
-      });
+      };
+
+      console.log("🚀 Setting selected user:", enhancedMember);
+      setSelectedUser(enhancedMember);
     } catch (error) {
       console.error("Error checking member status:", error);
-      setSelectedUser(member);
+      // Still set the user even if we can't check friendship status
+      console.log("⚠️ Setting member without friendship status");
+      setSelectedUser({
+        ...member,
+        __isFriend: false,
+        __isPending: false,
+      });
     }
   };
 
@@ -201,7 +225,7 @@ export const useEventMembers = (currentUserId, event, setEvent) => {
             break;
           }
         } catch (error) {
-          console.log("Method 1 failed, trying query method...");
+          console.log("Method 1 failed, trying query method...", error.message);
         }
       }
 

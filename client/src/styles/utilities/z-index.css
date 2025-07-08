@@ -210,6 +210,23 @@
   }
 }
 
+/* === CREATEEVENT MODAL SPECIFIC FIXES === */
+.create-event-modal-backdrop {
+  z-index: 99998 !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+}
+
+.create-event-modal-content {
+  z-index: 99999 !important;
+  position: relative !important;
+}
+
 /* === LAYER DOCUMENTATION === */
 /*
 Z-Index Hierarchy:

@@ -10,7 +10,7 @@ import {
   sendFriendRequest,
   removeFriend,
   getPendingFriendRequests,
-} from "@firebase-services/users";
+} from "@shared/services/firebase/users";
 
 export const useFriendship = (currentUser) => {
   const [friends, setFriends] = useState([]);
@@ -71,7 +71,3 @@ export const useFriendship = (currentUser) => {
     loadFriendsData,
   };
 };
-
-
-
-

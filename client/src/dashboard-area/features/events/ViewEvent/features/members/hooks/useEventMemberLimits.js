@@ -6,7 +6,7 @@ import { eventsService } from "../../../../services/eventsService";
  * Enhanced hook for event member invitation validation with comprehensive plan limits
  * Handles member limits per event and upgrade prompts
  */
-export const useEventMemberLimits = (eventId, currentMemberCount = 0, eventData = null) => {
+export const useEventMemberLimits = (eventId, currentMemberCount = 0) => {
   const {
     canPerformAction,
     enforceLimit,
@@ -28,227 +28,268 @@ export const useEventMemberLimits = (eventId, currentMemberCount = 0, eventData 
   }, [subscription, CORE_LIMITS]);
 
   // Validate member invitation
-  const validateMemberInvitation = useCallback(async (inviteeCount = 1, options = {}) => {
-    const { showToasts = true, skipLimitCheck = false } = options;
-    
-    setIsValidating(true);
+  const validateMemberInvitation = useCallback(
+    async (inviteeCount = 1, options = {}) => {
+      const { showToasts = true, skipLimitCheck = false } = options;
 
-    try {
-      // Skip validation if requested (for admin overrides)
-      if (skipLimitCheck) {
+      setIsValidating(true);
+
+      try {
+        // Skip validation if requested (for admin overrides)
+        if (skipLimitCheck) {
+          return { allowed: true, reason: null };
+        }
+
+        // Check member limit
+        const memberCheck = canPerformAction("invite_member", {
+          currentMembers: currentMemberCount,
+          newMemberCount: inviteeCount,
+        });
+
+        if (!memberCheck.allowed) {
+          if (showToasts) {
+            showUpgradePrompt(memberCheck.reason, { persistent: true });
+          }
+          return {
+            allowed: false,
+            reason: memberCheck.reason,
+            type: "member_limit",
+            currentUsage: currentMemberCount,
+            limit: planLimits.membersPerEvent,
+            additionalNeeded: inviteeCount,
+          };
+        }
+
         return { allowed: true, reason: null };
-      }
-
-      // Check member limit
-      const memberCheck = canPerformAction("invite_member", {
-        currentMembers: currentMemberCount,
-        newMemberCount: inviteeCount,
-      });
-
-      if (!memberCheck.allowed) {
+      } catch (error) {
+        console.error("Member invitation validation error:", error);
         if (showToasts) {
-          showUpgradePrompt(memberCheck.reason, { persistent: true });
+          toast.error("Failed to validate invitation. Please try again.");
         }
         return {
           allowed: false,
-          reason: memberCheck.reason,
-          type: "member_limit",
-          currentUsage: currentMemberCount,
-          limit: planLimits.membersPerTrip,
-          additionalNeeded: inviteeCount,
+          reason: "Validation failed",
+          type: "validation_error",
         };
+      } finally {
+        setIsValidating(false);
       }
-
-      return { allowed: true, reason: null };
-
-    } catch (error) {
-      console.error("Member invitation validation error:", error);
-      if (showToasts) {
-        toast.error("Failed to validate invitation. Please try again.");
-      }
-      return {
-        allowed: false,
-        reason: "Validation failed",
-        type: "validation_error",
-      };
-    } finally {
-      setIsValidating(false);
-    }
-  }, [canPerformAction, currentMemberCount, planLimits, showUpgradePrompt]);
+    },
+    [canPerformAction, currentMemberCount, planLimits, showUpgradePrompt]
+  );
 
   // Check if can invite more members
-  const canInviteMembers = useCallback((count = 1) => {
-    if (planLimits.membersPerTrip === "unlimited") return true;
-    return currentMemberCount + count <= planLimits.membersPerTrip;
-  }, [currentMemberCount, planLimits.membersPerTrip]);
+  const canInviteMembers = useCallback(
+    (count = 1) => {
+      const result =
+        planLimits.membersPerEvent === "unlimited" ||
+        currentMemberCount + count <= planLimits.membersPerEvent;
+
+      console.log("🔍 canInviteMembers check:", {
+        count,
+        currentMemberCount,
+        membersPerEvent: planLimits.membersPerEvent,
+        calculation: `${currentMemberCount} + ${count} <= ${planLimits.membersPerEvent}`,
+        result,
+      });
+
+      return result;
+    },
+    [currentMemberCount, planLimits.membersPerEvent]
+  );
 
   // Get remaining member slots
   const getRemainingMemberSlots = useCallback(() => {
-    if (planLimits.membersPerTrip === "unlimited") return "unlimited";
-    return Math.max(0, planLimits.membersPerTrip - currentMemberCount);
-  }, [currentMemberCount, planLimits.membersPerTrip]);
+    if (planLimits.membersPerEvent === "unlimited") return "unlimited";
+    return Math.max(0, planLimits.membersPerEvent - currentMemberCount);
+  }, [currentMemberCount, planLimits.membersPerEvent]);
 
   // Get member limit status
   const getMemberLimitStatus = useCallback(() => {
-    if (planLimits.membersPerTrip === "unlimited") return "unlimited";
-    
+    if (planLimits.membersPerEvent === "unlimited") return "unlimited";
+
     const remaining = getRemainingMemberSlots();
-    const percentage = (currentMemberCount / planLimits.membersPerTrip) * 100;
-    
+    const percentage = (currentMemberCount / planLimits.membersPerEvent) * 100;
+
     if (remaining === 0) return "full";
     if (percentage >= 80) return "warning";
     return "normal";
-  }, [currentMemberCount, planLimits.membersPerTrip, getRemainingMemberSlots]);
+  }, [currentMemberCount, planLimits.membersPerEvent, getRemainingMemberSlots]);
 
   // Invite a single member with validation
-  const inviteMember = useCallback(async (userId, userEmail, options = {}) => {
-    const { skipValidation = false, showToasts = true } = options;
-    
-    if (!userId && !userEmail) {
-      if (showToasts) toast.error("User ID or email is required");
-      return { success: false, reason: "Missing user identifier" };
-    }
+  const inviteMember = useCallback(
+    async (userId, userEmail, options = {}) => {
+      const { skipValidation = false, showToasts = true } = options;
 
-    setIsInviting(true);
+      if (!userId && !userEmail) {
+        if (showToasts) toast.error("User ID or email is required");
+        return { success: false, reason: "Missing user identifier" };
+      }
 
-    try {
-      // Validate invitation if not skipped
-      if (!skipValidation) {
-        const validation = await validateMemberInvitation(1, { showToasts });
-        if (!validation.allowed) {
-          return { success: false, reason: validation.reason, type: validation.type };
+      setIsInviting(true);
+
+      try {
+        // Validate invitation if not skipped
+        if (!skipValidation) {
+          const validation = await validateMemberInvitation(1, { showToasts });
+          if (!validation.allowed) {
+            return {
+              success: false,
+              reason: validation.reason,
+              type: validation.type,
+            };
+          }
         }
-      }
 
-      // Send invitation through trips service
-      const result = await eventsService.sendEventInvite(eventId, userId, userEmail);
-      
-      if (showToasts) {
-        toast.success(`Invitation sent successfully!`);
-      }
+        // Send invitation through trips service
+        const result = await eventsService.sendEventInvite(
+          eventId,
+          userId,
+          userEmail
+        );
 
-      return { success: true, invitationId: result.invitationId };
-
-    } catch (error) {
-      console.error("Member invitation error:", error);
-      const errorMessage = error.message || "Failed to send invitation";
-      
-      if (showToasts) {
-        if (errorMessage.includes("limit")) {
-          // This is a plan limit error from the service
-          showUpgradePrompt(errorMessage, { persistent: true });
-        } else {
-          toast.error(errorMessage);
+        if (showToasts) {
+          toast.success(`Invitation sent successfully!`);
         }
-      }
 
-      return { 
-        success: false, 
-        reason: errorMessage,
-        type: errorMessage.includes("limit") ? "member_limit" : "invitation_error"
-      };
-    } finally {
-      setIsInviting(false);
-    }
-  }, [eventId, validateMemberInvitation, showUpgradePrompt]);
+        return { success: true, invitationId: result.invitationId };
+      } catch (error) {
+        console.error("Member invitation error:", error);
+        const errorMessage = error.message || "Failed to send invitation";
+
+        if (showToasts) {
+          if (errorMessage.includes("limit")) {
+            // This is a plan limit error from the service
+            showUpgradePrompt(errorMessage, { persistent: true });
+          } else {
+            toast.error(errorMessage);
+          }
+        }
+
+        return {
+          success: false,
+          reason: errorMessage,
+          type: errorMessage.includes("limit")
+            ? "member_limit"
+            : "invitation_error",
+        };
+      } finally {
+        setIsInviting(false);
+      }
+    },
+    [eventId, validateMemberInvitation, showUpgradePrompt]
+  );
 
   // Batch invite multiple members
-  const inviteMultipleMembers = useCallback(async (userList, options = {}) => {
-    const { showToasts = true, continueOnError = false } = options;
-    
-    if (!userList || userList.length === 0) {
-      if (showToasts) toast.error("No users to invite");
-      return { success: false, results: [] };
-    }
+  const inviteMultipleMembers = useCallback(
+    async (userList, options = {}) => {
+      const { showToasts = true, continueOnError = false } = options;
 
-    // Validate batch invitation
-    const validation = await validateMemberInvitation(userList.length, { showToasts });
-    if (!validation.allowed) {
-      return { 
-        success: false, 
-        reason: validation.reason, 
-        type: validation.type,
-        results: []
-      };
-    }
+      if (!userList || userList.length === 0) {
+        if (showToasts) toast.error("No users to invite");
+        return { success: false, results: [] };
+      }
 
-    setIsInviting(true);
-    const results = [];
-    let successCount = 0;
-    let errorCount = 0;
+      // Validate batch invitation
+      const validation = await validateMemberInvitation(userList.length, {
+        showToasts,
+      });
+      if (!validation.allowed) {
+        return {
+          success: false,
+          reason: validation.reason,
+          type: validation.type,
+          results: [],
+        };
+      }
 
-    try {
-      for (const user of userList) {
-        try {
-          const result = await inviteMember(user.uid, user.email, { 
-            skipValidation: true, 
-            showToasts: false 
-          });
-          
-          results.push({
-            user,
-            success: result.success,
-            reason: result.reason,
-            invitationId: result.invitationId,
-          });
+      setIsInviting(true);
+      const results = [];
+      let successCount = 0;
+      let errorCount = 0;
 
-          if (result.success) {
-            successCount++;
-          } else {
+      try {
+        for (const user of userList) {
+          try {
+            const result = await inviteMember(user.uid, user.email, {
+              skipValidation: true,
+              showToasts: false,
+            });
+
+            results.push({
+              user,
+              success: result.success,
+              reason: result.reason,
+              invitationId: result.invitationId,
+            });
+
+            if (result.success) {
+              successCount++;
+            } else {
+              errorCount++;
+              if (!continueOnError) break;
+            }
+          } catch (error) {
+            results.push({
+              user,
+              success: false,
+              reason: error.message || "Unknown error",
+            });
             errorCount++;
             if (!continueOnError) break;
           }
-
-        } catch (error) {
-          results.push({
-            user,
-            success: false,
-            reason: error.message || "Unknown error",
-          });
-          errorCount++;
-          if (!continueOnError) break;
         }
-      }
 
-      // Show summary toast
-      if (showToasts) {
-        if (successCount > 0 && errorCount === 0) {
-          toast.success(`${successCount} invitation${successCount > 1 ? 's' : ''} sent successfully!`);
-        } else if (successCount > 0 && errorCount > 0) {
-          toast.success(`${successCount} invitations sent, ${errorCount} failed`);
-        } else {
-          toast.error(`Failed to send ${errorCount} invitation${errorCount > 1 ? 's' : ''}`);
+        // Show summary toast
+        if (showToasts) {
+          if (successCount > 0 && errorCount === 0) {
+            toast.success(
+              `${successCount} invitation${
+                successCount > 1 ? "s" : ""
+              } sent successfully!`
+            );
+          } else if (successCount > 0 && errorCount > 0) {
+            toast.success(
+              `${successCount} invitations sent, ${errorCount} failed`
+            );
+          } else {
+            toast.error(
+              `Failed to send ${errorCount} invitation${
+                errorCount > 1 ? "s" : ""
+              }`
+            );
+          }
         }
-      }
 
-      return {
-        success: successCount > 0,
-        successCount,
-        errorCount,
-        results,
-      };
-
-    } catch (error) {
-      console.error("Batch invitation error:", error);
-      if (showToasts) {
-        toast.error("Failed to send invitations");
+        return {
+          success: successCount > 0,
+          successCount,
+          errorCount,
+          results,
+        };
+      } catch (error) {
+        console.error("Batch invitation error:", error);
+        if (showToasts) {
+          toast.error("Failed to send invitations");
+        }
+        return { success: false, results };
+      } finally {
+        setIsInviting(false);
       }
-      return { success: false, results };
-    } finally {
-      setIsInviting(false);
-    }
-  }, [validateMemberInvitation, inviteMember]);
+    },
+    [validateMemberInvitation, inviteMember]
+  );
 
   // Get upgrade suggestions for member limits
   const getMemberUpgradeSuggestions = useCallback(() => {
     const currentPlan = subscription?.plan || "free";
-    
+
     const suggestions = [];
 
     if (currentPlan === "free") {
       suggestions.push({
         targetPlan: "premium",
-        benefit: `Increase from ${CORE_LIMITS.free.membersPerTrip} to ${CORE_LIMITS.premium.membersPerTrip} members per trip`,
+        benefit: `Increase from ${CORE_LIMITS.free.membersPerEvent} to ${CORE_LIMITS.premium.membersPerEvent} members per event`,
         price: "$9.99/month",
         highlight: "4x more members",
       });
@@ -257,7 +298,7 @@ export const useEventMemberLimits = (eventId, currentMemberCount = 0, eventData 
     if (currentPlan === "free" || currentPlan === "premium") {
       suggestions.push({
         targetPlan: "pro",
-        benefit: "Unlimited members per trip",
+        benefit: "Unlimited members per event",
         price: "$19.99/month",
         highlight: "Build large groups",
       });
@@ -280,71 +321,83 @@ export const useEventMemberLimits = (eventId, currentMemberCount = 0, eventData 
         current: currentMemberCount,
         limit: planLimits.membersPerEvent,
         remaining: getRemainingMemberSlots(),
-        percentage: planLimits.membersPerEvent === "unlimited" ? 0 : 
-          Math.round((currentMemberCount / planLimits.membersPerEvent) * 100),
-        formatted: planLimits.membersPerEvent === "unlimited" ? 
-          `${currentMemberCount} members` : 
-          `${currentMemberCount} / ${planLimits.membersPerEvent} members`,
+        percentage:
+          planLimits.membersPerEvent === "unlimited"
+            ? 0
+            : Math.round(
+                (currentMemberCount / planLimits.membersPerEvent) * 100
+              ),
+        formatted:
+          planLimits.membersPerEvent === "unlimited"
+            ? `${currentMemberCount} members`
+            : `${currentMemberCount} / ${planLimits.membersPerEvent} members`,
       },
     };
   }, [currentMemberCount, planLimits, getRemainingMemberSlots]);
 
   // Get member invitation preview
-  const getInvitationPreview = useCallback((inviteeCount = 1) => {
-    const remaining = getRemainingMemberSlots();
-    const wouldExceed = typeof remaining === "number" && inviteeCount > remaining;
-    
-    return {
-      canInvite: !wouldExceed,
-      remaining,
-      wouldExceed,
-      newTotal: currentMemberCount + inviteeCount,
-      limit: planLimits.membersPerEvent,
-      requiresUpgrade: wouldExceed,
-    };
-  }, [currentMemberCount, planLimits.membersPerEvent, getRemainingMemberSlots]);
+  const getInvitationPreview = useCallback(
+    (inviteeCount = 1) => {
+      const remaining = getRemainingMemberSlots();
+      const wouldExceed =
+        typeof remaining === "number" && inviteeCount > remaining;
+
+      return {
+        canInvite: !wouldExceed,
+        remaining,
+        wouldExceed,
+        newTotal: currentMemberCount + inviteeCount,
+        limit: planLimits.membersPerEvent,
+        requiresUpgrade: wouldExceed,
+      };
+    },
+    [currentMemberCount, planLimits.membersPerEvent, getRemainingMemberSlots]
+  );
 
   // Force member limit check (for UI components)
-  const checkMemberLimit = useCallback((additionalMembers = 1) => {
-    return enforceLimit("invite_member", {
-      currentMembers: currentMemberCount,
-      newMemberCount: additionalMembers,
-    });
-  }, [enforceLimit, currentMemberCount]);
+  const checkMemberLimit = useCallback(
+    (additionalMembers = 1) => {
+      return enforceLimit("invite_member", {
+        currentMembers: currentMemberCount,
+        newMemberCount: additionalMembers,
+      });
+    },
+    [enforceLimit, currentMemberCount]
+  );
 
   return {
     // Validation functions
     validateMemberInvitation,
     canInviteMembers,
     checkMemberLimit,
-    
+
     // Invitation functions
     inviteMember,
     inviteMultipleMembers,
-    
-    // Status functions  
+
+    // Status functions
     getRemainingMemberSlots,
     getMemberLimitStatus,
     isApproachingMemberLimit,
     getFormattedLimits,
     getInvitationPreview,
-    
+
     // Upgrade helpers
     getMemberUpgradeSuggestions,
-    
+
     // State
     isInviting,
     isValidating,
     planLimits,
-    
+
     // Plan info
     isFreePlan,
-    isPremiumPlan, 
+    isPremiumPlan,
     isProPlan,
-    
+
     // Current member count for easy access
     currentMemberCount,
-    
+
     // Quick status checks
     canInviteMore: canInviteMembers(1),
     limitStatus: getMemberLimitStatus(),

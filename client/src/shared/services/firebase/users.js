@@ -47,7 +47,12 @@ export const getUserProfile = async (uid) => {
     const userSnapshot = await getDoc(userRef);
 
     if (userSnapshot.exists()) {
-      return userSnapshot.data();
+      const userData = userSnapshot.data();
+      return {
+        uid: uid, // Ensure uid is always included
+        id: uid, // Add id field for compatibility
+        ...userData,
+      };
     }
     return null;
   } catch (error) {
@@ -188,9 +193,7 @@ export const rejectFriendRequest = async (uid, senderUid) => {
     console.error("Error rejecting friend request:", error);
     throw error;
   }
-};
-
-// Clean up invalid friends (including non-mutual friendships)
+}; // Clean up invalid friends (including non-mutual friendships)
 export const cleanupInvalidFriends = async (uid) => {
   try {
     const userRef = doc(db, "users", uid);
@@ -226,10 +229,10 @@ export const cleanupInvalidFriends = async (uid) => {
 
           if (friendsFriends.includes(uid)) {
             validFriendIds.push(friendId);
-          } else {
           }
-        } else {
+          // Non-mutual friendship, don't include in valid IDs
         }
+        // Friend document doesn't exist, don't include in valid IDs
       } catch (error) {
         console.error(`Error checking friend ${friendId}:`, error);
       }
@@ -249,73 +252,111 @@ export const cleanupInvalidFriends = async (uid) => {
 
 // Retrieve all friends with mutual friendship validation
 export const getFriends = async (uid) => {
+  console.log(`getFriends called for user: ${uid}`);
+
   try {
-    // First, cleanup any invalid friend references
-    await cleanupInvalidFriends(uid);
+    if (!uid) {
+      console.error("getFriends called with no uid");
+      return [];
+    }
+
+    // Skip cleanup for now as it may cause performance issues
+    // await cleanupInvalidFriends(uid);
 
     const userRef = doc(db, "users", uid);
     const userSnap = await getDoc(userRef);
 
     if (!userSnap.exists()) {
-      console.warn("⚠️ No user document found");
+      console.warn(`⚠️ User document for ${uid} not found in getFriends`);
       return [];
     }
 
-    const friendIds = userSnap.data().friends || [];
-    const friends = [];
+    const userData = userSnap.data();
+    const friendIds = userData.friends || [];
+
+    console.log(`Found ${friendIds.length} friend IDs for user ${uid}`);
+
+    if (friendIds.length === 0) {
+      return [];
+    }
+
     const invalidFriendIds = []; // Track friends to remove
 
-    for (const fid of friendIds) {
+    // Use Promise.all for better performance when fetching friend profiles
+    const friendPromises = friendIds.map(async (fid) => {
       if (!fid || typeof fid !== "string" || fid.trim() === "") {
         invalidFriendIds.push(fid);
-        continue; // Skip invalid IDs
+        return null; // Skip invalid IDs
       }
 
-      const fRef = doc(db, "users", fid);
-      const fSnap = await getDoc(fRef);
+      try {
+        const fRef = doc(db, "users", fid);
+        const fSnap = await getDoc(fRef);
 
-      if (fSnap.exists()) {
-        const fData = fSnap.data();
-        const friendsFriends = fData.friends || [];
+        if (fSnap.exists()) {
+          const fData = fSnap.data();
+          const friendsFriends = fData.friends || [];
 
-        // ✅ CHECK MUTUAL FRIENDSHIP: Verify that the friend also has current user in their friends list
-        if (friendsFriends.includes(uid)) {
-          friends.push({
-            uid: fid,
-            displayName: fData.displayName || fData.email || fid,
-            email: fData.email || "",
-            photoURL: fData.photoURL || "",
-          });
+          // ✅ CHECK MUTUAL FRIENDSHIP: Verify that the friend also has current user in their friends list
+          if (friendsFriends.includes(uid)) {
+            return {
+              uid: fid,
+              id: fid, // Add id field for compatibility
+              displayName: fData.displayName || fData.email || fid,
+              email: fData.email || "",
+              photoURL: fData.photoURL || "",
+            };
+          } else {
+            console.warn(
+              `⚠️ Non-mutual friendship: ${uid} -> ${fid}. Friend ${fid} doesn't have ${uid} in their list.`
+            );
+            invalidFriendIds.push(fid);
+            return null;
+          }
         } else {
-          // ❌ FRIENDSHIP IS NOT MUTUAL: Friend removed current user but current user still has them
-          console.warn(
-            `⚠️ Non-mutual friendship detected: ${uid} -> ${fid}. Friend ${fid} doesn't have ${uid} in their friends list.`
-          );
+          console.warn(`⚠️ Friend document doesn't exist: ${fid}`);
           invalidFriendIds.push(fid);
+          return null;
         }
-      } else {
-        // Friend document doesn't exist
-        console.warn(`⚠️ Friend document doesn't exist: ${fid}`);
-        invalidFriendIds.push(fid);
+      } catch (error) {
+        console.error(`Error fetching friend ${fid}:`, error);
+        return null;
+      }
+    });
+
+    // Wait for all friend profile fetches to complete
+    const friendResults = await Promise.all(friendPromises);
+    const validFriends = friendResults.filter((friend) => friend !== null);
+
+    console.log(
+      `Found ${validFriends.length} valid friends out of ${friendIds.length} total`
+    );
+
+    // Clean up invalid/non-mutual friendships only if we found problems
+    if (invalidFriendIds.length > 0) {
+      console.log(
+        `Cleaning up ${invalidFriendIds.length} invalid friend references`
+      );
+      try {
+        const validFriendIds = friendIds.filter(
+          (id) => !invalidFriendIds.includes(id)
+        );
+
+        await updateDoc(userRef, {
+          friends: validFriendIds,
+          updatedAt: new Date().toISOString(),
+        });
+      } catch (updateError) {
+        console.error("Error updating invalid friends:", updateError);
+        // Continue anyway - we still want to return the valid friends
       }
     }
 
-    // Clean up invalid/non-mutual friendships from current user's friends array
-    if (invalidFriendIds.length > 0) {
-      const validFriendIds = friendIds.filter(
-        (id) => !invalidFriendIds.includes(id)
-      );
-
-      await updateDoc(userRef, {
-        friends: validFriendIds,
-        updatedAt: new Date().toISOString(),
-      });
-    }
-
-    return friends;
+    return validFriends;
   } catch (error) {
     console.error("❌ Error getting friends:", error);
-    throw error;
+    // Return empty array instead of throwing - more resilient for UI
+    return [];
   }
 };
 

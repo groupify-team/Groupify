@@ -99,7 +99,7 @@ export const useEventData = (eventId, currentUserId) => {
     photos,
     eventMembers: useMemo(
       () =>
-        [eventMembers].sort((a, b) => {
+        [...eventMembers].sort((a, b) => {
           if (a.uid === currentUserId) return -1;
           if (b.uid === currentUserId) return 1;
           if (a.uid === event?.createdBy) return -1;

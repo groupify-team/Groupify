@@ -1,29 +1,25 @@
 import React, { useEffect, useState } from "react";
-import {
-  acceptFriendRequest,
-  rejectFriendRequest,
-  getPendingFriendRequests,
-} from "@firebase-services/users";
+import { UserService } from "@shared/services/user";
 
 const FriendRequestsModal = ({ currentUserId, onClose }) => {
   const [requests, setRequests] = useState([]);
 
   useEffect(() => {
     const fetchRequests = async () => {
-      const pending = await getPendingFriendRequests(currentUserId);
+      const pending = await UserService.getPendingFriendRequests(currentUserId);
       setRequests(pending);
     };
     fetchRequests();
   }, [currentUserId]);
 
-  const handleAccept = async (senderId) => {
-    await acceptFriendRequest(currentUserId, senderId);
-    setRequests(requests.filter((r) => r.id !== senderId));
+  const handleAccept = async (requestId) => {
+    await UserService.acceptFriendRequest(requestId, currentUserId);
+    setRequests(requests.filter((r) => r.id !== requestId));
   };
 
-  const handleReject = async (senderId) => {
-    await rejectFriendRequest(currentUserId, senderId);
-    setRequests(requests.filter((r) => r.id !== senderId));
+  const handleReject = async (requestId) => {
+    await UserService.rejectFriendRequest(requestId, currentUserId);
+    setRequests(requests.filter((r) => r.id !== requestId));
   };
 
   return (
@@ -72,7 +68,3 @@ const FriendRequestsModal = ({ currentUserId, onClose }) => {
 };
 
 export default FriendRequestsModal;
-
-
-
-

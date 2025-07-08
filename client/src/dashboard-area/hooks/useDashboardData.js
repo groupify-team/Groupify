@@ -4,10 +4,10 @@ import { useLocation, useNavigate } from "react-router-dom"; // ? ADDED
 import { useAuth } from "@auth/hooks/useAuth";
 
 import {
-  getFriends,
   getPendingFriendRequests,
   getUserProfile,
 } from "@/shared/services/firebase/users";
+import { UserService } from "@shared/services/user/UserService";
 import {
   getUserEvents,
   getPendingInvites,
@@ -207,7 +207,7 @@ export const useDashboardData = () => {
         if (friendIds.length > 0) {
           try {
             [friendsData, friendRequests] = await Promise.all([
-              getFriends(currentUser.uid),
+              UserService.getUserFriends(currentUser.uid),
               getPendingFriendRequests(currentUser.uid),
             ]);
           } catch (error) {
@@ -303,7 +303,7 @@ export const useDashboardData = () => {
   const refreshFriends = useCallback(async () => {
     if (!currentUser?.uid) return;
     try {
-      const updatedFriends = await getFriends(currentUser.uid);
+      const updatedFriends = await UserService.getUserFriends(currentUser.uid);
       setFriends(updatedFriends);
 
       // Update global data

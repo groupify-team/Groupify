@@ -9,21 +9,6 @@ import {
   UserIcon,
 } from "@heroicons/react/24/outline";
 
-let useDashboardLayout, useDashboardModals;
-try {
-  const layoutModule = require("@dashboard/hooks/useDashboardLayout");
-  useDashboardLayout = layoutModule.useDashboardLayout;
-} catch (e) {
-  console.log("useDashboardLayout not available, using fallback");
-}
-
-try {
-  const modalsModule = require("@dashboard/contexts/DashboardModalsContext");
-  useDashboardModals = modalsModule.useDashboardModals;
-} catch (e) {
-  console.log("useDashboardModals not available, using fallback");
-}
-
 // Accessibility icon component
 const AccessibilityIcon = ({ className }) => (
   <svg className={className} fill="currentColor" viewBox="0 0 24 24">
@@ -48,34 +33,14 @@ const DashboardHeader = ({
 }) => {
   const { userData, pendingRequests, eventInvites } = useDashboardData();
 
-  // Try to use new layout system, fallback to props
-  let layoutData = null;
-  if (useDashboardLayout) {
-    try {
-      layoutData = useDashboardLayout();
-    } catch (e) {
-      console.log("Error using useDashboardLayout, falling back to props");
-    }
-  }
-
-  // Extract layout data or use props as fallback
-  const currentSidebarOpen = layoutData?.layout?.sidebarOpen ?? sidebarOpen;
-  const currentIsMobile = layoutData?.layout?.isMobile ?? isMobile;
-  const toggleSidebar = layoutData?.sidebar?.toggle ?? onSidebarToggle;
-  const toggleNotificationsDropdown =
-    layoutData?.dropdownActions?.toggleNotificationsDropdown;
-  const notificationsDropdownOpen =
-    layoutData?.dropdowns?.notificationsDropdownOpen;
-  const navigateToSection = layoutData?.navigation?.navigateToSection;
-
-  // Local state for when new hooks aren't available
-  const [localNotificationsOpen, setLocalNotificationsOpen] = useState(false);
+  // Local state for notifications and user menu
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [mobileUserMenuOpen, setMobileUserMenuOpen] = useState(false);
 
-  // Use new hook state or local state
-  const notificationsOpen = notificationsDropdownOpen ?? localNotificationsOpen;
-  const setNotificationsOpen =
-    toggleNotificationsDropdown ?? setLocalNotificationsOpen;
+  // Use props directly
+  const currentSidebarOpen = sidebarOpen;
+  const currentIsMobile = isMobile;
+  const toggleSidebar = onSidebarToggle;
 
   // Refs for outside click detection
   const notificationRef = useRef(null);
@@ -84,16 +49,14 @@ const DashboardHeader = ({
   const totalNotifications =
     (pendingRequests?.length || 0) + (eventInvites?.length || 0);
 
-  // Close dropdowns when clicking outside (only for local state)
+  // Close dropdowns when clicking outside
   useEffect(() => {
-    if (toggleNotificationsDropdown) return; // Skip if using new system
-
     const handleClickOutside = (event) => {
       if (
         notificationRef.current &&
         !notificationRef.current.contains(event.target)
       ) {
-        setLocalNotificationsOpen(false);
+        setNotificationsOpen(false);
       }
       if (
         mobileUserMenuRef.current &&
@@ -105,7 +68,7 @@ const DashboardHeader = ({
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [toggleNotificationsDropdown]);
+  }, []);
 
   const getWelcomeMessage = () => {
     const displayName = userData?.displayName || "User";
@@ -113,11 +76,7 @@ const DashboardHeader = ({
   };
 
   const handleNotificationClick = () => {
-    if (toggleNotificationsDropdown) {
-      toggleNotificationsDropdown();
-    } else {
-      setLocalNotificationsOpen((prev) => !prev);
-    }
+    setNotificationsOpen((prev) => !prev);
   };
 
   const handleSidebarToggle = () => {
@@ -184,7 +143,7 @@ const DashboardHeader = ({
           {shouldShowCenterLogo() && (
             <div
               className="hidden sm:flex lg:hidden items-center gap-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg p-2 transition-colors"
-              onClick={() => navigateToSection && navigateToSection("events")}
+              onClick={() => (window.location.href = "/dashboard/events")}
             >
               <div className="w-8 h-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
                 <CameraIcon className="w-5 h-5 text-white" />

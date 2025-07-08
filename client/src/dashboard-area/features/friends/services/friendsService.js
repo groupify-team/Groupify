@@ -1,21 +1,21 @@
 // dashboard-area/features/friends/services/friendsService.js
-import { 
-  collection, 
-  doc, 
-  getDoc, 
-  getDocs, 
-  addDoc, 
-  deleteDoc, 
-  updateDoc, 
-  query, 
-  where, 
-  orderBy, 
-  arrayUnion, 
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  addDoc,
+  deleteDoc,
+  updateDoc,
+  query,
+  where,
+  orderBy,
+  arrayUnion,
   arrayRemove,
-  serverTimestamp 
-} from 'firebase/firestore';
-import { db } from '@firebase-services/config';
-import { PrivacyService } from '@shared/services/privacyService';
+  serverTimestamp,
+} from "firebase/firestore";
+import { db } from "@firebase-services/config";
+import { PrivacyService } from "@shared/services/privacyService";
 
 export class FriendsService {
   /**
@@ -27,34 +27,43 @@ export class FriendsService {
   static async sendFriendRequest(fromUserId, toUserId) {
     try {
       // Check if target user allows being found
-      const canBeFound = await PrivacyService.canUserBeFound(toUserId, fromUserId);
+      const canBeFound = await PrivacyService.canUserBeFound(
+        toUserId,
+        fromUserId
+      );
       if (!canBeFound) {
-        throw new Error('User cannot be found');
+        throw new Error("User cannot be found");
       }
 
       // Check if request already exists
-      const existingRequest = await this.getExistingRequest(fromUserId, toUserId);
+      const existingRequest = await this.getExistingRequest(
+        fromUserId,
+        toUserId
+      );
       if (existingRequest) {
-        throw new Error('Friend request already exists');
+        throw new Error("Friend request already exists");
       }
 
       // Check if already friends
-      const areAlreadyFriends = await this.areUsersFriends(fromUserId, toUserId);
+      const areAlreadyFriends = await this.areUsersFriends(
+        fromUserId,
+        toUserId
+      );
       if (areAlreadyFriends) {
-        throw new Error('Users are already friends');
+        throw new Error("Users are already friends");
       }
 
       // Create friend request
-      const requestRef = await addDoc(collection(db, 'friendRequests'), {
+      const requestRef = await addDoc(collection(db, "friendRequests"), {
         from: fromUserId,
         to: toUserId,
-        status: 'pending',
+        status: "pending",
         createdAt: serverTimestamp(),
       });
 
       return requestRef.id;
     } catch (error) {
-      console.error('Error sending friend request:', error);
+      console.error("Error sending friend request:", error);
       throw error;
     }
   }
@@ -68,16 +77,16 @@ export class FriendsService {
   static async acceptFriendRequest(requestId, currentUserId) {
     try {
       // Get the friend request
-      const requestDoc = await getDoc(doc(db, 'friendRequests', requestId));
+      const requestDoc = await getDoc(doc(db, "friendRequests", requestId));
       if (!requestDoc.exists()) {
-        throw new Error('Friend request not found');
+        throw new Error("Friend request not found");
       }
 
       const requestData = requestDoc.data();
-      
+
       // Verify the current user is the recipient
       if (requestData.to !== currentUserId) {
-        throw new Error('Unauthorized to accept this request');
+        throw new Error("Unauthorized to accept this request");
       }
 
       const fromUserId = requestData.from;
@@ -85,22 +94,22 @@ export class FriendsService {
 
       // Add each user to the other's friends list
       await Promise.all([
-        updateDoc(doc(db, 'users', fromUserId), {
+        updateDoc(doc(db, "users", fromUserId), {
           friends: arrayUnion(toUserId),
           updatedAt: serverTimestamp(),
         }),
-        updateDoc(doc(db, 'users', toUserId), {
+        updateDoc(doc(db, "users", toUserId), {
           friends: arrayUnion(fromUserId),
           updatedAt: serverTimestamp(),
         }),
       ]);
 
       // Delete the friend request
-      await deleteDoc(doc(db, 'friendRequests', requestId));
+      await deleteDoc(doc(db, "friendRequests", requestId));
 
       return true;
     } catch (error) {
-      console.error('Error accepting friend request:', error);
+      console.error("Error accepting friend request:", error);
       throw error;
     }
   }
@@ -114,24 +123,24 @@ export class FriendsService {
   static async declineFriendRequest(requestId, currentUserId) {
     try {
       // Get the friend request
-      const requestDoc = await getDoc(doc(db, 'friendRequests', requestId));
+      const requestDoc = await getDoc(doc(db, "friendRequests", requestId));
       if (!requestDoc.exists()) {
-        throw new Error('Friend request not found');
+        throw new Error("Friend request not found");
       }
 
       const requestData = requestDoc.data();
-      
+
       // Verify the current user is the recipient
       if (requestData.to !== currentUserId) {
-        throw new Error('Unauthorized to decline this request');
+        throw new Error("Unauthorized to decline this request");
       }
 
       // Simply delete the friend request
-      await deleteDoc(doc(db, 'friendRequests', requestId));
+      await deleteDoc(doc(db, "friendRequests", requestId));
 
       return true;
     } catch (error) {
-      console.error('Error declining friend request:', error);
+      console.error("Error declining friend request:", error);
       throw error;
     }
   }
@@ -146,11 +155,11 @@ export class FriendsService {
     try {
       // Remove each user from the other's friends list
       await Promise.all([
-        updateDoc(doc(db, 'users', currentUserId), {
+        updateDoc(doc(db, "users", currentUserId), {
           friends: arrayRemove(friendUserId),
           updatedAt: serverTimestamp(),
         }),
-        updateDoc(doc(db, 'users', friendUserId), {
+        updateDoc(doc(db, "users", friendUserId), {
           friends: arrayRemove(currentUserId),
           updatedAt: serverTimestamp(),
         }),
@@ -158,7 +167,7 @@ export class FriendsService {
 
       return true;
     } catch (error) {
-      console.error('Error removing friend:', error);
+      console.error("Error removing friend:", error);
       throw error;
     }
   }
@@ -171,7 +180,7 @@ export class FriendsService {
   static async getUserFriends(userId) {
     try {
       // Get user document to get friends array
-      const userDoc = await getDoc(doc(db, 'users', userId));
+      const userDoc = await getDoc(doc(db, "users", userId));
       if (!userDoc.exists()) {
         return [];
       }
@@ -181,25 +190,28 @@ export class FriendsService {
         return [];
       }
 
-      // Get friend details
+      // Get friend details with proper error handling
       const friends = [];
       for (const friendId of friendIds) {
         try {
-          const friendDoc = await getDoc(doc(db, 'users', friendId));
+          const friendDoc = await getDoc(doc(db, "users", friendId));
           if (friendDoc.exists()) {
+            const friendData = friendDoc.data();
             friends.push({
-              id: friendId,
-              ...friendDoc.data(),
+              uid: friendId,
+              id: friendId, // Add id field for compatibility
+              ...friendData,
             });
           }
         } catch (error) {
           console.warn(`Could not fetch friend ${friendId}:`, error);
+          continue; // Skip this friend but continue with others
         }
       }
 
       return friends;
     } catch (error) {
-      console.error('Error getting user friends:', error);
+      console.error("Error getting user friends:", error);
       return [];
     }
   }
@@ -213,18 +225,18 @@ export class FriendsService {
     try {
       // Get requests sent by user
       const sentQuery = query(
-        collection(db, 'friendRequests'),
-        where('from', '==', userId),
-        where('status', '==', 'pending'),
-        orderBy('createdAt', 'desc')
+        collection(db, "friendRequests"),
+        where("from", "==", userId),
+        where("status", "==", "pending"),
+        orderBy("createdAt", "desc")
       );
 
       // Get requests received by user
       const receivedQuery = query(
-        collection(db, 'friendRequests'),
-        where('to', '==', userId),
-        where('status', '==', 'pending'),
-        orderBy('createdAt', 'desc')
+        collection(db, "friendRequests"),
+        where("to", "==", userId),
+        where("status", "==", "pending"),
+        orderBy("createdAt", "desc")
       );
 
       const [sentSnapshot, receivedSnapshot] = await Promise.all([
@@ -237,7 +249,7 @@ export class FriendsService {
       for (const doc of sentSnapshot.docs) {
         const requestData = doc.data();
         try {
-          const toUserDoc = await getDoc(doc(db, 'users', requestData.to));
+          const toUserDoc = await getDoc(doc(db, "users", requestData.to));
           if (toUserDoc.exists()) {
             sentRequests.push({
               id: doc.id,
@@ -245,7 +257,7 @@ export class FriendsService {
               toUser: toUserDoc.data(),
             });
           }
-        } catch (error) {
+        } catch {
           console.warn(`Could not fetch user data for sent request ${doc.id}`);
         }
       }
@@ -255,7 +267,7 @@ export class FriendsService {
       for (const doc of receivedSnapshot.docs) {
         const requestData = doc.data();
         try {
-          const fromUserDoc = await getDoc(doc(db, 'users', requestData.from));
+          const fromUserDoc = await getDoc(doc(db, "users", requestData.from));
           if (fromUserDoc.exists()) {
             receivedRequests.push({
               id: doc.id,
@@ -263,8 +275,10 @@ export class FriendsService {
               fromUser: fromUserDoc.data(),
             });
           }
-        } catch (error) {
-          console.warn(`Could not fetch user data for received request ${doc.id}`);
+        } catch {
+          console.warn(
+            `Could not fetch user data for received request ${doc.id}`
+          );
         }
       }
 
@@ -273,7 +287,7 @@ export class FriendsService {
         received: receivedRequests,
       };
     } catch (error) {
-      console.error('Error getting pending requests:', error);
+      console.error("Error getting pending requests:", error);
       return { sent: [], received: [] };
     }
   }
@@ -287,25 +301,29 @@ export class FriendsService {
   static async searchUsersToAddAsFriends(searchTerm, currentUserId) {
     try {
       // Use privacy-aware search
-      const searchableUsers = await PrivacyService.searchUsers(searchTerm, currentUserId);
-      
+      const searchableUsers = await PrivacyService.searchUsers(
+        searchTerm,
+        currentUserId
+      );
+
       // Get current user's friends to filter them out
-      const currentUserDoc = await getDoc(doc(db, 'users', currentUserId));
+      const currentUserDoc = await getDoc(doc(db, "users", currentUserId));
       const currentUserFriends = currentUserDoc.data()?.friends || [];
-      
+
       // Filter out existing friends and pending requests
       const pendingRequests = await this.getPendingRequests(currentUserId);
       const pendingUserIds = [
-        ...pendingRequests.sent.map(req => req.to),
-        ...pendingRequests.received.map(req => req.from)
+        ...pendingRequests.sent.map((req) => req.to),
+        ...pendingRequests.received.map((req) => req.from),
       ];
-      
-      return searchableUsers.filter(user => 
-        !currentUserFriends.includes(user.id) && 
-        !pendingUserIds.includes(user.id)
+
+      return searchableUsers.filter(
+        (user) =>
+          !currentUserFriends.includes(user.id) &&
+          !pendingUserIds.includes(user.id)
       );
     } catch (error) {
-      console.error('Error searching users for friends:', error);
+      console.error("Error searching users for friends:", error);
       return [];
     }
   }
@@ -318,13 +336,13 @@ export class FriendsService {
    */
   static async areUsersFriends(userId1, userId2) {
     try {
-      const userDoc = await getDoc(doc(db, 'users', userId1));
+      const userDoc = await getDoc(doc(db, "users", userId1));
       if (!userDoc.exists()) return false;
 
       const friends = userDoc.data().friends || [];
       return friends.includes(userId2);
     } catch (error) {
-      console.error('Error checking friendship status:', error);
+      console.error("Error checking friendship status:", error);
       return false;
     }
   }
@@ -340,16 +358,16 @@ export class FriendsService {
       // Check for request in either direction
       const queries = [
         query(
-          collection(db, 'friendRequests'),
-          where('from', '==', fromUserId),
-          where('to', '==', toUserId),
-          where('status', '==', 'pending')
+          collection(db, "friendRequests"),
+          where("from", "==", fromUserId),
+          where("to", "==", toUserId),
+          where("status", "==", "pending")
         ),
         query(
-          collection(db, 'friendRequests'),
-          where('from', '==', toUserId),
-          where('to', '==', fromUserId),
-          where('status', '==', 'pending')
+          collection(db, "friendRequests"),
+          where("from", "==", toUserId),
+          where("to", "==", fromUserId),
+          where("status", "==", "pending")
         ),
       ];
 
@@ -363,7 +381,7 @@ export class FriendsService {
 
       return null;
     } catch (error) {
-      console.error('Error checking existing request:', error);
+      console.error("Error checking existing request:", error);
       return null;
     }
   }
@@ -375,13 +393,13 @@ export class FriendsService {
    */
   static async getFriendCount(userId) {
     try {
-      const userDoc = await getDoc(doc(db, 'users', userId));
+      const userDoc = await getDoc(doc(db, "users", userId));
       if (!userDoc.exists()) return 0;
 
       const friends = userDoc.data().friends || [];
       return friends.length;
     } catch (error) {
-      console.error('Error getting friend count:', error);
+      console.error("Error getting friend count:", error);
       return 0;
     }
   }
@@ -395,8 +413,8 @@ export class FriendsService {
   static async getMutualFriends(userId1, userId2) {
     try {
       const [user1Doc, user2Doc] = await Promise.all([
-        getDoc(doc(db, 'users', userId1)),
-        getDoc(doc(db, 'users', userId2)),
+        getDoc(doc(db, "users", userId1)),
+        getDoc(doc(db, "users", userId2)),
       ]);
 
       if (!user1Doc.exists() || !user2Doc.exists()) return [];
@@ -404,7 +422,7 @@ export class FriendsService {
       const user1Friends = user1Doc.data().friends || [];
       const user2Friends = user2Doc.data().friends || [];
 
-      const mutualFriendIds = user1Friends.filter(friendId => 
+      const mutualFriendIds = user1Friends.filter((friendId) =>
         user2Friends.includes(friendId)
       );
 
@@ -412,26 +430,22 @@ export class FriendsService {
       const mutualFriends = [];
       for (const friendId of mutualFriendIds) {
         try {
-          const friendDoc = await getDoc(doc(db, 'users', friendId));
+          const friendDoc = await getDoc(doc(db, "users", friendId));
           if (friendDoc.exists()) {
             mutualFriends.push({
               id: friendId,
               ...friendDoc.data(),
             });
           }
-        } catch (error) {
+        } catch {
           console.warn(`Could not fetch mutual friend ${friendId}`);
         }
       }
 
       return mutualFriends;
     } catch (error) {
-      console.error('Error getting mutual friends:', error);
+      console.error("Error getting mutual friends:", error);
       return [];
     }
   }
 }
-
-
-
-

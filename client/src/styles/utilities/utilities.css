@@ -426,6 +426,11 @@
     -webkit-backdrop-filter: blur(8px);
   }
 
+  .create-event-modal-content {
+    z-index: 999999 !important;
+    position: relative !important;
+  }
+
   /* === MODAL ANIMATIONS SPECIFIC TO event view === */
   .event-modal-enter {
     animation: modalEnter var(--duration-slower) var(--ease-spring);

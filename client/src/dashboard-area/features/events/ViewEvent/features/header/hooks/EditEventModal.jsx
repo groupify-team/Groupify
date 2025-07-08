@@ -231,7 +231,7 @@ const EditEventModal = ({
 
   return (
     <div
-      className="modal-backdrop-standard event-modal-backdrop-enter overflow-y-auto"
+      className="modal-backdrop-standard event-modal-backdrop-enter overflow-y-auto fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 w-full h-full"
       onClick={handleClose}
     >
       <div className="min-h-full flex items-center justify-center p-2 sm:p-4 event-modal-enter">
@@ -404,7 +404,7 @@ const EditEventModal = ({
                       Location
                     </label>
                     <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
                         <MapPinIcon className="w-3 h-3 sm:w-4 sm:h-4 text-blue-500" />
                       </div>
                       <input
