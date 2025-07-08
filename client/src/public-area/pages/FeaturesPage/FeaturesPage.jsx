@@ -32,7 +32,7 @@ import {
 
 // Import required components and hooks
 // Note: These imports should be adjusted based on your actual file structure
-// import { usePublicNavigation } from "../hooks/usePublicNavigation";
+import { usePublicNavigation } from "../../hooks/usePublicNavigation";
 // import PublicLayout from "../components/layout/PublicLayout";
 // import AccessibilityModal from "../components/modals/AccessibilityModal";
 
@@ -266,13 +266,8 @@ const CallToActionSection = ({ handleGetStarted }) => (
 );
 
 const Features = () => {
-  // Uncomment and adjust these lines based on your actual hook implementation
-  // const {
-  //   handleGetStarted: navHandleGetStarted,
-  //   handleSmoothNavigation,
-  //   headerProps,
-  //   accessibilityModalProps,
-  // } = usePublicNavigation();
+  const { handleSmoothNavigation, headerProps, accessibilityModalProps } =
+    usePublicNavigation();
 
   const [isLoaded, setIsLoaded] = useState(false);
   const [activeCategory, setActiveCategory] = useState("all");

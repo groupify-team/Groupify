@@ -12,9 +12,6 @@ const mockSubscriptionService = {
   enhanceSubscriptionData: jest.fn(),
 };
 
-// Mock the usePlanLimits hook
-const mockUsePlanLimits = jest.fn();
-
 describe("Pricing Plan Enforcement System", () => {
   // Test data for different plans
   const testPlans = {
@@ -468,7 +465,7 @@ describe("Pricing Plan Enforcement System", () => {
       const parseStoredData = (storedValue) => {
         try {
           return JSON.parse(storedValue);
-        } catch (error) {
+        } catch {
           // Return default on corrupted data
           return testPlans.free;
         }

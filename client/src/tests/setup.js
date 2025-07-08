@@ -1,4 +1,5 @@
 // src/tests/setup.js
+/* global jest, beforeAll, afterAll, global */
 import "@testing-library/jest-dom";
 
 // Mock Firebase config based on your actual file structure
