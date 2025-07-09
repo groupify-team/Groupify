@@ -31,8 +31,19 @@ const MAX_PHOTOS_PER_EVENT = 30;
 // Function to check user's event count
 export const getUserEventCount = async (userId) => {
   try {
-    const q = query(collection(db, "events"), where("createdBy", "==", userId));
+    // Count ALL events where user is a member (not just created by user)
+    const q = query(
+      collection(db, "events"), 
+      where("members", "array-contains", userId)
+    );
     const querySnapshot = await getDocs(q);
+    
+    console.log("📊 getUserEventCount:", {
+      userId,
+      totalEvents: querySnapshot.size,
+      queryType: "members array-contains"
+    });
+    
     return querySnapshot.size;
   } catch (error) {
     console.error("Error getting user event count:", error);
@@ -44,6 +55,14 @@ export const getUserEventCount = async (userId) => {
 export const canUserCreateEvent = async (userId) => {
   try {
     const eventCount = await getUserEventCount(userId);
+    
+    console.log("🔍 canUserCreateEvent:", {
+      userId,
+      currentCount: eventCount,
+      limit: MAX_EVENTS_PER_USER,
+      canCreate: eventCount < MAX_EVENTS_PER_USER
+    });
+    
     return eventCount < MAX_EVENTS_PER_USER;
   } catch (error) {
     console.error("Error checking event creation permission:", error);
@@ -210,14 +229,37 @@ export const deleteEvent = async (eventId) => {
 // Get all events for a user
 export const getUserEvents = async (uid) => {
   try {
-    // Use the new validation function instead of the old query
-    const events = await getUserEventsWithValidation(uid);
+    console.log("🔍 getUserEvents called for:", uid);
+    
+    // BYPASS the validation function and use direct query like CreateEventModal
+    const q = query(
+      collection(db, "events"),
+      where("members", "array-contains", uid)
+    );
+    
+    const querySnapshot = await getDocs(q);
+    const events = querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
 
     // Sort events by creation date (newest first)
     events.sort((a, b) => {
       const dateA = new Date(a.createdAt || 0);
       const dateB = new Date(b.createdAt || 0);
       return dateB - dateA;
+    });
+
+    console.log("📊 getUserEvents results:", {
+      userId: uid,
+      totalEvents: events.length,
+      queryType: "members array-contains (direct)",
+      events: events.map(e => ({
+        id: e.id,
+        name: e.name,
+        createdBy: e.createdBy,
+        isCreator: e.createdBy === uid
+      }))
     });
 
     return events;

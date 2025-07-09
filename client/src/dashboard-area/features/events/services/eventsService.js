@@ -12,6 +12,14 @@ import {
   MAX_PHOTOS_PER_EVENT,
 } from "@shared/services/firebase/events";
 
+import { 
+  collection, 
+  query, 
+  where, 
+  getDocs 
+} from "firebase/firestore";
+import { db } from "@shared/services/firebase/config";
+
 import { getEventPhotos } from "@shared/services/firebase/storage";
 import { getUserProfile } from "@firebase-services/users";
 import subscriptionService from "@shared/services/subscriptionService";
@@ -20,21 +28,59 @@ export const eventsService = {
   // Event CRUD operations with enhanced plan validation
   async getEvents(userId) {
     try {
-      return await getUserEvents(userId);
+      // FIXED: Get ALL events where user is a member (not just created by user)
+      const eventsQuery = query(
+        collection(db, "events"),
+        where("members", "array-contains", userId)
+      );
+      const querySnapshot = await getDocs(eventsQuery);
+      
+      const events = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+
+      console.log("📊 Events fetched for user:", {
+        userId,
+        totalEvents: events.length,
+        createdByUser: events.filter(e => e.createdBy === userId).length,
+        memberOfOnly: events.filter(e => e.createdBy !== userId).length
+      });
+
+      return events;
     } catch (error) {
       console.error("Error fetching events:", error);
       throw error;
     }
   },
 
-  async getEventById(eventId) {
-    try {
-      return await getEvent(eventId);
-    } catch (error) {
-      console.error("Error fetching event:", error);
-      throw error;
-    }
-  },
+  async getUserCreatedEvents(userId) {
+  try {
+    const eventsQuery = query(
+      collection(db, "events"),
+      where("createdBy", "==", userId)
+    );
+    const querySnapshot = await getDocs(eventsQuery);
+    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  } catch (error) {
+    console.error("Error fetching user created events:", error);
+    throw error;
+  }
+},
+
+async getUserMemberEvents(userId) {
+  try {
+    const eventsQuery = query(
+      collection(db, "events"),
+      where("members", "array-contains", userId)
+    );
+    const querySnapshot = await getDocs(eventsQuery);
+    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  } catch (error) {
+    console.error("Error fetching user member events:", error);
+    throw error;
+  }
+},
 
   async createEvent(eventData) {
     try {
@@ -49,10 +95,12 @@ export const eventsService = {
       const eventLimit = planFeatures.events;
 
       if (eventLimit !== "unlimited" && currentEventCount >= eventLimit) {
-        throw new Error(
-          `Event limit reached! Your ${subscription.plan} plan allows ${eventLimit} events. You currently have ${currentEventCount} events. Upgrade your plan to Create More Events.`
-        );
-      }
+        const planName = subscription.plan.charAt(0).toUpperCase() + subscription.plan.slice(1);
+      throw new Error(
+        `Event limit reached! Your ${planName} plan allows ${eventLimit} events. You currently participate in ${currentEventCount} events. Upgrade to ${subscription.plan === 'free' ? 'Premium' : 'Pro'} for ${subscription.plan === 'free' ? '50 events' : 'unlimited events'}.`
+      );
+    }
+
 
       // Create the event
       const newEvent = await createEvent({
