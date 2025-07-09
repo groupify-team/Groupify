@@ -86,6 +86,7 @@ export const usePlanLimits = () => {
       }
 
       const limits = CORE_LIMITS[subscription.plan] || CORE_LIMITS.free;
+      const planName = subscription.plan.charAt(0).toUpperCase() + subscription.plan.slice(1);
 
       switch (action) {
         case "create_event":
@@ -93,12 +94,19 @@ export const usePlanLimits = () => {
             limits.events !== "unlimited" &&
             additionalData.currentEventCount >= limits.events
           ) {
+            // FIXED: More helpful error message
+            const nextPlan = subscription.plan === 'free' ? 'Premium' : 'Pro';
+            const nextPlanLimit = subscription.plan === 'free' ? '50 events' : 'unlimited events';
+            
             return {
               allowed: false,
-              reason: `Event limit reached (${limits.events} events)`,
+              reason: `Event limit reached! Your ${planName} plan allows ${limits.events} events. You currently participate in ${additionalData.currentEventCount} events`,
               upgradeRequired: true,
               currentUsage: additionalData.currentEventCount,
               limit: limits.events,
+              suggestedPlan: nextPlan,
+              suggestedPlanLimit: nextPlanLimit,
+              upgradeMessage: `Upgrade to ${nextPlan} for ${nextPlanLimit}!`
             };
           }
           break;
@@ -110,7 +118,7 @@ export const usePlanLimits = () => {
             if (currentEventPhotos + newPhotoCount > limits.photosPerEvent) {
               return {
                 allowed: false,
-                reason: `event photo limit reached (${limits.photosPerEvent} photos per event)`,
+                reason: `Photo limit reached! Your ${planName} plan allows ${limits.photosPerEvent} photos per event. This event has ${currentEventPhotos} photos`,
                 upgradeRequired: true,
                 currentUsage: currentEventPhotos,
                 limit: limits.photosPerEvent,
@@ -129,7 +137,7 @@ export const usePlanLimits = () => {
             if (newStorageUsed > storageBytes) {
               return {
                 allowed: false,
-                reason: `Storage limit exceeded (${limits.storageGB}GB limit)`,
+                reason: `Storage limit exceeded! Your ${planName} plan includes ${limits.storageGB}GB storage`,
                 upgradeRequired: true,
                 currentUsage: usage.storage.used,
                 limit: storageBytes,
@@ -147,7 +155,7 @@ export const usePlanLimits = () => {
             if (currentMembers + newMemberCount > limits.membersPerEvent) {
               return {
                 allowed: false,
-                reason: `Member limit reached (${limits.membersPerEvent} members per event)`,
+                reason: `Member limit reached! Your ${planName} plan allows ${limits.membersPerEvent} members per event`,
                 upgradeRequired: true,
                 currentUsage: currentMembers,
                 limit: limits.membersPerEvent,

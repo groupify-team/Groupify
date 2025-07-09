@@ -18,8 +18,10 @@ import { usePlanLimits } from "../../../../shared/hooks/usePlanLimits";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "@shared/services/firebase/config";
 import subscriptionService from "@shared/services/subscriptionService";
+import { useNavigate } from "react-router-dom";
 
 const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
+  const navigate = useNavigate();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [location, setLocation] = useState("");
@@ -33,7 +35,6 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
   const [locationSuggestions, setLocationSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [currentEventCount, setCurrentEventCount] = useState(0);
-  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
 
   // Plan limits integration
   const {
@@ -55,7 +56,6 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
       setStartDate("");
       setEndDate("");
       setError(null);
-      setShowUpgradePrompt(false);
       onClose();
     }
   }, [loading, onClose]);
@@ -78,7 +78,7 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
         console.log("🔍 Event Count Debug:", {
           actualFirestoreCount: actualCount,
           subscriptionServiceCount: usageFromService,
-          currentStateCount: currentEventCount,
+          previousStateCount: currentEventCount,
           userId: currentUser.uid,
           events: querySnapshot.docs.map((doc) => ({
             id: doc.id,
@@ -94,7 +94,7 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
     } catch (error) {
       console.error("Error loading event count:", error);
     }
-  }, [currentUser, currentEventCount]);
+  }, [currentUser]); // Removed currentEventCount from dependencies
 
   useEffect(() => {
     const handleEscape = (e) => {
@@ -115,6 +115,14 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
       loadEventCount();
     }
   }, [isOpen, currentUser, loadEventCount]);
+
+  // FIXED: Also reload when modal opens again (to catch events created outside this modal)
+  useEffect(() => {
+    if (isOpen) {
+      // Always reload the event count when modal opens to ensure accuracy
+      loadEventCount();
+    }
+  }, [isOpen, loadEventCount]);
 
   useEffect(() => {
     if (isOpen) {
@@ -174,6 +182,8 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
     }
   };
 
+  // Replace the handleSubmit function in CreateEventModal.jsx (around line 140-230)
+
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
 
@@ -187,52 +197,33 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
       return;
     }
 
-    // Check plan limits before proceeding
-    // Only perform this check if the current count is at or exceeding the limit
+    // Check plan limits
     const planFeatures = getPlanFeatures();
-    const planLimit = planFeatures?.events || 5;
-
-    console.log("Event count check:", { currentEventCount, planLimit }); // Debug log
-
-    if (planLimit !== "unlimited" && currentEventCount >= planLimit) {
-      const limitCheck = canPerformAction("create_event", {
-        currentEventCount,
-      });
-
-      if (!limitCheck.allowed) {
-        if (limitCheck.upgradeRequired) {
-          setShowUpgradePrompt(true);
-          setError(limitCheck.reason);
-          return;
-        } else {
-          setError(limitCheck.reason);
-          return;
+    const eventLimit = planFeatures?.events || 5;
+    
+    if (currentEventCount >= eventLimit && eventLimit !== "unlimited") {
+      setError(`You've reached your ${isFreePlan ? "Free" : "Premium"} plan limit of ${eventLimit} events`);
+      
+      toast.error(
+        `You've reached your ${isFreePlan ? "Free" : "Premium"} plan limit!`, 
+        {
+          duration: 8000,
+          action: {
+            label: `Upgrade to ${isFreePlan ? "Premium" : "Pro"}`,
+            onClick: () => {
+              const targetPlan = isFreePlan ? "premium" : "pro";
+              handleClose();
+              navigate(`/pricing?from=events-limit&plan=${targetPlan}`);
+            },
+          },
         }
-      }
+      );
+      return;
     }
 
     try {
       setLoading(true);
       setError(null);
-
-      const freshCount = currentEventCount;
-
-      // Get plan features
-      const planFeatures = getPlanFeatures();
-      const planLimit = planFeatures?.events || 5;
-
-      console.log("Final count check:", { freshCount, planLimit }); // Debug log
-
-      // Check limits with current data
-      if (planLimit !== "unlimited" && freshCount >= planLimit) {
-        setError(
-          `Event limit reached! Your ${
-            planFeatures?.planName || "current"
-          } plan allows ${planLimit} events. You currently have ${freshCount} events.`
-        );
-        setLoading(false);
-        return;
-      }
 
       const newEvent = await eventsService.createEvent({
         name,
@@ -253,12 +244,14 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
       setcreatedEventName(name);
 
       // Show success toast with remaining events info
+      const planFeatures = getPlanFeatures();
       const remaining =
-        planLimit === "unlimited" ? "unlimited" : planLimit - (freshCount + 1);
+        planFeatures?.events === "unlimited" ? "unlimited" : planFeatures?.events - (currentEventCount + 1);
+      
       toast.success(
         `Event "${name}" created successfully! ${
           remaining !== "unlimited"
-            ? `(${freshCount + 1}/${planLimit} events)`
+            ? `(${currentEventCount + 1}/${planFeatures?.events} events)`
             : ""
         }`,
         { duration: 4000 }
@@ -270,29 +263,37 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
       setLocation("");
       setStartDate("");
       setEndDate("");
-      setShowSuccessModal(true);
-
+      
       // Notify parent component
       if (onEventCreated) {
         onEventCreated(newEvent);
       }
 
-      // Close modal
-      onClose();
+      // Show success modal (don't close main modal yet)
+      setShowSuccessModal(true);
     } catch (error) {
       console.error("Error creating event:", error);
-      if (error.message.includes("Event limit reached")) {
+      
+      if (error.message.includes("Event limit reached") || error.message.includes("limit reached")) {
         setError(error.message);
+        toast.error(error.message, {
+          duration: 6000,
+          action: {
+            label: "Upgrade Plan", 
+            onClick: () => {
+              const targetPlan = isFreePlan ? "premium" : "pro";
+              navigate(`/pricing?from=events-error&plan=${targetPlan}`);
+            },
+          },
+        });
       } else {
-        setError("Failed to create event. Please try again.");
+        const fallbackError = "Failed to create event. Please try again.";
+        setError(fallbackError);
+        toast.error(fallbackError, { duration: 4000 });
       }
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleUpgradeClick = () => {
-    setShowUpgradePrompt(false);
   };
 
   if (!isOpen) return null;
@@ -365,15 +366,14 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
                     {planFeatures?.events === "unlimited"
                       ? "∞"
                       : planFeatures?.events || 5}
-                    {/* Debug info */}
-                    <span className="text-xs text-red-500 ml-2">
-                      (Debug: {currentEventCount})
-                    </span>
                   </span>
 
                   {(isFreePlan || isPremiumPlan) && (
                     <button
-                      onClick={() => setShowUpgradePrompt(true)}
+                      onClick={() => {
+                        const targetPlan = isFreePlan ? "premium" : "pro";
+                        navigate(`/pricing?from=events-modal&plan=${targetPlan}`);
+                      }}
                       className="flex items-center gap-1 text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium"
                     >
                       <ArrowUpIcon className="w-3 h-3" />
@@ -408,63 +408,42 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
             </div>
           )}
 
+          {/* Event Limit Warning Banner */}
+          {!planLoading && planFeatures && currentEventCount >= (planFeatures?.events || 5) && planFeatures?.events !== "unlimited" && (
+            <div className="mx-6 mt-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl p-4">
+              <div className="flex items-center gap-3">
+                <ExclamationTriangleIcon className="w-5 h-5 text-yellow-600 dark:text-yellow-400 flex-shrink-0" />
+                <div className="flex-1">
+                  <h4 className="font-semibold text-yellow-800 dark:text-yellow-200 text-sm mb-1">
+                    Event Limit Reached ({currentEventCount}/{planFeatures?.events || 5})
+                  </h4>
+                  <p className="text-yellow-700 dark:text-yellow-300 text-sm">
+                    You've reached your {isFreePlan ? "Free" : "Premium"} plan limit. 
+                    {isFreePlan ? " Upgrade to Premium for 50 events or Pro for unlimited events!" : " Upgrade to Pro for unlimited events!"}
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    const targetPlan = isFreePlan ? "premium" : "pro";
+                    handleClose();
+                    navigate(`/pricing?from=events-limit&plan=${targetPlan}`);
+                  }}
+                  className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors inline-flex items-center gap-2 flex-shrink-0"
+                >
+                  <StarIcon className="w-4 h-4" />
+                  Upgrade to {isFreePlan ? "Premium" : "Pro"}
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Compact Form */}
           <div className="p-6 space-y-4">
             {/* Error message */}
             {error && (
-              <div
-                className={`border px-4 py-3 rounded-xl flex items-center gap-2 ${
-                  showUpgradePrompt
-                    ? "bg-blue-50/80 dark:bg-blue-900/30 border-blue-200/50 dark:border-blue-800/50 text-blue-700 dark:text-blue-400"
-                    : "bg-red-50/80 dark:bg-red-900/30 border-red-200/50 dark:border-red-800/50 text-red-700 dark:text-red-400"
-                }`}
-              >
+              <div className="bg-red-50/80 dark:bg-red-900/30 border border-red-200/50 dark:border-red-800/50 text-red-700 dark:text-red-400 px-4 py-3 rounded-xl flex items-center gap-2">
                 <ExclamationTriangleIcon className="w-4 h-4 flex-shrink-0" />
                 <span className="text-sm">{error}</span>
-
-                {showUpgradePrompt && (
-                  <button
-                    onClick={handleUpgradeClick}
-                    className="ml-auto bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg text-xs font-medium transition-colors"
-                  >
-                    Upgrade Now
-                  </button>
-                )}
-              </div>
-            )}
-
-            {/* Upgrade prompt for plan limits */}
-            {showUpgradePrompt && !error && (
-              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/50 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <StarIcon className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-1">
-                      Upgrade to Create More Events
-                    </h4>
-                    <p className="text-sm text-blue-700 dark:text-blue-300 mb-3">
-                      You've reached your {planFeatures?.events || 0} event
-                      limit. Upgrade to {isPremiumPlan ? "Pro" : "Premium"} for{" "}
-                      {isPremiumPlan ? "unlimited" : "more"} events!
-                    </p>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={handleUpgradeClick}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                      >
-                        Upgrade Plan
-                      </button>
-                      <button
-                        onClick={() => setShowUpgradePrompt(false)}
-                        className="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
-                </div>
               </div>
             )}
 
@@ -480,7 +459,7 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
                 className="w-full px-3 py-2.5 bg-white/70 dark:bg-gray-700/70 border border-white/30 dark:border-gray-600/30 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                 placeholder="Summer Vacation"
                 required
-                disabled={loading || showUpgradePrompt}
+                disabled={loading}
               />
             </div>
 
@@ -495,7 +474,7 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
                 rows="2"
                 className="w-full px-3 py-2.5 bg-white/70 dark:bg-gray-700/70 border border-white/30 dark:border-gray-600/30 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 resize-none"
                 placeholder="Event description..."
-                disabled={loading || showUpgradePrompt}
+                disabled={loading}
               />
             </div>
 
@@ -505,9 +484,6 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
                 Location
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <MapPinIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-indigo-500 pointer-events-none z-10" />
-                </div>
                 <input
                   type="text"
                   value={location}
@@ -515,14 +491,14 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
                     setLocation(e.target.value);
                     handleLocationSearch(e.target.value);
                   }}
-                  className="w-full pl-10 pr-3 py-2.5 bg-white/70 dark:bg-gray-700/70 border border-white/30 dark:border-gray-600/30 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                  className="w-full px-3 py-2.5 bg-white/70 dark:bg-gray-700/70 border border-white/30 dark:border-gray-600/30 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                   placeholder="Paris, France"
-                  disabled={loading || showUpgradePrompt}
+                  disabled={loading}
                 />
 
                 {/* Dropdown suggestions */}
                 {showSuggestions && locationSuggestions.length > 0 && (
-                  <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                  <div className="absolute z-20 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto">
                     {locationSuggestions
                       .slice(0, 4)
                       .map((suggestion, index) => (
@@ -549,37 +525,27 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
                 <label className="block text-sm font-medium text-gray-800 dark:text-gray-200">
                   Start Date
                 </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
-                    <CalendarIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-green-500 pointer-events-none z-10" />
-                  </div>
-                  <input
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    className="w-full pl-10 pr-3 py-2.5 bg-white/70 dark:bg-gray-700/70 border border-white/30 dark:border-gray-600/30 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all text-gray-900 dark:text-white text-sm"
-                    disabled={loading || showUpgradePrompt}
-                  />
-                </div>
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="w-full px-3 py-2.5 bg-white/70 dark:bg-gray-700/70 border border-white/30 dark:border-gray-600/30 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all text-gray-900 dark:text-white text-sm"
+                  disabled={loading}
+                />
               </div>
 
               <div className="space-y-1">
                 <label className="block text-sm font-medium text-gray-800 dark:text-gray-200">
                   End Date
                 </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
-                    <CalendarIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-purple-500 pointer-events-none z-10" />
-                  </div>
-                  <input
-                    type="date"
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    min={startDate}
-                    className="w-full pl-10 pr-3 py-2.5 bg-white/70 dark:bg-gray-700/70 border border-white/30 dark:border-gray-600/30 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all text-gray-900 dark:text-white text-sm"
-                    disabled={loading || showUpgradePrompt}
-                  />
-                </div>
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  min={startDate}
+                  className="w-full px-3 py-2.5 bg-white/70 dark:bg-gray-700/70 border border-white/30 dark:border-gray-600/30 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all text-gray-900 dark:text-white text-sm"
+                  disabled={loading}
+                />
               </div>
             </div>
 
@@ -597,18 +563,17 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
               <button
                 type="button"
                 onClick={handleSubmit}
-                disabled={loading || !name.trim() || showUpgradePrompt}
-                className="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-400 text-white py-2.5 px-4 rounded-xl font-medium transition-all transform hover:scale-105 shadow-lg disabled:hover:scale-100 flex items-center justify-center gap-2"
+                disabled={loading || !name.trim()}
+                className={`flex-1 py-2.5 px-4 rounded-xl font-medium transition-all transform shadow-lg flex items-center justify-center gap-2 ${
+                  loading || !name.trim()
+                    ? "bg-gray-400 text-gray-600 cursor-not-allowed"
+                    : "bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white hover:scale-105"
+                } ${!loading && name.trim() ? "" : "hover:scale-100"}`}
               >
                 {loading ? (
                   <>
                     <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                     <span className="text-sm">Creating...</span>
-                  </>
-                ) : showUpgradePrompt ? (
-                  <>
-                    <StarIcon className="w-4 h-4" />
-                    <span className="text-sm">Upgrade Required</span>
                   </>
                 ) : (
                   <>
@@ -656,6 +621,7 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
             <button
               onClick={() => {
                 setShowSuccessModal(false);
+                // Close the main modal after success modal is dismissed
                 onClose();
               }}
               className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white py-3 px-4 rounded-xl font-medium transition-all"
