@@ -39,8 +39,10 @@ import { usePlanLimits } from "@shared/hooks/usePlanLimits";
 import TabSwitcher from "@/dashboard-area/components/ui/TabSwitcher";
 import FilterDropdown from "@/dashboard-area/components/ui/FilterDropdown";
 
-// event Components
+// Event Components
 import EventCard from "@/dashboard-area/features/events/components/EventCard";
+import EventsLimitBanner from "@/dashboard-area/features/events/components/EventsLimitBanner"; // New import
+
 const CreateEventModal = lazy(() =>
   import("@/dashboard-area/features/events/components/CreateEventModal")
 );
@@ -468,6 +470,13 @@ const EventsSection = () => {
           </button>
         )}
       </div>
+
+      {/* Events Limit Banner - NEW ADDITION */}
+      {eventsActiveTab === "events" && (
+        <EventsLimitBanner 
+          currentEventCount={events.length}
+        />
+      )}
 
       {/* Mobile Tab Switcher */}
       {isMobile && (

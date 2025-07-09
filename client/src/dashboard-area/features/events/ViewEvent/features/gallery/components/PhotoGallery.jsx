@@ -2,6 +2,8 @@ import React, { useState, useEffect, useMemo, useCallback, memo } from "react";
 import { toast } from "react-hot-toast";
 import { uploadPhoto } from "@shared/services/firebase/storage";
 import { useAuth } from "@auth/hooks/useAuth";
+import { usePlanLimits } from "@shared/hooks/usePlanLimits";
+import PhotoLimitBanner from "./PhotoLimitBanner";
 
 import {
   PhotoIcon,
@@ -16,16 +18,23 @@ const PhotoGallery = memo(
   ({
     photos = [],
     eventId,
-    maxPhotos = 100,
     onPhotoSelect,
     onShowAllPhotos,
     onPhotoUploaded,
   }) => {
     const { currentUser } = useAuth();
+    const { subscription } = usePlanLimits();
     const [localPhotos, setLocalPhotos] = useState(photos);
     const [showModal, setShowModal] = useState(null); // 'upload'
     const [loading, setLoading] = useState(false);
     const [gridCols, setGridCols] = useState(6);
+
+    // Get the actual photo limit from subscription plan
+    const maxPhotos = useMemo(() => {
+      if (!subscription) return 30; // Free plan default
+      const limit = subscription.features?.photosPerEvent;
+      return limit === "unlimited" ? Infinity : (limit || 30);
+    }, [subscription]);
 
     useEffect(() => {
       setLocalPhotos(photos);
@@ -62,10 +71,26 @@ const PhotoGallery = memo(
       async (files) => {
         if (!files?.length || !eventId || !currentUser?.uid) return;
 
-        const availableSlots = maxPhotos - localPhotos.length;
+        const availableSlots = maxPhotos === Infinity ? files.length : maxPhotos - localPhotos.length;
+        
+        // Show popup if trying to upload more than allowed
         if (availableSlots <= 0) {
-          toast.error("Photo limit reached!");
+          toast.error("Photo limit reached! Please upgrade your plan to add more photos.", {
+            duration: 4000,
+            icon: "🚫",
+          });
           return;
+        }
+
+        // Show popup if trying to upload more files than available slots
+        if (files.length > availableSlots) {
+          toast.error(
+            `You can only upload ${availableSlots} more photo${availableSlots === 1 ? '' : 's'}. ${files.length - availableSlots} photo${files.length - availableSlots === 1 ? '' : 's'} will be skipped.`,
+            {
+              duration: 5000,
+              icon: "⚠️",
+            }
+          );
         }
 
         const filesToUpload = Array.from(files).slice(0, availableSlots);
@@ -125,6 +150,9 @@ const PhotoGallery = memo(
 
     return (
       <>
+        {/* Photo Limit Banner */}
+        <PhotoLimitBanner currentPhotoCount={localPhotos.length} />
+        
         <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-xl shadow-lg border border-white/20 dark:border-gray-700/50">
           {/* Header */}
           <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 dark:from-purple-900/30 dark:to-pink-900/30 p-4 border-b border-purple-200/30 dark:border-purple-800/30">
@@ -139,7 +167,10 @@ const PhotoGallery = memo(
                   </h2>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
                     {localPhotos.length} photos •{" "}
-                    {Math.max(0, maxPhotos - localPhotos.length)} slots left
+                    {maxPhotos === Infinity 
+                      ? "unlimited slots" 
+                      : `${Math.max(0, maxPhotos - localPhotos.length)} slots left`
+                    }
                   </p>
                 </div>
               </div>
@@ -147,8 +178,13 @@ const PhotoGallery = memo(
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setShowModal("upload")}
-                  disabled={loading}
-                  className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-3 py-2 rounded-lg text-sm flex items-center gap-2 disabled:opacity-50"
+                  disabled={loading || (maxPhotos !== Infinity && localPhotos.length >= maxPhotos)}
+                  className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-3 py-2 rounded-lg text-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  title={
+                    maxPhotos !== Infinity && localPhotos.length >= maxPhotos
+                      ? "Photo limit reached. Upgrade your plan to add more photos."
+                      : "Add Photos"
+                  }
                 >
                   <PlusIcon className="w-4 h-4" />
                   Add Photos
@@ -172,10 +208,18 @@ const PhotoGallery = memo(
                 </p>
                 <button
                   onClick={() => setShowModal("upload")}
-                  className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-6 py-3 rounded-xl font-medium flex items-center gap-2 mx-auto"
+                  disabled={maxPhotos !== Infinity && localPhotos.length >= maxPhotos}
+                  className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-6 py-3 rounded-xl font-medium flex items-center gap-2 mx-auto disabled:opacity-50 disabled:cursor-not-allowed"
+                  title={
+                    maxPhotos !== Infinity && localPhotos.length >= maxPhotos
+                      ? "Photo limit reached. Upgrade your plan to add more photos."
+                      : "Upload First Photos"
+                  }
                 >
                   <PlusIcon className="w-5 h-5" />
-                  Upload First Photos
+                  {maxPhotos !== Infinity && localPhotos.length >= maxPhotos
+                    ? "Limit Reached"
+                    : "Upload First Photos"}
                 </button>
               </div>
             ) : (
@@ -235,7 +279,14 @@ const PhotoGallery = memo(
           <Modal onClose={() => !loading && setShowModal(null)}>
             <div className="bg-gradient-to-r from-indigo-500 to-purple-500 p-4 rounded-t-xl">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-bold text-white">Upload Photos</h3>
+                <div>
+                  <h3 className="text-lg font-bold text-white">Upload Photos</h3>
+                  {maxPhotos !== Infinity && (
+                    <p className="text-indigo-100 text-sm">
+                      {Math.max(0, maxPhotos - localPhotos.length)} slots available
+                    </p>
+                  )}
+                </div>
                 {!loading && (
                   <button
                     onClick={() => setShowModal(null)}
@@ -267,7 +318,22 @@ const PhotoGallery = memo(
                     accept="image/*"
                     className="hidden"
                     disabled={loading}
-                    onChange={(e) => handleFileUpload(e.target.files)}
+                    onChange={(e) => {
+                      const files = e.target.files;
+                      if (files?.length) {
+                        // Check limit before processing
+                        const availableSlots = maxPhotos === Infinity ? files.length : maxPhotos - localPhotos.length;
+                        if (availableSlots <= 0) {
+                          toast.error("Photo limit reached! Please upgrade your plan to add more photos.", {
+                            duration: 4000,
+                            icon: "🚫",
+                          });
+                          e.target.value = ''; // Reset file input
+                          return;
+                        }
+                        handleFileUpload(files);
+                      }
+                    }}
                   />
                 </label>
               </div>
