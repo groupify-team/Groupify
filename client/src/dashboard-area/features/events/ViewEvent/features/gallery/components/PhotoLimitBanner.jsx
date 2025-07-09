@@ -49,15 +49,16 @@ const PhotoLimitBanner = ({ currentPhotoCount, onUpgrade }) => {
   };
 
   const getBannerContent = () => {
+    // CHANGED: Both conditions now use yellow colors
     if (isAtLimit) {
       return {
         title: "Photo Limit Reached",
         message: `You've used all ${photoLimit} photo slots for this event.`,
         action: "Upgrade Now",
-        bgColor: "bg-red-50 dark:bg-red-900/20",
-        borderColor: "border-red-200 dark:border-red-800",
-        textColor: "text-red-800 dark:text-red-400",
-        buttonColor: "bg-red-600 hover:bg-red-700",
+        bgColor: "bg-yellow-50 dark:bg-yellow-900/20",
+        borderColor: "border-yellow-200 dark:border-yellow-800",
+        textColor: "text-yellow-800 dark:text-yellow-400",
+        buttonColor: "bg-yellow-600 hover:bg-yellow-700",
       };
     } else {
       return {

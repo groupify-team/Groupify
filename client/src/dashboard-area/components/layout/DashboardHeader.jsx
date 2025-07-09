@@ -1,4 +1,4 @@
-// DashboardHeader.jsx - FIXED VERSION with proper sticky positioning
+// DashboardHeader.jsx - FIXED VERSION with correct profile image field
 import React, { useState, useRef, useEffect } from "react";
 import { useDashboardData } from "@dashboard/hooks/useDashboardData";
 import {
@@ -94,9 +94,18 @@ const DashboardHeader = ({
     );
   };
 
+  // FIXED: Helper function to get the correct profile image URL
+  const getProfileImageUrl = (user) => {
+    // Check multiple possible field names for the profile image
+    return (
+      user?.profilePicture ||  // Primary field used in your app
+      user?.photoURL ||        // Firebase Auth field (fallback)
+      user?.profileImage ||    // Alternative field name
+      "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg" // Default fallback
+    );
+  };
+
   return (
-    // ?? FIXED: Changed from 'sticky top-0' to 'fixed top-0 left-0 right-0'
-    // This ensures the header is ALWAYS pinned to the top regardless of scroll
     <header
       className="fixed top-0 bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg shadow-sm border-b border-white/20 dark:border-gray-700/50 z-50 transition-all duration-300"
       style={{
@@ -104,7 +113,6 @@ const DashboardHeader = ({
         right: "0px",
       }}
     >
-      {" "}
       <div className="w-full px-2 sm:px-4 lg:px-8">
         <div className="flex justify-between items-center h-12 sm:h-14 w-full">
           {/* Left Section */}
@@ -213,12 +221,12 @@ const DashboardHeader = ({
                             >
                               <div className="flex items-center gap-3">
                                 <img
-                                  src={
-                                    request.photoURL ||
-                                    "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg"
-                                  }
+                                  src={getProfileImageUrl(request)}
                                   alt="Profile"
-                                  className="w-8 h-8 rounded-full"
+                                  className="w-8 h-8 rounded-full object-cover"
+                                  onError={(e) => {
+                                    e.target.src = "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg";
+                                  }}
                                 />
                                 <div className="flex-1">
                                   <p className="text-sm font-medium text-gray-900 dark:text-white">
@@ -233,7 +241,7 @@ const DashboardHeader = ({
                             </div>
                           ))}
 
-                          {/* event Invitations */}
+                          {/* Event Invitations */}
                           {eventInvites?.map((invite, index) => (
                             <div
                               key={`event-${index}`}
@@ -245,7 +253,7 @@ const DashboardHeader = ({
                                 </div>
                                 <div className="flex-1">
                                   <p className="text-sm font-medium text-gray-900 dark:text-white">
-                                    event invitation: {invite.eventName}
+                                    Event invitation: {invite.eventName}
                                   </p>
                                   <p className="text-xs text-gray-500 dark:text-gray-400">
                                     From {invite.inviterName}
@@ -265,10 +273,7 @@ const DashboardHeader = ({
             {/* User Avatar with Mobile Menu */}
             <div className="relative" ref={mobileUserMenuRef}>
               <img
-                src={
-                  userData?.photoURL ||
-                  "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg"
-                }
+                src={getProfileImageUrl(userData)}
                 alt="Profile"
                 onClick={() => {
                   if (currentIsMobile) {
@@ -280,6 +285,9 @@ const DashboardHeader = ({
                     ? "cursor-pointer hover:ring-2 hover:ring-indigo-500"
                     : "cursor-default"
                 }`}
+                onError={(e) => {
+                  e.target.src = "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg";
+                }}
               />
 
               {/* Mobile User Menu */}
@@ -295,12 +303,12 @@ const DashboardHeader = ({
                   <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-4 py-3">
                     <div className="flex items-center gap-3">
                       <img
-                        src={
-                          userData?.photoURL ||
-                          "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg"
-                        }
+                        src={getProfileImageUrl(userData)}
                         alt="Profile"
                         className="w-10 h-10 rounded-full object-cover border-2 border-white/30"
+                        onError={(e) => {
+                          e.target.src = "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg";
+                        }}
                       />
                       <div className="flex-1 min-w-0">
                         <p className="text-white font-semibold text-sm truncate">
