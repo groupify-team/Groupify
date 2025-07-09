@@ -8,26 +8,26 @@ import React, {
   useTransition,
 } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-
-// Performance monitoring
 import { useRenderTracker } from "@shared/hooks/usePerformanceMonitor";
-
-// Context
 import { useAuth } from "@auth/hooks/useAuth";
-
-// Optimized components - load immediately
 import EventHeader from "./features/header/components/EventHeader";
 import EventMembersCard from "./features/members/components/EventMembersCard";
 import InvitePeopleCard from "./features/members/components/InvitePeopleCard";
 import EventStatistics from "./features/statistics/components/EventStatistics";
-
-// Use PhotoGallery (with performance optimizations)
 import PhotoGallery from "./features/gallery/components/PhotoGallery";
+import { useEventData } from "./hooks/useEventData";
+import { usePhotoOperations } from "./features/gallery/hooks/usePhotoOperations";
+import { useEventMembers } from "./features/members/hooks/useEventMembers";
+import { usePhotoModal } from "./features/gallery/hooks/usePhotoModal";
+import { useFaceRecognition } from "./features/faceRecognition/hooks/useFaceRecognition";
 
-// Lazy load heavy components with preloading
+import {
+  getPhotoLimitStatus,
+  getRemainingPhotoSlots,
+} from "./features/gallery/utils/photoHelpers";
+
 const UserProfileModal = lazy(() =>
   import("@shared/components/user/UserProfileModal").then((module) => {
-    // Preload this component when hovering over member cards
     return { default: module.default };
   })
 );
@@ -35,7 +35,6 @@ const UserProfileModal = lazy(() =>
 const FaceRecognitionCard = lazy(() =>
   import("./features/faceRecognition/components/FaceRecognitionCard").then(
     (module) => {
-      // Only load when user has photos
       return { default: module.default };
     }
   )
@@ -49,7 +48,6 @@ const FaceRecognitionResults = lazy(() =>
   import("./features/faceRecognition/components/FaceRecognitionResults")
 );
 
-// Lazy load modals - only when needed
 const PhotoModal = lazy(() => import("./components/PhotoModal"));
 
 const AllPhotosModal = lazy(() =>
@@ -60,19 +58,6 @@ const EditEventModal = lazy(() =>
   import("./features/header/hooks/EditEventModal")
 );
 
-import { useEventData } from "./hooks/useEventData";
-import { usePhotoOperations } from "./features/gallery/hooks/usePhotoOperations";
-import { useEventMembers } from "./features/members/hooks/useEventMembers";
-import { usePhotoModal } from "./features/gallery/hooks/usePhotoModal";
-import { useFaceRecognition } from "./features/faceRecognition/hooks/useFaceRecognition";
-
-// Utils
-import {
-  getPhotoLimitStatus,
-  getRemainingPhotoSlots,
-} from "./features/gallery/utils/photoHelpers";
-
-// Performance: Recreate original loading design
 const EventLoadingSpinner = () => (
   <div className="flex items-center justify-center min-h-[60vh]">
     <div className="text-center">

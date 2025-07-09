@@ -3,14 +3,11 @@ import { useCallback } from "react";
 
 export const useAuthAnimations = () => {
   const navigate = useNavigate();
-
-  // Enhanced navigation with smooth loading overlay
   const navigateWithTransition = useCallback(
     (targetPath, options = {}) => {
       const { replace = false, showLoadingOverlay = true } = options;
 
       if (showLoadingOverlay) {
-        // Create and show loading overlay
         const overlay = document.createElement("div");
         overlay.className =
           "fixed inset-0 bg-white dark:bg-gray-900 z-50 flex items-center justify-center transition-opacity duration-300";
@@ -22,17 +19,12 @@ export const useAuthAnimations = () => {
         </div>
       `;
         document.body.appendChild(overlay);
-
-        // Fade in overlay smoothly
         requestAnimationFrame(() => {
           overlay.style.opacity = "1";
         });
 
-        // Navigate after overlay is visible
         setTimeout(() => {
           navigate(targetPath, { replace });
-
-          // Remove overlay after navigation
           setTimeout(() => {
             if (overlay && overlay.parentNode) {
               overlay.style.opacity = "0";
@@ -45,7 +37,6 @@ export const useAuthAnimations = () => {
           }, 100);
         }, 300);
       } else {
-        // Simple navigation without overlay
         setTimeout(() => {
           navigate(targetPath, { replace });
         }, 150);
@@ -53,8 +44,6 @@ export const useAuthAnimations = () => {
     },
     [navigate]
   );
-
-  // Legacy smooth transition for backward compatibility
   const smoothTransition = useCallback(
     (targetPath) => {
       navigateWithTransition(targetPath, { showLoadingOverlay: true });
@@ -62,20 +51,17 @@ export const useAuthAnimations = () => {
     [navigateWithTransition]
   );
 
-  // Fade in effect for page load
   const fadeIn = useCallback((duration = 500) => {
     document.body.style.transition = `opacity ${duration}ms ease-in-out`;
     document.body.style.opacity = "1";
   }, []);
 
-  // Reset body styles
   const resetBodyStyles = useCallback(() => {
     document.body.style.transition = "";
     document.body.style.opacity = "1";
     document.body.style.transform = "";
   }, []);
 
-  // Form shake animation for errors
   const shakeForm = useCallback((formRef) => {
     if (formRef.current) {
       formRef.current.style.animation = "shake 0.5s ease-in-out";

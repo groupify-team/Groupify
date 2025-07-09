@@ -133,6 +133,7 @@ export const useEventMembers = (currentUserId, event, setEvent) => {
         ...prevUser,
         __isPending: true,
       }));
+      setSelectedUser(null);
     } catch (error) {
       console.error("? Failed to send friend request:", error);
       throw error;

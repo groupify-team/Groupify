@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useAuth } from "@auth/hooks/useAuth";
-
 import { doc, onSnapshot, getDoc } from "firebase/firestore";
 import { db } from "@shared/services/firebase/config";
 import {
@@ -20,7 +19,6 @@ import {
 } from "@firebase-services/users";
 import toast from "react-hot-toast";
 
-// Updated import to use the corrected UserProfileModal
 import AddFriend from "@dashboard/features/friends/components/AddFriend";
 import UserProfileModal from "@shared/components/user/UserProfileModal";
 
@@ -219,16 +217,8 @@ const FriendsSection = () => {
 
   const handleRemoveFriend = async (friendUid) => {
     try {
-      // Call the removeFriend function
       await removeFriend(currentUser.uid, friendUid);
-
-      // The real-time listener will automatically update the friends list
-      // No need to manually refresh since we have onSnapshot listeners
-
-      // Show success message
       toast.success("Friend removed!");
-
-      // Close the user profile modal
       setShowUserProfileModal(false);
       setSelectedUser(null);
     } catch (error) {
@@ -263,13 +253,10 @@ const FriendsSection = () => {
 
   const handleViewProfile = (friend) => {
     console.log("🔍 handleViewProfile called with:", friend);
-
-    // Since this is the friends section, we know they are already friends
-    // Set the friend object with proper flags
     const enhancedFriend = {
       ...friend,
-      __isFriend: true, // Since they're in the friends list, they are friends
-      __isPending: false, // No pending requests since they're already friends
+      __isFriend: true,
+      __isPending: false,
     };
 
     console.log("🚀 Setting enhanced friend:", enhancedFriend);
@@ -280,17 +267,15 @@ const FriendsSection = () => {
   };
 
   const handleUserSelect = (userOrUid) => {
-  // If it's already a user object, use it directly
-  if (typeof userOrUid === 'object' && userOrUid.uid) {
-    handleViewProfile(userOrUid);
-  } else {
-    // If it's a uid, find the user data
-    const userData = friends.find((f) => f.uid === userOrUid);
-    if (userData) {
-      handleViewProfile(userData);
+    if (typeof userOrUid === "object" && userOrUid.uid) {
+      handleViewProfile(userOrUid);
+    } else {
+      const userData = friends.find((f) => f.uid === userOrUid);
+      if (userData) {
+        handleViewProfile(userData);
+      }
     }
-  }
-};
+  };
 
   if (loading) {
     return (
@@ -494,9 +479,8 @@ const FriendsSection = () => {
             isOpen={showUserProfileModal}
             user={selectedUser}
             currentUserId={currentUser?.uid}
-            // Pass friends array and pending requests for the component's logic
-            friends={friends.map((f) => f.uid)} // Convert to array of UIDs
-            pendingRequests={pendingRequests} // Pass pending requests
+            friends={friends.map((f) => f.uid)}
+            pendingRequests={pendingRequests}
             onAddFriend={handleAddFriendDirect}
             onRemoveFriend={handleRemoveFriend}
             onCancelRequest={handleCancelRequest}

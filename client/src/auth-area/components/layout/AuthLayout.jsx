@@ -14,21 +14,16 @@ const AuthLayout = ({
 }) => {
   const { accessibilityModalProps, openAccessibilitySettings } =
     useGlobalAccessibility();
-  // Enhanced fade-in effect on mount with proper cleanup
   useEffect(() => {
-    // Reset any previous styles and add smooth entrance
     document.body.style.opacity = "1";
     document.body.style.transition = "opacity 0.5s ease-in-out";
     document.body.style.transform = "translateY(0)";
-
-    // Cleanup function to reset styles when component unmounts
     return () => {
       document.body.style.transition = "";
       document.body.style.transform = "";
     };
   }, []);
 
-  // Split layout (SignIn/SignUp style with left content, right form)
   if (layoutType === "split") {
     return (
       <div
