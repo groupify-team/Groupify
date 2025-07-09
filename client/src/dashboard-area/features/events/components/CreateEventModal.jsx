@@ -263,15 +263,14 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
       setLocation("");
       setStartDate("");
       setEndDate("");
-      setShowSuccessModal(true);
-
+      
       // Notify parent component
       if (onEventCreated) {
         onEventCreated(newEvent);
       }
 
-      // Close modal
-      onClose();
+      // Show success modal (don't close main modal yet)
+      setShowSuccessModal(true);
     } catch (error) {
       console.error("Error creating event:", error);
       
@@ -622,6 +621,7 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
             <button
               onClick={() => {
                 setShowSuccessModal(false);
+                // Close the main modal after success modal is dismissed
                 onClose();
               }}
               className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white py-3 px-4 rounded-xl font-medium transition-all"
