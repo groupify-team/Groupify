@@ -404,7 +404,7 @@ export const useEventMembers = (currentUserId, event, setEvent) => {
     }
   };
 
-  const handleLeaveEvent = async () => {
+  const handleLeaveEvent = async (navigate) => {
     if (!event || !currentUserId) {
       console.error("event data or user ID not available");
       return;
@@ -424,12 +424,14 @@ export const useEventMembers = (currentUserId, event, setEvent) => {
 
       await updateEvent(event.id, updatedEvent);
 
-      // Navigate away from the event (you'll need to import useNavigate)
-      // For now, just show success message
       toast.success("You have left the event successfully!");
 
-      // You can add navigation logic here if needed
-      // navigate('/events');
+      // Navigate back to events with smooth transition
+      if (navigate) {
+        setTimeout(() => {
+          navigate("/dashboard/events");
+        }, 1000); // Small delay to show the success message
+      }
     } catch (error) {
       console.error("Error leaving event:", error);
       toast.error("Failed to leave event");
