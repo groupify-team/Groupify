@@ -227,6 +227,110 @@
   position: relative !important;
 }
 
+/* Add these rules to your existing z-index.css file */
+
+@layer components {
+  /* === FILTER DROPDOWN Z-INDEX FIX === */
+  
+  /* Force filter dropdown to be above event cards */
+  .filter-dropdown {
+    z-index: 500 !important;
+    position: relative !important;
+  }
+
+  /* Dropdown menu specifically */
+  .filter-dropdown .dropdown-menu,
+  .filter-dropdown > div:last-child {
+    z-index: 600 !important;
+  }
+
+  /* Event cards - ensure they stay below */
+  .event-card,
+  .event-card-container,
+  .bg-white\/60.dark\:bg-gray-800\/60.backdrop-blur-lg:not(:has(.filter-dropdown)) {
+    position: relative;
+    z-index: 10 !important;
+  }
+
+  /* Events grid container */
+  .grid:has(.event-card) {
+    z-index: 1 !important;
+  }
+
+  /* Override problematic Tailwind classes */
+  .z-\[100\] {
+    z-index: 100 !important;
+  }
+  
+  .z-\[201\] {
+    z-index: 201 !important;
+  }
+  
+  .z-\[250\] {
+    z-index: 250 !important;
+  }
+  
+  .z-\[300\] {
+    z-index: 300 !important;
+  }
+
+  /* Create event modal should still be highest */
+  .create-event-modal-backdrop {
+    z-index: 9999 !important;
+  }
+
+  .create-event-modal-content {
+    z-index: 10000 !important;
+  }
+
+  /* Ensure search input container doesn't interfere */
+  .bg-white\/60.dark\:bg-gray-800\/60.backdrop-blur-lg:has(.filter-dropdown) {
+    z-index: 50 !important;
+  }
+
+  /* Special class for dropdown above cards */
+  .dropdown-above-cards {
+    z-index: 700 !important;
+  }
+
+  .dropdown-above-cards > div:last-child {
+    z-index: 800 !important;
+  }
+}
+
+/* === LAYOUT DEBUGGING === */
+@layer utilities {
+  /* Add this temporarily to debug z-index issues */
+  .debug-z * {
+    position: relative !important;
+    outline: 1px solid red !important;
+    background: rgba(255, 0, 0, 0.1) !important;
+  }
+  
+  .debug-z .filter-dropdown {
+    outline: 2px solid blue !important;
+    background: rgba(0, 0, 255, 0.1) !important;
+  }
+  
+  .debug-z .event-card {
+    outline: 2px solid green !important;
+    background: rgba(0, 255, 0, 0.1) !important;
+  }
+}
+
+/* === RESPONSIVE CONSIDERATIONS === */
+@media (max-width: 640px) {
+  /* Mobile dropdown adjustments */
+  .filter-dropdown {
+    z-index: 300 !important;
+  }
+  
+  .filter-dropdown .dropdown-menu,
+  .filter-dropdown > div:last-child {
+    z-index: 400 !important;
+  }
+}
+
 /* === LAYER DOCUMENTATION === */
 /*
 Z-Index Hierarchy:

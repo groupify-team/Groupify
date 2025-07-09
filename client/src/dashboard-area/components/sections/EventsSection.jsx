@@ -22,7 +22,6 @@ import {
   PlusIcon,
   XCircleIcon,
   ExclamationTriangleIcon,
-  StarIcon,
 } from "@heroicons/react/24/outline";
 
 // Auth Context
@@ -65,7 +64,7 @@ const EventsSection = () => {
   const navigate = useNavigate();
 
   // Plan Limits Hook
-  const { canPerformAction, showUpgradePrompt, getUsageInfo, getPlanFeatures, isFreePlan } = usePlanLimits();
+  const { canPerformAction, showUpgradePrompt, getUsageInfo } = usePlanLimits();
 
   // Layout state and actions
   const {
@@ -469,43 +468,6 @@ const EventsSection = () => {
           </button>
         )}
       </div>
-
-      {/* Event Limit Warning Banner */}
-      {(() => {
-        const usageInfo = getUsageInfo();
-        const limit = usageInfo?.events?.limit || MAX_EVENTS_PER_USER;
-        const planFeatures = getPlanFeatures();
-        const isAtLimit = events.length >= limit && limit !== "unlimited";
-        
-        if (!isAtLimit) return null;
-        
-        return (
-          <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl p-4 mb-4">
-            <div className="flex items-center gap-3">
-              <ExclamationTriangleIcon className="w-5 h-5 text-yellow-600 dark:text-yellow-400 flex-shrink-0" />
-              <div className="flex-1">
-                <h4 className="font-semibold text-yellow-800 dark:text-yellow-200 text-sm mb-1">
-                  Event Limit Reached ({events.length}/{limit})
-                </h4>
-                <p className="text-yellow-700 dark:text-yellow-300 text-sm">
-                  You've reached your {isFreePlan ? "Free" : "Premium"} plan limit. 
-                  {isFreePlan ? " Upgrade to Premium for 50 events or Pro for unlimited events!" : " Upgrade to Pro for unlimited events!"}
-                </p>
-              </div>
-              <button
-                onClick={() => {
-                  const targetPlan = isFreePlan ? "premium" : "pro";
-                  navigate(`/pricing?from=events-dashboard-limit&plan=${targetPlan}`);
-                }}
-                className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors inline-flex items-center gap-2 flex-shrink-0"
-              >
-                <StarIcon className="w-4 h-4" />
-                Upgrade to {isFreePlan ? "Premium" : "Pro"}
-              </button>
-            </div>
-          </div>
-        );
-      })()}
 
       {/* Mobile Tab Switcher */}
       {isMobile && (
