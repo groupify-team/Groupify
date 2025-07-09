@@ -375,18 +375,15 @@ export const useEventMembers = (currentUserId, event, setEvent) => {
     }
   };
 
-  const handleRemoveFromEvent = async (
-    uid,
-    event,
-    eventMembers,
-    setEvent,
-    setEventMembers
-  ) => {
-    try {
-      const userToRemove = eventMembers.find((m) => m.uid === uid);
+  const handleRemoveFromEvent = async (uid) => {
+    if (!event) {
+      console.error("event data not available");
+      return;
+    }
 
-      const updatedMembers = event.members?.filter((id) => id !== uid);
-      const updatedAdmins = event.admins?.filter((id) => id !== uid);
+    try {
+      const updatedMembers = event.members?.filter((id) => id !== uid) || [];
+      const updatedAdmins = event.admins?.filter((id) => id !== uid) || [];
 
       const updatedEvent = {
         ...event,
@@ -396,21 +393,48 @@ export const useEventMembers = (currentUserId, event, setEvent) => {
 
       await updateEvent(event.id, updatedEvent);
 
-      const memberProfiles = await Promise.all(
-        updatedMembers.map((id) => getUserProfile(id))
-      );
-      setEventMembers(memberProfiles);
-
+      // Update local state
       setEvent(updatedEvent);
-
-      toast.success(
-        `User ${userToRemove?.displayName || uid} was removed from the event`
-      );
-
       setSelectedUser(null);
+
+      toast.success("User removed from event successfully!");
     } catch (error) {
-      console.error("Failed to remove user from event:", error);
+      console.error("Error removing user from event:", error);
       toast.error("Failed to remove user from event");
+      throw error;
+    }
+  };
+
+  const handleLeaveEvent = async () => {
+    if (!event || !currentUserId) {
+      console.error("event data or user ID not available");
+      return;
+    }
+
+    try {
+      const updatedMembers =
+        event.members?.filter((id) => id !== currentUserId) || [];
+      const updatedAdmins =
+        event.admins?.filter((id) => id !== currentUserId) || [];
+
+      const updatedEvent = {
+        ...event,
+        members: updatedMembers,
+        admins: updatedAdmins,
+      };
+
+      await updateEvent(event.id, updatedEvent);
+
+      // Navigate away from the event (you'll need to import useNavigate)
+      // For now, just show success message
+      toast.success("You have left the event successfully!");
+
+      // You can add navigation logic here if needed
+      // navigate('/events');
+    } catch (error) {
+      console.error("Error leaving event:", error);
+      toast.error("Failed to leave event");
+      throw error;
     }
   };
 
@@ -432,5 +456,6 @@ export const useEventMembers = (currentUserId, event, setEvent) => {
     handlePromoteToAdmin,
     handleDemoteFromAdmin,
     handleRemoveFromEvent,
+    handleLeaveEvent,
   };
 };

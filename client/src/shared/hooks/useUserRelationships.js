@@ -22,11 +22,10 @@ export const useUserRelationships = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Load friends data
+  // Load friends data - simplified version for external calls
   const loadFriends = useCallback(async () => {
     if (!user?.uid) {
       console.log("No user ID in loadFriends, cannot fetch friends");
-      setLoading(false);
       return;
     }
 
@@ -43,7 +42,7 @@ export const useUserRelationships = () => {
       const friendIds = friendsData.map((friend) => friend.uid || friend.id);
       setFriends(friendIds);
 
-      // Load friend requests separately (not as part of this async function)
+      // Load friend requests separately
       const userDoc = await getDoc(doc(db, "users", user.uid));
       if (userDoc.exists()) {
         const userData = userDoc.data();
@@ -62,32 +61,27 @@ export const useUserRelationships = () => {
     }
   }, [user?.uid]);
 
-  // Load pending requests
-  const loadPendingRequests = useCallback(() => {
+  // Load pending requests - simplified version for external calls
+  const loadPendingRequests = useCallback(async () => {
     if (!user?.uid) return;
 
-    // Using an IIFE (Immediately Invoked Function Expression) to handle the async code
-    (async () => {
-      try {
-        console.log("Loading pending friend requests for user:", user.uid);
-        const q = query(
-          collection(db, "friendRequests"),
-          where("from", "==", user.uid),
-          where("status", "==", "pending")
-        );
-        const querySnapshot = await getDocs(q);
-        const pending = querySnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        console.log("Pending friend requests loaded:", pending);
-        setPendingRequests(pending);
-      } catch (err) {
-        console.error("Error loading pending requests:", err);
-      }
-    })();
-
-    // This function doesn't return an unsubscribe since it's not setting up a listener
+    try {
+      console.log("Loading pending friend requests for user:", user.uid);
+      const q = query(
+        collection(db, "friendRequests"),
+        where("from", "==", user.uid),
+        where("status", "==", "pending")
+      );
+      const querySnapshot = await getDocs(q);
+      const pending = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      console.log("Pending friend requests loaded:", pending);
+      setPendingRequests(pending);
+    } catch (err) {
+      console.error("Error loading pending requests:", err);
+    }
   }, [user?.uid]);
 
   // Check if user is a friend
@@ -134,23 +128,81 @@ export const useUserRelationships = () => {
   useEffect(() => {
     console.log("useUserRelationships effect running, user:", user?.uid);
 
-    // If no user yet, just wait and keep loading state
+    // If no user yet, set loading to false since we can't load friends without a user
     if (!user?.uid) {
       console.log(
-        "No user ID yet in useUserRelationships, waiting for auth..."
+        "No user ID yet in useUserRelationships, setting loading to false"
       );
-      // Don't set loading to false, we're still waiting for user to load
+      setLoading(false);
+      setFriends([]);
+      setFriendRequests([]);
+      setPendingRequests([]);
       return;
     }
 
     console.log("User authenticated, loading friends for:", user.uid);
+    setLoading(true);
+
+    // Define loadFriends inside the effect to avoid dependency issues
+    const loadFriendsLocal = async () => {
+      try {
+        console.log("Starting to load friends for user:", user.uid);
+        setError(null);
+
+        // Use UserService to get friends with full profiles
+        const friendsData = await UserService.getUserFriends(user.uid);
+        console.log("useUserRelationships: Friends loaded:", friendsData);
+
+        // Extract friend IDs for compatibility with existing code
+        const friendIds = friendsData.map((friend) => friend.uid || friend.id);
+        setFriends(friendIds);
+
+        // Load friend requests separately
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          const friendRequestsData = userData.friendRequests || [];
+          console.log(
+            `useUserRelationships: Found ${friendRequestsData.length} friend requests`
+          );
+          setFriendRequests(friendRequestsData);
+        }
+
+        setLoading(false);
+      } catch (err) {
+        console.error("Exception in loadFriends function:", err);
+        setError(err.message);
+        setLoading(false);
+      }
+    };
+
+    // Define loadPendingRequests inside the effect
+    const loadPendingRequestsLocal = async () => {
+      try {
+        console.log("Loading pending friend requests for user:", user.uid);
+        const q = query(
+          collection(db, "friendRequests"),
+          where("from", "==", user.uid),
+          where("status", "==", "pending")
+        );
+        const querySnapshot = await getDocs(q);
+        const pending = querySnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        console.log("Pending friend requests loaded:", pending);
+        setPendingRequests(pending);
+      } catch (err) {
+        console.error("Error loading pending requests:", err);
+      }
+    };
 
     // Load friends and pending requests
     const initializeData = async () => {
       try {
-        await loadFriends();
-        // Load pending requests (this is an async function but doesn't return an unsubscribe)
-        loadPendingRequests();
+        await loadFriendsLocal();
+        // Load pending requests
+        await loadPendingRequestsLocal();
       } catch (error) {
         console.error("Error initializing user relationships:", error);
         setError(error.message);
@@ -161,7 +213,7 @@ export const useUserRelationships = () => {
     initializeData();
 
     // No cleanup needed since we're not using listeners anymore
-  }, [loadFriends, loadPendingRequests, user?.uid]);
+  }, [user?.uid]);
 
   return {
     friends,

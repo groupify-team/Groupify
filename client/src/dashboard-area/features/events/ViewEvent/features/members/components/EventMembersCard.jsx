@@ -1,8 +1,14 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   UserGroupIcon,
   StarIcon,
   ShieldCheckIcon,
+  EllipsisVerticalIcon,
+  ArrowRightOnRectangleIcon,
+  UserMinusIcon,
+  ShieldExclamationIcon,
+  ExclamationTriangleIcon,
+  SparklesIcon,
 } from "@heroicons/react/24/outline";
 
 const EventMembersCard = ({
@@ -10,7 +16,15 @@ const EventMembersCard = ({
   event,
   currentUserId,
   onMemberClick,
+  onPromoteToAdmin,
+  onDemoteFromAdmin,
+  onRemoveFromEvent,
+  onLeaveEvent,
 }) => {
+  const [showMenuForMember, setShowMenuForMember] = useState(null);
+  const [confirmAction, setConfirmAction] = useState(null);
+  const [loading, setLoading] = useState(false);
+
   // Debug logging
   console.log("EventMembersCard props:", {
     eventMembersCount: eventMembers?.length,
@@ -19,7 +33,7 @@ const EventMembersCard = ({
     currentUserId,
   });
 
-  // Sort members: current user first, then creator, then alphabetical
+  // Sort members: current user first, then creator, then admins, then by join date
   const sortedMembers = [...eventMembers].sort((a, b) => {
     // 1. Current user first
     if (a.uid === currentUserId) return -1;
@@ -34,7 +48,6 @@ const EventMembersCard = ({
     const bIsAdmin = event.admins?.includes(b.uid);
 
     if (aIsAdmin && bIsAdmin) {
-      // Both admins - compare join dates (you'll need to add joinDate to member data)
       const aJoinDate = new Date(a.joinDate || a.createdAt || 0);
       const bJoinDate = new Date(b.joinDate || b.createdAt || 0);
       return aJoinDate - bJoinDate;
@@ -66,12 +79,69 @@ const EventMembersCard = ({
       .slice(0, 2);
   };
 
+  // Check if current user can manage another user
+  const canManageUser = (targetMember) => {
+    const isCurrentUserCreator = currentUserId === event.createdBy;
+    const isCurrentUserAdmin = event.admins?.includes(currentUserId);
+    const isTargetCreator = targetMember.uid === event.createdBy;
+    const isTargetCurrentUser = targetMember.uid === currentUserId;
+
+    // Current user can't manage themselves (except leaving)
+    if (isTargetCurrentUser) return false;
+
+    // Creator can manage everyone except themselves
+    if (isCurrentUserCreator && !isTargetCreator) return true;
+
+    // Admin can manage regular members only (not creator or other admins)
+    if (
+      isCurrentUserAdmin &&
+      !isTargetCreator &&
+      !event.admins?.includes(targetMember.uid)
+    )
+      return true;
+
+    return false;
+  };
+
+  // Handle confirmed actions
+  const handleConfirmedAction = async () => {
+    if (!confirmAction) return;
+
+    setLoading(true);
+    try {
+      const { action, member } = confirmAction;
+
+      switch (action) {
+        case "promote":
+          await onPromoteToAdmin(member.uid);
+          break;
+        case "demote":
+          await onDemoteFromAdmin(member.uid);
+          break;
+        case "remove":
+          await onRemoveFromEvent(member.uid);
+          break;
+        case "leave":
+          await onLeaveEvent();
+          break;
+        default:
+          break;
+      }
+    } catch (error) {
+      console.error("Action failed:", error);
+    } finally {
+      setLoading(false);
+      setConfirmAction(null);
+      setShowMenuForMember(null);
+    }
+  };
+
   const renderRoleBadge = (member) => {
     const role = getMemberRole(member);
 
     if (role === "creator") {
       return (
-        <div className="flex items-center gap-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white px-2 py-1 rounded-full text-xs font-medium">
+        <div className="flex items-center gap-1 bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white px-2 py-1 rounded-full text-xs font-medium shadow-lg">
           <StarIcon className="w-3 h-3" />
           Creator
         </div>
@@ -80,9 +150,101 @@ const EventMembersCard = ({
 
     if (role === "admin") {
       return (
-        <div className="flex items-center gap-1 bg-gradient-to-r from-blue-500 to-cyan-500 text-white px-2 py-1 rounded-full text-xs font-medium">
+        <div className="flex items-center gap-1 bg-gradient-to-r from-blue-500 via-cyan-500 to-teal-500 text-white px-2 py-1 rounded-full text-xs font-medium shadow-lg">
           <ShieldCheckIcon className="w-3 h-3" />
           Admin
+        </div>
+      );
+    }
+
+    return null;
+  };
+
+  const renderMemberActions = (member) => {
+    const isCurrentUser = member.uid === currentUserId;
+    const canManage = canManageUser(member);
+    const isAdmin = event.admins?.includes(member.uid);
+    const isCreator = member.uid === event.createdBy;
+
+    // Current user - show leave button
+    if (isCurrentUser) {
+      return (
+        <div className="relative">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setConfirmAction({ action: "leave", member });
+            }}
+            className="p-2 bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white rounded-lg shadow-lg transition-all duration-200 transform hover:scale-110"
+            title="Leave Event"
+          >
+            <ArrowRightOnRectangleIcon className="w-4 h-4" />
+          </button>
+        </div>
+      );
+    }
+
+    // Admin controls for other members
+    if (canManage) {
+      return (
+        <div className="relative">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowMenuForMember(
+                showMenuForMember === member.uid ? null : member.uid
+              );
+            }}
+            className="p-2 bg-gradient-to-r from-slate-500 to-slate-600 hover:from-slate-600 hover:to-slate-700 text-white rounded-lg shadow-lg transition-all duration-200 transform hover:scale-110"
+            title="Manage Member"
+          >
+            <EllipsisVerticalIcon className="w-4 h-4" />
+          </button>
+
+          {/* Action Menu */}
+          {showMenuForMember === member.uid && (
+            <div className="absolute top-full right-0 mt-2 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-slate-600 overflow-hidden z-20 min-w-48">
+              {/* Promote to Admin */}
+              {!isAdmin && !isCreator && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setConfirmAction({ action: "promote", member });
+                  }}
+                  className="w-full text-left px-4 py-3 text-gray-900 dark:text-white hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors flex items-center gap-3"
+                >
+                  <ShieldCheckIcon className="w-4 h-4 text-blue-500" />
+                  <span className="font-medium">Promote to Admin</span>
+                </button>
+              )}
+
+              {/* Demote from Admin */}
+              {isAdmin && !isCreator && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setConfirmAction({ action: "demote", member });
+                  }}
+                  className="w-full text-left px-4 py-3 text-gray-900 dark:text-white hover:bg-yellow-50 dark:hover:bg-yellow-900/20 transition-colors flex items-center gap-3"
+                >
+                  <ShieldExclamationIcon className="w-4 h-4 text-yellow-500" />
+                  <span className="font-medium">Remove Admin</span>
+                </button>
+              )}
+
+              {/* Remove from Event */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setConfirmAction({ action: "remove", member });
+                }}
+                className="w-full text-left px-4 py-3 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors flex items-center gap-3"
+              >
+                <UserMinusIcon className="w-4 h-4" />
+                <span className="font-medium">Remove from Event</span>
+              </button>
+            </div>
+          )}
         </div>
       );
     }
@@ -106,7 +268,7 @@ const EventMembersCard = ({
               </span>
             </h2>
             <p className="text-gray-600 dark:text-gray-400 text-xs">
-              View member profiles
+              Manage members and permissions
             </p>
           </div>
         </div>
@@ -125,13 +287,20 @@ const EventMembersCard = ({
             {sortedMembers.map((member, index) => (
               <div
                 key={member.uid || `member-${index}`}
-                className="group/member p-3 rounded-lg bg-gradient-to-r from-gray-50/50 to-orange-50/50 dark:from-gray-800/50 dark:to-orange-900/20 hover:from-orange-50 hover:to-orange-100 dark:hover:from-orange-900/30 dark:hover:to-orange-900/40 transition-all duration-300 cursor-pointer border border-gray-200/30 dark:border-gray-700/30 backdrop-blur-sm hover:shadow-md"
+                className="group/member p-3 rounded-lg bg-gradient-to-r from-gray-50/50 to-orange-50/50 dark:from-gray-800/50 dark:to-orange-900/20 hover:from-orange-50 hover:to-orange-100 dark:hover:from-orange-900/30 dark:hover:to-orange-900/40 transition-all duration-300 cursor-pointer border border-gray-200/30 dark:border-gray-700/30 backdrop-blur-sm hover:shadow-md relative"
                 onClick={() => {
                   console.log("🔍 EventMembersCard: Member clicked:", member);
                   onMemberClick(member, currentUserId);
                 }}
               >
-                {/* Simple User Card Design */}
+                {/* Click outside to close menu */}
+                {showMenuForMember === member.uid && (
+                  <div
+                    className="fixed inset-0 z-10"
+                    onClick={() => setShowMenuForMember(null)}
+                  />
+                )}
+
                 <div className="flex items-center gap-3">
                   {/* Avatar */}
                   <div className="relative flex-shrink-0">
@@ -174,13 +343,72 @@ const EventMembersCard = ({
                   </div>
 
                   {/* Role Badge */}
-                  <div className="flex-shrink-0">{renderRoleBadge(member)}</div>
+                  <div className="flex-shrink-0 flex items-center gap-2">
+                    {renderRoleBadge(member)}
+                    {renderMemberActions(member)}
+                  </div>
                 </div>
               </div>
             ))}
           </div>
         )}
       </div>
+
+      {/* Confirmation Dialog */}
+      {confirmAction && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-slate-800 rounded-3xl p-8 max-w-sm w-full border border-gray-200 dark:border-slate-700 shadow-2xl transform transition-all duration-300">
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 bg-gradient-to-br from-red-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                {confirmAction.action === "leave" ? (
+                  <ArrowRightOnRectangleIcon className="w-8 h-8 text-white" />
+                ) : confirmAction.action === "promote" ? (
+                  <ShieldCheckIcon className="w-8 h-8 text-white" />
+                ) : (
+                  <ExclamationTriangleIcon className="w-8 h-8 text-white" />
+                )}
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                {confirmAction.action === "leave" && "Leave Event"}
+                {confirmAction.action === "promote" && "Promote to Admin"}
+                {confirmAction.action === "demote" && "Remove Admin"}
+                {confirmAction.action === "remove" && "Remove Member"}
+              </h3>
+              <p className="text-gray-600 dark:text-slate-300">
+                {confirmAction.action === "leave" &&
+                  "Are you sure you want to leave this event? You won't be able to access it anymore."}
+                {confirmAction.action === "promote" &&
+                  `Are you sure you want to promote ${
+                    confirmAction.member?.displayName || "this user"
+                  } to admin?`}
+                {confirmAction.action === "demote" &&
+                  `Are you sure you want to remove admin privileges from ${
+                    confirmAction.member?.displayName || "this user"
+                  }?`}
+                {confirmAction.action === "remove" &&
+                  `Are you sure you want to remove ${
+                    confirmAction.member?.displayName || "this user"
+                  } from the event?`}
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setConfirmAction(null)}
+                className="flex-1 px-6 py-3 bg-gray-200 hover:bg-gray-300 dark:bg-slate-600 dark:hover:bg-slate-700 text-gray-900 dark:text-white rounded-2xl font-bold transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmedAction}
+                disabled={loading}
+                className="flex-1 px-6 py-3 bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white rounded-2xl font-bold transition-all duration-300 disabled:opacity-50"
+              >
+                {loading ? "Processing..." : "Confirm"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
