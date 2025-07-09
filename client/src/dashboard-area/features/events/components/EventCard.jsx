@@ -42,7 +42,7 @@ const EventCard = memo(({ event, onViewEvent }) => {
             </div>
           )}
 
-          {/* Status Badge */}
+          {/* Status Badge - FIXED: Removed question marks */}
           <div className="absolute top-4 right-4">
             <span
               className={`inline-flex items-center px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-semibold backdrop-blur-sm border ${
@@ -55,10 +55,10 @@ const EventCard = memo(({ event, onViewEvent }) => {
                   : "bg-gray-100/80 dark:bg-gray-700/50 text-gray-800 dark:text-gray-300 border-gray-200/50 dark:border-gray-600/50"
               }`}
             >
-              {eventstatus.status === "completed" && "? Completed"}
-              {eventstatus.status === "upcoming" && "?? Upcoming"}
-              {eventstatus.status === "ongoing" && "?? Ongoing"}
-              {eventstatus.status === "draft" && "?? Draft"}
+              {eventstatus.status === "completed" && "Completed"}
+              {eventstatus.status === "upcoming" && "Upcoming"}
+              {eventstatus.status === "ongoing" && "Ongoing"}
+              {eventstatus.status === "draft" && "Draft"}
             </span>
           </div>
 

@@ -293,7 +293,7 @@ const EditEventModal = ({
                       </div>
                       <div>
                         <h4 className="font-bold text-red-800 dark:text-red-400">
-                          ?? Permanent Deletion
+                          Permanent Deletion
                         </h4>
                         <p className="text-red-700 dark:text-red-300 text-sm">
                           This action cannot be undone

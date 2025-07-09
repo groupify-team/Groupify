@@ -50,16 +50,16 @@ const EventsLimitBanner = ({ currentEventCount, onUpgrade }) => {
   };
 
   const getBannerContent = () => {
-    // Since we only show when at limit, always return "reached" content
+    // CHANGED: Modified to use yellow colors instead of red
     return {
       title: "Event Limit Reached",
       message: `You've reached your ${subscription?.plan} plan limit of ${eventLimit} events.`,
       action: "Upgrade Now",
-      bgColor: "bg-red-50 dark:bg-red-900/20",
-      borderColor: "border-red-200 dark:border-red-800",
-      textColor: "text-red-800 dark:text-red-400",
-      buttonColor: "bg-red-600 hover:bg-red-700",
-      iconColor: "text-red-600 dark:text-red-400",
+      bgColor: "bg-yellow-50 dark:bg-yellow-900/20",
+      borderColor: "border-yellow-200 dark:border-yellow-800",
+      textColor: "text-yellow-800 dark:text-yellow-400",
+      buttonColor: "bg-yellow-600 hover:bg-yellow-700",
+      iconColor: "text-yellow-600 dark:text-yellow-400",
       upgradePlan: isFreePlan ? "premium" : "pro",
     };
   };
