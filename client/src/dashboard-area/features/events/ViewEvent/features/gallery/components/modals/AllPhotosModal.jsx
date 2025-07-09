@@ -1,8 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { toast } from "react-hot-toast";
 import { doc, deleteDoc } from "firebase/firestore";
 import { ref, deleteObject } from "firebase/storage";
 import { db, storage } from "@shared/services/firebase/config";
+import { usePlanLimits } from "@shared/hooks/usePlanLimits";
+import PhotoLimitBanner from "../PhotoLimitBanner";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
 import {
@@ -22,12 +24,12 @@ const AllPhotosModal = ({
   isOpen,
   photos,
   eventId,
-  maxPhotos,
   isAdmin,
   onClose,
   onPhotoSelect,
   onPhotoDeleted,
 }) => {
+  const { subscription } = usePlanLimits();
   const [localSelectMode, setLocalSelectMode] = useState(false);
   const [localSelectedPhotos, setLocalSelectedPhotos] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -36,6 +38,13 @@ const AllPhotosModal = ({
   const [showConfirmModal, setShowConfirmModal] = useState(null); // 'delete' | 'export'
   const [loading, setLoading] = useState(false);
   const [localPhotos, setLocalPhotos] = useState(photos);
+
+  // Get the actual photo limit from subscription plan
+  const maxPhotos = useMemo(() => {
+    if (!subscription) return 30; // Free plan default
+    const limit = subscription.features?.photosPerEvent;
+    return limit === "unlimited" ? Infinity : (limit || 30);
+  }, [subscription]);
 
   const fixPhotoUrl = (url) => {
     return url.replace(
@@ -66,6 +75,13 @@ const AllPhotosModal = ({
   };
 
   const handleDeletePhotos = async () => {
+    console.log("🚀 handleDeletePhotos called", {
+      selectedCount: localSelectedPhotos.length,
+      photos: localSelectedPhotos,
+      isAdmin,
+      eventId
+    });
+
     if (!localSelectedPhotos.length) return;
 
     setLoading(true);
@@ -229,7 +245,7 @@ const AllPhotosModal = ({
     });
 
   const ConfirmModal = ({ type, onConfirm, onCancel }) => (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[10000] animate-fade-in">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[20000] animate-fade-in">
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full border border-gray-200 dark:border-gray-700 animate-slide-in-scale">
         <div className="p-6">
           {type === "delete" ? (
@@ -306,7 +322,13 @@ const AllPhotosModal = ({
             </button>
             {type === "delete" && (
               <button
-                onClick={() => onConfirm()}
+                onClick={() => {
+                  console.log("✅ Confirm delete clicked", {
+                    localSelectedPhotos: localSelectedPhotos.length,
+                    loading
+                  });
+                  onConfirm();
+                }}
                 disabled={loading}
                 className="flex-1 bg-red-600 hover:bg-red-700 text-white py-3 rounded-lg font-medium transition-all disabled:opacity-50 flex items-center justify-center gap-2"
               >
@@ -364,8 +386,10 @@ const AllPhotosModal = ({
                       {filteredPhotos.length} Photos
                     </span>
                     <span className="text-xs text-gray-500 dark:text-gray-400">
-                      {Math.round((localPhotos.length / maxPhotos) * 100)}%
-                      storage used
+                      {maxPhotos === Infinity 
+                        ? "unlimited storage" 
+                        : `${Math.round((localPhotos.length / maxPhotos) * 100)}% storage used`
+                      }
                     </span>
                     {localSelectMode && localSelectedPhotos.length > 0 && (
                       <span className="text-sm font-semibold text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/30 px-3 py-1 rounded-full">
@@ -479,7 +503,14 @@ const AllPhotosModal = ({
 
                     {localSelectedPhotos.length > 0 && (
                       <button
-                        onClick={() => setShowConfirmModal("delete")}
+                        onClick={() => {
+                          console.log("🗑️ Delete button clicked - deleting immediately", {
+                            isAdmin,
+                            localSelectedPhotos: localSelectedPhotos.length,
+                            loading
+                          });
+                          handleDeletePhotos();
+                        }}
                         disabled={loading}
                         className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-3 py-2 rounded-lg font-medium transition-all text-sm flex items-center gap-2 disabled:opacity-50"
                       >
@@ -491,7 +522,10 @@ const AllPhotosModal = ({
                 )}
 
                 <button
-                  onClick={() => setShowConfirmModal("export")}
+                  onClick={() => {
+                    console.log("📥 Export button clicked - exporting as ZIP");
+                    handleExportPhotos("zip");
+                  }}
                   disabled={
                     (localSelectMode && localSelectedPhotos.length === 0) ||
                     loading
@@ -506,6 +540,11 @@ const AllPhotosModal = ({
                 </button>
               </div>
             </div>
+          </div>
+
+          {/* Photo Limit Banner */}
+          <div className="px-6">
+            <PhotoLimitBanner currentPhotoCount={localPhotos.length} />
           </div>
 
           {/* Photos Grid */}
@@ -600,23 +639,6 @@ const AllPhotosModal = ({
           </div>
         </div>
       </div>
-
-      {/* Confirmation Modals */}
-      {showConfirmModal === "delete" && (
-        <ConfirmModal
-          type="delete"
-          onConfirm={handleDeletePhotos}
-          onCancel={() => setShowConfirmModal(null)}
-        />
-      )}
-
-      {showConfirmModal === "export" && (
-        <ConfirmModal
-          type="export"
-          onConfirm={handleExportPhotos}
-          onCancel={() => setShowConfirmModal(null)}
-        />
-      )}
     </>
   );
 };

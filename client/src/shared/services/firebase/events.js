@@ -26,7 +26,7 @@ import {
 
 // Constants
 const MAX_EVENTS_PER_USER = 5;
-const MAX_PHOTOS_PER_EVENT = 30;
+const MAX_PHOTOS_PER_EVENT = 30; // Free plan default - actual limits come from subscription
 
 // Function to check user's event count
 export const getUserEventCount = async (userId) => {

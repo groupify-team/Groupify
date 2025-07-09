@@ -398,7 +398,6 @@ const EventDetailView = ({ eventId: propeventId }) => {
             <PhotoGallery
               photos={photos || []}
               eventId={eventId}
-              maxPhotos={100}
               onPhotoSelect={(photo) => {
                 setSelectedPhoto(photo);
                 setModalSource("gallery");
@@ -534,7 +533,6 @@ const EventDetailView = ({ eventId: propeventId }) => {
               isOpen={showAllPhotosModal}
               photos={photos || []}
               eventId={eventId}
-              maxPhotos={100}
               isAdmin={isAdmin}
               onClose={() => setShowAllPhotosModal(false)}
               onPhotoSelect={(photo) => {

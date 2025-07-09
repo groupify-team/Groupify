@@ -1,12 +1,7 @@
-/**
- * Hook for managing plan limits and enforcement across the application
- * Provides real-time limit checking, usage tracking, and upgrade prompts
- * ALIGNED with exact pricing page values
- */
-
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useAuth } from "@auth/hooks/useAuth";
-
+import { useNavigate } from "react-router-dom";
+import navigationService from "@shared/services/navigationService";
 import subscriptionService from "@shared/services/subscriptionService";
 import { toast } from "react-hot-toast";
 
@@ -248,21 +243,41 @@ export const usePlanLimits = () => {
 
   const showUpgradePrompt = useCallback(
     (reason, options = {}) => {
-      const { persistent = false } = options;
+      const { persistent = false, navigateToUpgrade = true } = options;
 
-      toast.error(reason, {
-        duration: persistent ? 6000 : 4000,
-        id: "upgrade-prompt",
-        action: {
-          label: "Upgrade Plan",
-          onClick: () => {
-            console.log("Navigate to upgrade:", {
-              reason,
-              subscription: subscription?.plan,
-            });
+      if (navigateToUpgrade) {
+        // Set navigation context
+        navigationService.setContext({
+          origin: "upgrade-prompt",
+          returnPath: window.location.pathname + window.location.search,
+          section: "upgrade",
+          metadata: { 
+            reason,
+            currentPlan: subscription?.plan,
+            triggeredBy: "plan-limits"
           },
-        },
-      });
+        });
+
+        // Show toast with navigation
+        toast.error(reason, {
+          duration: persistent ? 6000 : 4000,
+          id: "upgrade-prompt",
+          action: {
+            label: "Upgrade Plan",
+            onClick: () => {
+              // Navigate to pricing page
+              const suggestedPlan = subscription?.plan === "free" ? "premium" : "pro";
+              window.location.href = `/pricing?plan=${suggestedPlan}&from=upgrade-prompt`;
+            },
+          },
+        });
+      } else {
+        // Fallback to just showing toast
+        toast.error(reason, {
+          duration: persistent ? 6000 : 4000,
+          id: "upgrade-prompt",
+        });
+      }
     },
     [subscription]
   );

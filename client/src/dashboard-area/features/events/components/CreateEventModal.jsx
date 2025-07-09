@@ -590,7 +590,7 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
       {/* Success Modal */}
       {showSuccessModal && (
         <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[60]"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[1100]"
           style={{ width: "100vw", height: "100vh", overflowY: "auto" }}
         >
           <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20 dark:border-gray-700/50 p-8 max-w-md w-full text-center animate-slide-in-scale">
