@@ -5,14 +5,11 @@ import {
   UserMinusIcon,
   ShieldCheckIcon,
   StarIcon,
-  HeartIcon,
   ClockIcon,
   EllipsisVerticalIcon,
   CalendarIcon,
   UsersIcon,
-  MapPinIcon,
   EnvelopeIcon,
-  ChatBubbleLeftRightIcon,
   SparklesIcon,
 } from "@heroicons/react/24/outline";
 import { userStatsCache } from "@shared/services/userStatsCache";
@@ -188,35 +185,6 @@ const UserProfileModal = ({
     return null;
   };
 
-  // Render friendship status badge
-  const renderFriendshipStatus = () => {
-    if (isOwnProfile) return null;
-
-    if (isFriend) {
-      return (
-        <div className="flex items-center justify-center mb-6">
-          <div className="flex items-center gap-2 bg-gradient-to-r from-pink-500 to-red-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg">
-            <HeartIcon className="w-4 h-4" />
-            Best Friends
-          </div>
-        </div>
-      );
-    }
-
-    if (isPending) {
-      return (
-        <div className="flex items-center justify-center mb-6">
-          <div className="flex items-center gap-2 bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg">
-            <ClockIcon className="w-4 h-4" />
-            Request Pending
-          </div>
-        </div>
-      );
-    }
-
-    return null;
-  };
-
   // Render friend actions
   const renderFriendActions = () => {
     if (isOwnProfile || context === "event") return null;
@@ -244,15 +212,6 @@ const UserProfileModal = ({
             Remove Friend
           </button>
         )}
-
-        {/* Message Button */}
-        <button
-          onClick={() => toast.success("Messaging feature coming soon!")}
-          className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white px-6 py-4 rounded-2xl font-bold text-lg transition-all duration-300 transform hover:scale-[1.02] shadow-xl"
-        >
-          <ChatBubbleLeftRightIcon className="w-6 h-6" />
-          Send Message
-        </button>
       </div>
     );
   };
@@ -389,14 +348,6 @@ const UserProfileModal = ({
               </p>
             </div>
 
-            {/* Location (if available) */}
-            <div className="flex items-center justify-center gap-2 mb-4">
-              <MapPinIcon className="w-4 h-4 text-gray-500" />
-              <p className="text-gray-500 dark:text-slate-500 text-sm">
-                Earth, Solar System 🌍
-              </p>
-            </div>
-
             {/* Stats */}
             {showStats && (
               <div className="flex justify-center gap-8 mb-6">
@@ -442,9 +393,6 @@ const UserProfileModal = ({
               </div>
             )}
           </div>
-
-          {/* Relationship Status */}
-          {renderFriendshipStatus()}
 
           {/* Actions */}
           {showActions && (

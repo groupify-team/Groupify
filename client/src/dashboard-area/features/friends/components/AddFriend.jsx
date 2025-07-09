@@ -131,7 +131,7 @@ const AddFriend = ({
 
   const handleViewProfile = () => {
     if (foundUser && onUserSelect) {
-      onUserSelect(foundUser.uid || foundUser.id);
+      onUserSelect(foundUser);
     }
   };
 
