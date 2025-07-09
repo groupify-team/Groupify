@@ -388,22 +388,34 @@ export const useDashboardData = () => {
     loadDashboardData();
   }, [loadDashboardData]);
 
-  // ? NEW: Effect to handle navigation state (event deletions, etc.)
   useEffect(() => {
     const state = location.state;
 
-    if (state && state.deletedeventId) {
-      removeEventFromState(state.deletedeventId);
+    console.log("🔍 Navigation state effect triggered:", {
+      state,
+      pathname: location.pathname,
+      leftEventId: state?.leftEventId,
+      currentEventsCount: events.length,
+    });
+
+    if (state && state.leftEventId) {
+      console.log("✅ Removing event from state:", state.leftEventId);
+      removeEventFromState(state.leftEventId);
 
       navigate(location.pathname, {
         replace: true,
-        state: { ...state, deletedeventId: null },
+        state: { ...state, leftEventId: null },
       });
 
-      showSuccessMessage("event deleted successfully!");
+      showSuccessMessage("You have left the event successfully!");
     }
 
-    if (state && state.forceRefresh && !state.deletedeventId) {
+    if (
+      state &&
+      state.forceRefresh &&
+      !state.deletedeventId &&
+      !state.leftEventId
+    ) {
       refreshevents();
 
       navigate(location.pathname, {
@@ -413,9 +425,9 @@ export const useDashboardData = () => {
     }
   }, [
     location.state,
+    location.pathname,
     removeEventFromState,
     navigate,
-    location.pathname,
     refreshevents,
     showSuccessMessage,
   ]);

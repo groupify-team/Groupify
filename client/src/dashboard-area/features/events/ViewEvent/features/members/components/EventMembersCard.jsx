@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+
 import {
   UserGroupIcon,
   StarIcon,
@@ -21,6 +23,7 @@ const EventMembersCard = ({
   onRemoveFromEvent,
   onLeaveEvent,
 }) => {
+  const navigate = useNavigate();
   const [showMenuForMember, setShowMenuForMember] = useState(null);
   const [confirmAction, setConfirmAction] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -123,6 +126,9 @@ const EventMembersCard = ({
           break;
         case "leave":
           await onLeaveEvent();
+          setTimeout(() => {
+            navigate("/dashboard/events");
+          }, 1500);
           break;
         default:
           break;

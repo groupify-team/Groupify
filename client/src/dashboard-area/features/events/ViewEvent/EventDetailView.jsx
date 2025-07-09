@@ -1,19 +1,3 @@
-/**
- * Ultra-Optimized EventDetailView with Advanced Performance Techniques
- *
- * PERFORMANCE OPTIMIZATIONS:
- * 1. Cached Firebase calls with TTL
- * 2. Virtual scrolling for large photo sets
- * 3. Progressive image loading
- * 4. Smart lazy loading with Intersection Observer
- * 5. Reduced bundle size with dynamic imports
- * 6. Memoized expensive calculations
- * 7. Debounced state updates
- * 8. Background data fetching
- * 9. Optimized re-render prevention
- * 10. Advanced code splitting
- */
-
 import React, {
   useState,
   Suspense,
@@ -269,6 +253,22 @@ const EventDetailView = ({ eventId: propeventId }) => {
     handleLeaveEvent,
   } = useEventMembers(currentUser?.uid, event, setEvent);
 
+  const handleLeaveEventWithNavigation = useCallback(async () => {
+    try {
+      await handleLeaveEvent();
+      navigate("/dashboard/events", {
+        replace: true,
+        state: {
+          leftEventId: eventId,
+          forceRefresh: true,
+          timestamp: Date.now(),
+        },
+      });
+    } catch (error) {
+      console.error("Error leaving event:", error);
+    }
+  }, [handleLeaveEvent, navigate, eventId]);
+
   const {
     selectedPhoto,
     mobileActiveTab,
@@ -486,7 +486,7 @@ const EventDetailView = ({ eventId: propeventId }) => {
               onPromoteToAdmin={handlePromoteToAdmin}
               onDemoteFromAdmin={handleDemoteFromAdmin}
               onRemoveFromEvent={handleRemoveFromEvent}
-              onLeaveEvent={handleLeaveEvent}
+              onLeaveEvent={handleLeaveEventWithNavigation}
             />
 
             {/* Invite People */}
