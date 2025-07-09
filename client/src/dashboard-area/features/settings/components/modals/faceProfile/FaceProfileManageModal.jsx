@@ -32,13 +32,6 @@ const FaceProfileManageModal = ({ isOpen, onClose, onProfileUpdated }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
 
-  // Load profile data when modal opens
-  useEffect(() => {
-    if (isOpen && currentUser?.uid) {
-      loadProfileData();
-    }
-  }, [isOpen, currentUser, loadProfileData]);
-
   const loadProfileData = useCallback(() => {
     try {
       const currentProfile = getFaceProfile(currentUser.uid);
@@ -49,6 +42,15 @@ const FaceProfileManageModal = ({ isOpen, onClose, onProfileUpdated }) => {
       console.error("❌ Error loading profile data:", error);
     }
   }, [currentUser]);
+
+  // Load profile data when modal opens
+  useEffect(() => {
+    if (isOpen && currentUser?.uid) {
+      loadProfileData();
+    }
+  }, [isOpen, currentUser, loadProfileData]);
+
+  
 
   // Helper function for uploading files using your existing uploadPhoto function
   const uploadProfilePhotos = async (files, userId) => {

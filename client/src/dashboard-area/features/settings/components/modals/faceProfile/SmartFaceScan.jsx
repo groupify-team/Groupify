@@ -9,7 +9,7 @@ import { useAuth } from "@auth/hooks/useAuth";
 
 import { createFaceProfile } from "@face-recognition/service/faceRecognitionService";
 import { saveFaceProfileToStorage } from "@firebase-services/faceProfiles";
-import { uploadBytes, getDownloadURL } from "firebase/storage";
+import { uploadBytes, getDownloadURL, ref as storageRef } from "firebase/storage";
 import { storage } from "@shared/services/firebase/config";
 import MobileStepGuide from "./ui/MobileStepGuide";
 import DesktopCameraView from "./ui/DesktopCameraView";
@@ -307,17 +307,17 @@ const SmartFaceScan = forwardRef(
 
     // Upload files to Firebase Storage
     const uploadFiles = async (files) => {
-      const uploadPromises = files.map(async (file, index) => {
-        const timestamp = Date.now();
-        const fileName = `profile_photos/${currentUser.uid}/${timestamp}_${index}_${file.name}`;
-        const storageRef = ref(storage, fileName);
-        const snapshot = await uploadBytes(storageRef, file);
-        const downloadURL = await getDownloadURL(snapshot.ref);
-        return downloadURL;
-      });
+    const uploadPromises = files.map(async (file, index) => {
+      const timestamp = Date.now();
+      const fileName = `profile_photos/${currentUser.uid}/${timestamp}_${index}_${file.name}`;
+      const fileStorageRef = storageRef(storage, fileName); // ✅ Now using storageRef
+      const snapshot = await uploadBytes(fileStorageRef, file);
+      const downloadURL = await getDownloadURL(snapshot.ref);
+      return downloadURL;
+    });
 
-      return await Promise.all(uploadPromises);
-    };
+    return await Promise.all(uploadPromises);
+  };
 
     // Create face profile
     const handleCreateProfile = async () => {
