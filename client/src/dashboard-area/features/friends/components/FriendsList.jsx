@@ -1,6 +1,6 @@
 // FriendsList.jsx - updated with better design
 import React from "react";
-import { EnhancedUserCard } from "@shared/components/user";
+import { UserCard } from "@shared/components/user";
 import { EyeIcon, UsersIcon, HeartIcon } from "@heroicons/react/24/outline";
 
 const FriendsList = ({ friends = [], handleViewProfile }) => {

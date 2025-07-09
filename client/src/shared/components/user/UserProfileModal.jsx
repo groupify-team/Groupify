@@ -11,36 +11,27 @@ import {
   UsersIcon,
   EnvelopeIcon,
   SparklesIcon,
+  CheckCircleIcon,
 } from "@heroicons/react/24/outline";
 import { userStatsCache } from "@shared/services/userStatsCache";
 import { toast } from "react-hot-toast";
 
-/**
- * Enhanced UserProfileModal with beautiful modern design
- */
 const UserProfileModal = ({
   isOpen,
   onClose,
   user,
   currentUserId,
-
-  // Context configuration
-  context = "general", // "general", "friends", "event"
-
-  // Friend-related props
+  context = "general",
   onAddFriend,
   onRemoveFriend,
+  onCancelRequest,
   friends = [],
   pendingRequests = [],
-
-  // Event-related props
   event = null,
   onPromoteToAdmin = null,
   onDemoteFromAdmin = null,
   onRemoveFromEvent = null,
   onInviteToEvent = null,
-
-  // UI customization
   showStats = true,
   showActions = true,
 }) => {
@@ -54,7 +45,6 @@ const UserProfileModal = ({
   const [confirmAction, setConfirmAction] = useState(null);
   const [showActionMenu, setShowActionMenu] = useState(false);
 
-  // Load user stats when modal opens
   useEffect(() => {
     if (!isOpen || !user?.uid || !showStats) {
       return;
@@ -133,6 +123,9 @@ const UserProfileModal = ({
       case "remove-friend":
         await handleAction(() => onRemoveFriend(user.uid));
         break;
+      case "cancel-request":
+        await handleAction(() => onCancelRequest(user.uid));
+        break;
       case "demote":
         await handleAction(() => onDemoteFromAdmin(user.uid));
         break;
@@ -186,8 +179,9 @@ const UserProfileModal = ({
   };
 
   // Render friend actions
+  // Render friend actions - Now uniform for all contexts
   const renderFriendActions = () => {
-    if (isOwnProfile || context === "event") return null;
+    if (isOwnProfile) return null;
 
     return (
       <div className="space-y-3">
@@ -202,79 +196,37 @@ const UserProfileModal = ({
           </button>
         )}
 
+        {isPending && (
+          <button
+            onClick={() => setConfirmAction("cancel-request")}
+            disabled={loading}
+            className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white px-6 py-4 rounded-2xl font-bold text-lg transition-all duration-300 transform hover:scale-[1.02] shadow-xl disabled:opacity-50"
+          >
+            <ClockIcon className="w-6 h-6" />
+            Cancel Request
+          </button>
+        )}
+
         {isFriend && (
           <button
             onClick={() => setConfirmAction("remove-friend")}
             disabled={loading}
-            className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white px-6 py-4 rounded-2xl font-bold text-lg transition-all duration-300 transform hover:scale-[1.02] shadow-xl disabled:opacity-50"
+            className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white px-6 py-4 rounded-2xl font-bold text-lg transition-all duration-300 transform hover:scale-[1.02] shadow-xl disabled:opacity-50"
           >
-            <UserMinusIcon className="w-6 h-6" />
-            Remove Friend
+            <CheckCircleIcon className="w-6 h-6" />
+            Friends
           </button>
         )}
       </div>
     );
   };
 
-  // Render event-specific actions
+  // Render event-specific actions - only invite button if not a member
   const renderEventActions = () => {
     if (context !== "event" || isOwnProfile) return null;
 
-    const canManageUser =
-      isCurrentUserCreator || (isCurrentUserAdmin && !isUserCreator);
-
     return (
       <div className="space-y-3">
-        {canManageUser && isEventMember && (
-          <div className="relative">
-            <button
-              onClick={() => setShowActionMenu(!showActionMenu)}
-              className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 text-white px-6 py-4 rounded-2xl font-bold text-lg transition-all duration-300 transform hover:scale-[1.02] shadow-xl"
-            >
-              <EllipsisVerticalIcon className="w-6 h-6" />
-              Manage User
-            </button>
-
-            {showActionMenu && (
-              <div className="absolute bottom-full left-0 right-0 mb-2 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-slate-600 overflow-hidden z-20">
-                {!isUserAdmin && (
-                  <button
-                    onClick={() => {
-                      setConfirmAction("promote");
-                      setShowActionMenu(false);
-                    }}
-                    className="w-full text-left px-6 py-4 text-gray-900 dark:text-white hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors font-medium"
-                  >
-                    🛡️ Promote to Admin
-                  </button>
-                )}
-
-                {isUserAdmin && !isUserCreator && (
-                  <button
-                    onClick={() => {
-                      setConfirmAction("demote");
-                      setShowActionMenu(false);
-                    }}
-                    className="w-full text-left px-6 py-4 text-gray-900 dark:text-white hover:bg-yellow-50 dark:hover:bg-yellow-900/20 transition-colors font-medium"
-                  >
-                    ⬇️ Remove Admin
-                  </button>
-                )}
-
-                <button
-                  onClick={() => {
-                    setConfirmAction("kick");
-                    setShowActionMenu(false);
-                  }}
-                  className="w-full text-left px-6 py-4 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors font-medium"
-                >
-                  🚫 Remove from Event
-                </button>
-              </div>
-            )}
-          </div>
-        )}
-
         {!isEventMember && onInviteToEvent && (
           <button
             onClick={() => handleAction(() => onInviteToEvent(user.uid))}
@@ -295,8 +247,81 @@ const UserProfileModal = ({
         {/* Animated Background */}
         <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-pink-500/10 dark:from-blue-500/5 dark:via-purple-500/5 dark:to-pink-500/5"></div>
 
-        {/* Header with Close Button */}
-        <div className="relative flex justify-end p-4">
+        {/* Header with Manage Button and Close Button */}
+        <div className="relative flex justify-between items-center p-4">
+          {/* Manage Button (3-dots) - Only for event context when user can manage */}
+          {context === "event" &&
+            !isOwnProfile &&
+            (isCurrentUserCreator || (isCurrentUserAdmin && !isUserCreator)) &&
+            isEventMember && (
+              <div className="relative">
+                <button
+                  onClick={() => setShowActionMenu(!showActionMenu)}
+                  className="text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white transition-colors p-2 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700"
+                >
+                  <EllipsisVerticalIcon className="w-6 h-6" />
+                </button>
+
+                {showActionMenu && (
+                  <>
+                    {/* Invisible backdrop to catch clicks */}
+                    <div
+                      className="fixed inset-0 z-20"
+                      onClick={() => setShowActionMenu(false)}
+                    />
+
+                    <div className="absolute top-full left-0 mt-2 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-slate-600 overflow-hidden z-50 min-w-72 w-72">
+                      {!isUserAdmin && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setConfirmAction("promote");
+                            setShowActionMenu(false);
+                          }}
+                          className="w-full text-left px-6 py-4 text-gray-900 dark:text-white hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors font-medium flex items-center gap-3"
+                        >
+                          🛡️ <span>Promote to Admin</span>
+                        </button>
+                      )}
+
+                      {isUserAdmin && !isUserCreator && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setConfirmAction("demote");
+                            setShowActionMenu(false);
+                          }}
+                          className="w-full text-left px-6 py-4 text-gray-900 dark:text-white hover:bg-yellow-50 dark:hover:bg-yellow-900/20 transition-colors font-medium flex items-center gap-3"
+                        >
+                          ⬇️ <span>Remove Admin</span>
+                        </button>
+                      )}
+
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setConfirmAction("kick");
+                          setShowActionMenu(false);
+                        }}
+                        className="w-full text-left px-6 py-4 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors font-medium flex items-center gap-3"
+                      >
+                        🚫 <span>Remove from Event</span>
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+
+          {/* Spacer when no manage button */}
+          {!(
+            context === "event" &&
+            !isOwnProfile &&
+            (isCurrentUserCreator || (isCurrentUserAdmin && !isUserCreator)) &&
+            isEventMember
+          ) && <div></div>}
+
+          {/* Close Button */}
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 dark:hover:text-white transition-colors p-2 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700"
@@ -418,6 +443,8 @@ const UserProfileModal = ({
               <p className="text-gray-600 dark:text-slate-300">
                 {confirmAction === "remove-friend" &&
                   "Are you sure you want to remove this friend?"}
+                {confirmAction === "cancel-request" &&
+                  "Are you sure you want to cancel the friend request?"}
                 {confirmAction === "promote" &&
                   "Are you sure you want to promote this user to admin?"}
                 {confirmAction === "demote" &&

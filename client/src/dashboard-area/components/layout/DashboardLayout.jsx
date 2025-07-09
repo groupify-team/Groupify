@@ -170,21 +170,20 @@ const DashboardLayout = ({ children }) => {
     }
   };
 
-  // Friend operation handlers
-  const handleAddFriendDirect = async (targetUid) => {
+  const handleAddFriendDirect = async (userId) => {
     try {
-      const { sendFriendRequest } = await import("@firebase-services/users");
-      await sendFriendRequest(currentUser.uid, targetUid);
+      const { sendFriendRequest } = await import(
+        "@shared/services/firebase/users"
+      );
+      await sendFriendRequest(currentUser.uid, userId);
+      await refreshFriends();
       showSuccessMessage("Friend request sent!");
-      closeAddFriendModal();
     } catch (error) {
       console.error("Error sending friend request:", error);
       showErrorMessage("Failed to send friend request");
     }
   };
-
   const handleUserSelect = (uid) => {
-    // Find user data and open profile modal
     const userData = friends.find((f) => f.uid === uid) || preservedFoundUser;
     if (userData) {
       openUserProfile(userData);

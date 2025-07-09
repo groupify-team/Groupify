@@ -1,5 +1,4 @@
-// Export shared components
-export { default as UserCard } from "./UserCard";
+// Export shared components (excluding UserCard - now in user folder)
 export { default as ProgressiveImage } from "./ProgressiveImage";
 export { default as VirtualGrid } from "./VirtualGrid";
 

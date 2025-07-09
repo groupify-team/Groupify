@@ -1,10 +1,10 @@
 import React from "react";
 
 /**
- * Enhanced UserCard component with support for different contexts and actions
+ * UserCard component with support for different contexts and actions
  * Can be used in friends list, event members, search results, etc.
  */
-const EnhancedUserCard = ({
+const UserCard = ({
   user,
   onClick,
   rightContent,
@@ -19,9 +19,11 @@ const EnhancedUserCard = ({
 }) => {
   // Add safety check for user prop
   if (!user) {
-    console.warn("EnhancedUserCard: user prop is undefined");
+    console.warn("UserCard: user prop is undefined");
     return (
-      <div className={`flex items-center p-3 gap-3 rounded-xl bg-gray-100 dark:bg-slate-600 border border-gray-200 dark:border-slate-500 ${className}`}>
+      <div
+        className={`flex items-center p-3 gap-3 rounded-xl bg-gray-100 dark:bg-slate-600 border border-gray-200 dark:border-slate-500 ${className}`}
+      >
         <div className="w-10 h-10 bg-gray-300 dark:bg-slate-400 rounded-full animate-pulse"></div>
         <div className="flex-1">
           <div className="h-4 bg-gray-300 dark:bg-slate-400 rounded animate-pulse mb-2"></div>
@@ -115,7 +117,9 @@ const EnhancedUserCard = ({
   const textSizes = getTextSizes();
 
   // Safe access to user properties with fallbacks
-  const userPhotoURL = user?.photoURL || "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg";
+  const userPhotoURL =
+    user?.photoURL ||
+    "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg";
   const userDisplayName = user?.displayName || user?.email || "Unknown User";
   const userEmail = user?.email;
 
@@ -137,7 +141,8 @@ const EnhancedUserCard = ({
           }`}
           onError={(e) => {
             // Fallback if image fails to load
-            e.target.src = "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg";
+            e.target.src =
+              "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg";
           }}
         />
         {renderStatusIndicator()}
@@ -179,4 +184,4 @@ const EnhancedUserCard = ({
   );
 };
 
-export default EnhancedUserCard;
+export default UserCard;
