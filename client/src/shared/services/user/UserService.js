@@ -92,9 +92,16 @@ export class UserService {
   /**
    * Send friend request
    */
+
   static async sendFriendRequest(fromUserId, toUserId) {
     try {
       console.log(`🤝 Sending friend request: ${fromUserId} -> ${toUserId}`);
+
+      // Check if user is trying to send request to themselves
+      if (fromUserId === toUserId) {
+        console.warn("⚠️ User cannot send friend request to themselves");
+        throw new Error("You cannot send a friend request to yourself");
+      }
 
       // Check if request already exists
       const existingRequest = await this.getExistingFriendRequest(
@@ -351,6 +358,8 @@ export class UserService {
   /**
    * Get user's friend requests
    */
+  // In your UserService.js, replace the getUserFriendRequests function:
+
   static async getUserFriendRequests(userId) {
     try {
       console.log(`📨 Getting friend requests for user: ${userId}`);
@@ -373,6 +382,7 @@ export class UserService {
       const requests = [];
       for (const requestDoc of querySnapshot.docs) {
         const requestData = requestDoc.data();
+        const documentId = requestDoc.id; // ← Store the REAL document ID
 
         try {
           // Get the sender's profile
@@ -380,17 +390,22 @@ export class UserService {
 
           if (senderProfile) {
             requests.push({
-              id: requestDoc.id,
-              ...requestData,
-              ...senderProfile, // Merge sender profile data
+              id: documentId,         // ← Use the document ID, not user ID
+              ...requestData,         // ← Request data (from, to, status, etc.)
+              // Merge sender profile but rename conflicting fields
+              uid: senderProfile.uid || senderProfile.id,
+              displayName: senderProfile.displayName,
+              email: senderProfile.email,
+              photoURL: senderProfile.photoURL,
+              // Don't include senderProfile.id to avoid overwriting documentId
             });
           } else {
             console.warn(
-              `⚠️ Sender profile not found for request: ${requestDoc.id}`
+              `⚠️ Sender profile not found for request: ${documentId}`
             );
             // Still include the request with basic info
             requests.push({
-              id: requestDoc.id,
+              id: documentId,        // ← Use the document ID
               ...requestData,
               displayName: "Unknown User",
               email: "",
@@ -398,7 +413,7 @@ export class UserService {
           }
         } catch (error) {
           console.error(
-            `❌ Error loading sender profile for request ${requestDoc.id}:`,
+            `❌ Error loading sender profile for request ${documentId}:`,
             error
           );
         }
@@ -411,7 +426,6 @@ export class UserService {
       throw error;
     }
   }
-
   /**
    * Get pending friend requests for a user (alias for getUserFriendRequests)
    */
@@ -481,18 +495,17 @@ export class UserService {
   /**
    * Search users
    */
-  static async searchUsers(searchTerm, currentUserId, limit = 10) {
+    static async searchUsers(searchTerm, currentUserId, limit = 10) {
     try {
       console.log(`🔍 Searching users with term: "${searchTerm}"`);
 
-      // This is a simplified search - in production you'd want to use
-      // a more sophisticated search solution like Algolia or Elasticsearch
       const usersCollection = collection(db, "users");
       const querySnapshot = await getDocs(usersCollection);
 
       const users = [];
       querySnapshot.forEach((doc) => {
         const userData = doc.data();
+        // Filter out current user AND check if user has displayName
         if (doc.id !== currentUserId && userData.displayName) {
           const displayName = userData.displayName.toLowerCase();
           const email = userData.email?.toLowerCase() || "";
