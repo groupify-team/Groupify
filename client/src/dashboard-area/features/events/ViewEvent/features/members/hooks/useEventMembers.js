@@ -17,7 +17,6 @@ import { db } from "@shared/services/firebase/config";
 import { updateEvent, sendEventInvite } from "@shared/services/firebase/events";
 import { UserService } from "@shared/services/user/UserService";
 import {
-  getUserProfile,
   sendFriendRequest,
   removeFriend,
 } from "@shared/services/firebase/users";
