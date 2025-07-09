@@ -442,6 +442,8 @@ export function AuthProvider({ children }) {
   // PERFORMANCE: Enhanced auth state change listener with proper loading management
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      console.log("Auth state changed:", { user: user?.uid });
+
       // If user changed, clear only user-specific caches (preserve general cache for performance)
       if (currentUser && user && currentUser.uid !== user.uid) {
         const previousUserId = currentUser.uid;
@@ -459,13 +461,17 @@ export function AuthProvider({ children }) {
       }
 
       if (user) {
+        console.log("User exists, checking verification status");
         if (user.providerData[0]?.providerId === "google.com") {
+          console.log("Google user, setting as current user");
           setCurrentUser(user);
           await initializeUserPlan(user);
         } else if (user.emailVerified) {
+          console.log("Email verified user, setting as current user");
           setCurrentUser(user);
           await initializeUserPlan(user);
         } else {
+          console.log("Email not verified, signing out");
           setCurrentUser(null);
           setUserPlan(null);
           try {
@@ -475,11 +481,14 @@ export function AuthProvider({ children }) {
           }
         }
       } else {
+        console.log("No user, setting to null");
         setCurrentUser(null);
         setUserPlan(null);
       }
 
+      // Always set loading to false and initialized to true after first auth check
       if (firstLoad.current) {
+        console.log("First load complete, setting loading to false");
         setLoading(false);
         setInitialized(true);
         firstLoad.current = false;
@@ -489,7 +498,7 @@ export function AuthProvider({ children }) {
     return () => {
       unsubscribe();
     };
-  }, [initializeUserPlan, currentUser]);
+  }, []);
 
   useEffect(() => {
     const unsubscribe = subscriptionService.subscribe((event, data) => {

@@ -1,8 +1,7 @@
-// FriendsSection.jsx - updated to use shared components
+// FriendsSection.jsx - Clean version without syntax errors
 import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useAuth } from "@auth/hooks/useAuth";
-import { useUserRelationships } from "@shared/hooks";
 import { UserService } from "@shared/services/user/UserService";
 import { UserProfileModal } from "@shared/components/user";
 import toast from "react-hot-toast";
@@ -12,68 +11,78 @@ import FriendRequestsList from "@dashboard/features/friends/components/FriendReq
 import FriendsList from "@dashboard/features/friends/components/FriendsList";
 
 const FriendsSection = () => {
-  const { user } = useAuth();
+  const { currentUser: user } = useAuth();
   console.log("FriendsSection rendered, user:", user?.uid);
 
-  const {
-    friends: friendIds,
-    friendRequests,
-    loading,
-    error,
-    loadFriends,
-    loadPendingRequests,
-  } = useUserRelationships();
+  // State management
+  const [friendIds, setFriendIds] = useState([]);
+  const [friendRequests, setFriendRequests] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Debug logging
-  console.log("FriendsSection state:", {
-    friendIds,
-    friendIdsLength: friendIds?.length,
-    friendRequests,
-    loading,
-    error,
-    userUid: user?.uid,
-  });
-
+  // Component state
   const [friends, setFriends] = useState([]);
   const [showFriendRequests, setShowFriendRequests] = useState(false);
   const [openProfile, setOpenProfile] = useState(false);
   const [profileUser, setProfileUser] = useState(null);
 
-  // Load friend profiles
-  useEffect(() => {
-    console.log("FriendsSection useEffect: Friend IDs changed:", friendIds);
-    console.log("FriendsSection useEffect: Loading state:", loading);
+  // Data loading function
+  const loadUserData = async () => {
+    if (!user?.uid) {
+      console.log("No user ID available");
+      setLoading(false);
+      return;
+    }
 
+    setLoading(true);
+    setError(null);
+
+    try {
+      console.log("Loading friends and requests for user:", user.uid);
+
+      const [userFriends, pendingRequests] = await Promise.all([
+        UserService.getUserFriends(user.uid),
+        UserService.getPendingFriendRequests(user.uid),
+      ]);
+
+      console.log("Loaded friends:", userFriends);
+      console.log("Loaded requests:", pendingRequests);
+
+      setFriendIds(userFriends.map((friend) => friend.uid || friend.id));
+      setFriendRequests(pendingRequests);
+      setError(null);
+    } catch (err) {
+      console.error("Error loading user data:", err);
+      setError(err.message);
+      setFriendIds([]);
+      setFriendRequests([]);
+      toast.error("Failed to load friends data");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Load data on mount and when user changes
+  useEffect(() => {
+    loadUserData();
+  }, [user?.uid]);
+
+  // Load friend profiles when friendIds change
+  useEffect(() => {
     const loadFriendProfiles = async () => {
-      // Don't load profiles while still loading the friend IDs or if user is not available
       if (loading || !user?.uid) {
-        console.log(
-          "FriendsSection: Still loading friend IDs or user not available, skipping profile loading"
-        );
         return;
       }
 
       if (friendIds && friendIds.length > 0) {
         try {
-          console.log(
-            "FriendsSection: Loading profiles for friends:",
-            friendIds
-          );
-          // Get individual friend profiles based on the friend IDs
           const profiles = await UserService.getUserProfiles(friendIds);
-          console.log("FriendsSection: Friend profiles loaded:", profiles);
           setFriends(profiles);
         } catch (error) {
-          console.error(
-            "FriendsSection: Error loading friend profiles:",
-            error
-          );
+          console.error("Error loading friend profiles:", error);
           toast.error("Failed to load friend profiles");
         }
       } else {
-        console.log(
-          "FriendsSection: No friend IDs found, setting empty friends array"
-        );
         setFriends([]);
       }
     };
@@ -82,7 +91,6 @@ const FriendsSection = () => {
   }, [friendIds, loading, user?.uid]);
 
   const handleOpenProfile = (user) => {
-    console.log("Opening profile for user:", user);
     setProfileUser(user);
     setOpenProfile(true);
   };
@@ -97,7 +105,7 @@ const FriendsSection = () => {
 
     try {
       await UserService.acceptFriendRequest(requestId, user.uid);
-      await loadFriends();
+      await loadUserData();
       toast.success("Friend request accepted!");
     } catch (error) {
       console.error("Error accepting friend request:", error);
@@ -110,7 +118,7 @@ const FriendsSection = () => {
 
     try {
       await UserService.rejectFriendRequest(requestId, user.uid);
-      await loadFriends();
+      await loadUserData();
       toast.success("Friend request rejected.");
     } catch (error) {
       console.error("Error rejecting friend request:", error);
@@ -123,7 +131,7 @@ const FriendsSection = () => {
 
     try {
       await UserService.removeFriend(user.uid, friendUserId);
-      await loadFriends();
+      await loadUserData();
       toast.success("Friend removed.");
     } catch (error) {
       console.error("Error removing friend:", error);
@@ -136,7 +144,7 @@ const FriendsSection = () => {
 
     try {
       await UserService.sendFriendRequest(user.uid, targetUserId);
-      await loadPendingRequests();
+      await loadUserData();
       toast.success("Friend request sent!");
     } catch (error) {
       console.error("Error sending friend request:", error);
@@ -149,7 +157,7 @@ const FriendsSection = () => {
 
     try {
       await UserService.cancelFriendRequest(user.uid, targetUserId);
-      await loadPendingRequests();
+      await loadUserData();
       toast.success("Friend request canceled.");
     } catch (error) {
       console.error("Error canceling friend request:", error);
@@ -159,70 +167,111 @@ const FriendsSection = () => {
 
   if (loading) {
     return (
-      <div className="p-4 text-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-        <p className="text-gray-600 dark:text-slate-400 mt-2">
-          Loading friends...
-        </p>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-slate-400 text-lg">
+            Loading friends...
+          </p>
+        </div>
       </div>
     );
   }
 
-  // Add guard for user not being available
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-600 text-lg mb-4">Error: {error}</p>
+          <button
+            onClick={() => loadUserData()}
+            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (!user?.uid) {
     return (
-      <div className="p-4 text-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-        <p className="text-gray-600 dark:text-slate-400 mt-2">
-          Loading user data...
-        </p>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-slate-400 text-lg">
+            Loading user data...
+          </p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">Friends</h1>
-      <AddFriend />
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 p-4 lg:p-8">
+      <div className="max-w-7xl mx-auto space-y-8">
+        {/* Page Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-4">
+            Friends
+          </h1>
+          <p className="text-gray-600 dark:text-slate-400 text-lg">
+            Connect with friends and share amazing moments together
+          </p>
+        </div>
 
-      {/* Friend Requests Section */}
-      <FriendRequestsList
-        pendingRequests={friendRequests}
-        showFriendRequests={showFriendRequests}
-        setShowFriendRequests={setShowFriendRequests}
-        handleAcceptRequest={handleAcceptFriendRequest}
-        handleRejectRequest={handleRejectFriendRequest}
-      />
+        {/* Add Friend Component */}
+        <div className="max-w-2xl mx-auto">
+          <div className="relative">
+            <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl blur opacity-20"></div>
+            <div className="relative bg-white/90 dark:bg-slate-800/90 backdrop-blur-lg rounded-xl border border-gray-200/60 dark:border-slate-600/60 p-6 shadow-xl">
+              <AddFriend
+                onAddFriendDirect={handleAddFriend}
+                onUserSelect={(userId) => console.log("User selected:", userId)}
+              />
+            </div>
+          </div>
+        </div>
 
-      {/* Friends List */}
-      <FriendsList friends={friends} handleViewProfile={handleOpenProfile} />
+        {/* Friend Requests Section */}
+        <div className="max-w-4xl mx-auto">
+          <FriendRequestsList
+            pendingRequests={friendRequests}
+            showFriendRequests={showFriendRequests}
+            setShowFriendRequests={setShowFriendRequests}
+            handleAcceptRequest={handleAcceptFriendRequest}
+            handleRejectRequest={handleRejectFriendRequest}
+          />
+        </div>
+
+        {/* Friends List */}
+        <div className="max-w-6xl mx-auto">
+          <FriendsList
+            friends={friends}
+            handleViewProfile={handleOpenProfile}
+          />
+        </div>
+      </div>
 
       {/* User Profile Modal */}
-      {openProfile && profileUser && user?.uid && (
-        <>
-          {console.log(
-            "Rendering user profile modal for:",
-            profileUser,
-            "isOpen:",
-            openProfile
-          )}
-          {createPortal(
-            <UserProfileModal
-              isOpen={openProfile}
-              onClose={handleCloseProfile}
-              user={profileUser}
-              currentUserId={user.uid}
-              context="friends"
-              friends={friendIds}
-              pendingRequests={[]} // TODO: Get pending requests for this user
-              onAddFriend={handleAddFriend}
-              onRemoveFriend={handleRemoveFriend}
-              onCancelRequest={handleCancelRequest}
-            />,
-            document.body
-          )}
-        </>
-      )}
+      {openProfile &&
+        profileUser &&
+        user?.uid &&
+        createPortal(
+          <UserProfileModal
+            isOpen={openProfile}
+            onClose={handleCloseProfile}
+            user={profileUser}
+            currentUserId={user.uid}
+            context="friends"
+            friends={friendIds}
+            pendingRequests={[]}
+            onAddFriend={handleAddFriend}
+            onRemoveFriend={handleRemoveFriend}
+            onCancelRequest={handleCancelRequest}
+          />,
+          document.body
+        )}
     </div>
   );
 };

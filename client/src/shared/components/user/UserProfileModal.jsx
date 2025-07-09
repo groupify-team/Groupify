@@ -8,13 +8,18 @@ import {
   HeartIcon,
   ClockIcon,
   EllipsisVerticalIcon,
+  CalendarIcon,
+  UsersIcon,
+  MapPinIcon,
+  EnvelopeIcon,
+  ChatBubbleLeftRightIcon,
+  SparklesIcon,
 } from "@heroicons/react/24/outline";
 import { userStatsCache } from "@shared/services/userStatsCache";
 import { toast } from "react-hot-toast";
 
 /**
- * Unified UserProfileModal component that works in different contexts
- * Supports both friend management and event member management
+ * Enhanced UserProfileModal with beautiful modern design
  */
 const UserProfileModal = ({
   isOpen,
@@ -88,15 +93,7 @@ const UserProfileModal = ({
     };
   }, [isOpen, user?.uid, showStats]);
 
-  console.log("UserProfileModal render:", {
-    isOpen,
-    user,
-    currentUserId,
-    context,
-  });
-
   if (!isOpen || !user) {
-    console.log("UserProfileModal not rendering - missing isOpen or user");
     return null;
   }
 
@@ -151,12 +148,6 @@ const UserProfileModal = ({
       case "invite-to-event":
         await handleAction(() => onInviteToEvent(user.uid));
         break;
-      case "leave-event":
-        await handleAction(() => onRemoveFromEvent(currentUserId));
-        break;
-      case "leave-admin":
-        await handleAction(() => onDemoteFromAdmin(currentUserId));
-        break;
       default:
         break;
     }
@@ -170,32 +161,26 @@ const UserProfileModal = ({
 
     if (isUserCreator) {
       return (
-        <div className="role-badge">
-          <div className="flex items-center gap-1.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white px-3 py-1.5 rounded-full text-xs font-medium shadow-lg border-2 border-white">
-            <StarIcon className="w-3 h-3" />
-            Creator
-          </div>
+        <div className="absolute -top-2 -right-2 flex items-center gap-1.5 bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-lg border-2 border-white z-10">
+          <StarIcon className="w-3 h-3" />
+          Creator
         </div>
       );
     }
 
     if (isUserAdmin) {
       return (
-        <div className="role-badge">
-          <div className="flex items-center gap-1.5 bg-gradient-to-r from-blue-500 to-cyan-500 text-white px-3 py-1.5 rounded-full text-xs font-medium shadow-lg border-2 border-white">
-            <ShieldCheckIcon className="w-3 h-3" />
-            Admin
-          </div>
+        <div className="absolute -top-2 -right-2 flex items-center gap-1.5 bg-gradient-to-r from-blue-500 via-cyan-500 to-teal-500 text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-lg border-2 border-white z-10">
+          <ShieldCheckIcon className="w-3 h-3" />
+          Admin
         </div>
       );
     }
 
     if (isEventMember) {
       return (
-        <div className="role-badge">
-          <span className="bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 px-3 py-1.5 rounded-full text-xs font-medium border-2 border-white shadow-lg">
-            Member
-          </span>
+        <div className="absolute -top-2 -right-2 bg-gradient-to-r from-emerald-500 to-green-500 text-white px-3 py-1.5 rounded-full text-xs font-bold border-2 border-white shadow-lg z-10">
+          Member
         </div>
       );
     }
@@ -209,10 +194,10 @@ const UserProfileModal = ({
 
     if (isFriend) {
       return (
-        <div className="flex items-center justify-center mb-4">
-          <div className="flex items-center gap-1.5 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 px-4 py-2 rounded-full text-sm font-medium border border-green-200 dark:border-green-800">
+        <div className="flex items-center justify-center mb-6">
+          <div className="flex items-center gap-2 bg-gradient-to-r from-pink-500 to-red-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg">
             <HeartIcon className="w-4 h-4" />
-            Friends
+            Best Friends
           </div>
         </div>
       );
@@ -220,10 +205,10 @@ const UserProfileModal = ({
 
     if (isPending) {
       return (
-        <div className="flex items-center justify-center mb-4">
-          <div className="flex items-center gap-1.5 bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-300 px-4 py-2 rounded-full text-sm font-medium border border-yellow-200 dark:border-yellow-800">
+        <div className="flex items-center justify-center mb-6">
+          <div className="flex items-center gap-2 bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg">
             <ClockIcon className="w-4 h-4" />
-            Pending
+            Request Pending
           </div>
         </div>
       );
@@ -237,14 +222,14 @@ const UserProfileModal = ({
     if (isOwnProfile || context === "event") return null;
 
     return (
-      <div className="space-y-2">
+      <div className="space-y-3">
         {!isFriend && !isPending && (
           <button
             onClick={() => handleAction(() => onAddFriend(user.uid))}
             disabled={loading}
-            className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg font-medium transition-colors disabled:opacity-50"
+            className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-4 rounded-2xl font-bold text-lg transition-all duration-300 transform hover:scale-[1.02] shadow-xl disabled:opacity-50"
           >
-            <UserPlusIcon className="w-5 h-5" />
+            <UserPlusIcon className="w-6 h-6" />
             Add Friend
           </button>
         )}
@@ -253,12 +238,21 @@ const UserProfileModal = ({
           <button
             onClick={() => setConfirmAction("remove-friend")}
             disabled={loading}
-            className="w-full flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-lg font-medium transition-colors disabled:opacity-50"
+            className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white px-6 py-4 rounded-2xl font-bold text-lg transition-all duration-300 transform hover:scale-[1.02] shadow-xl disabled:opacity-50"
           >
-            <UserMinusIcon className="w-5 h-5" />
+            <UserMinusIcon className="w-6 h-6" />
             Remove Friend
           </button>
         )}
+
+        {/* Message Button */}
+        <button
+          onClick={() => toast.success("Messaging feature coming soon!")}
+          className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white px-6 py-4 rounded-2xl font-bold text-lg transition-all duration-300 transform hover:scale-[1.02] shadow-xl"
+        >
+          <ChatBubbleLeftRightIcon className="w-6 h-6" />
+          Send Message
+        </button>
       </div>
     );
   };
@@ -271,28 +265,28 @@ const UserProfileModal = ({
       isCurrentUserCreator || (isCurrentUserAdmin && !isUserCreator);
 
     return (
-      <div className="space-y-2">
+      <div className="space-y-3">
         {canManageUser && isEventMember && (
           <div className="relative">
             <button
               onClick={() => setShowActionMenu(!showActionMenu)}
-              className="w-full flex items-center justify-center gap-2 bg-slate-600 hover:bg-slate-700 text-white px-4 py-3 rounded-lg font-medium transition-colors"
+              className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 text-white px-6 py-4 rounded-2xl font-bold text-lg transition-all duration-300 transform hover:scale-[1.02] shadow-xl"
             >
-              <EllipsisVerticalIcon className="w-5 h-5" />
+              <EllipsisVerticalIcon className="w-6 h-6" />
               Manage User
             </button>
 
             {showActionMenu && (
-              <div className="absolute bottom-full left-0 right-0 mb-2 bg-slate-700 rounded-lg shadow-lg border border-slate-600 overflow-hidden">
+              <div className="absolute bottom-full left-0 right-0 mb-2 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-slate-600 overflow-hidden z-20">
                 {!isUserAdmin && (
                   <button
                     onClick={() => {
                       setConfirmAction("promote");
                       setShowActionMenu(false);
                     }}
-                    className="w-full text-left px-4 py-3 text-white hover:bg-slate-600 transition-colors"
+                    className="w-full text-left px-6 py-4 text-gray-900 dark:text-white hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors font-medium"
                   >
-                    Promote to Admin
+                    🛡️ Promote to Admin
                   </button>
                 )}
 
@@ -302,9 +296,9 @@ const UserProfileModal = ({
                       setConfirmAction("demote");
                       setShowActionMenu(false);
                     }}
-                    className="w-full text-left px-4 py-3 text-white hover:bg-slate-600 transition-colors"
+                    className="w-full text-left px-6 py-4 text-gray-900 dark:text-white hover:bg-yellow-50 dark:hover:bg-yellow-900/20 transition-colors font-medium"
                   >
-                    Remove Admin
+                    ⬇️ Remove Admin
                   </button>
                 )}
 
@@ -313,9 +307,9 @@ const UserProfileModal = ({
                     setConfirmAction("kick");
                     setShowActionMenu(false);
                   }}
-                  className="w-full text-left px-4 py-3 text-red-400 hover:bg-slate-600 transition-colors"
+                  className="w-full text-left px-6 py-4 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors font-medium"
                 >
-                  Remove from Event
+                  🚫 Remove from Event
                 </button>
               </div>
             )}
@@ -326,9 +320,9 @@ const UserProfileModal = ({
           <button
             onClick={() => handleAction(() => onInviteToEvent(user.uid))}
             disabled={loading}
-            className="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-3 rounded-lg font-medium transition-colors disabled:opacity-50"
+            className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-6 py-4 rounded-2xl font-bold text-lg transition-all duration-300 transform hover:scale-[1.02] shadow-xl disabled:opacity-50"
           >
-            <UserPlusIcon className="w-5 h-5" />
+            <UserPlusIcon className="w-6 h-6" />
             Invite to Event
           </button>
         )}
@@ -337,84 +331,111 @@ const UserProfileModal = ({
   };
 
   return (
-    <div className="user-profile-modal modal-backdrop">
-      <div className="user-profile-modal-content">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="relative bg-white dark:bg-slate-800 rounded-3xl shadow-2xl max-w-md w-full mx-4 overflow-hidden border border-gray-200 dark:border-slate-700 transform transition-all duration-300 animate-in slide-in-from-bottom-4">
+        {/* Animated Background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-pink-500/10 dark:from-blue-500/5 dark:via-purple-500/5 dark:to-pink-500/5"></div>
+
         {/* Header with Close Button */}
-        <div className="user-profile-modal-header">
+        <div className="relative flex justify-end p-4">
           <button
             onClick={onClose}
-            className="user-profile-modal-close text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors"
+            className="text-gray-400 hover:text-gray-600 dark:hover:text-white transition-colors p-2 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700"
           >
             <XMarkIcon className="w-6 h-6" />
           </button>
         </div>
 
         {/* Profile Section */}
-        <div className="px-6 pt-6 pb-6">
-          {/* Profile Image */}
+        <div className="relative px-8 pb-8 -mt-4">
+          {/* Profile Image with Role Badge */}
           <div className="text-center mb-6">
             <div className="relative inline-block">
-              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 p-1 mx-auto">
-                <img
-                  src={
-                    user.photoURL ||
-                    "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg"
-                  }
-                  alt="Profile"
-                  className="w-full h-full rounded-full object-cover bg-slate-200 dark:bg-slate-700"
-                />
+              <div className="relative">
+                <div className="w-32 h-32 rounded-full bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 p-1 mx-auto shadow-2xl">
+                  <img
+                    src={
+                      user.photoURL ||
+                      "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg"
+                    }
+                    alt="Profile"
+                    className="w-full h-full rounded-full object-cover bg-white dark:bg-slate-700"
+                  />
+                </div>
+
+                {/* Online Status */}
+                <div className="absolute bottom-2 right-2 w-8 h-8 bg-green-500 border-4 border-white dark:border-slate-800 rounded-full shadow-lg flex items-center justify-center">
+                  <div className="w-3 h-3 bg-white rounded-full"></div>
+                </div>
               </div>
+
               {renderRoleBadge()}
             </div>
           </div>
 
           {/* User Info */}
           <div className="text-center mb-6">
-            <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-1">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
               {user.displayName || "Unknown User"}
+              {isOwnProfile && (
+                <span className="text-blue-500 text-sm ml-2">(You)</span>
+              )}
             </h2>
-            <p className="text-slate-500 dark:text-slate-400 text-sm break-all mb-4">
-              {user.email}
-            </p>
+
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <EnvelopeIcon className="w-4 h-4 text-gray-500" />
+              <p className="text-gray-600 dark:text-slate-400 text-sm">
+                {user.email}
+              </p>
+            </div>
+
+            {/* Location (if available) */}
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <MapPinIcon className="w-4 h-4 text-gray-500" />
+              <p className="text-gray-500 dark:text-slate-500 text-sm">
+                Earth, Solar System 🌍
+              </p>
+            </div>
 
             {/* Stats */}
             {showStats && (
-              <div className="flex justify-center gap-8 mb-4">
+              <div className="flex justify-center gap-8 mb-6">
                 <div className="text-center">
-                  <div className="w-8 h-8 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-1">
-                    <span className="text-slate-600 dark:text-slate-400 text-xs">
-                      📅
-                    </span>
+                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-2xl flex items-center justify-center mx-auto mb-2 shadow-lg">
+                    <CalendarIcon className="w-6 h-6 text-white" />
                   </div>
-                  <div className="text-2xl font-bold text-slate-900 dark:text-white h-8 flex items-center justify-center">
+                  <div className="text-2xl font-bold text-gray-900 dark:text-white h-8 flex items-center justify-center">
                     {userStats.loading ? (
-                      <div className="w-4 h-4 border-2 border-slate-300 dark:border-slate-400 border-t-blue-500 rounded-full animate-spin"></div>
+                      <div className="w-4 h-4 border-2 border-gray-300 dark:border-slate-400 border-t-blue-500 rounded-full animate-spin"></div>
                     ) : userStats.error ? (
-                      <span className="text-slate-400 text-lg">-</span>
+                      <span className="text-gray-400 text-lg">-</span>
                     ) : (
-                      <span className="text-2xl">{userStats.eventsCount}</span>
+                      <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                        {userStats.eventsCount}
+                      </span>
                     )}
                   </div>
-                  <div className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+                  <div className="text-xs text-gray-500 dark:text-slate-400 uppercase tracking-wide font-medium">
                     Events
                   </div>
                 </div>
+
                 <div className="text-center">
-                  <div className="w-8 h-8 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-1">
-                    <span className="text-slate-600 dark:text-slate-400 text-xs">
-                      👥
-                    </span>
+                  <div className="w-12 h-12 bg-gradient-to-br from-pink-500 to-red-500 rounded-2xl flex items-center justify-center mx-auto mb-2 shadow-lg">
+                    <UsersIcon className="w-6 h-6 text-white" />
                   </div>
-                  <div className="text-2xl font-bold text-slate-900 dark:text-white h-8 flex items-center justify-center">
+                  <div className="text-2xl font-bold text-gray-900 dark:text-white h-8 flex items-center justify-center">
                     {userStats.loading ? (
-                      <div className="w-4 h-4 border-2 border-slate-300 dark:border-slate-400 border-t-blue-500 rounded-full animate-spin"></div>
+                      <div className="w-4 h-4 border-2 border-gray-300 dark:border-slate-400 border-t-pink-500 rounded-full animate-spin"></div>
                     ) : userStats.error ? (
-                      <span className="text-slate-400 text-lg">-</span>
+                      <span className="text-gray-400 text-lg">-</span>
                     ) : (
-                      <span className="text-2xl">{userStats.friendsCount}</span>
+                      <span className="bg-gradient-to-r from-pink-600 to-red-600 bg-clip-text text-transparent">
+                        {userStats.friendsCount}
+                      </span>
                     )}
                   </div>
-                  <div className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+                  <div className="text-xs text-gray-500 dark:text-slate-400 uppercase tracking-wide font-medium">
                     Friends
                   </div>
                 </div>
@@ -427,7 +448,7 @@ const UserProfileModal = ({
 
           {/* Actions */}
           {showActions && (
-            <div className="space-y-3">
+            <div className="space-y-4">
               {renderFriendActions()}
               {renderEventActions()}
             </div>
@@ -438,37 +459,38 @@ const UserProfileModal = ({
       {/* Confirmation Dialog */}
       {confirmAction && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-60 p-4">
-          <div className="bg-white dark:bg-slate-800 rounded-xl p-6 max-w-sm w-full border border-slate-200 dark:border-slate-700 shadow-2xl">
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
-              Confirm Action
-            </h3>
-            <p className="text-slate-600 dark:text-slate-300 mb-6">
-              {confirmAction === "remove-friend" &&
-                "Are you sure you want to remove this friend?"}
-              {confirmAction === "promote" &&
-                "Are you sure you want to promote this user to admin?"}
-              {confirmAction === "demote" &&
-                "Are you sure you want to remove admin privileges from this user?"}
-              {confirmAction === "kick" &&
-                "Are you sure you want to remove this user from the event?"}
-              {confirmAction === "invite-to-event" &&
-                "Are you sure you want to invite this user to the event?"}
-              {confirmAction === "leave-event" &&
-                "Are you sure you want to leave this event?"}
-              {confirmAction === "leave-admin" &&
-                "Are you sure you want to give up your admin privileges?"}
-            </p>
+          <div className="bg-white dark:bg-slate-800 rounded-3xl p-8 max-w-sm w-full border border-gray-200 dark:border-slate-700 shadow-2xl transform transition-all duration-300 animate-in slide-in-from-bottom-4">
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 bg-gradient-to-br from-red-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                <SparklesIcon className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                Confirm Action
+              </h3>
+              <p className="text-gray-600 dark:text-slate-300">
+                {confirmAction === "remove-friend" &&
+                  "Are you sure you want to remove this friend?"}
+                {confirmAction === "promote" &&
+                  "Are you sure you want to promote this user to admin?"}
+                {confirmAction === "demote" &&
+                  "Are you sure you want to remove admin privileges?"}
+                {confirmAction === "kick" &&
+                  "Are you sure you want to remove this user from the event?"}
+                {confirmAction === "invite-to-event" &&
+                  "Are you sure you want to invite this user to the event?"}
+              </p>
+            </div>
             <div className="flex gap-3">
               <button
                 onClick={() => setConfirmAction(null)}
-                className="flex-1 px-4 py-2 bg-slate-200 hover:bg-slate-300 dark:bg-slate-600 dark:hover:bg-slate-700 text-slate-900 dark:text-white rounded-lg font-medium transition-colors"
+                className="flex-1 px-6 py-3 bg-gray-200 hover:bg-gray-300 dark:bg-slate-600 dark:hover:bg-slate-700 text-gray-900 dark:text-white rounded-2xl font-bold transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleConfirmedAction}
                 disabled={loading}
-                className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50"
+                className="flex-1 px-6 py-3 bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white rounded-2xl font-bold transition-all duration-300 disabled:opacity-50"
               >
                 {loading ? "Processing..." : "Confirm"}
               </button>

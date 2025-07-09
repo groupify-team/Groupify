@@ -266,6 +266,7 @@ const EventDetailView = ({ eventId: propeventId }) => {
     handlePromoteToAdmin,
     handleDemoteFromAdmin,
     handleRemoveFromEvent,
+    handleLeaveEvent,
   } = useEventMembers(currentUser?.uid, event, setEvent);
 
   const {
@@ -483,6 +484,10 @@ const EventDetailView = ({ eventId: propeventId }) => {
               onMemberClick={(member) =>
                 handleMemberClick(member, currentUser?.uid)
               }
+              onPromoteToAdmin={handlePromoteToAdmin}
+              onDemoteFromAdmin={handleDemoteFromAdmin}
+              onRemoveFromEvent={handleRemoveFromEvent}
+              onLeaveEvent={handleLeaveEvent}
             />
 
             {/* Invite People */}
