@@ -123,6 +123,9 @@ export function AuthProvider({ children }) {
         if (!email || !password || !displayName) {
           throw new Error("Email, password, and name are required");
         }
+        
+        console.log("Signup called with:", { email, displayName, gender });
+        
         const userCredential = await createUserWithEmailAndPassword(
           auth,
           email,
@@ -130,45 +133,18 @@ export function AuthProvider({ children }) {
         );
         const user = userCredential.user;
 
-        // Update user profile
+        // Update user profile in Firebase Auth (this persists even after sign-out)
         await updateProfile(user, {
           displayName: displayName,
         });
 
-        // Create user document with default plan
-        try {
-          await setDoc(doc(db, "users", user.uid), {
-            uid: user.uid,
-            email: email,
-            displayName: displayName,
-            gender: gender,
-            createdAt: new Date().toISOString(),
-            emailVerified: false,
-            friends: [],
-            profilePicture: null,
-            bio: "",
-            location: "",
-            joinedAt: new Date().toISOString(),
-            // Initialize with free plan
-            subscription: {
-              plan: "free",
-              status: "active",
-              createdAt: new Date().toISOString(),
-            },
-            usage: {
-              events: 0,
-              photos: 0,
-              storage: 0,
-              albums: 0,
-            },
-          });
-        } catch (firestoreError) {
-          console.warn(
-            "Failed to save user data to Firestore:",
-            firestoreError
-          );
-          // Don't fail the signup if Firestore fails
-        }
+        // Store signup data in localStorage temporarily for use after email verification
+        const signupData = {
+          displayName,
+          gender,
+          signupTimestamp: new Date().toISOString()
+        };
+        localStorage.setItem(`groupify_signup_${user.uid}`, JSON.stringify(signupData));
 
         // Initialize subscription service for new user
         subscriptionService.updateSubscription({
@@ -180,7 +156,10 @@ export function AuthProvider({ children }) {
             initializedAt: new Date().toISOString(),
           },
         });
+
+        // Sign out user until email is verified (user document will be created on first sign-in)
         await signOut(auth);
+        
         return {
           success: true,
           email: email,
@@ -195,22 +174,87 @@ export function AuthProvider({ children }) {
 
   const signin = useCallback(async (email, password) => {
     try {
-      // Try to sign in directly - Firebase Auth will handle email verification
-      const userCredential = await signInWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // Check if email is verified in Firebase Auth
+      // Check if email is verified
       if (!user.emailVerified) {
-        await signOut(auth); // Sign out if not verified
-        throw new Error(
-          "Please verify your email before signing in. Check your inbox!"
-        );
+        await signOut(auth);
+        throw new Error("Please verify your email before signing in. Check your inbox!");
       }
-      // Plan initialization will happen in the auth state change listener
+
+      // Check if user document exists in Firestore
+      const userDoc = await getDoc(doc(db, "users", user.uid));
+      
+      if (!userDoc.exists()) {
+        console.log("🔄 Creating user document for verified user...");
+        
+        // Get stored signup data
+        const storageKey = `groupify_signup_${user.uid}`;
+        const storedSignupData = localStorage.getItem(storageKey);
+        let signupData = null;
+        
+        if (storedSignupData) {
+          try {
+            signupData = JSON.parse(storedSignupData);
+          } catch (e) {
+            console.warn("Could not parse stored signup data");
+          }
+        }
+        
+        // Determine display name with priority
+        let finalDisplayName;
+        if (signupData?.displayName) {
+          finalDisplayName = signupData.displayName;
+          console.log("✅ Using stored signup displayName:", finalDisplayName);
+        } else if (user.displayName) {
+          finalDisplayName = user.displayName;
+          console.log("✅ Using Firebase Auth displayName:", finalDisplayName);
+        } else {
+          finalDisplayName = user.email.split('@')[0];
+          console.log("⚠️ Falling back to email prefix:", finalDisplayName);
+        }
+        
+        const userData = {
+          uid: user.uid,
+          email: user.email,
+          displayName: finalDisplayName,
+          gender: signupData?.gender || "other",
+          createdAt: signupData?.signupTimestamp || new Date().toISOString(),
+          emailVerified: true,
+          friends: [],
+          profilePicture: user.photoURL || null,
+          bio: "",
+          location: "",
+          joinedAt: new Date().toISOString(),
+          subscription: {
+            plan: "free",
+            status: "active",
+            createdAt: new Date().toISOString(),
+          },
+          usage: {
+            events: 0,
+            photos: 0,
+            storage: 0,
+            albums: 0,
+          },
+        };
+
+        try {
+          await setDoc(doc(db, "users", user.uid), userData);
+          console.log("✅ User document created successfully during first sign-in");
+          
+          // Clean up stored signup data
+          if (storedSignupData) {
+            localStorage.removeItem(storageKey);
+            console.log("🧹 Cleaned up stored signup data");
+          }
+        } catch (createError) {
+          console.error("❌ Failed to create user document during sign-in:", createError);
+          throw new Error("Failed to complete account setup. Please try again.");
+        }
+      }
+
       return userCredential;
     } catch (error) {
       console.error("Sign in error:", error);
@@ -439,6 +483,17 @@ export function AuthProvider({ children }) {
     [currentUser]
   );
 
+  // Light monitoring for displayName changes (keep this to catch future issues)
+  useEffect(() => {
+    if (currentUser?.displayName && currentUser.displayName !== currentUser.displayName) {
+      console.warn("⚠️ DisplayName changed unexpectedly:", {
+        uid: currentUser.uid,
+        newDisplayName: currentUser.displayName,
+        timestamp: new Date().toISOString()
+      });
+    }
+  }, [currentUser?.displayName]);
+
   // PERFORMANCE: Enhanced auth state change listener with proper loading management
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -509,16 +564,6 @@ export function AuthProvider({ children }) {
 
     return unsubscribe;
   }, [currentUser]);
-
-  // Debug auth state
-  useEffect(() => {
-    console.log("Auth context state:", {
-      hasUser: !!currentUser,
-      loading,
-      initialized,
-      planLoading,
-    });
-  }, [currentUser, loading, initialized, planLoading]);
 
   // PERFORMANCE: Memoize context value to prevent unnecessary re-renders
   const value = useMemo(
