@@ -231,6 +231,7 @@ const EventDetailView = ({ eventId: propeventId }) => {
     handleMemberClick,
     handleAddFriend,
     handleRemoveFriend,
+    handleCancelFriendRequest,
     handleInviteToEvent,
     handlePromoteToAdmin,
     handleDemoteFromAdmin,
@@ -547,24 +548,33 @@ const EventDetailView = ({ eventId: propeventId }) => {
 
         {/* User Profile Modal */}
         {selectedUser && (
-          <Suspense fallback={<div>Loading user profile...</div>}>
-            <UserProfileModal
-              isOpen={!!selectedUser}
-              user={selectedUser}
-              currentUserId={currentUser?.uid}
-              context="event"
-              friends={friends || []}
-              pendingRequests={pendingFriendRequests || []}
-              onAddFriend={handleAddFriend}
-              onRemoveFriend={handleRemoveFriend}
-              event={event}
-              onPromoteToAdmin={handlePromoteToAdmin}
-              onDemoteFromAdmin={handleDemoteFromAdmin}
-              onRemoveFromEvent={handleRemoveFromEvent}
-              onInviteToEvent={handleInviteToEvent}
-              onClose={() => setSelectedUser(null)}
-            />
-          </Suspense>
+          <>
+            {console.log("🔍 DEBUG - Selected User Data:", {
+              user: selectedUser,
+              isPending: selectedUser.__isPending,
+              pendingRequests: pendingFriendRequests,
+              friends: friends,
+            })}
+            <Suspense fallback={<div>Loading user profile...</div>}>
+              <UserProfileModal
+                isOpen={!!selectedUser}
+                user={selectedUser}
+                currentUserId={currentUser?.uid}
+                context="event"
+                friends={friends || []}
+                pendingRequests={pendingFriendRequests || []}
+                onAddFriend={handleAddFriend}
+                onRemoveFriend={handleRemoveFriend}
+                onCancelRequest={handleCancelFriendRequest}
+                event={event}
+                onPromoteToAdmin={handlePromoteToAdmin}
+                onDemoteFromAdmin={handleDemoteFromAdmin}
+                onRemoveFromEvent={handleRemoveFromEvent}
+                onInviteToEvent={handleInviteToEvent}
+                onClose={() => setSelectedUser(null)}
+              />
+            </Suspense>
+          </>
         )}
 
         {/* Success Notifications */}

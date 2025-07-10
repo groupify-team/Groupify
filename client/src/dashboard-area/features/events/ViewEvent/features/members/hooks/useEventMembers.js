@@ -82,6 +82,18 @@ export const useEventMembers = (currentUserId, event, setEvent) => {
     fetchFriendsAndPending();
   }, [currentUserId]);
 
+  const refreshPendingRequests = async () => {
+    if (!currentUserId) return;
+    try {
+      const pending = await getPendingFriendRequests(currentUserId);
+      const pendingIds = pending.map((r) => r.uid);
+      setPendingFriendRequests(pendingIds);
+      console.log("🔄 Refreshed pending requests:", pendingIds);
+    } catch (error) {
+      console.error("❌ Failed to refresh pending requests:", error);
+    }
+  };
+
   const handleMemberClick = async (member) => {
     console.log("🔍 handleMemberClick called with member:", member);
     console.log("🔍 Current user ID:", currentUserId);
@@ -92,15 +104,27 @@ export const useEventMembers = (currentUserId, event, setEvent) => {
     }
 
     try {
+      // Refresh pending requests first
+      await refreshPendingRequests();
+
       const isFriendNow = friends.includes(member.uid);
+
+      // Check both directions for pending requests
       const status = await checkFriendStatus(currentUserId, member.uid);
-      const isPendingNow = status === "pending";
+      const reverseStatus = await checkFriendStatus(member.uid, currentUserId);
+
+      const isPendingNow =
+        status === "pending" ||
+        reverseStatus === "pending" ||
+        pendingFriendRequests.includes(member.uid);
 
       console.log("🔍 Member relationship status:", {
         memberUid: member.uid,
         isFriend: isFriendNow,
         isPending: isPendingNow,
         status,
+        reverseStatus,
+        pendingList: pendingFriendRequests,
       });
 
       const enhancedMember = {
@@ -129,11 +153,18 @@ export const useEventMembers = (currentUserId, event, setEvent) => {
       setPendingFriendRequests((prev) => [...prev, targetUid]);
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 3000);
+
+      // Update the selected user to show pending status
       setSelectedUser((prevUser) => ({
         ...prevUser,
         __isPending: true,
+        __isFriend: false,
       }));
-      setSelectedUser(null);
+
+      // Don't close the modal immediately, let user see the change
+      setTimeout(() => {
+        setSelectedUser(null);
+      }, 1500);
     } catch (error) {
       console.error("? Failed to send friend request:", error);
       throw error;
@@ -204,10 +235,7 @@ export const useEventMembers = (currentUserId, event, setEvent) => {
 
   const handleCancelFriendRequest = async (targetUid) => {
     try {
-      // Try different possible document ID formats and query approaches
       let requestDeleted = false;
-
-      // Method 1: Try the direct document ID format
       const possibleDocIds = [
         `${currentUserId}_${targetUid}`,
         `${targetUid}_${currentUserId}`,

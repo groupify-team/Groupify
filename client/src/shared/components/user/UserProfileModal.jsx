@@ -95,13 +95,32 @@ const UserProfileModal = ({
   const isEventMember =
     context === "event" && event?.members?.includes(user.uid);
 
-  // Friend status checking
-  const isFriend = friends.includes(user.uid);
-  const isPending = pendingRequests.some(
-    (req) =>
-      (req.from === currentUserId && req.to === user.uid) ||
-      (req.from === user.uid && req.to === currentUserId)
-  );
+  // Friend status checking - Use the enhanced status from the user object first
+  const isFriend =
+    user.__isFriend !== undefined
+      ? user.__isFriend
+      : friends.includes(user.uid);
+  const isPending =
+    user.__isPending !== undefined
+      ? user.__isPending
+      : Array.isArray(pendingRequests) && pendingRequests.length > 0
+      ? typeof pendingRequests[0] === "string"
+        ? pendingRequests.includes(user.uid)
+        : pendingRequests.some(
+            (req) =>
+              (req.from === currentUserId && req.to === user.uid) ||
+              (req.from === user.uid && req.to === currentUserId)
+          )
+      : false;
+
+  console.log("🔍 UserProfileModal friend status:", {
+    userId: user.uid,
+    isFriend,
+    isPending,
+    userIsPending: user.__isPending,
+    userIsFriend: user.__isFriend,
+    pendingRequests: pendingRequests.slice(0, 3), // Show first 3 for debugging
+  });
 
   // Helper functions
   const handleAction = async (action) => {
@@ -178,8 +197,7 @@ const UserProfileModal = ({
     return null;
   };
 
-  // Render friend actions
-  // Render friend actions - Now uniform for all contexts
+  // Render friend actions - uniform for all contexts
   const renderFriendActions = () => {
     if (isOwnProfile) return null;
 

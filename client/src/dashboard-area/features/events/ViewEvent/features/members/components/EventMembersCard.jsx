@@ -166,98 +166,6 @@ const EventMembersCard = ({
     return null;
   };
 
-  const renderMemberActions = (member) => {
-    const isCurrentUser = member.uid === currentUserId;
-    const canManage = canManageUser(member);
-    const isAdmin = event.admins?.includes(member.uid);
-    const isCreator = member.uid === event.createdBy;
-
-    // Current user - show leave button
-    if (isCurrentUser) {
-      return (
-        <div className="relative">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setConfirmAction({ action: "leave", member });
-            }}
-            className="p-2 bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white rounded-lg shadow-lg transition-all duration-200 transform hover:scale-110"
-            title="Leave Event"
-          >
-            <ArrowRightOnRectangleIcon className="w-4 h-4" />
-          </button>
-        </div>
-      );
-    }
-
-    // Admin controls for other members
-    if (canManage) {
-      return (
-        <div className="relative">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setShowMenuForMember(
-                showMenuForMember === member.uid ? null : member.uid
-              );
-            }}
-            className="p-2 bg-gradient-to-r from-slate-500 to-slate-600 hover:from-slate-600 hover:to-slate-700 text-white rounded-lg shadow-lg transition-all duration-200 transform hover:scale-110"
-            title="Manage Member"
-          >
-            <EllipsisVerticalIcon className="w-4 h-4" />
-          </button>
-
-          {/* Action Menu */}
-          {showMenuForMember === member.uid && (
-            <div className="absolute top-full right-0 mt-2 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-slate-600 overflow-hidden z-20 min-w-48">
-              {/* Promote to Admin */}
-              {!isAdmin && !isCreator && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setConfirmAction({ action: "promote", member });
-                  }}
-                  className="w-full text-left px-4 py-3 text-gray-900 dark:text-white hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors flex items-center gap-3"
-                >
-                  <ShieldCheckIcon className="w-4 h-4 text-blue-500" />
-                  <span className="font-medium">Promote to Admin</span>
-                </button>
-              )}
-
-              {/* Demote from Admin */}
-              {isAdmin && !isCreator && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setConfirmAction({ action: "demote", member });
-                  }}
-                  className="w-full text-left px-4 py-3 text-gray-900 dark:text-white hover:bg-yellow-50 dark:hover:bg-yellow-900/20 transition-colors flex items-center gap-3"
-                >
-                  <ShieldExclamationIcon className="w-4 h-4 text-yellow-500" />
-                  <span className="font-medium">Remove Admin</span>
-                </button>
-              )}
-
-              {/* Remove from Event */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setConfirmAction({ action: "remove", member });
-                }}
-                className="w-full text-left px-4 py-3 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors flex items-center gap-3"
-              >
-                <UserMinusIcon className="w-4 h-4" />
-                <span className="font-medium">Remove from Event</span>
-              </button>
-            </div>
-          )}
-        </div>
-      );
-    }
-
-    return null;
-  };
-
   return (
     <div className="relative group">
       <div className="absolute -inset-1 bg-gradient-to-r from-orange-500 to-red-500 rounded-2xl blur opacity-20 group-hover:opacity-30 transition duration-300"></div>
@@ -299,14 +207,6 @@ const EventMembersCard = ({
                   onMemberClick(member, currentUserId);
                 }}
               >
-                {/* Click outside to close menu */}
-                {showMenuForMember === member.uid && (
-                  <div
-                    className="fixed inset-0 z-10"
-                    onClick={() => setShowMenuForMember(null)}
-                  />
-                )}
-
                 <div className="flex items-center gap-3">
                   {/* Avatar */}
                   <div className="relative flex-shrink-0">
@@ -351,7 +251,6 @@ const EventMembersCard = ({
                   {/* Role Badge */}
                   <div className="flex-shrink-0 flex items-center gap-2">
                     {renderRoleBadge(member)}
-                    {renderMemberActions(member)}
                   </div>
                 </div>
               </div>
