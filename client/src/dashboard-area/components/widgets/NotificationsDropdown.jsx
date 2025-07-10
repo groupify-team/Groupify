@@ -1,15 +1,17 @@
 // client/src/dashboard-area/components/widgets/NotificationsDropdown.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   BellIcon,
   CheckCircleIcon,
   XCircleIcon,
   CalendarIcon,
   UsersIcon,
+  ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
 import { useAuth } from "@auth/hooks/useAuth";
-import { useEventContext } from "@shared/contexts/EventContext"; // NEW: Use EventContext
-import { useFriendsContext } from "@shared/contexts/FriendsContext"; // NEW: Use FriendsContext
+import { useEventContext } from "@shared/contexts/EventContext";
+import { useFriendsContext } from "@shared/contexts/FriendsContext";
+import { usePlanLimits } from "@shared/hooks/usePlanLimits"; // NEW: Add plan limits hook
 import { useDashboardData } from "../../hooks/useDashboardData";
 import {
   formatNotificationMessage,
@@ -21,11 +23,12 @@ const NotificationsDropdown = () => {
   const { currentUser } = useAuth();
   const [processingNotification, setProcessingNotification] = useState(null);
   
-  // NEW: Get real-time data from contexts
+  // Real-time data from contexts
   const { 
     eventInvitations, 
     acceptEventInvitation, 
-    rejectEventInvitation 
+    rejectEventInvitation,
+    events // NEW: Get events to check current count
   } = useEventContext();
   
   const { 
@@ -34,16 +37,55 @@ const NotificationsDropdown = () => {
     rejectFriendRequest 
   } = useFriendsContext();
 
-  // FIXED: Use the correct function name (refreshevents, not refreshEvents)
+  // NEW: Add plan limits hook for enforcement
+  const { 
+    canPerformAction, 
+    showUpgradePrompt, 
+    getUsageInfo 
+  } = usePlanLimits();
+
   const {
     refreshevents,
     showSuccessMessage,
     showErrorMessage,
   } = useDashboardData();
 
+  // NEW: Track if user can accept more event invitations
+  const [canAcceptMoreEvents, setCanAcceptMoreEvents] = useState(true);
+  const [currentEventCount, setCurrentEventCount] = useState(0);
+
+  // NEW: Check event acceptance ability when events or plan changes
+  useEffect(() => {
+    const checkEventAcceptanceAbility = () => {
+      if (currentUser?.uid) {
+        // Use the same logic as EventsSection - get usage info first
+        const usageInfo = getUsageInfo();
+        if (usageInfo?.events) {
+          const { used: eventCount, limit } = usageInfo.events;
+          setCurrentEventCount(eventCount);
+          
+          const canAccept = limit === "unlimited" || eventCount < limit;
+          setCanAcceptMoreEvents(canAccept);
+
+          console.log("🔍 NotificationsDropdown: Event acceptance check:", {
+            eventCount,
+            limit,
+            canAccept,
+            usageInfo: usageInfo.events,
+          });
+        }
+      }
+    };
+
+    checkEventAcceptanceAbility();
+  }, [currentUser?.uid, getUsageInfo]);
+
   console.log("🎬 NotificationsDropdown: Real-time data:", {
     eventInvitations: eventInvitations.length,
     pendingRequests: pendingRequests.length,
+    canAcceptMoreEvents,
+    currentEventCount,
+    usageInfo: getUsageInfo()?.events, // NEW: Log usage info for debugging
   });
 
   // Transform data into unified notification format
@@ -61,11 +103,13 @@ const NotificationsDropdown = () => {
           label: "Accept",
           type: "accept",
           action: () => handleAcceptFriendRequest(req),
+          disabled: false, // Friend requests don't have plan limits
         },
         {
           label: "Decline",
           type: "decline",
           action: () => handleRejectFriendRequest(req),
+          disabled: false,
         },
       ],
     })),
@@ -82,11 +126,13 @@ const NotificationsDropdown = () => {
           label: "Accept",
           type: "accept",
           action: () => handleAcceptEventInvitation(invite),
+          disabled: !canAcceptMoreEvents, // NEW: Disable based on plan limits
         },
         {
           label: "Decline",
           type: "decline",
           action: () => handleRejectEventInvitation(invite),
+          disabled: false,
         },
       ],
     })),
@@ -129,25 +175,80 @@ const NotificationsDropdown = () => {
     }
   };
 
-  const handleAcceptEventInvitation = async (invitation) => {
+  // NEW: Enhanced event invitation handler with plan limit checking
+  const handleAcceptEventInvitation = useCallback(async (invitation) => {
+    if (processingNotification === `event-invite-${invitation.id}`) return;
+
     try {
       setProcessingNotification(`event-invite-${invitation.id}`);
-      console.log("✅ NotificationsDropdown: Accepting event invitation:", invitation.id, "for event:", invitation.eventId);
+      console.log("✅ NotificationsDropdown: Accepting event invitation:", invitation.id);
+
+      // NEW: Check plan limits before accepting
+      const usageInfo = getUsageInfo();
+      const currentUsedEvents = usageInfo?.events?.used || 0;
       
-      // FIXED: The EventContext handles the invitation acceptance and real-time updates
-      // No need to manually refresh events since EventContext has real-time listeners
+      const limitCheck = canPerformAction("create_event", {
+        currentEventCount: currentUsedEvents,
+      });
+
+      if (!limitCheck.allowed) {
+        console.log("🚫 NotificationsDropdown: Plan limit reached, showing upgrade prompt");
+        showUpgradePrompt(limitCheck.reason, {
+          title: "Upgrade to Accept Invitation",
+          persistent: true,
+        });
+        return;
+      }
+
+      // Accept the invitation
       await acceptEventInvitation(invitation.id, invitation.eventId);
       
-      toast.success(`Joined "${invitation.eventTitle}"! 🎉`);
+      // Update local state using usage info (more reliable than manual counting)
+      const updatedUsageInfo = getUsageInfo();
+      const newEventCount = updatedUsageInfo?.events?.used || (currentEventCount + 1);
+      setCurrentEventCount(newEventCount);
+
+      // Check if user can still accept more events
+      const { limit } = updatedUsageInfo?.events || {};
+      const stillCanAccept = limit === "unlimited" || newEventCount < limit;
+      setCanAcceptMoreEvents(stillCanAccept);
+
+      // Show success message with usage info
+      const finalUsageInfo = getUsageInfo();
+      toast.success(
+        `Joined "${invitation.eventTitle}"! (${newEventCount}/${
+          finalUsageInfo?.events?.limit === "unlimited" ? "∞" : finalUsageInfo?.events?.limit
+        } events) 🎉`
+      );
       
-      console.log("✅ NotificationsDropdown: Event invitation accepted successfully via context");
+      console.log("✅ NotificationsDropdown: Event invitation accepted successfully");
     } catch (error) {
       console.error("❌ NotificationsDropdown: Error accepting event invitation:", error);
-      toast.error("Failed to accept event invitation");
+      
+      // Check if error is related to plan limits
+      if (
+        error.message?.includes("limit") ||
+        error.message?.includes("upgrade")
+      ) {
+        showUpgradePrompt(error.message, {
+          title: "Upgrade Required",
+          persistent: true,
+        });
+      } else {
+        toast.error("Failed to accept event invitation");
+      }
     } finally {
       setProcessingNotification(null);
     }
-  };
+  }, [
+    processingNotification,
+    canPerformAction,
+    events?.length,
+    showUpgradePrompt,
+    acceptEventInvitation,
+    currentEventCount,
+    getUsageInfo,
+  ]);
 
   const handleRejectEventInvitation = async (invitation) => {
     try {
@@ -186,6 +287,9 @@ const NotificationsDropdown = () => {
     }
   };
 
+  // NEW: Check if there are event invitations that can't be accepted due to limits
+  const hasBlockedEventInvites = eventInvitations.length > 0 && !canAcceptMoreEvents;
+
   return (
     <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-2xl shadow-2xl border border-gray-200/50 dark:border-gray-700/50 z-50 max-h-96 overflow-hidden max-w-[calc(100vw-1rem)] mr-2 sm:mr-0">
       {/* Header */}
@@ -202,6 +306,23 @@ const NotificationsDropdown = () => {
           )}
         </div>
       </div>
+
+      {/* NEW: Plan limit warning banner */}
+      {hasBlockedEventInvites && (
+        <div className="p-3 bg-amber-50 dark:bg-amber-900/20 border-b border-amber-200/50 dark:border-amber-700/50">
+          <div className="flex items-start gap-2">
+            <ExclamationTriangleIcon className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
+            <div className="text-xs">
+              <p className="font-medium text-amber-800 dark:text-amber-200">
+                Event limit reached
+              </p>
+              <p className="text-amber-700 dark:text-amber-300">
+                Upgrade to accept event invitations ({currentEventCount}/{getUsageInfo()?.events?.limit || 5} events)
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Notifications Content */}
       <div className="max-h-80 overflow-y-auto">
@@ -262,6 +383,15 @@ const NotificationsDropdown = () => {
                       {notification.message}
                     </p>
 
+                    {/* NEW: Plan limit notice for disabled event invitations */}
+                    {notification.type === "event_invite" && !canAcceptMoreEvents && (
+                      <div className="mb-2 p-2 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
+                        <p className="text-xs text-amber-700 dark:text-amber-300">
+                          Event limit reached. Upgrade to accept this invitation.
+                        </p>
+                      </div>
+                    )}
+
                     {/* Action Buttons */}
                     <div className="flex gap-2">
                       {notification.actions.map((action, index) => (
@@ -271,12 +401,22 @@ const NotificationsDropdown = () => {
                             e.stopPropagation();
                             action.action();
                           }}
-                          disabled={processingNotification === notification.id}
+                          disabled={
+                            processingNotification === notification.id || 
+                            action.disabled // NEW: Respect the disabled state
+                          }
                           className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${
                             action.type === "accept"
-                              ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-900/50 hover:scale-105"
+                              ? action.disabled
+                                ? "bg-gray-100 dark:bg-gray-700/30 text-gray-500 dark:text-gray-400" // NEW: Disabled styling
+                                : "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-900/50 hover:scale-105"
                               : "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50 hover:scale-105"
                           }`}
+                          title={
+                            action.disabled && notification.type === "event_invite"
+                              ? `Event limit reached (${currentEventCount}/${getUsageInfo()?.events?.limit || 5}) - upgrade to accept`
+                              : ""
+                          }
                         >
                           {processingNotification === notification.id ? (
                             <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
