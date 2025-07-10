@@ -113,14 +113,22 @@ const FriendsSection = () => {
   };
 
   const handleUserSelect = (userOrUid) => {
-    if (typeof userOrUid === "object" && userOrUid.uid) {
-      handleViewProfile(userOrUid);
-    } else {
-      const userData = friends.find((f) => f.uid === userOrUid);
-      if (userData) {
-        handleViewProfile(userData);
+    console.log("🔍 handleUserSelect called with:", userOrUid);
+
+    // CLOSE THE ADD FRIEND MODAL FIRST to avoid z-index conflicts
+    setShowAddFriendModal(false);
+
+    // Small delay to ensure modal closes completely before opening profile
+    setTimeout(() => {
+      if (typeof userOrUid === "object" && userOrUid.uid) {
+        handleViewProfile(userOrUid);
+      } else {
+        const userData = friends.find((f) => f.uid === userOrUid);
+        if (userData) {
+          handleViewProfile(userData);
+        }
       }
-    }
+    }, 100);
   };
 
   if (loading) {
@@ -314,7 +322,7 @@ const FriendsSection = () => {
         )}
       </div>
 
-      {/* Add Friend Modal */}
+      {/* Add Friend Modal - Z-INDEX: 50 */}
       {showAddFriendModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white/95 dark:bg-slate-800/95 rounded-2xl max-w-md w-full shadow-2xl border border-gray-300/80 dark:border-slate-700/80">
@@ -339,25 +347,27 @@ const FriendsSection = () => {
         </div>
       )}
 
-      {/* User Profile Modal - Updated with global context compatibility */}
+      {/* User Profile Modal - Z-INDEX: 60 (Higher than AddFriend modal) */}
       {showUserProfileModal &&
         selectedUser &&
         createPortal(
-          <UserProfileModal
-            isOpen={showUserProfileModal}
-            user={selectedUser}
-            currentUserId={currentUser?.uid}
-            friends={friendIds} // Use global friend IDs
-            pendingRequests={pendingRequests}
-            onAddFriend={handleAddFriendDirect}
-            onRemoveFriend={handleRemoveFriendLocal}
-            onCancelRequest={handleCancelRequestLocal}
-            onClose={() => {
-              console.log("🚪 Closing UserProfileModal");
-              setSelectedUser(null);
-              setShowUserProfileModal(false);
-            }}
-          />,
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-60 flex items-center justify-center p-4">
+            <UserProfileModal
+              isOpen={showUserProfileModal}
+              user={selectedUser}
+              currentUserId={currentUser?.uid}
+              friends={friendIds} // Use global friend IDs
+              pendingRequests={pendingRequests}
+              onAddFriend={handleAddFriendDirect}
+              onRemoveFriend={handleRemoveFriendLocal}
+              onCancelRequest={handleCancelRequestLocal}
+              onClose={() => {
+                console.log("🚪 Closing UserProfileModal");
+                setSelectedUser(null);
+                setShowUserProfileModal(false);
+              }}
+            />
+          </div>,
           document.body
         )}
     </div>

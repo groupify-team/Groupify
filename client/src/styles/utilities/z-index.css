@@ -231,7 +231,7 @@
 
 @layer components {
   /* === FILTER DROPDOWN Z-INDEX FIX === */
-  
+
   /* Force filter dropdown to be above event cards */
   .filter-dropdown {
     z-index: 500 !important;
@@ -247,7 +247,9 @@
   /* Event cards - ensure they stay below */
   .event-card,
   .event-card-container,
-  .bg-white\/60.dark\:bg-gray-800\/60.backdrop-blur-lg:not(:has(.filter-dropdown)) {
+  .bg-white\/60.dark\:bg-gray-800\/60.backdrop-blur-lg:not(
+      :has(.filter-dropdown)
+    ) {
     position: relative;
     z-index: 10 !important;
   }
@@ -261,15 +263,15 @@
   .z-\[100\] {
     z-index: 100 !important;
   }
-  
+
   .z-\[201\] {
     z-index: 201 !important;
   }
-  
+
   .z-\[250\] {
     z-index: 250 !important;
   }
-  
+
   .z-\[300\] {
     z-index: 300 !important;
   }
@@ -306,12 +308,12 @@
     outline: 1px solid red !important;
     background: rgba(255, 0, 0, 0.1) !important;
   }
-  
+
   .debug-z .filter-dropdown {
     outline: 2px solid blue !important;
     background: rgba(0, 0, 255, 0.1) !important;
   }
-  
+
   .debug-z .event-card {
     outline: 2px solid green !important;
     background: rgba(0, 255, 0, 0.1) !important;
@@ -324,30 +326,76 @@
   .filter-dropdown {
     z-index: 300 !important;
   }
-  
+
   .filter-dropdown .dropdown-menu,
   .filter-dropdown > div:last-child {
     z-index: 400 !important;
   }
 }
 
-/* === LAYER DOCUMENTATION === */
-/*
-Z-Index Hierarchy:
---z-base: 1          - Base content, cards, regular elements
---z-dropdown: 50     - Dropdowns, filters, menus
---z-sticky: 100      - Sticky navigation, floating elements
---z-fixed: 200       - Fixed headers, sidebars
---z-modal-backdrop: 9999  - Modal backdrops, overlays
---z-modal: 10000     - Modal content, dialogs
---z-popover: 10001   - Popovers, context menus
---z-tooltip: 10002   - Tooltips, help text
+/* Ensure z-index utility classes work properly */
+.z-50 {
+  z-index: 50;
+}
 
-Usage Guidelines:
-1. Always use CSS custom properties, not hard-coded values
-2. Modal backdrops should use --z-modal-backdrop
-3. Modal content should use --z-modal
-4. Dropdowns should use --z-dropdown
-5. Navigation should use --z-sticky or --z-fixed
-6. Never use z-index values above 10002 except for debugging
-*/
+.z-60 {
+  z-index: 60;
+}
+
+.z-70 {
+  z-index: 70;
+}
+
+/* Modal backdrop styles */
+.modal-backdrop-lower {
+  z-index: 50;
+}
+
+.modal-backdrop-higher {
+  z-index: 60;
+}
+
+.modal-backdrop-highest {
+  z-index: 70;
+}
+
+/* Ensure modals are positioned correctly */
+.modal-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+/* Prevent body scroll when modal is open */
+body.modal-open {
+  overflow: hidden;
+}
+
+/* Animation for modal transitions */
+.modal-enter {
+  opacity: 0;
+  transform: scale(0.95);
+}
+
+.modal-enter-active {
+  opacity: 1;
+  transform: scale(1);
+  transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+}
+
+.modal-exit {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.modal-exit-active {
+  opacity: 0;
+  transform: scale(0.95);
+  transition: opacity 0.15s ease-in, transform 0.15s ease-in;
+}
