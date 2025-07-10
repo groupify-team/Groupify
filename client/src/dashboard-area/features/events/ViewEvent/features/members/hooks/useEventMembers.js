@@ -1,5 +1,5 @@
 // client/src/dashboard-area/features/events/ViewEvent/features/members/hooks/useEventMembers.js
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "react-hot-toast";
 import { updateEvent, sendEventInvite } from "@shared/services/firebase/events";
 import { useFriendsContext } from "@shared/contexts/FriendsContext";
@@ -160,6 +160,7 @@ export const useEventMembers = (currentUserId, event, setEvent) => {
       await updateEvent(event.id, { admins: updatedEvent.admins });
       setEvent(updatedEvent);
       setSelectedUser(null);
+
       toast.success("User promoted to admin successfully!");
     } catch (error) {
       console.error("Error promoting to admin:", error);
@@ -204,17 +205,14 @@ export const useEventMembers = (currentUserId, event, setEvent) => {
       console.error("Event data not available");
       return;
     }
-
     try {
       const updatedMembers = event.members?.filter((id) => id !== uid) || [];
       const updatedAdmins = event.admins?.filter((id) => id !== uid) || [];
-
       const updatedEvent = {
         ...event,
         members: updatedMembers,
         admins: updatedAdmins,
       };
-
       await updateEvent(event.id, updatedEvent);
       setEvent(updatedEvent);
       setSelectedUser(null);

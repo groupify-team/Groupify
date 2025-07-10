@@ -70,7 +70,7 @@ const AddFriend = ({
       console.log("Search results:", users);
 
       const targetUser = users.find(
-        (u) => u.uid !== currentUser?.uid && u.id !== currentUser?.uid
+        (u) => u.email?.toLowerCase() === input.trim().toLowerCase()
       );
 
       if (!targetUser) {
@@ -83,18 +83,31 @@ const AddFriend = ({
         return;
       }
 
+      // ENHANCED SELF-CHECK VALIDATION
+      const targetUserId = targetUser.uid || targetUser.id;
+      const currentUserId = currentUser?.uid;
+
+      console.log("🔍 Self-check validation:", {
+        targetUserId,
+        currentUserId,
+        targetEmail: targetUser.email,
+        currentEmail: currentUser?.email,
+        isSameId: targetUserId === currentUserId,
+        isSameEmail: targetUser.email === currentUser?.email,
+      });
+
       if (
-        targetUser.uid === currentUser?.uid ||
-        targetUser.id === currentUser?.uid
+        targetUserId === currentUserId ||
+        targetUser.email === currentUser?.email ||
+        targetUser.email?.toLowerCase() === currentUser?.email?.toLowerCase()
       ) {
         setStatus({
           type: "error",
-          message: "You cannot add yourself as a friend.",
+          message: "❌ You cannot add yourself as a friend!",
         });
         setLoading(false);
         return;
       }
-
       // Show found user
       setFoundUser(targetUser);
       setStatus({
@@ -114,6 +127,17 @@ const AddFriend = ({
 
   const handleAddFriendDirect = async () => {
     if (foundUser && onAddFriendDirect) {
+      // ADDITIONAL SELF-CHECK
+      const targetUserId = foundUser.uid || foundUser.id;
+      const currentUserId = currentUser?.uid;
+
+      if (targetUserId === currentUserId) {
+        setStatus({
+          type: "error",
+          message: "❌ You cannot add yourself as a friend!",
+        });
+        return;
+      }
       try {
         setLoading(true);
         console.log("Adding friend:", foundUser.uid || foundUser.id);
