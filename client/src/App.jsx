@@ -4,6 +4,7 @@ import { BrowserRouter as Router } from "react-router-dom";
 // Core providers
 import { AuthProvider } from "@/auth-area";
 import { ThemeProvider } from "@shared/contexts/ThemeContext";
+import { FriendsProvider } from "@shared/contexts/FriendsContext"; // ADD THIS IMPORT
 import GlobalAccessibilityProvider from "@/shared/components/accessibility/GlobalAccessibilityProvider";
 
 // App components
@@ -18,20 +19,25 @@ function App() {
   const AppContent = memo(() => (
     <Router>
       <AuthProvider>
-        <GlobalAccessibilityProvider>
-          <FlowController>
-            <Toaster
-              position="top-center"
-              toastOptions={{
-                duration: 3000,
-                className: "toast-above-modal",
-              }}
-            />
-            <PageTransitionWrapper>
-              <AppRoutes />
-            </PageTransitionWrapper>
-          </FlowController>
-        </GlobalAccessibilityProvider>
+        <FriendsProvider>
+          {" "}
+          {/* ADD THIS */}
+          <GlobalAccessibilityProvider>
+            <FlowController>
+              <Toaster
+                position="top-center"
+                toastOptions={{
+                  duration: 3000,
+                  className: "toast-above-modal",
+                }}
+              />
+              <PageTransitionWrapper>
+                <AppRoutes />
+              </PageTransitionWrapper>
+            </FlowController>
+          </GlobalAccessibilityProvider>
+        </FriendsProvider>{" "}
+        {/* ADD THIS */}
       </AuthProvider>
     </Router>
   ));

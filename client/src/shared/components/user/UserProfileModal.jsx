@@ -95,13 +95,32 @@ const UserProfileModal = ({
   const isEventMember =
     context === "event" && event?.members?.includes(user.uid);
 
-  // Friend status checking
-  const isFriend = friends.includes(user.uid);
-  const isPending = pendingRequests.some(
-    (req) =>
-      (req.from === currentUserId && req.to === user.uid) ||
-      (req.from === user.uid && req.to === currentUserId)
-  );
+  // Friend status checking - Use the enhanced status from the user object first
+  const isFriend =
+    user.__isFriend !== undefined
+      ? user.__isFriend
+      : friends.includes(user.uid);
+  const isPending =
+    user.__isPending !== undefined
+      ? user.__isPending
+      : Array.isArray(pendingRequests) && pendingRequests.length > 0
+      ? typeof pendingRequests[0] === "string"
+        ? pendingRequests.includes(user.uid)
+        : pendingRequests.some(
+            (req) =>
+              (req.from === currentUserId && req.to === user.uid) ||
+              (req.from === user.uid && req.to === currentUserId)
+          )
+      : false;
+
+  console.log("🔍 UserProfileModal friend status:", {
+    userId: user.uid,
+    isFriend,
+    isPending,
+    userIsPending: user.__isPending,
+    userIsFriend: user.__isFriend,
+    pendingRequests: pendingRequests.slice(0, 3), // Show first 3 for debugging
+  });
 
   // Helper functions
   const handleAction = async (action) => {
@@ -178,8 +197,7 @@ const UserProfileModal = ({
     return null;
   };
 
-  // Render friend actions
-  // Render friend actions - Now uniform for all contexts
+  // Render friend actions - uniform for all contexts
   const renderFriendActions = () => {
     if (isOwnProfile) return null;
 
@@ -242,7 +260,7 @@ const UserProfileModal = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
       <div className="relative bg-white dark:bg-slate-800 rounded-3xl shadow-2xl max-w-md w-full mx-4 overflow-hidden border border-gray-200 dark:border-slate-700 transform transition-all duration-300 animate-in slide-in-from-bottom-4">
         {/* Animated Background */}
         <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-pink-500/10 dark:from-blue-500/5 dark:via-purple-500/5 dark:to-pink-500/5"></div>
