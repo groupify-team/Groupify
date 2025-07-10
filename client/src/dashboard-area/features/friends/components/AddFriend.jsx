@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { useAuth } from "@auth/hooks/useAuth";
 import { UserService } from "@shared/services/user";
+import { useFriendsContext } from "@shared/contexts/FriendsContext"; // ADD THIS IMPORT
+import toast from "react-hot-toast";
 
 import {
   MagnifyingGlassIcon,
@@ -10,6 +12,8 @@ import {
   AtSymbolIcon,
   SparklesIcon,
   EyeIcon,
+  ClockIcon,
+  UserMinusIcon,
 } from "@heroicons/react/24/outline";
 
 const AddFriend = ({
@@ -18,7 +22,10 @@ const AddFriend = ({
   preservedInput = "",
   preservedUser = null,
 }) => {
-  const { user: currentUser } = useAuth(); // FIXED: Use 'user' instead of 'currentUser'
+  const { user: currentUser } = useAuth();
+  const { getUserRelationshipData, cancelFriendRequest, removeFriend } =
+    useFriendsContext();
+
   const [input, setInput] = useState(preservedInput);
   const [status, setStatus] = useState(
     preservedUser
@@ -117,11 +124,55 @@ const AddFriend = ({
           type: "success",
           message: "Friend request sent successfully!",
         });
+        toast.success("Friend request sent successfully!");
       } catch (error) {
         console.error("Error adding friend:", error);
         setStatus({
           type: "error",
           message: "Failed to send friend request. Please try again.",
+        });
+        toast.error("Failed to send friend request!");
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+  const handleCancelRequest = async () => {
+    if (foundUser) {
+      try {
+        setLoading(true);
+        await cancelFriendRequest(foundUser.uid || foundUser.id);
+        setStatus({
+          type: "success",
+          message: "Friend request cancelled successfully!",
+        });
+      } catch (error) {
+        console.error("Error cancelling friend request:", error);
+        setStatus({
+          type: "error",
+          message: "Failed to cancel friend request.",
+        });
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+  const handleRemoveFriend = async () => {
+    if (foundUser) {
+      try {
+        setLoading(true);
+        await removeFriend(foundUser.uid || foundUser.id);
+        setStatus({
+          type: "success",
+          message: "Friend removed successfully!",
+        });
+      } catch (error) {
+        console.error("Error removing friend:", error);
+        setStatus({
+          type: "error",
+          message: "Failed to remove friend.",
         });
       } finally {
         setLoading(false);
@@ -141,6 +192,49 @@ const AddFriend = ({
     }
   };
 
+  // Get relationship status for found user
+  const relationshipData = foundUser
+    ? getUserRelationshipData(foundUser.uid || foundUser.id)
+    : null;
+
+  // Determine button configuration based on relationship
+  const getActionButtonConfig = () => {
+    if (!foundUser || !relationshipData) return null;
+
+    if (relationshipData.isFriend) {
+      return {
+        text: "Friends",
+        icon: CheckCircleIcon,
+        bgColor:
+          "from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700",
+        onClick: handleRemoveFriend,
+        disabled: false,
+      };
+    }
+
+    if (relationshipData.isPending) {
+      return {
+        text: "Request Sent",
+        icon: ClockIcon,
+        bgColor:
+          "from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700",
+        onClick: handleCancelRequest,
+        disabled: false,
+      };
+    }
+
+    return {
+      text: "Add Friend",
+      icon: UserPlusIcon,
+      bgColor:
+        "from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700",
+      onClick: handleAddFriendDirect,
+      disabled: false,
+    };
+  };
+
+  const buttonConfig = getActionButtonConfig();
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -152,6 +246,7 @@ const AddFriend = ({
           Search for friends by email address and send connection requests
         </p>
       </div>
+
       {/* Search Input */}
       <div className="space-y-4">
         <div className="relative">
@@ -207,8 +302,23 @@ const AddFriend = ({
                 alt="User avatar"
                 className="w-12 h-12 sm:w-14 sm:h-14 rounded-full object-cover border-2 sm:border-3 border-white dark:border-gray-600 shadow-lg"
               />
-              <div className="absolute -bottom-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 bg-emerald-500 border-2 border-white dark:border-gray-800 rounded-full flex items-center justify-center">
-                <CheckCircleIcon className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" />
+              {/* Status indicator */}
+              <div
+                className={`absolute -bottom-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 border-2 border-white dark:border-gray-800 rounded-full flex items-center justify-center ${
+                  relationshipData?.isFriend
+                    ? "bg-green-500"
+                    : relationshipData?.isPending
+                    ? "bg-yellow-500"
+                    : "bg-emerald-500"
+                }`}
+              >
+                {relationshipData?.isFriend ? (
+                  <CheckCircleIcon className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" />
+                ) : relationshipData?.isPending ? (
+                  <ClockIcon className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" />
+                ) : (
+                  <CheckCircleIcon className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" />
+                )}
               </div>
             </div>
             <div className="flex-1 min-w-0">
@@ -221,7 +331,11 @@ const AddFriend = ({
               <div className="flex items-center gap-2 mt-1">
                 <SparklesIcon className="w-3 h-3 sm:w-4 sm:h-4 text-emerald-500 flex-shrink-0" />
                 <span className="text-xs text-emerald-700 dark:text-emerald-400 font-medium">
-                  Ready to connect!
+                  {relationshipData?.isFriend
+                    ? "Already friends!"
+                    : relationshipData?.isPending
+                    ? "Request pending..."
+                    : "Ready to connect!"}
                 </span>
               </div>
             </div>
@@ -229,19 +343,28 @@ const AddFriend = ({
 
           {/* Action Buttons */}
           <div className="flex gap-2 sm:gap-3 mt-4">
-            <button
-              onClick={handleAddFriendDirect}
-              disabled={loading}
-              className="flex-1 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white py-2.5 sm:py-3 px-3 sm:px-4 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? (
-                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              ) : (
-                <UserPlusIcon className="w-4 h-4" />
-              )}
-              <span className="hidden xs:inline">Add Friend</span>
-              <span className="xs:hidden">Add</span>
-            </button>
+            {buttonConfig && (
+              <button
+                onClick={buttonConfig.onClick}
+                disabled={loading || buttonConfig.disabled}
+                className={`flex-1 bg-gradient-to-r ${buttonConfig.bgColor} text-white py-2.5 sm:py-3 px-3 sm:px-4 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed`}
+              >
+                {loading ? (
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <buttonConfig.icon className="w-4 h-4" />
+                )}
+                <span className="hidden xs:inline">{buttonConfig.text}</span>
+                <span className="xs:hidden">
+                  {relationshipData?.isFriend
+                    ? "Friends"
+                    : relationshipData?.isPending
+                    ? "Sent"
+                    : "Add"}
+                </span>
+              </button>
+            )}
+
             {onUserSelect && (
               <button
                 onClick={handleViewProfile}
@@ -291,6 +414,7 @@ const AddFriend = ({
               <li>✓ Make sure they have registered with this email</li>
               <li>✓ Check for typos in the email address</li>
               <li>✓ They'll receive a friend request notification</li>
+              <li>✓ Green status = friends, Yellow = request sent</li>
             </ul>
           </div>
         </div>
