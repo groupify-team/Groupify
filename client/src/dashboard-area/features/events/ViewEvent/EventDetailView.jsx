@@ -6,20 +6,25 @@ import React, {
   memo,
   lazy,
   useTransition,
+  useEffect,
 } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useRenderTracker } from "@shared/hooks/usePerformanceMonitor";
 import { useAuth } from "@auth/hooks/useAuth";
+import { useEventContext } from "@shared/contexts/EventContext"; // NEW: EventContext import
 import EventHeader from "./features/header/components/EventHeader";
 import EventMembersCard from "./features/members/components/EventMembersCard";
 import InvitePeopleCard from "./features/members/components/InvitePeopleCard";
 import EventStatistics from "./features/statistics/components/EventStatistics";
 import PhotoGallery from "./features/gallery/components/PhotoGallery";
-import { useEventData } from "./hooks/useEventData";
+import { useEventPhotos } from "./hooks/useEventPhotos"; // NEW: Separate photos hook
 import { usePhotoOperations } from "./features/gallery/hooks/usePhotoOperations";
 import { useEventMembers } from "./features/members/hooks/useEventMembers";
 import { usePhotoModal } from "./features/gallery/hooks/usePhotoModal";
 import { useFaceRecognition } from "./features/faceRecognition/hooks/useFaceRecognition";
+import { modalToast } from "@shared/utils/modalToast";
+
+
 
 import {
   getPhotoLimitStatus,
@@ -148,24 +153,74 @@ const EventDetailView = ({ eventId: propeventId }) => {
   const { currentUser } = useAuth();
   const [isPending, startTransition] = useTransition();
 
-  // Core event data and loading
+  // NEW: Get real-time event data from EventContext
   const {
-    event,
-    photos,
-    eventMembers,
-    isAdmin,
-    loading,
-    error,
-    setEvent,
-    setPhotos,
-  } = useEventData(eventId, currentUser?.uid);
+    getEventById,
+    getEventMembers,
+    isEventAdmin,
+    isEventCreator,
+    isEventMember,
+    leaveEvent,
+    loading: eventLoading,
+    error: eventError,
+  } = useEventContext();
 
-  // Performance logging - track what causes re-renders (after data is defined)
+  // NEW: Get real-time event data
+  const event = useMemo(() => {
+    return eventId ? getEventById(eventId) : null;
+  }, [eventId, getEventById]);
+
+  const eventMembers = useMemo(() => {
+    return eventId ? getEventMembers(eventId) : [];
+  }, [eventId, getEventMembers]);
+
+  // NEW: Check permissions using EventContext
+  const isAdmin = useMemo(() => {
+    return currentUser?.uid && eventId ? isEventAdmin(eventId, currentUser.uid) : false;
+  }, [eventId, currentUser?.uid, isEventAdmin]);
+
+  const isCreator = useMemo(() => {
+    return currentUser?.uid && eventId ? isEventCreator(eventId, currentUser.uid) : false;
+  }, [eventId, currentUser?.uid, isEventCreator]);
+
+  //check if the user is a member of the event
+  const isMember = useMemo(() => {
+    return currentUser?.uid && eventId ? isEventMember(eventId, currentUser.uid) : false;
+  }, [eventId, currentUser?.uid, isEventMember]);
+
+  // NEW: Use separate hook for photos
+  const {
+    photos,
+    loading: photosLoading,
+    error: photosError,
+    setPhotos,
+  } = useEventPhotos(eventId);
+
+  // Combine loading states
+  const loading = eventLoading || photosLoading;
+  const error = eventError || photosError;
+
+  // NEW: State for local event updates (for compatibility with existing components)
+  const [localEvent, setLocalEvent] = useState(event);
+
+  // Initialize local event with context data
+  const [showLeaveConfirmation, setShowLeaveConfirmation] = useState(false);
+
+  // NEW: Update local event when context changes
+  useEffect(() => {
+    if (event && JSON.stringify(event) !== JSON.stringify(localEvent)) {
+      console.log("🔄 EventDetailView: Updating local event from context", event);
+      setLocalEvent(event);
+    }
+  }, [event, localEvent]);
+
+  // Performance logging - track what causes re-renders
   useRenderTracker("EventDetailView", {
     eventId,
     currentUserId: currentUser?.uid,
     hasEvent: !!event,
     photosLength: photos?.length,
+    eventMembersLength: eventMembers?.length,
     loading,
     error: !!error,
     isPending,
@@ -182,6 +237,52 @@ const EventDetailView = ({ eventId: propeventId }) => {
     event?.members?.includes(currentUser?.uid) || false,
     eventId
   );
+
+  const handleLeaveEventFromHeader = useCallback(() => {
+    setShowLeaveConfirmation(true);
+  }, []);
+
+  const handleConfirmLeaveEvent = useCallback(async () => {
+  if (!currentUser?.uid || !eventId) return;
+  
+  try {
+    setShowLeaveConfirmation(false);
+    
+    // Show loading toast
+    const loadingToast = modalToast.loading("Leaving event...", {
+      icon: "🚪",
+    });
+
+    console.log("🚪 Leaving event from header:", eventId);
+    await leaveEvent(eventId);
+    
+    // Dismiss loading and show success
+    modalToast.dismiss(loadingToast);
+    modalToast.success("You've successfully left the event", {
+      duration: 3000,
+      icon: "👋",
+    });
+    
+    // Navigate away after leaving
+    setTimeout(() => {
+      navigate("/dashboard/events", {
+        replace: true,
+        state: {
+          leftEventId: eventId,
+          forceRefresh: true,
+          timestamp: Date.now(),
+        },
+      });
+    }, 1500);
+    
+  } catch (error) {
+    console.error("Error leaving event:", error);
+    modalToast.error("Failed to leave event. Please try again.", {
+      duration: 4000,
+      icon: "❌",
+    });
+  }
+}, [leaveEvent, currentUser?.uid, eventId, navigate]);
 
   // Only destructure face recognition if we need it
   const {
@@ -213,9 +314,9 @@ const EventDetailView = ({ eventId: propeventId }) => {
   } = usePhotoOperations(
     eventId,
     photos,
-    event,
+    localEvent, // Use localEvent for compatibility
     setPhotos,
-    setEvent,
+    setLocalEvent, // Update localEvent
     filteredPhotos,
     setFilteredPhotos,
     filterActive
@@ -237,7 +338,7 @@ const EventDetailView = ({ eventId: propeventId }) => {
     handleDemoteFromAdmin,
     handleRemoveFromEvent,
     handleLeaveEvent,
-  } = useEventMembers(currentUser?.uid, event, setEvent);
+  } = useEventMembers(currentUser?.uid, localEvent, setLocalEvent);
 
   const handleLeaveEventWithNavigation = useCallback(async () => {
     try {
@@ -282,11 +383,11 @@ const EventDetailView = ({ eventId: propeventId }) => {
   const handleEventUpdated = useCallback(
     (updatedEvent) => {
       startTransition(() => {
-        setEvent(updatedEvent);
+        setLocalEvent(updatedEvent); // Update local state
         setShowEditModal(false);
       });
     },
-    [setEvent]
+    [setLocalEvent]
   );
 
   const handleEventDeleted = useCallback(
@@ -338,21 +439,27 @@ const EventDetailView = ({ eventId: propeventId }) => {
     return <ErrorDisplay error={error} />;
   }
 
-  if (!event) return null;
+  if (!event) {
+    return <ErrorDisplay error="Event not found or you don't have access to this event." />;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50/50 via-indigo-50/50 to-purple-50/50 dark:from-gray-900 dark:via-blue-900/20 dark:to-purple-900/20 animate-fade-in-smooth">
       <div className="space-y-4 sm:space-y-8 p-3 sm:p-6 max-w-7xl mx-auto pb-20 sm:pb-6 animate-slide-in-smooth">
-        {/* event header */}
+        {/* event header - NOW USES REAL-TIME DATA */}
         <EventHeader
-          event={event}
+          event={event} // Real-time event data from EventContext
           photos={photos || []}
-          eventMembers={eventMembers || []}
+          eventMembers={eventMembers || []} // Real-time member data from EventContext
           isAdmin={isAdmin}
+          isCreator={isCreator}
+          isMember={isMember}
+          currentUserId={currentUser?.uid}
           showUploadForm={showUploadForm}
           photoLimitStatus={photoLimitStatus}
           remainingPhotoSlots={remainingPhotoSlots}
           onEditEvent={handleEditEvent}
+          onLeaveEvent={handleLeaveEventFromHeader}
           onToggleUploadForm={handleToggleUploadForm}
         />
 
@@ -447,11 +554,11 @@ const EventDetailView = ({ eventId: propeventId }) => {
               </div>
             )}
 
-            {/* event Statistics */}
+            {/* event Statistics - NOW USES REAL-TIME DATA */}
             <EventStatistics
-              event={event}
+              event={event} // Real-time event data
               photos={photos || []}
-              eventMembers={eventMembers || []}
+              eventMembers={eventMembers || []} // Real-time member data
             />
           </div>
 
@@ -461,10 +568,9 @@ const EventDetailView = ({ eventId: propeventId }) => {
               mobileActiveTab === "members" ? "block" : "hidden xl:block"
             }`}
           >
-            {/* event Members */}
+            {/* event Members - NOW GETS REAL-TIME UPDATES */}
             <EventMembersCard
-              eventMembers={eventMembers || []}
-              event={event}
+              event={event} // Real-time event data from EventContext
               currentUserId={currentUser?.uid}
               onMemberClick={(member) =>
                 handleMemberClick(member, currentUser?.uid)
@@ -475,11 +581,11 @@ const EventDetailView = ({ eventId: propeventId }) => {
               onLeaveEvent={handleLeaveEventWithNavigation}
             />
 
-            {/* Invite People */}
+            {/* Invite People - NOW USES REAL-TIME MEMBER IDS */}
             <InvitePeopleCard
               currentUser={currentUser}
               eventId={eventId}
-              eventMembers={event?.members || []}
+              eventMembers={event?.members || []} // Real-time member IDs from EventContext
               onFriendClick={(friend) => {
                 setSelectedUser({
                   ...friend,
@@ -539,7 +645,7 @@ const EventDetailView = ({ eventId: propeventId }) => {
             <EditEventModal
               isOpen={showEditModal}
               onClose={() => setShowEditModal(false)}
-              event={event}
+              event={localEvent} // Use localEvent for editing
               onEventUpdated={handleEventUpdated}
               onEventDeleted={handleEventDeleted}
             />
@@ -566,7 +672,7 @@ const EventDetailView = ({ eventId: propeventId }) => {
                 onAddFriend={handleAddFriend}
                 onRemoveFriend={handleRemoveFriend}
                 onCancelRequest={handleCancelFriendRequest}
-                event={event}
+                event={localEvent} // Use localEvent for user profile context
                 onPromoteToAdmin={handlePromoteToAdmin}
                 onDemoteFromAdmin={handleDemoteFromAdmin}
                 onRemoveFromEvent={handleRemoveFromEvent}
@@ -622,6 +728,52 @@ const EventDetailView = ({ eventId: propeventId }) => {
           </div>
         )}
       </div>
+
+      {/* Leave Event Confirmation Modal */}
+{showLeaveConfirmation && (
+  <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+    <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 max-w-md w-full shadow-2xl animate-scale-in">
+      <div className="text-center">
+        <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg className="w-8 h-8 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+          </svg>
+        </div>
+        
+        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+          Leave Event?
+        </h3>
+        
+        <p className="text-gray-600 dark:text-gray-400 mb-6 leading-relaxed">
+          Are you sure you want to leave <span className="font-semibold">{event?.name}</span>?
+        </p>
+        
+        <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3 mb-6">
+          <ul className="text-sm text-yellow-800 dark:text-yellow-200 text-left space-y-1">
+            <li>• You won't be able to see photos anymore</li>
+            <li>• You'll lose access to event updates</li>
+            <li>• You'll need to be re-invited to rejoin</li>
+          </ul>
+        </div>
+        
+        <div className="flex gap-3">
+          <button
+            onClick={() => setShowLeaveConfirmation(false)}
+            className="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-xl font-medium transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleConfirmLeaveEvent}
+            className="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl font-medium transition-colors"
+          >
+            Leave Event
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 };

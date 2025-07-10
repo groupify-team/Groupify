@@ -1,4 +1,4 @@
-// DashboardHeader.jsx - FIXED VERSION with correct profile image field
+// DashboardHeader.jsx - FIXED VERSION with working notifications dropdown
 import React, { useState, useRef, useEffect } from "react";
 import { useDashboardData } from "@dashboard/hooks/useDashboardData";
 import {
@@ -8,6 +8,13 @@ import {
   CameraIcon,
   UserIcon,
 } from "@heroicons/react/24/outline";
+
+// Import the real-time contexts
+import { useEventContext } from "@shared/contexts/EventContext";
+import { useFriendsContext } from "@shared/contexts/FriendsContext";
+
+// Import the actual NotificationsDropdown component
+import NotificationsDropdown from "@dashboard/components/widgets/NotificationsDropdown";
 
 // Accessibility icon component
 const AccessibilityIcon = ({ className }) => (
@@ -31,7 +38,11 @@ const DashboardHeader = ({
   sidebarOpen,
   isMobile,
 }) => {
-  const { userData, pendingRequests, eventInvites } = useDashboardData();
+  const { userData } = useDashboardData();
+
+  // FIXED: Use real-time data from contexts instead of useDashboardData
+  const { eventInvitations } = useEventContext();
+  const { pendingRequests } = useFriendsContext();
 
   // Local state for notifications and user menu
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -46,8 +57,14 @@ const DashboardHeader = ({
   const notificationRef = useRef(null);
   const mobileUserMenuRef = useRef(null);
 
-  const totalNotifications =
-    (pendingRequests?.length || 0) + (eventInvites?.length || 0);
+  // FIXED: Calculate total notifications from real-time contexts
+  const totalNotifications = (pendingRequests?.length || 0) + (eventInvitations?.length || 0);
+
+  console.log("🔔 DashboardHeader: Real-time notification data:", {
+    pendingRequests: pendingRequests?.length || 0,
+    eventInvitations: eventInvitations?.length || 0,
+    totalNotifications,
+  });
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -75,8 +92,14 @@ const DashboardHeader = ({
     return `Welcome back, ${displayName}!`;
   };
 
+  // FIXED: Handle notification click properly
   const handleNotificationClick = () => {
-    setNotificationsOpen((prev) => !prev);
+    console.log("🔔 DashboardHeader: Notification bell clicked");
+    setNotificationsOpen((prev) => {
+      const newState = !prev;
+      console.log("🔔 DashboardHeader: Notifications dropdown", newState ? "opened" : "closed");
+      return newState;
+    });
   };
 
   const handleSidebarToggle = () => {
@@ -94,14 +117,13 @@ const DashboardHeader = ({
     );
   };
 
-  // FIXED: Helper function to get the correct profile image URL
+  // Helper function to get the correct profile image URL
   const getProfileImageUrl = (user) => {
-    // Check multiple possible field names for the profile image
     return (
-      user?.profilePicture ||  // Primary field used in your app
-      user?.photoURL ||        // Firebase Auth field (fallback)
-      user?.profileImage ||    // Alternative field name
-      "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg" // Default fallback
+      user?.profilePicture ||
+      user?.photoURL ||
+      user?.profileImage ||
+      "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg"
     );
   };
 
@@ -179,7 +201,7 @@ const DashboardHeader = ({
                 </button>
               )}
 
-              {/* Notifications */}
+              {/* FIXED: Notifications with proper dropdown */}
               <div className="relative" ref={notificationRef}>
                 <button
                   onClick={handleNotificationClick}
@@ -194,79 +216,8 @@ const DashboardHeader = ({
                   )}
                 </button>
 
-                {/* Notifications Dropdown */}
-                {notificationsOpen && (
-                  <div
-                    className="absolute right-0 top-10 w-80 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 z-50 max-h-96 overflow-y-auto transform transition-all duration-300 ease-out"
-                    style={{
-                      animation: "slideInFromTop 0.3s ease-out",
-                      transformOrigin: "top right",
-                    }}
-                  >
-                    <div className="p-4">
-                      <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
-                        Notifications
-                      </h3>
-                      {totalNotifications === 0 ? (
-                        <p className="text-gray-500 dark:text-gray-400 text-center py-4">
-                          No new notifications
-                        </p>
-                      ) : (
-                        <div className="space-y-2">
-                          {/* Friend Requests */}
-                          {pendingRequests?.map((request, index) => (
-                            <div
-                              key={`friend-${index}`}
-                              className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
-                            >
-                              <div className="flex items-center gap-3">
-                                <img
-                                  src={getProfileImageUrl(request)}
-                                  alt="Profile"
-                                  className="w-8 h-8 rounded-full object-cover"
-                                  onError={(e) => {
-                                    e.target.src = "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg";
-                                  }}
-                                />
-                                <div className="flex-1">
-                                  <p className="text-sm font-medium text-gray-900 dark:text-white">
-                                    Friend request from{" "}
-                                    {request.displayName || request.email}
-                                  </p>
-                                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                                    Click to view in Friends section
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-
-                          {/* Event Invitations */}
-                          {eventInvites?.map((invite, index) => (
-                            <div
-                              key={`event-${index}`}
-                              className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
-                            >
-                              <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
-                                  <CameraIcon className="w-4 h-4 text-white" />
-                                </div>
-                                <div className="flex-1">
-                                  <p className="text-sm font-medium text-gray-900 dark:text-white">
-                                    Event invitation: {invite.eventName}
-                                  </p>
-                                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                                    From {invite.inviterName}
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
+                {/* FIXED: Use the actual NotificationsDropdown component */}
+                {notificationsOpen && <NotificationsDropdown />}
               </div>
             </div>
 

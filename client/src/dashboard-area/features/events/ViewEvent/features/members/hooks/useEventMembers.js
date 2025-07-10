@@ -1,8 +1,9 @@
 // client/src/dashboard-area/features/events/ViewEvent/features/members/hooks/useEventMembers.js
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { toast } from "react-hot-toast";
-import { updateEvent, sendEventInvite } from "@shared/services/firebase/events";
+import { sendEventInvite } from "@shared/services/firebase/events";
 import { useFriendsContext } from "@shared/contexts/FriendsContext";
+import { useEventContext } from "@shared/contexts/EventContext";
 
 export const useEventMembers = (currentUserId, event, setEvent) => {
   // Get global friends state
@@ -22,9 +23,30 @@ export const useEventMembers = (currentUserId, event, setEvent) => {
     getUserRelationshipData,
   } = useFriendsContext();
 
+  // Get global event state
+  const {
+    getEventById,
+    getEventMembers,
+    promoteToAdmin,
+    demoteFromAdmin,
+    removeEventMember,
+    leaveEvent,
+    isEventAdmin,
+    isEventCreator,
+  } = useEventContext();
+
   const [selectedUser, setSelectedUser] = useState(null);
   const [showSuccess, setShowSuccess] = useState(false);
   const [cancelSuccess, setCancelSuccess] = useState(null);
+
+  // Get real-time event data from context
+  const currentEvent = event?.id ? getEventById(event.id) : event;
+  const currentEventMembers = event?.id ? getEventMembers(event.id) : [];
+
+  // Update local event state when context changes
+  if (currentEvent && setEvent && JSON.stringify(currentEvent) !== JSON.stringify(event)) {
+    setEvent(currentEvent);
+  }
 
   const handleMemberClick = async (member) => {
     console.log("🔍 handleMemberClick called with member:", member);
@@ -146,21 +168,14 @@ export const useEventMembers = (currentUserId, event, setEvent) => {
   };
 
   const handlePromoteToAdmin = async (uid) => {
-    if (!event) {
+    if (!event?.id) {
       console.error("Event data not available");
       return;
     }
 
     try {
-      const updatedEvent = {
-        ...event,
-        admins: [...(event.admins || []), uid],
-      };
-
-      await updateEvent(event.id, { admins: updatedEvent.admins });
-      setEvent(updatedEvent);
+      await promoteToAdmin(event.id, uid);
       setSelectedUser(null);
-
       toast.success("User promoted to admin successfully!");
     } catch (error) {
       console.error("Error promoting to admin:", error);
@@ -170,12 +185,13 @@ export const useEventMembers = (currentUserId, event, setEvent) => {
   };
 
   const handleDemoteFromAdmin = async (uid) => {
-    if (!event) {
+    if (!event?.id) {
       console.error("Event data not available");
       return;
     }
 
-    const isLastAdmin = event.admins?.length === 1 && event.admins[0] === uid;
+    // Check if this is the last admin
+    const isLastAdmin = currentEvent?.admins?.length === 1 && currentEvent.admins[0] === uid;
 
     if (isLastAdmin) {
       toast.error(
@@ -185,12 +201,7 @@ export const useEventMembers = (currentUserId, event, setEvent) => {
     }
 
     try {
-      const updatedAdmins = event.admins?.filter((id) => id !== uid) || [];
-      await updateEvent(event.id, { admins: updatedAdmins });
-      setEvent({
-        ...event,
-        admins: updatedAdmins,
-      });
+      await demoteFromAdmin(event.id, uid);
       setSelectedUser(null);
       toast.success("Admin privileges removed successfully!");
     } catch (error) {
@@ -201,20 +212,13 @@ export const useEventMembers = (currentUserId, event, setEvent) => {
   };
 
   const handleRemoveFromEvent = async (uid) => {
-    if (!event) {
+    if (!event?.id) {
       console.error("Event data not available");
       return;
     }
+
     try {
-      const updatedMembers = event.members?.filter((id) => id !== uid) || [];
-      const updatedAdmins = event.admins?.filter((id) => id !== uid) || [];
-      const updatedEvent = {
-        ...event,
-        members: updatedMembers,
-        admins: updatedAdmins,
-      };
-      await updateEvent(event.id, updatedEvent);
-      setEvent(updatedEvent);
+      await removeEventMember(event.id, uid);
       setSelectedUser(null);
       toast.success("User removed from event successfully!");
     } catch (error) {
@@ -225,24 +229,13 @@ export const useEventMembers = (currentUserId, event, setEvent) => {
   };
 
   const handleLeaveEvent = async (navigate) => {
-    if (!event || !currentUserId) {
+    if (!event?.id || !currentUserId) {
       console.error("Event data or user ID not available");
       return;
     }
 
     try {
-      const updatedMembers =
-        event.members?.filter((id) => id !== currentUserId) || [];
-      const updatedAdmins =
-        event.admins?.filter((id) => id !== currentUserId) || [];
-
-      const updatedEvent = {
-        ...event,
-        members: updatedMembers,
-        admins: updatedAdmins,
-      };
-
-      await updateEvent(event.id, updatedEvent);
+      await leaveEvent(event.id);
       toast.success("You have left the event successfully!");
 
       if (navigate) {
@@ -258,23 +251,37 @@ export const useEventMembers = (currentUserId, event, setEvent) => {
   };
 
   return {
-    // Global friends state
-    friends: friends.map((f) => f.uid), // Return just UIDs for compatibility
+    // Global friends state (unchanged for compatibility)
+    friends: friends.map((f) => f.uid),
     selectedUser,
     showSuccess,
     cancelSuccess,
-    pendingFriendRequests: sentRequestIds, // UIDs of users we sent requests to
+    pendingFriendRequests: sentRequestIds,
+    
+    // Real-time event members from context
+    eventMembers: currentEventMembers,
+    currentEvent,
+    
+    // State setters
     setSelectedUser,
     setShowSuccess,
     setCancelSuccess,
+    
+    // Event member actions (now using EventContext)
     handleMemberClick,
-    handleAddFriend,
-    handleRemoveFriend,
-    handleCancelFriendRequest,
-    handleInviteToEvent,
     handlePromoteToAdmin,
     handleDemoteFromAdmin,
     handleRemoveFromEvent,
     handleLeaveEvent,
+    
+    // Friend actions (unchanged)
+    handleAddFriend,
+    handleRemoveFriend,
+    handleCancelFriendRequest,
+    handleInviteToEvent,
+    
+    // Convenience helpers
+    isAdmin: currentUserId ? isEventAdmin(event?.id, currentUserId) : false,
+    isCreator: currentUserId ? isEventCreator(event?.id, currentUserId) : false,
   };
 };

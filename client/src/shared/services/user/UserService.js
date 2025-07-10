@@ -143,56 +143,87 @@ export class UserService {
    * Accept friend request
    */
   static async acceptFriendRequest(requestId, currentUserId) {
-    try {
-      console.log(
-        `✅ Accepting friend request: ${requestId} by ${currentUserId}`
-      );
+  try {
+    console.log(`✅ Accepting friend request: ${requestId} by ${currentUserId}`);
+    console.log(`🔍 RequestId type: ${typeof requestId}, value: "${requestId}"`);
+    console.log(`🔍 CurrentUserId type: ${typeof currentUserId}, value: "${currentUserId}"`);
 
-      // Get the friend request
-      const requestDoc = await getDoc(doc(db, "friendRequests", requestId));
-      if (!requestDoc.exists()) {
-        console.error("❌ Friend request not found:", requestId);
-        throw new Error("Friend request not found");
-      }
-
-      const requestData = requestDoc.data();
-      console.log("📋 Request data:", requestData);
-
-      // Verify the current user is the recipient
-      if (requestData.to !== currentUserId) {
-        console.error("❌ Unauthorized to accept this request");
-        throw new Error("Unauthorized to accept this request");
-      }
-
-      const fromUserId = requestData.from;
-      const toUserId = requestData.to;
-
-      // Add each user to the other's friends list
-      await Promise.all([
-        updateDoc(doc(db, "users", fromUserId), {
-          friends: arrayUnion(toUserId),
-          updatedAt: serverTimestamp(),
-        }),
-        updateDoc(doc(db, "users", toUserId), {
-          friends: arrayUnion(fromUserId),
-          updatedAt: serverTimestamp(),
-        }),
-      ]);
-
-      // Delete the friend request
-      await deleteDoc(doc(db, "friendRequests", requestId));
-
-      // Invalidate user stats cache
-      userStatsCache.invalidateUser(fromUserId);
-      userStatsCache.invalidateUser(toUserId);
-
-      console.log(`✅ Friend request accepted successfully`);
-      return true;
-    } catch (error) {
-      console.error("❌ Error accepting friend request:", error);
-      throw error;
+    // Validate inputs
+    if (!requestId || typeof requestId !== 'string') {
+      console.error("❌ Invalid requestId:", requestId);
+      throw new Error("Invalid request ID provided");
     }
+
+    if (!currentUserId || typeof currentUserId !== 'string') {
+      console.error("❌ Invalid currentUserId:", currentUserId);
+      throw new Error("Invalid current user ID provided");
+    }
+
+    // Get the friend request document
+    console.log(`🔍 Looking for document with ID: ${requestId}`);
+    const requestDoc = await getDoc(doc(db, "friendRequests", requestId));
+    
+    if (!requestDoc.exists()) {
+      console.error("❌ Friend request document not found:", requestId);
+      
+      // Let's also search for any requests involving this user to debug
+      console.log("🔍 Searching for any requests to current user...");
+      const q = query(
+        collection(db, "friendRequests"),
+        where("to", "==", currentUserId),
+        where("status", "==", "pending")
+      );
+      const querySnapshot = await getDocs(q);
+      console.log(`🔍 Found ${querySnapshot.size} pending requests for user ${currentUserId}:`);
+      
+      querySnapshot.forEach((doc) => {
+        console.log(`   - Doc ID: ${doc.id}, Data:`, doc.data());
+      });
+      
+      throw new Error("Friend request not found");
+    }
+
+    const requestData = requestDoc.data();
+    console.log("📋 Request data:", requestData);
+
+    // Verify the current user is the recipient
+    if (requestData.to !== currentUserId) {
+      console.error("❌ Unauthorized to accept this request");
+      console.log(`🔍 Request 'to' field: ${requestData.to}, current user: ${currentUserId}`);
+      throw new Error("Unauthorized to accept this request");
+    }
+
+    const fromUserId = requestData.from;
+    const toUserId = requestData.to;
+
+    console.log(`🤝 Creating friendship between ${fromUserId} and ${toUserId}`);
+
+    // Add each user to the other's friends list
+    await Promise.all([
+      updateDoc(doc(db, "users", fromUserId), {
+        friends: arrayUnion(toUserId),
+        updatedAt: serverTimestamp(),
+      }),
+      updateDoc(doc(db, "users", toUserId), {
+        friends: arrayUnion(fromUserId),
+        updatedAt: serverTimestamp(),
+      }),
+    ]);
+
+    // Delete the friend request
+    await deleteDoc(doc(db, "friendRequests", requestId));
+
+    // Invalidate user stats cache
+    userStatsCache.invalidateUser(fromUserId);
+    userStatsCache.invalidateUser(toUserId);
+
+    console.log(`✅ Friend request accepted successfully`);
+    return true;
+  } catch (error) {
+    console.error("❌ Error accepting friend request:", error);
+    throw error;
   }
+}
 
   /**
    * Reject friend request

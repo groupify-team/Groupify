@@ -3,9 +3,20 @@ import {
   MapPinIcon,
   PencilIcon,
   CalendarIcon,
+  ArrowRightOnRectangleIcon,
 } from "@heroicons/react/24/outline";
 
-const EventHeader = ({ event, photos, eventMembers, isAdmin, onEditEvent }) => {
+const EventHeader = ({ 
+  event, 
+  photos, 
+  eventMembers, 
+  isAdmin, 
+  isCreator,
+  isMember,
+  currentUserId,
+  onEditEvent,
+  onLeaveEvent 
+}) => {
   // Note: photos and eventMembers are passed but not used in current implementation
   const formatDateRange = (startDate, endDate) => {
     if (!startDate && !endDate) return null;
@@ -30,6 +41,11 @@ const EventHeader = ({ event, photos, eventMembers, isAdmin, onEditEvent }) => {
   };
 
   const dateRange = formatDateRange(event.startDate, event.endDate);
+
+  // Determine which action button to show
+  const shouldShowEditButton = isAdmin || isCreator;
+  const shouldShowLeaveButton = isMember && !isCreator && currentUserId; // Members can leave, but not creators
+  const shouldShowActionButton = shouldShowEditButton || shouldShowLeaveButton;
 
   return (
     <div className="relative group">
@@ -62,13 +78,25 @@ const EventHeader = ({ event, photos, eventMembers, isAdmin, onEditEvent }) => {
                 </div>
               </div>
             </div>
-            {isAdmin && (
-              <button
-                onClick={onEditEvent}
-                className="ml-3 p-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg transition-all duration-300"
-              >
-                <PencilIcon className="w-4 h-4" />
-              </button>
+            {shouldShowActionButton && (
+              <div className="ml-3">
+                {shouldShowEditButton && (
+                  <button
+                    onClick={onEditEvent}
+                    className="p-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg transition-all duration-300"
+                  >
+                    <PencilIcon className="w-4 h-4" />
+                  </button>
+                )}
+                {shouldShowLeaveButton && (
+                  <button
+                    onClick={onLeaveEvent}
+                    className="p-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg transition-all duration-300"
+                  >
+                    <ArrowRightOnRectangleIcon className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
             )}
           </div>
         </div>
@@ -102,15 +130,28 @@ const EventHeader = ({ event, photos, eventMembers, isAdmin, onEditEvent }) => {
               </div>
             </div>
 
-            {/* Right - Edit Button Only */}
-            {isAdmin && (
-              <button
-                onClick={onEditEvent}
-                className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center gap-2"
-              >
-                <PencilIcon className="w-5 h-5" />
-                Edit event
-              </button>
+            {/* Right - Action Buttons */}
+            {shouldShowActionButton && (
+              <div>
+                {shouldShowEditButton && (
+                  <button
+                    onClick={onEditEvent}
+                    className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center gap-2"
+                  >
+                    <PencilIcon className="w-5 h-5" />
+                    Edit event
+                  </button>
+                )}
+                {shouldShowLeaveButton && (
+                  <button
+                    onClick={onLeaveEvent}
+                    className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center gap-2"
+                  >
+                    <ArrowRightOnRectangleIcon className="w-5 h-5" />
+                    Leave Event
+                  </button>
+                )}
+              </div>
             )}
           </div>
         </div>

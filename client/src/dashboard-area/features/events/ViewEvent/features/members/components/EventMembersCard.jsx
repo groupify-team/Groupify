@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { useEventContext } from "@shared/contexts/EventContext";
 
 import {
   UserGroupIcon,
@@ -14,7 +15,6 @@ import {
 } from "@heroicons/react/24/outline";
 
 const EventMembersCard = ({
-  eventMembers,
   event,
   currentUserId,
   onMemberClick,
@@ -28,47 +28,61 @@ const EventMembersCard = ({
   const [confirmAction, setConfirmAction] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  // Get real-time event members from context
+  const { getEventMembers, getEventById } = useEventContext();
+  
+  // Get real-time data
+  const currentEvent = useMemo(() => {
+    return event?.id ? getEventById(event.id) : event;
+  }, [event, getEventById]);
+
+  const eventMembers = useMemo(() => {
+    return event?.id ? getEventMembers(event.id) : [];
+  }, [event?.id, getEventMembers]);
+
   // Debug logging
   console.log("EventMembersCard props:", {
     eventMembersCount: eventMembers?.length,
     eventMembers,
-    eventData: event,
+    eventData: currentEvent,
     currentUserId,
   });
 
   // Sort members: current user first, then creator, then admins, then by join date
-  const sortedMembers = [...eventMembers].sort((a, b) => {
-    // 1. Current user first
-    if (a.uid === currentUserId) return -1;
-    if (b.uid === currentUserId) return 1;
+  const sortedMembers = useMemo(() => {
+    return [...eventMembers].sort((a, b) => {
+      // 1. Current user first
+      if (a.uid === currentUserId) return -1;
+      if (b.uid === currentUserId) return 1;
 
-    // 2. Creator second (if not current user)
-    if (a.uid === event.createdBy) return -1;
-    if (b.uid === event.createdBy) return 1;
+      // 2. Creator second (if not current user)
+      if (a.uid === currentEvent?.createdBy) return -1;
+      if (b.uid === currentEvent?.createdBy) return 1;
 
-    // 3. Both are admins - sort by join date (oldest first)
-    const aIsAdmin = event.admins?.includes(a.uid);
-    const bIsAdmin = event.admins?.includes(b.uid);
+      // 3. Both are admins - sort by join date (oldest first)
+      const aIsAdmin = currentEvent?.admins?.includes(a.uid);
+      const bIsAdmin = currentEvent?.admins?.includes(b.uid);
 
-    if (aIsAdmin && bIsAdmin) {
+      if (aIsAdmin && bIsAdmin) {
+        const aJoinDate = new Date(a.joinDate || a.createdAt || 0);
+        const bJoinDate = new Date(b.joinDate || b.createdAt || 0);
+        return aJoinDate - bJoinDate;
+      }
+
+      // 4. Admin vs non-admin
+      if (aIsAdmin && !bIsAdmin) return -1;
+      if (!aIsAdmin && bIsAdmin) return 1;
+
+      // 5. Both are regular members - sort by join date (oldest first)
       const aJoinDate = new Date(a.joinDate || a.createdAt || 0);
       const bJoinDate = new Date(b.joinDate || b.createdAt || 0);
       return aJoinDate - bJoinDate;
-    }
-
-    // 4. Admin vs non-admin
-    if (aIsAdmin && !bIsAdmin) return -1;
-    if (!aIsAdmin && bIsAdmin) return 1;
-
-    // 5. Both are regular members - sort by join date (oldest first)
-    const aJoinDate = new Date(a.joinDate || a.createdAt || 0);
-    const bJoinDate = new Date(b.joinDate || b.createdAt || 0);
-    return aJoinDate - bJoinDate;
-  });
+    });
+  }, [eventMembers, currentUserId, currentEvent]);
 
   const getMemberRole = (member) => {
-    if (member.uid === event.createdBy) return "creator";
-    if (event.admins?.includes(member.uid)) return "admin";
+    if (member.uid === currentEvent?.createdBy) return "creator";
+    if (currentEvent?.admins?.includes(member.uid)) return "admin";
     return "member";
   };
 
@@ -84,9 +98,9 @@ const EventMembersCard = ({
 
   // Check if current user can manage another user
   const canManageUser = (targetMember) => {
-    const isCurrentUserCreator = currentUserId === event.createdBy;
-    const isCurrentUserAdmin = event.admins?.includes(currentUserId);
-    const isTargetCreator = targetMember.uid === event.createdBy;
+    const isCurrentUserCreator = currentUserId === currentEvent?.createdBy;
+    const isCurrentUserAdmin = currentEvent?.admins?.includes(currentUserId);
+    const isTargetCreator = targetMember.uid === currentEvent?.createdBy;
     const isTargetCurrentUser = targetMember.uid === currentUserId;
 
     // Current user can't manage themselves (except leaving)
@@ -99,7 +113,7 @@ const EventMembersCard = ({
     if (
       isCurrentUserAdmin &&
       !isTargetCreator &&
-      !event.admins?.includes(targetMember.uid)
+      !currentEvent?.admins?.includes(targetMember.uid)
     )
       return true;
 

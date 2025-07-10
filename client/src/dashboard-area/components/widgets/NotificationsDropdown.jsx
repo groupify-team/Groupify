@@ -1,35 +1,50 @@
-// NotificationsDropdown.jsx - Notifications dropdown widget
-import React from "react";
+// client/src/dashboard-area/components/widgets/NotificationsDropdown.jsx
+import React, { useState } from "react";
 import {
   BellIcon,
   CheckCircleIcon,
   XCircleIcon,
+  CalendarIcon,
+  UsersIcon,
 } from "@heroicons/react/24/outline";
 import { useAuth } from "@auth/hooks/useAuth";
-
+import { useEventContext } from "@shared/contexts/EventContext"; // NEW: Use EventContext
+import { useFriendsContext } from "@shared/contexts/FriendsContext"; // NEW: Use FriendsContext
 import { useDashboardData } from "../../hooks/useDashboardData";
-import {
-  acceptFriendRequest,
-  rejectFriendRequest,
-} from "@firebase-services/users";
-import {
-  acceptEventInvite,
-  declineEventInvite,
-} from "@shared/services/firebase/events";
 import {
   formatNotificationMessage,
   getRelativeTime,
 } from "@dashboard/utils/dashboardHelpers";
+import toast from "react-hot-toast";
 
-const NotificationsDropdown = ({ pendingRequests, eventInvites }) => {
+const NotificationsDropdown = () => {
   const { currentUser } = useAuth();
+  const [processingNotification, setProcessingNotification] = useState(null);
+  
+  // NEW: Get real-time data from contexts
+  const { 
+    eventInvitations, 
+    acceptEventInvitation, 
+    rejectEventInvitation 
+  } = useEventContext();
+  
+  const { 
+    pendingRequests, 
+    acceptFriendRequest, 
+    rejectFriendRequest 
+  } = useFriendsContext();
+
+  // FIXED: Use the correct function name (refreshevents, not refreshEvents)
   const {
     refreshevents,
-    removePendingRequest,
-    removeEventInvite,
     showSuccessMessage,
     showErrorMessage,
   } = useDashboardData();
+
+  console.log("🎬 NotificationsDropdown: Real-time data:", {
+    eventInvitations: eventInvitations.length,
+    pendingRequests: pendingRequests.length,
+  });
 
   // Transform data into unified notification format
   const allNotifications = [
@@ -37,53 +52,41 @@ const NotificationsDropdown = ({ pendingRequests, eventInvites }) => {
       id: `friend-request-${req.id}`,
       type: "friend_request",
       title: "Friend Request",
-      message: formatNotificationMessage({
-        type: "friend_request",
-        senderName: req.displayName,
-        senderEmail: req.email,
-      }),
-      avatar:
-        req.photoURL ||
-        "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg",
+      message: `${req.displayName || req.email} wants to be your friend`,
+      avatar: req.photoURL || "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg",
       time: req.createdAt,
       data: req,
       actions: [
         {
           label: "Accept",
           type: "accept",
-          action: () => handleAcceptFriendRequest(req.from),
+          action: () => handleAcceptFriendRequest(req),
         },
         {
           label: "Decline",
           type: "decline",
-          action: () => handleRejectFriendRequest(req.from),
+          action: () => handleRejectFriendRequest(req),
         },
       ],
     })),
-    ...eventInvites.map((invite) => ({
+    ...eventInvitations.map((invite) => ({
       id: `event-invite-${invite.id}`,
       type: "event_invite",
       title: "Event Invitation",
-      message: formatNotificationMessage({
-        type: "event_invite",
-        inviterName: invite.inviterName,
-        eventName: invite.eventName,
-      }),
-      avatar:
-        invite.inviterPhoto ||
-        "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg",
+      message: `${invite.senderName} invited you to "${invite.eventTitle}"`,
+      avatar: invite.senderPhotoURL || "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg",
       time: invite.createdAt,
       data: invite,
       actions: [
         {
           label: "Accept",
           type: "accept",
-          action: () => handleAcceptEventInvite(invite),
+          action: () => handleAcceptEventInvitation(invite),
         },
         {
           label: "Decline",
           type: "decline",
-          action: () => handleDeclineEventInvite(invite),
+          action: () => handleRejectEventInvitation(invite),
         },
       ],
     })),
@@ -96,59 +99,79 @@ const NotificationsDropdown = ({ pendingRequests, eventInvites }) => {
     return new Date(timeB) - new Date(timeA);
   });
 
-  const handleAcceptFriendRequest = async (fromUid) => {
+  const handleAcceptFriendRequest = async (request) => {
     try {
-      await acceptFriendRequest(currentUser.uid, fromUid);
-      removePendingRequest(fromUid);
-      showSuccessMessage("Friend request accepted");
+      setProcessingNotification(`friend-request-${request.id}`);
+      console.log("✅ NotificationsDropdown: Accepting friend request from:", request.from || request.uid);
+      
+      await acceptFriendRequest(request.id, request.from || request.uid);
+      toast.success("Friend request accepted! 🎉");
     } catch (error) {
-      console.error("Error accepting friend request:", error);
-      showErrorMessage("Failed to accept friend request");
+      console.error("❌ NotificationsDropdown: Error accepting friend request:", error);
+      toast.error("Failed to accept friend request");
+    } finally {
+      setProcessingNotification(null);
     }
   };
 
-  const handleRejectFriendRequest = async (senderUid) => {
+  const handleRejectFriendRequest = async (request) => {
     try {
-      await rejectFriendRequest(currentUser.uid, senderUid);
-      removePendingRequest(senderUid);
-      showSuccessMessage("Friend request declined");
+      setProcessingNotification(`friend-request-${request.id}`);
+      console.log("❌ NotificationsDropdown: Rejecting friend request from:", request.from || request.uid);
+      
+      await rejectFriendRequest(request.id, request.from || request.uid);
+      toast.success("Friend request declined");
     } catch (error) {
-      console.error("Error rejecting friend request:", error);
-      showErrorMessage("Failed to decline friend request");
+      console.error("❌ NotificationsDropdown: Error rejecting friend request:", error);
+      toast.error("Failed to decline friend request");
+    } finally {
+      setProcessingNotification(null);
     }
   };
 
-  const handleAcceptEventInvite = async (invite) => {
+  const handleAcceptEventInvitation = async (invitation) => {
     try {
-      await acceptEventInvite(invite.id, currentUser.uid);
-      removeEventInvite(invite.id);
-      await refreshevents();
-      showSuccessMessage("Event invitation accepted");
+      setProcessingNotification(`event-invite-${invitation.id}`);
+      console.log("✅ NotificationsDropdown: Accepting event invitation:", invitation.id, "for event:", invitation.eventId);
+      
+      // FIXED: The EventContext handles the invitation acceptance and real-time updates
+      // No need to manually refresh events since EventContext has real-time listeners
+      await acceptEventInvitation(invitation.id, invitation.eventId);
+      
+      toast.success(`Joined "${invitation.eventTitle}"! 🎉`);
+      
+      console.log("✅ NotificationsDropdown: Event invitation accepted successfully via context");
     } catch (error) {
-      console.error("Error accepting event invite:", error);
-      showErrorMessage("Failed to accept Event invitation");
+      console.error("❌ NotificationsDropdown: Error accepting event invitation:", error);
+      toast.error("Failed to accept event invitation");
+    } finally {
+      setProcessingNotification(null);
     }
   };
 
-  const handleDeclineEventInvite = async (invite) => {
+  const handleRejectEventInvitation = async (invitation) => {
     try {
-      await declineEventInvite(invite.id);
-      removeEventInvite(invite.id);
-      showSuccessMessage("Event invitation declined");
+      setProcessingNotification(`event-invite-${invitation.id}`);
+      console.log("❌ NotificationsDropdown: Rejecting event invitation:", invitation.id);
+      
+      await rejectEventInvitation(invitation.id);
+      toast.success("Event invitation declined");
     } catch (error) {
-      console.error("Error declining event invite:", error);
-      showErrorMessage("Failed to decline Event invitation");
+      console.error("❌ NotificationsDropdown: Error rejecting event invitation:", error);
+      toast.error("Failed to decline event invitation");
+    } finally {
+      setProcessingNotification(null);
     }
   };
 
   const getNotificationIcon = (type) => {
     switch (type) {
       case "friend_request":
-        return "??";
+        return "👤";
       case "event_invite":
-        return "??";
+        return "📅";
       default:
-        return "??";
+        return "🔔";
     }
   };
 
@@ -248,13 +271,16 @@ const NotificationsDropdown = ({ pendingRequests, eventInvites }) => {
                             e.stopPropagation();
                             action.action();
                           }}
-                          className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 ${
+                          disabled={processingNotification === notification.id}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${
                             action.type === "accept"
                               ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-900/50 hover:scale-105"
                               : "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50 hover:scale-105"
                           }`}
                         >
-                          {action.type === "accept" ? (
+                          {processingNotification === notification.id ? (
+                            <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                          ) : action.type === "accept" ? (
                             <CheckCircleIcon className="w-3 h-3" />
                           ) : (
                             <XCircleIcon className="w-3 h-3" />

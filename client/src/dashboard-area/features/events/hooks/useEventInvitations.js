@@ -1,37 +1,25 @@
 // client/src/dashboard-area/features/events/hooks/useEventInvitations.js
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { toast } from "react-hot-toast";
-import {
-  getPendingInvites,
-  acceptEventInvite,
-  declineEventInvite,
-} from "@shared/services/firebase/events";
 import { usePlanLimits } from "@shared/hooks/usePlanLimits";
+import { useEventContext } from "@shared/contexts/EventContext"; // NEW: Use EventContext
 import { eventsService } from "../services/eventsService";
 
 export const useEventInvitations = (userId) => {
-  const [pendingInvites, setPendingInvites] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [processingInvite, setProcessingInvite] = useState(null);
   const { canPerformAction, showUpgradePrompt, getUsageInfo } = usePlanLimits();
 
-  // Load pending invitations
-  const loadPendingInvites = async () => {
-    if (!userId) return;
+  // NEW: Get real-time data from EventContext instead of local state
+  const { 
+    eventInvitations: pendingInvites, 
+    loading, 
+    acceptEventInvitation, 
+    rejectEventInvitation 
+  } = useEventContext();
 
-    try {
-      setLoading(true);
-      const invites = await getPendingInvites(userId);
-      setPendingInvites(invites);
-    } catch (error) {
-      console.error("Error loading pending invites:", error);
-      toast.error("Failed to load invitations");
-    } finally {
-      setLoading(false);
-    }
-  };
+  console.log("🎬 useEventInvitations: Real-time invitations:", pendingInvites);
 
-  // Accept invitation with plan validation
+  // Accept invitation with plan validation (now uses EventContext)
   const acceptInvite = async (invite) => {
     try {
       setProcessingInvite(invite.id);
@@ -56,28 +44,25 @@ export const useEventInvitations = (userId) => {
         return false;
       }
 
-      // Proceed with accepting the invitation
-      await acceptEventInvite(invite.id, userId);
-
-      // Remove from local state
-      setPendingInvites((prev) => prev.filter((inv) => inv.id !== invite.id));
+      // Use EventContext function instead of direct Firebase call
+      await acceptEventInvitation(invite.id, invite.eventId);
 
       // Update usage statistics
       const usageInfo = getUsageInfo();
       if (usageInfo) {
         // This will be handled by the backend, but we update locally for immediate feedback
         toast.success(
-          `Joined ${invite.eventName}! (${currentEventCount + 1}/${
+          `Joined ${invite.eventTitle}! (${currentEventCount + 1}/${
             limitCheck.limit === "unlimited" ? "∞" : limitCheck.limit
           } events)`
         );
       } else {
-        toast.success(`Joined ${invite.eventName}!`);
+        toast.success(`Joined ${invite.eventTitle}!`);
       }
 
       return true;
     } catch (error) {
-      console.error("Error accepting invite:", error);
+      console.error("❌ useEventInvitations: Error accepting invite:", error);
 
       // Check if error is related to plan limits
       if (
@@ -98,18 +83,18 @@ export const useEventInvitations = (userId) => {
     }
   };
 
-  // Decline invitation (unchanged)
+  // Decline invitation (now uses EventContext)
   const declineInvite = async (invite) => {
     try {
       setProcessingInvite(invite.id);
-      await declineEventInvite(invite.id);
-
-      // Remove from local state
-      setPendingInvites((prev) => prev.filter((inv) => inv.id !== invite.id));
+      
+      // Use EventContext function instead of direct Firebase call
+      await rejectEventInvitation(invite.id);
+      
       toast.success("Invitation declined");
       return true;
     } catch (error) {
-      console.error("Error declining invite:", error);
+      console.error("❌ useEventInvitations: Error declining invite:", error);
       toast.error("Failed to decline invitation");
       return false;
     } finally {
@@ -126,25 +111,21 @@ export const useEventInvitations = (userId) => {
       });
       return limitCheck.allowed;
     } catch (error) {
-      console.error("Error checking invitation acceptance ability:", error);
+      console.error("❌ useEventInvitations: Error checking invitation acceptance ability:", error);
       return false;
     }
   };
 
-  // Load invites when userId changes
-  useEffect(() => {
-    if (userId) {
-      loadPendingInvites();
-    }
-  }, [userId]);
-
   return {
-    pendingInvites,
-    loading,
+    pendingInvites, // Now comes from EventContext (real-time)
+    loading, // Now comes from EventContext
     processingInvite,
-    acceptInvite,
-    declineInvite,
-    refreshInvites: loadPendingInvites,
-    canAcceptMoreInvitations, // New helper function
+    acceptInvite, // Updated to use EventContext
+    declineInvite, // Updated to use EventContext
+    refreshInvites: () => {
+      // No need to refresh - EventContext handles real-time updates
+      console.log("ℹ️ useEventInvitations: Refresh not needed - using real-time data from EventContext");
+    },
+    canAcceptMoreInvitations,
   };
 };
