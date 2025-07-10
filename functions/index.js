@@ -1495,7 +1495,7 @@ exports.acceptEventInvitation = onRequest(
         // Get the invitation details
         const invitationDoc = await admin
           .firestore()
-          .collection("eventInvitations")
+          .collection("eventInvites")
           .doc(invitationId)
           .get();
 

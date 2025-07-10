@@ -4,7 +4,8 @@ import { BrowserRouter as Router } from "react-router-dom";
 // Core providers
 import { AuthProvider } from "@/auth-area";
 import { ThemeProvider } from "@shared/contexts/ThemeContext";
-import { FriendsProvider } from "@shared/contexts/FriendsContext"; // ADD THIS IMPORT
+import { FriendsProvider } from "@shared/contexts/FriendsContext";
+import { EventProvider } from "@shared/contexts/EventContext"; 
 import GlobalAccessibilityProvider from "@/shared/components/accessibility/GlobalAccessibilityProvider";
 
 // App components
@@ -20,24 +21,23 @@ function App() {
     <Router>
       <AuthProvider>
         <FriendsProvider>
-          {" "}
-          {/* ADD THIS */}
-          <GlobalAccessibilityProvider>
-            <FlowController>
-              <Toaster
-                position="top-center"
-                toastOptions={{
-                  duration: 3000,
-                  className: "toast-above-modal",
-                }}
-              />
-              <PageTransitionWrapper>
-                <AppRoutes />
-              </PageTransitionWrapper>
-            </FlowController>
-          </GlobalAccessibilityProvider>
-        </FriendsProvider>{" "}
-        {/* ADD THIS */}
+          <EventProvider> 
+            <GlobalAccessibilityProvider>
+              <FlowController>
+                <Toaster
+                  position="top-center"
+                  toastOptions={{
+                    duration: 3000,
+                    className: "toast-above-modal",
+                  }}
+                />
+                <PageTransitionWrapper>
+                  <AppRoutes />
+                </PageTransitionWrapper>
+              </FlowController>
+            </GlobalAccessibilityProvider>
+          </EventProvider>
+        </FriendsProvider>
       </AuthProvider>
     </Router>
   ));

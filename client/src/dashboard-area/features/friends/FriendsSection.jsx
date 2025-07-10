@@ -40,9 +40,23 @@ const FriendsSection = () => {
   const [showUserProfileModal, setShowUserProfileModal] = useState(false);
 
   // Handler functions
-  const handleAcceptRequest = async (requestId, fromUserId) => {
+  const handleAcceptRequest = async (request) => {
     try {
-      await acceptFriendRequest(requestId, fromUserId);
+      console.log("🔍 Full request object:", request);
+      console.log("🔍 Request keys:", Object.keys(request));
+      
+      // TEMPORARY FIX: Find the correct document ID
+      // Since the ID might be wrong, let's search for the actual document
+      const actualDocId = await findCorrectDocumentId(request.from, currentUser.uid);
+      
+      if (!actualDocId) {
+        throw new Error("Could not find the friend request document");
+      }
+      
+      console.log("🔍 Using document ID:", actualDocId);
+      
+      // Use the correct document ID
+      await acceptFriendRequest(actualDocId, request.from);
       toast.success("Friend request accepted!");
     } catch (error) {
       console.error("Error accepting friend request:", error);
@@ -50,13 +64,53 @@ const FriendsSection = () => {
     }
   };
 
-  const handleRejectRequest = async (requestId, fromUserId) => {
+  const handleRejectRequest = async (request) => {
     try {
-      await rejectFriendRequest(requestId, fromUserId);
+      console.log("🔍 Full request object:", request);
+      
+      // TEMPORARY FIX: Find the correct document ID
+      const actualDocId = await findCorrectDocumentId(request.from, currentUser.uid);
+      
+      if (!actualDocId) {
+        throw new Error("Could not find the friend request document");
+      }
+      
+      console.log("🔍 Using document ID:", actualDocId);
+      
+      // Use the correct document ID
+      await rejectFriendRequest(actualDocId, request.from);
       toast.success("Friend request declined");
     } catch (error) {
       console.error("Error rejecting friend request:", error);
       toast.error("Failed to decline friend request");
+    }
+  };
+
+  // Helper function to find the correct document ID
+  const findCorrectDocumentId = async (fromUserId, toUserId) => {
+    try {
+      const { collection, query, where, getDocs } = await import("firebase/firestore");
+      const { db } = await import("@shared/services/firebase/config");
+      
+      const q = query(
+        collection(db, "friendRequests"),
+        where("from", "==", fromUserId),
+        where("to", "==", toUserId),
+        where("status", "==", "pending")
+      );
+      
+      const querySnapshot = await getDocs(q);
+      
+      if (!querySnapshot.empty) {
+        const doc = querySnapshot.docs[0];
+        console.log("🔍 Found correct document ID:", doc.id);
+        return doc.id;
+      }
+      
+      return null;
+    } catch (error) {
+      console.error("Error finding document ID:", error);
+      return null;
     }
   };
 
@@ -238,23 +292,13 @@ const FriendsSection = () => {
                       </div>
                       <div className="flex gap-2">
                         <button
-                          onClick={() =>
-                            handleAcceptRequest(
-                              request.id,
-                              request.from || request.uid
-                            )
-                          }
+                          onClick={() => handleAcceptRequest(request)}
                           className="bg-green-600 hover:bg-green-700 text-white py-1 px-3 rounded-md text-xs font-medium transition-colors"
                         >
                           Accept
                         </button>
                         <button
-                          onClick={() =>
-                            handleRejectRequest(
-                              request.id,
-                              request.from || request.uid
-                            )
-                          }
+                          onClick={() => handleRejectRequest(request)}
                           className="bg-gray-600 hover:bg-gray-700 dark:bg-slate-600 dark:hover:bg-slate-700 text-white py-1 px-3 rounded-md text-xs font-medium transition-colors"
                         >
                           Decline
