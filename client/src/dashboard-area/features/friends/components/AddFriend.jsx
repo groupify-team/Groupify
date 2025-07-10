@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useAuth } from "@auth/hooks/useAuth";
 import { UserService } from "@shared/services/user";
-import { useFriendsContext } from "@shared/contexts/FriendsContext"; // ADD THIS IMPORT
+import { useFriendsContext } from "@shared/contexts/FriendsContext";
 import toast from "react-hot-toast";
 
 import {
@@ -206,6 +206,9 @@ const AddFriend = ({
 
   const handleViewProfile = () => {
     if (foundUser && onUserSelect) {
+      // IMPORTANT: Pass the foundUser to the parent component
+      // The parent will be responsible for opening the UserProfileModal
+      // with proper z-index handling
       onUserSelect(foundUser);
     }
   };
