@@ -1,5 +1,5 @@
 /* ========================================
-   TOAST NOTIFICATIONS - FIXED VERSION
+   TOAST NOTIFICATIONS - UPDATED VERSION
    Create this file: client/src/styles/components/toast.css
    ======================================== */
 
@@ -29,26 +29,51 @@
     border: none !important;
   }
 
-  /* === SUCCESS TOAST === */
-  [data-testid="toast-container"] > div:has(svg[fill="#10B981"]) {
+  /* === SUCCESS TOAST (GREEN) === */
+  [data-testid="toast-container"] > div:has(svg[fill="#10B981"]),
+  [data-testid="toast-container"] > div[data-type="success"],
+  [data-testid="toast-container"] > div.toast-success {
     background: #10b981 !important;
     color: white !important;
   }
 
-  /* === ERROR TOAST === */
-  [data-testid="toast-container"] > div:has(svg[fill="#EF4444"]) {
+  /* === ERROR TOAST (RED) === */
+  [data-testid="toast-container"] > div:has(svg[fill="#EF4444"]),
+  [data-testid="toast-container"] > div[data-type="error"],
+  [data-testid="toast-container"] > div.toast-error {
     background: #ef4444 !important;
     color: white !important;
   }
 
+  /* === WARNING/ALERT TOAST (YELLOW) === */
+  [data-testid="toast-container"] > div:has(svg[fill="#F59E0B"]),
+  [data-testid="toast-container"] > div[data-type="warning"],
+  [data-testid="toast-container"] > div[data-type="alert"],
+  [data-testid="toast-container"] > div.toast-warning,
+  [data-testid="toast-container"] > div.toast-alert {
+    background: #f59e0b !important;
+    color: white !important;
+  }
+
+  /* === INFO TOAST (BLUE) === */
+  [data-testid="toast-container"] > div:has(svg[fill="#3B82F6"]),
+  [data-testid="toast-container"] > div[data-type="info"],
+  [data-testid="toast-container"] > div.toast-info {
+    background: #3b82f6 !important;
+    color: white !important;
+  }
+
   /* === DEFAULT TOAST === */
-  [data-testid="toast-container"] > div:not(:has(svg)) {
+  [data-testid="toast-container"]
+    > div:not(:has(svg)):not([data-type]):not([class*="toast-"]) {
     background: white !important;
     color: #1f2937 !important;
     border: 1px solid #e5e7eb !important;
   }
 
-  .dark [data-testid="toast-container"] > div:not(:has(svg)) {
+  .dark
+    [data-testid="toast-container"]
+    > div:not(:has(svg)):not([data-type]):not([class*="toast-"]) {
     background: #374151 !important;
     color: #f9fafb !important;
     border: 1px solid #4b5563 !important;
