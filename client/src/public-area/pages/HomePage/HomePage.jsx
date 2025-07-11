@@ -572,7 +572,6 @@ const HomePage = () => {
 
       {/* Footer */}
       <PublicFooter />
-
       {/* Settings Modal - Contains accessibility settings including dark mode toggle */}
       <AccessibilityModal {...accessibilityModalProps} />
     </div>
