@@ -5,7 +5,7 @@ import { BrowserRouter as Router } from "react-router-dom";
 import { AuthProvider } from "@/auth-area";
 import { ThemeProvider } from "@shared/contexts/ThemeContext";
 import { FriendsProvider } from "@shared/contexts/FriendsContext";
-import { EventProvider } from "@shared/contexts/EventContext"; 
+import { EventProvider } from "@shared/contexts/EventContext";
 import GlobalAccessibilityProvider from "@/shared/components/accessibility/GlobalAccessibilityProvider";
 
 // App components
@@ -21,16 +21,10 @@ function App() {
     <Router>
       <AuthProvider>
         <FriendsProvider>
-          <EventProvider> 
+          <EventProvider>
             <GlobalAccessibilityProvider>
               <FlowController>
-                <Toaster
-                  position="top-center"
-                  toastOptions={{
-                    duration: 3000,
-                    className: "toast-above-modal",
-                  }}
-                />
+                <Toaster />
                 <PageTransitionWrapper>
                   <AppRoutes />
                 </PageTransitionWrapper>

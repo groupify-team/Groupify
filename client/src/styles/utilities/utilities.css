@@ -339,45 +339,8 @@
   }
 
   /* === EMERGENCY TOAST OVERRIDE === */
-  /* Force toast messages to appear above modal backdrops */
-  .toast-above-modal,
-  div[aria-live="polite"],
-  div[aria-live="assertive"],
-  div[data-testid="toast-container"],
-  div[data-testid="toast"],
-  .react-hot-toast,
-  .Toaster,
-  .Toaster > div,
-  .Toaster__toast,
-  .Toaster__toast > div,
-  .Toaster__toast--success,
-  .Toaster__toast--error,
-  .Toaster__toast--loading,
-  div[style*="z-index"] {
-    z-index: 1000001 !important;
-    position: fixed !important;
-  }
-
-  /* Force toast positioning context */
-  div[data-testid="toast-container"] {
-    position: fixed !important;
-    top: 20px !important;
-    left: 50% !important;
-    transform: translateX(-50%) !important;
-    z-index: 1000000 !important;
-  }
 
   /* === TOAST NOTIFICATIONS ABOVE MODALS === */
-  /* Ensure toast messages appear above modal backdrops */
-  .toast-above-modal,
-  div[data-testid="toast-container"],
-  div[data-testid="toast"],
-  .react-hot-toast,
-  .Toaster,
-  .Toaster > div,
-  .Toaster__toast {
-    z-index: var(--z-toast) !important;
-  }
 
   /* Force toast positioning above everything */
   .toast-override {

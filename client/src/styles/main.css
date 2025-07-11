@@ -19,6 +19,7 @@
 @import "./components/modals.css";
 @import "./components/loading.css";
 @import "./components/layout.css";
+@import "./components/toast.css";
 
 /* === UTILITIES LAYER === */
 @import "./utilities/utilities.css";
