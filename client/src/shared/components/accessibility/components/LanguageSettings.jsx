@@ -1,5 +1,9 @@
 import React from "react";
-import { LanguageIcon, ChevronDownIcon, CheckIcon, ExclamationCircleIcon } from "@heroicons/react/24/outline";
+import {
+  LanguageIcon,
+  ChevronDownIcon,
+  CheckIcon,
+} from "@heroicons/react/24/outline";
 import { LANGUAGES, LANGUAGE_MESSAGES } from "../utils/accessibilityConstants";
 
 const LanguageSettings = ({
@@ -12,6 +16,57 @@ const LanguageSettings = ({
   pendingLanguage,
   handleLanguageChange,
 }) => {
+  // Flag component
+  const FlagImage = ({ langCode, size = "small", className = "" }) => {
+    const sizes = {
+      small: "w-6 h-4",
+      medium: "w-8 h-6",
+      large: "w-24 h-16",
+      badge: "w-4 h-3",
+    };
+
+    const [imageError, setImageError] = React.useState(false);
+
+    const handleImageError = () => {
+      setImageError(true);
+    };
+
+    // Fallback to emoji if image fails
+    if (imageError) {
+      const emojiFlags = {
+        en: "🇺🇸",
+        es: "🇪🇸",
+        fr: "🇫🇷",
+        de: "🇩🇪",
+        he: "🇮🇱",
+        ar: "🇸🇦",
+        ru: "🇷🇺",
+      };
+
+      return (
+        <span
+          className={`${sizes[size]} ${className} flex items-center justify-center text-lg`}
+          style={{ fontFamily: "system-ui, -apple-system" }}
+          title={`${
+            LANGUAGES.find((lang) => lang.code === langCode)?.name
+          } flag`}
+        >
+          {emojiFlags[langCode] || "🌐"}
+        </span>
+      );
+    }
+
+    return (
+      <img
+        src={`/flags/${langCode}.png`}
+        alt={`${LANGUAGES.find((lang) => lang.code === langCode)?.name} flag`}
+        className={`${sizes[size]} object-cover rounded-sm border border-gray-200 dark:border-gray-600 flex-shrink-0 ${className}`}
+        onError={handleImageError}
+        loading="lazy"
+      />
+    );
+  };
+
   return (
     <>
       <div>
@@ -35,14 +90,10 @@ const LanguageSettings = ({
               aria-label="Language selection"
             >
               <div className="flex items-center">
-                <span
-                  className="text-xl mr-2"
-                  style={{ fontFamily: "system-ui, -apple-system" }}
-                >
-                  {LANGUAGES.find((lang) => lang.code === language)?.flag || "🇺🇸"}
-                </span>
+                <FlagImage langCode={language} size="small" className="mr-3" />
                 <span>
-                  {LANGUAGES.find((lang) => lang.code === language)?.name || "English"}
+                  {LANGUAGES.find((lang) => lang.code === language)?.name ||
+                    "English"}
                 </span>
               </div>
               <ChevronDownIcon
@@ -62,13 +113,12 @@ const LanguageSettings = ({
                     role="option"
                     aria-selected={language === lang.code}
                   >
-                    <span
-                      className="text-xl mr-3"
-                      style={{ fontFamily: "system-ui, -apple-system" }}
-                    >
-                      {lang.flag}
-                    </span>
-                    <div>
+                    <FlagImage
+                      langCode={lang.code}
+                      size="small"
+                      className="mr-3"
+                    />
+                    <div className="flex-1">
                       <div className="text-gray-900 dark:text-white">
                         {lang.name}
                       </div>
@@ -87,59 +137,100 @@ const LanguageSettings = ({
         </div>
       </div>
 
-      {/* Language Coming Soon Modal - FIXED: Proper positioning with higher z-index */}
+      {/* SIMPLE: Language modal with backdrop that blocks everything */}
       {showLanguageModal && (
-        <div 
-          className="fixed inset-0 z-[60] flex items-center justify-center p-4"
-          style={{ 
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.75)',
-            backdropFilter: 'blur(8px)',
-            zIndex: 60
-          }}
-        >
-          <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-gray-200 dark:border-gray-700 relative z-[61]">
-            <div className="text-center">
-              <div className="text-6xl mb-4">
-                {LANGUAGES.find((lang) => lang.code === pendingLanguage)?.flag || "🌐"}
-              </div>
-              <div className="w-12 h-12 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-                <ExclamationCircleIcon className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
-              </div>
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-3">
-                Language Coming Soon!
-              </h3>
-              <div className="space-y-3 text-sm">
-                <p className="text-gray-600 dark:text-gray-400">
-                  {LANGUAGE_MESSAGES[pendingLanguage]?.english}
-                </p>
-                <p className="text-gray-600 dark:text-gray-400 border-t pt-3">
-                  {LANGUAGE_MESSAGES[pendingLanguage]?.native}
-                </p>
-              </div>
-              <div className="mt-6 space-y-2">
-                <button
-                  onClick={() => setShowLanguageModal(false)}
-                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-                >
-                  Got it!
-                </button>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  We'll notify you when it's available
-                </p>
+        <>
+          {/* Backdrop that blocks all clicks */}
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm z-20 rounded-2xl animate-fade-in"
+            onClick={() => setShowLanguageModal(false)}
+          />
+
+          {/* Modal positioned above footer */}
+          <div
+            className="absolute inset-x-4 z-30"
+            style={{
+              top: "20%",
+              bottom: "80px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              pointerEvents: "none",
+            }}
+          >
+            <div
+              className="bg-white dark:bg-gray-800 rounded-xl w-full max-w-xs p-6 shadow-2xl border border-gray-200 dark:border-gray-700 relative animate-slide-in-scale"
+              style={{ pointerEvents: "auto" }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="text-center">
+                <div className="mb-4">
+                  <FlagImage
+                    langCode={pendingLanguage}
+                    size="large"
+                    className="mx-auto shadow-lg border-2"
+                  />
+                </div>
+
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-3">
+                  Language Coming Soon!
+                </h3>
+
+                <div className="mb-4">
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200">
+                    <FlagImage
+                      langCode={pendingLanguage}
+                      size="badge"
+                      className="mr-2"
+                    />
+                    {
+                      LANGUAGES.find((lang) => lang.code === pendingLanguage)
+                        ?.name
+                    }
+                  </span>
+                </div>
+
+                <div className="space-y-3 text-sm">
+                  <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
+                    {LANGUAGE_MESSAGES[pendingLanguage]?.english}
+                  </p>
+                  <div className="border-t pt-3">
+                    <p
+                      className="text-gray-600 dark:text-gray-400 leading-relaxed"
+                      style={{
+                        fontFamily:
+                          pendingLanguage === "he" || pendingLanguage === "ar"
+                            ? "system-ui, -apple-system"
+                            : "inherit",
+                        direction:
+                          pendingLanguage === "he" || pendingLanguage === "ar"
+                            ? "rtl"
+                            : "ltr",
+                      }}
+                    >
+                      {LANGUAGE_MESSAGES[pendingLanguage]?.native}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-6 space-y-2">
+                  <button
+                    onClick={() => setShowLanguageModal(false)}
+                    className="w-full bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                  >
+                    Got it!
+                  </button>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    We'll notify you when it's available
+                  </p>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        </>
       )}
     </>
   );
 };
 
 export default LanguageSettings;
-
-

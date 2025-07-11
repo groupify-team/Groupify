@@ -1,4 +1,4 @@
-/* ===== WCAG AAA COMPLIANT HIGH CONTRAST MODE ===== */
+/* ===== REFINED WCAG AAA COMPLIANT HIGH CONTRAST MODE ===== */
 
 /* Base high contrast variables */
 .high-contrast-mode {
@@ -32,22 +32,34 @@
   --hc-error: #ff6b6b;
 }
 
-/* Primary text elements - WCAG AAA 7:1 contrast */
+/* REFINED: Text elements with proper visibility */
 .high-contrast-mode h1,
 .high-contrast-mode h2,
 .high-contrast-mode h3,
 .high-contrast-mode h4,
 .high-contrast-mode h5,
-.high-contrast-mode h6,
+.high-contrast-mode h6 {
+  color: var(--hc-text-primary) !important;
+  font-weight: bold !important;
+}
+
 .high-contrast-mode .font-bold,
 .high-contrast-mode .font-semibold,
-.high-contrast-mode .font-medium,
-.high-contrast-mode .text-gray-900,
-.high-contrast-mode .dark .text-white {
+.high-contrast-mode .font-medium {
   color: var(--hc-text-primary) !important;
 }
 
-/* Secondary text elements - still WCAG AAA compliant but distinguishable */
+.high-contrast-mode .text-gray-900,
+.high-contrast-mode .text-white,
+.high-contrast-mode .dark .text-white,
+.high-contrast-mode span,
+.high-contrast-mode p,
+.high-contrast-mode div,
+.high-contrast-mode label {
+  color: var(--hc-text-primary) !important;
+}
+
+/* REFINED: Secondary text with better contrast */
 .high-contrast-mode .text-gray-600,
 .high-contrast-mode .text-gray-500,
 .high-contrast-mode .text-gray-400,
@@ -55,88 +67,87 @@
 .high-contrast-mode .dark .text-gray-300,
 .high-contrast-mode .text-sm {
   color: var(--hc-text-secondary) !important;
+  font-weight: 500 !important;
 }
 
-/* Ensure all other text elements have proper contrast */
-.high-contrast-mode * {
+/* REFINED: Background elements */
+.high-contrast-mode .bg-white,
+.high-contrast-mode .bg-gray-50,
+.high-contrast-mode .bg-gray-100,
+.high-contrast-mode .bg-gray-200,
+.high-contrast-mode .dark .bg-gray-800,
+.high-contrast-mode .dark .bg-gray-900 {
+  background-color: var(--hc-bg-primary) !important;
   color: var(--hc-text-primary) !important;
 }
 
-/* Primary background elements */
-.high-contrast-mode .bg-white,
-.high-contrast-mode .bg-gray-100,
-.high-contrast-mode .bg-gray-200,
-.high-contrast-mode .bg-gray-300 {
-  background-color: var(--hc-bg-primary) !important;
-}
-
-/* Secondary background elements - subtle distinction while maintaining contrast */
-.high-contrast-mode .bg-gray-50,
+/* REFINED: Secondary backgrounds */
 .high-contrast-mode [class*="bg-gray-50"],
 .high-contrast-mode [class*="bg-gray-700/50"],
 .high-contrast-mode [class*="bg-gray-800/50"],
 .high-contrast-mode [class*="bg-white/95"],
 .high-contrast-mode [class*="bg-gray-800/95"] {
   background-color: var(--hc-bg-secondary) !important;
+  color: var(--hc-text-primary) !important;
   border: 1px solid var(--hc-border) !important;
 }
 
-/* Borders - minimum 2px for WCAG AAA */
-.high-contrast-mode .border,
-.high-contrast-mode .border-gray-200,
-.high-contrast-mode .border-gray-300,
-.high-contrast-mode .border-gray-400,
-.high-contrast-mode .border-gray-500 {
-  border-color: var(--hc-border) !important;
-  border-width: 2px !important;
-}
-
-.high-contrast-mode [class*="border-white/20"],
-.high-contrast-mode [class*="border-gray-700/50"] {
-  border-color: var(--hc-border) !important;
-  border-width: 2px !important;
-}
-
-/* Buttons - clear visual boundaries */
-.high-contrast-mode button {
-  background-color: var(--hc-button-bg) !important;
-  color: var(--hc-button-text) !important;
-  border: 2px solid var(--hc-border) !important;
-  min-height: 44px; /* WCAG touch target size */
-}
-
-/* Toggle switches - maintain visibility */
-.high-contrast-mode .bg-gray-200 {
-  background-color: var(--hc-bg-secondary) !important;
-  border: 2px solid var(--hc-border) !important;
-}
-
-/* Active toggles */
+/* REFINED: Font size buttons - ensure text is visible */
 .high-contrast-mode .bg-indigo-600,
-.high-contrast-mode .bg-indigo-700 {
+.high-contrast-mode [aria-checked="true"],
+.high-contrast-mode .bg-indigo-100 {
   background-color: var(--hc-button-bg) !important;
   color: var(--hc-button-text) !important;
   border: 2px solid var(--hc-border) !important;
 }
 
-/* Font size selection buttons */
-.high-contrast-mode .bg-indigo-100,
-.high-contrast-mode .text-indigo-700 {
-  background-color: var(--hc-button-bg) !important;
-  color: var(--hc-button-text) !important;
-  border: 2px solid var(--hc-border) !important;
-}
-
-/* Inactive font size buttons */
-.high-contrast-mode .text-gray-700,
-.high-contrast-mode .text-gray-300,
-.high-contrast-mode .bg-gray-600 {
+.high-contrast-mode .bg-gray-200,
+.high-contrast-mode .bg-gray-600,
+.high-contrast-mode .dark .bg-gray-600 {
   background-color: var(--hc-bg-secondary) !important;
   color: var(--hc-text-primary) !important;
   border: 2px solid var(--hc-border) !important;
 }
 
-/* Form elements */
+/* REFINED: Button styling */
+.high-contrast-mode button {
+  background-color: var(--hc-bg-secondary) !important;
+  color: var(--hc-text-primary) !important;
+  border: 2px solid var(--hc-border) !important;
+  min-height: 44px;
+  font-weight: bold !important;
+}
+
+.high-contrast-mode button:hover {
+  background-color: var(--hc-button-bg) !important;
+  color: var(--hc-button-text) !important;
+}
+
+/* REFINED: Primary action buttons */
+.high-contrast-mode .bg-indigo-600,
+.high-contrast-mode .bg-indigo-700,
+.high-contrast-mode button.bg-indigo-600 {
+  background-color: var(--hc-button-bg) !important;
+  color: var(--hc-button-text) !important;
+  border: 2px solid var(--hc-border) !important;
+}
+
+/* REFINED: Toggle switches */
+.high-contrast-mode [role="switch"] {
+  background-color: var(--hc-bg-secondary) !important;
+  border: 2px solid var(--hc-border) !important;
+}
+
+.high-contrast-mode [role="switch"][aria-checked="true"] {
+  background-color: var(--hc-button-bg) !important;
+}
+
+.high-contrast-mode [role="switch"] span {
+  background-color: var(--hc-bg-primary) !important;
+  border: 1px solid var(--hc-border) !important;
+}
+
+/* REFINED: Form elements */
 .high-contrast-mode input,
 .high-contrast-mode textarea,
 .high-contrast-mode select {
@@ -146,20 +157,35 @@
   min-height: 44px;
 }
 
-/* Links - underlined and bold */
-.high-contrast-mode a {
-  color: var(--hc-link) !important;
-  text-decoration: underline !important;
-  font-weight: bold !important;
+/* REFINED: Modal specific styling */
+.high-contrast-mode .accessibility-modal {
+  background-color: var(--hc-bg-primary) !important;
+  color: var(--hc-text-primary) !important;
+  border: 3px solid var(--hc-border) !important;
+  box-shadow: none !important;
 }
 
-/* Focus indicators - WCAG AAA 3px minimum */
-.high-contrast-mode *:focus {
-  outline: 3px solid var(--hc-focus) !important;
-  outline-offset: 2px !important;
+/* REFINED: Modal backdrop */
+.high-contrast-mode [class*="bg-black/50"] {
+  background-color: rgba(0, 0, 0, 0.95) !important;
+  backdrop-filter: none !important;
 }
 
-/* Remove decorative elements */
+/* REFINED: Borders */
+.high-contrast-mode .border,
+.high-contrast-mode [class*="border-"] {
+  border-color: var(--hc-border) !important;
+}
+
+.high-contrast-mode .border-t,
+.high-contrast-mode .border-b,
+.high-contrast-mode .border-l,
+.high-contrast-mode .border-r,
+.high-contrast-mode [class*="border-gray-"] {
+  border-color: var(--hc-border) !important;
+}
+
+/* REFINED: Remove decorative elements */
 .high-contrast-mode .shadow,
 .high-contrast-mode .shadow-sm,
 .high-contrast-mode .shadow-md,
@@ -167,37 +193,95 @@
 .high-contrast-mode .shadow-xl,
 .high-contrast-mode .shadow-2xl {
   box-shadow: none !important;
-  border: 2px solid var(--hc-border) !important;
 }
 
-.high-contrast-mode .bg-gradient-to-r,
-.high-contrast-mode .bg-gradient-to-br,
-.high-contrast-mode .bg-gradient-to-l,
-.high-contrast-mode .bg-gradient-to-t,
-.high-contrast-mode .bg-gradient-to-b {
+.high-contrast-mode [class*="bg-gradient-"] {
   background: var(--hc-button-bg) !important;
   color: var(--hc-button-text) !important;
 }
 
-/* Remove backdrop blur */
 .high-contrast-mode .backdrop-blur-sm,
 .high-contrast-mode .backdrop-blur-md {
   backdrop-filter: none !important;
 }
 
-/* Modal backgrounds */
-.high-contrast-mode [class*="bg-black/50"] {
-  background-color: rgba(0, 0, 0, 0.95) !important;
+/* REFINED: Icons and SVG */
+.high-contrast-mode svg,
+.high-contrast-mode svg path,
+.high-contrast-mode svg circle {
+  color: currentColor !important;
+  fill: currentColor !important;
+  stroke: currentColor !important;
 }
 
-/* Scrollbar high contrast styling */
-.high-contrast-mode .accessibility-modal .overflow-y-auto::-webkit-scrollbar-thumb {
-  background: var(--hc-border) !important;
+/* REFINED: Focus indicators */
+.high-contrast-mode *:focus {
+  outline: 3px solid var(--hc-focus) !important;
+  outline-offset: 2px !important;
 }
 
-.high-contrast-mode .accessibility-modal .overflow-y-auto::-webkit-scrollbar-track {
-  background: var(--hc-bg-primary) !important;
-  border: 1px solid var(--hc-border) !important;
+/* REFINED: Links */
+.high-contrast-mode a {
+  color: var(--hc-link) !important;
+  text-decoration: underline !important;
+  font-weight: bold !important;
+}
+
+/* REFINED: Dropdown elements */
+.high-contrast-mode [role="listbox"],
+.high-contrast-mode [role="option"] {
+  background-color: var(--hc-bg-primary) !important;
+  color: var(--hc-text-primary) !important;
+  border: 2px solid var(--hc-border) !important;
+}
+
+.high-contrast-mode [role="option"]:hover,
+.high-contrast-mode [role="option"]:focus {
+  background-color: var(--hc-button-bg) !important;
+  color: var(--hc-button-text) !important;
+}
+
+/* REFINED: Status colors */
+.high-contrast-mode .text-green-600,
+.high-contrast-mode .text-green-500,
+.high-contrast-mode .text-green-400 {
+  color: var(--hc-success) !important;
+}
+
+.high-contrast-mode .text-yellow-600,
+.high-contrast-mode .text-yellow-500,
+.high-contrast-mode .text-yellow-400 {
+  color: var(--hc-warning) !important;
+}
+
+.high-contrast-mode .text-red-600,
+.high-contrast-mode .text-red-500,
+.high-contrast-mode .text-red-400 {
+  color: var(--hc-error) !important;
+}
+
+/* REFINED: Ensure all interactive elements are visible */
+.high-contrast-mode .hover\:bg-gray-100:hover,
+.high-contrast-mode .hover\:bg-gray-300:hover,
+.high-contrast-mode .hover\:bg-gray-500:hover,
+.high-contrast-mode .dark .hover\:bg-gray-700:hover {
+  background-color: var(--hc-button-bg) !important;
+  color: var(--hc-button-text) !important;
+}
+
+/* REFINED: Font size specific fixes */
+.high-contrast-mode [role="radiogroup"] button {
+  background-color: var(--hc-bg-secondary) !important;
+  color: var(--hc-text-primary) !important;
+  border: 2px solid var(--hc-border) !important;
+  font-weight: bold !important;
+  min-width: 60px !important;
+  text-align: center !important;
+}
+
+.high-contrast-mode [role="radiogroup"] button[aria-checked="true"] {
+  background-color: var(--hc-button-bg) !important;
+  color: var(--hc-button-text) !important;
 }
 
 /* ===== REDUCED MOTION STYLES ===== */
@@ -252,90 +336,15 @@
   background: rgba(75, 85, 99, 0.7);
 }
 
-/* ===== ADDITIONAL HIGH CONTRAST IMPROVEMENTS ===== */
-
-/* Icons and SVG elements */
-.high-contrast-mode svg,
-.high-contrast-mode .w-4,
-.high-contrast-mode .w-5,
-.high-contrast-mode .h-4,
-.high-contrast-mode .h-5 {
-  color: currentColor !important;
-  fill: currentColor !important;
-  stroke: currentColor !important;
+.high-contrast-mode
+  .accessibility-modal
+  .overflow-y-auto::-webkit-scrollbar-thumb {
+  background: var(--hc-border) !important;
 }
 
-/* Hover states for interactive elements */
-.high-contrast-mode button:hover,
-.high-contrast-mode .hover\:bg-gray-300:hover,
-.high-contrast-mode .hover\:bg-gray-500:hover,
-.high-contrast-mode .dark .hover\:bg-gray-500:hover {
-  background-color: var(--hc-text-secondary) !important;
-  color: var(--hc-bg-primary) !important;
-  border: 2px solid var(--hc-border) !important;
-}
-
-/* Specific modal component styling */
-.high-contrast-mode .accessibility-modal {
-  background-color: var(--hc-bg-primary) !important;
-  border: 3px solid var(--hc-border) !important;
-}
-
-/* Information text and help text */
-.high-contrast-mode .text-sm.text-gray-600,
-.high-contrast-mode .text-sm.text-gray-400 {
-  color: var(--hc-text-secondary) !important;
-  font-weight: 500 !important; /* Make it slightly bolder for better readability */
-}
-
-/* Border improvements */
-.high-contrast-mode .border-t,
-.high-contrast-mode .border-gray-200\/50,
-.high-contrast-mode .border-gray-700\/50 {
-  border-color: var(--hc-border) !important;
-  border-width: 2px !important;
-}
-
-/* Rounded elements maintain visibility */
-.high-contrast-mode .rounded-lg,
-.high-contrast-mode .rounded-2xl,
-.high-contrast-mode .rounded-full {
-  border: 2px solid var(--hc-border) !important;
-}
-
-/* Toggle switch specific improvements */
-.high-contrast-mode [role="switch"] {
-  background-color: var(--hc-bg-secondary) !important;
-  border: 2px solid var(--hc-border) !important;
-}
-
-.high-contrast-mode [role="switch"][aria-checked="true"] {
-  background-color: var(--hc-button-bg) !important;
-}
-
-.high-contrast-mode [role="switch"] span {
-  background-color: var(--hc-bg-primary) !important;
+.high-contrast-mode
+  .accessibility-modal
+  .overflow-y-auto::-webkit-scrollbar-track {
+  background: var(--hc-bg-primary) !important;
   border: 1px solid var(--hc-border) !important;
-}
-
-/* Ensure flex items maintain proper contrast */
-.high-contrast-mode .flex-shrink-0,
-.high-contrast-mode .flex-1 {
-  color: inherit !important;
-}
-
-/* Status and indicator colors */
-.high-contrast-mode .text-green-600,
-.high-contrast-mode .text-green-500 {
-  color: var(--hc-success) !important;
-}
-
-.high-contrast-mode .text-yellow-600,
-.high-contrast-mode .text-yellow-500 {
-  color: var(--hc-warning) !important;
-}
-
-.high-contrast-mode .text-red-600,
-.high-contrast-mode .text-red-500 {
-  color: var(--hc-error) !important;
 }
