@@ -14,7 +14,7 @@ import {
   CheckCircleIcon,
 } from "@heroicons/react/24/outline";
 import { userStatsCache } from "@shared/services/userStatsCache";
-import { toast } from "react-hot-toast";
+import { toast } from "@shared/utils/toast";
 
 const UserProfileModal = ({
   isOpen,

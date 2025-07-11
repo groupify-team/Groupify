@@ -4,7 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@auth/hooks/useAuth";
 import { usePublicNavigation } from "../../../public-area/hooks/usePublicNavigation";
 
-import { toast } from "react-hot-toast";
+import { toast } from "@shared/utils/toast";
 import PublicLayout from "../../../public-area/components/layout/PublicLayout";
 import HeroSection from "../../../public-area/components/ui/HeroSection";
 import AccessibilityModal from "../accessibility/AccessibilityModal";

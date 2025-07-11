@@ -4,7 +4,7 @@
  */
 
 import { useState, useCallback, useMemo } from "react";
-import { toast } from "react-hot-toast";
+import { toast } from "@shared/utils/toast";
 import { MAX_PHOTOS_PER_EVENT } from "@shared/services/firebase/events";
 
 export const useEventPhotos = (eventId, event, setEvent) => {

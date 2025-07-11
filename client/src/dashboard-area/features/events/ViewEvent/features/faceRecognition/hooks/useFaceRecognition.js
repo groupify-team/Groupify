@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
-import { toast } from "react-hot-toast";
+import { toast } from "@shared/utils/toast";
 import {
   filterPhotosByFaceProfile,
   hasFaceProfile,
@@ -14,7 +14,12 @@ import {
 } from "../service/faceRecognitionService";
 import { getFaceProfileFromStorage } from "@shared/services/firebase/faceProfiles";
 
-export const useFaceRecognition = (photos, currentUserId, isMember, eventId) => {
+export const useFaceRecognition = (
+  photos,
+  currentUserId,
+  isMember,
+  eventId
+) => {
   const [hasProfile, setHasProfile] = useState(false);
   const [isLoadingProfile, setIsLoadingProfile] = useState(false);
   const [isProcessingFaces, setIsProcessingFaces] = useState(false);
@@ -361,7 +366,3 @@ export const useFaceRecognition = (photos, currentUserId, isMember, eventId) => 
     lastScanInfo,
   };
 };
-
-
-
-

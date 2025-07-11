@@ -12,7 +12,7 @@ import {
 import subscriptionService from "@shared/services/subscriptionService";
 import navigationService from "@shared/services/navigationService";
 import { useNavigate } from "react-router-dom";
-import { toast } from "react-hot-toast";
+import { toast } from "@shared/utils/toast";
 
 const PlanManagementModal = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
@@ -683,7 +683,3 @@ const PlanManagementModal = ({ isOpen, onClose }) => {
 };
 
 export default PlanManagementModal;
-
-
-
-

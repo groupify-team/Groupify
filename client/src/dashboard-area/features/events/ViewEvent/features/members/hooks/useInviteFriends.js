@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect } from "react";
-import { toast } from "react-hot-toast";
+import { toast } from "@shared/utils/toast";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "@shared/services/firebase/config";
 import { getFriends } from "@shared/services/firebase/users";

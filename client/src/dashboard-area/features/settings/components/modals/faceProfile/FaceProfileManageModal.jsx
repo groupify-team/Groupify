@@ -11,7 +11,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { useAuth } from "@auth/hooks/useAuth";
 
-import { toast } from "react-hot-toast";
+import { toast } from "@shared/utils/toast";
 import {
   addPhotosToProfile,
   removePhotosFromProfile,
@@ -49,8 +49,6 @@ const FaceProfileManageModal = ({ isOpen, onClose, onProfileUpdated }) => {
       loadProfileData();
     }
   }, [isOpen, currentUser, loadProfileData]);
-
-  
 
   // Helper function for uploading files using your existing uploadPhoto function
   const uploadProfilePhotos = async (files, userId) => {

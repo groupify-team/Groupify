@@ -1,11 +1,11 @@
 /* ========================================
-   TOAST NOTIFICATIONS - UPDATED VERSION
-   Create this file: client/src/styles/components/toast.css
+   TOAST CSS - MINIMAL POSITIONING ONLY
+   All colors are handled by JavaScript
    ======================================== */
 
 @layer components {
-  /* === FORCE TOAST CONTAINER POSITIONING === */
-  [data-testid="toast-container"] {
+  /* === CONTAINER POSITIONING === */
+  #_rht_toaster {
     position: fixed !important;
     top: 20px !important;
     left: 50% !important;
@@ -14,85 +14,25 @@
     pointer-events: none !important;
   }
 
-  /* === INDIVIDUAL TOAST STYLING === */
-  [data-testid="toast-container"] > div {
-    pointer-events: auto !important;
-    z-index: 100001 !important;
-    margin-bottom: 8px !important;
-    border-radius: 8px !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
-    font-size: 14px !important;
-    font-weight: 500 !important;
-    padding: 12px 16px !important;
-    min-width: 300px !important;
-    max-width: 500px !important;
-    border: none !important;
+  /* === MODAL TOAST OVERRIDE === */
+  .toast-above-modal {
+    z-index: 999999 !important;
+    position: fixed !important;
   }
 
-  /* === SUCCESS TOAST (GREEN) === */
-  [data-testid="toast-container"] > div:has(svg[fill="#10B981"]),
-  [data-testid="toast-container"] > div[data-type="success"],
-  [data-testid="toast-container"] > div.toast-success {
-    background: #10b981 !important;
-    color: white !important;
-  }
-
-  /* === ERROR TOAST (RED) === */
-  [data-testid="toast-container"] > div:has(svg[fill="#EF4444"]),
-  [data-testid="toast-container"] > div[data-type="error"],
-  [data-testid="toast-container"] > div.toast-error {
-    background: #ef4444 !important;
-    color: white !important;
-  }
-
-  /* === WARNING/ALERT TOAST (YELLOW) === */
-  [data-testid="toast-container"] > div:has(svg[fill="#F59E0B"]),
-  [data-testid="toast-container"] > div[data-type="warning"],
-  [data-testid="toast-container"] > div[data-type="alert"],
-  [data-testid="toast-container"] > div.toast-warning,
-  [data-testid="toast-container"] > div.toast-alert {
-    background: #f59e0b !important;
-    color: white !important;
-  }
-
-  /* === INFO TOAST (BLUE) === */
-  [data-testid="toast-container"] > div:has(svg[fill="#3B82F6"]),
-  [data-testid="toast-container"] > div[data-type="info"],
-  [data-testid="toast-container"] > div.toast-info {
-    background: #3b82f6 !important;
-    color: white !important;
-  }
-
-  /* === DEFAULT TOAST === */
-  [data-testid="toast-container"]
-    > div:not(:has(svg)):not([data-type]):not([class*="toast-"]) {
-    background: white !important;
-    color: #1f2937 !important;
-    border: 1px solid #e5e7eb !important;
-  }
-
-  .dark
-    [data-testid="toast-container"]
-    > div:not(:has(svg)):not([data-type]):not([class*="toast-"]) {
-    background: #374151 !important;
-    color: #f9fafb !important;
-    border: 1px solid #4b5563 !important;
+  .toast-override {
+    z-index: 999999 !important;
+    position: fixed !important;
   }
 
   /* === MOBILE RESPONSIVE === */
   @media (max-width: 640px) {
-    [data-testid="toast-container"] {
+    #_rht_toaster {
       top: 16px !important;
       left: 16px !important;
       right: 16px !important;
       transform: none !important;
       width: calc(100% - 32px) !important;
-    }
-
-    [data-testid="toast-container"] > div {
-      min-width: auto !important;
-      max-width: 100% !important;
-      width: 100% !important;
     }
   }
 }

@@ -9,7 +9,7 @@ import {
   ArrowUpIcon,
 } from "@heroicons/react/24/outline";
 import { usePhotoUploadLimits } from "../hooks/usePhotoUploadLimits";
-import { toast } from "react-hot-toast";
+import { toast } from "@shared/utils/toast";
 
 const PhotoUploadSection = ({
   isOpen,

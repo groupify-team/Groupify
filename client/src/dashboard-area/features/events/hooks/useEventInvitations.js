@@ -1,6 +1,6 @@
 // client/src/dashboard-area/features/events/hooks/useEventInvitations.js
 import { useState } from "react";
-import { toast } from "react-hot-toast";
+import { toast } from "@shared/utils/toast";
 import { usePlanLimits } from "@shared/hooks/usePlanLimits";
 import { useEventContext } from "@shared/contexts/EventContext"; // NEW: Use EventContext
 import { eventsService } from "../services/eventsService";
@@ -10,11 +10,11 @@ export const useEventInvitations = (userId) => {
   const { canPerformAction, showUpgradePrompt, getUsageInfo } = usePlanLimits();
 
   // NEW: Get real-time data from EventContext instead of local state
-  const { 
-    eventInvitations: pendingInvites, 
-    loading, 
-    acceptEventInvitation, 
-    rejectEventInvitation 
+  const {
+    eventInvitations: pendingInvites,
+    loading,
+    acceptEventInvitation,
+    rejectEventInvitation,
   } = useEventContext();
 
   console.log("🎬 useEventInvitations: Real-time invitations:", pendingInvites);
@@ -87,10 +87,10 @@ export const useEventInvitations = (userId) => {
   const declineInvite = async (invite) => {
     try {
       setProcessingInvite(invite.id);
-      
+
       // Use EventContext function instead of direct Firebase call
       await rejectEventInvitation(invite.id);
-      
+
       toast.success("Invitation declined");
       return true;
     } catch (error) {
@@ -111,7 +111,10 @@ export const useEventInvitations = (userId) => {
       });
       return limitCheck.allowed;
     } catch (error) {
-      console.error("❌ useEventInvitations: Error checking invitation acceptance ability:", error);
+      console.error(
+        "❌ useEventInvitations: Error checking invitation acceptance ability:",
+        error
+      );
       return false;
     }
   };
@@ -124,7 +127,9 @@ export const useEventInvitations = (userId) => {
     declineInvite, // Updated to use EventContext
     refreshInvites: () => {
       // No need to refresh - EventContext handles real-time updates
-      console.log("ℹ️ useEventInvitations: Refresh not needed - using real-time data from EventContext");
+      console.log(
+        "ℹ️ useEventInvitations: Refresh not needed - using real-time data from EventContext"
+      );
     },
     canAcceptMoreInvitations,
   };

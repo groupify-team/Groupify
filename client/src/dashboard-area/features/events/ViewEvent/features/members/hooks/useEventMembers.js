@@ -1,6 +1,6 @@
 // client/src/dashboard-area/features/events/ViewEvent/features/members/hooks/useEventMembers.js
 import { useState } from "react";
-import { toast } from "react-hot-toast";
+import { toast } from "@shared/utils/toast";
 import { sendEventInvite } from "@shared/services/firebase/events";
 import { useFriendsContext } from "@shared/contexts/FriendsContext";
 import { useEventContext } from "@shared/contexts/EventContext";
@@ -44,7 +44,11 @@ export const useEventMembers = (currentUserId, event, setEvent) => {
   const currentEventMembers = event?.id ? getEventMembers(event.id) : [];
 
   // Update local event state when context changes
-  if (currentEvent && setEvent && JSON.stringify(currentEvent) !== JSON.stringify(event)) {
+  if (
+    currentEvent &&
+    setEvent &&
+    JSON.stringify(currentEvent) !== JSON.stringify(event)
+  ) {
     setEvent(currentEvent);
   }
 
@@ -191,7 +195,8 @@ export const useEventMembers = (currentUserId, event, setEvent) => {
     }
 
     // Check if this is the last admin
-    const isLastAdmin = currentEvent?.admins?.length === 1 && currentEvent.admins[0] === uid;
+    const isLastAdmin =
+      currentEvent?.admins?.length === 1 && currentEvent.admins[0] === uid;
 
     if (isLastAdmin) {
       toast.error(
@@ -257,29 +262,29 @@ export const useEventMembers = (currentUserId, event, setEvent) => {
     showSuccess,
     cancelSuccess,
     pendingFriendRequests: sentRequestIds,
-    
+
     // Real-time event members from context
     eventMembers: currentEventMembers,
     currentEvent,
-    
+
     // State setters
     setSelectedUser,
     setShowSuccess,
     setCancelSuccess,
-    
+
     // Event member actions (now using EventContext)
     handleMemberClick,
     handlePromoteToAdmin,
     handleDemoteFromAdmin,
     handleRemoveFromEvent,
     handleLeaveEvent,
-    
+
     // Friend actions (unchanged)
     handleAddFriend,
     handleRemoveFriend,
     handleCancelFriendRequest,
     handleInviteToEvent,
-    
+
     // Convenience helpers
     isAdmin: currentUserId ? isEventAdmin(event?.id, currentUserId) : false,
     isCreator: currentUserId ? isEventCreator(event?.id, currentUserId) : false,

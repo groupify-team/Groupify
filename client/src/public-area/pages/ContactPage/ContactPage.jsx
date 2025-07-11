@@ -17,7 +17,7 @@ import {
   ClockIcon,
   CheckCircleIcon,
 } from "@heroicons/react/24/outline";
-import { toast } from "react-hot-toast";
+import { toast } from "@shared/utils/toast";
 import { httpsCallable } from "firebase/functions";
 import { functions } from "@firebase-services/config";
 
@@ -395,56 +395,56 @@ const ContactUs = () => {
   }, []);
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  if (
-    !formData.name ||
-    !formData.email ||
-    !formData.subject ||
-    !formData.message
-  ) {
-    toast.error("Please fill in all required fields");
-    return;
-  }
-
-  // Email validation
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(formData.email)) {
-    toast.error("Please enter a valid email address");
-    return;
-  }
-
-  try {
-    setLoading(true);
-
-    console.log("Attempting to send contact email with data:", formData);
-
-    // Send email via Firebase Function
-    const sendContactEmail = httpsCallable(functions, "sendContactEmail");
-    const result = await sendContactEmail(formData);
-
-    console.log("Email sent successfully:", result);
-
-    setSubmitted(true);
-    toast.success("Message sent successfully!");
-  } catch (error) {
-    console.error("Contact form error details:", error);
-
-    if (error.code === "functions/internal") {
-      toast.error("Server error. Please try again later.");
-    } else if (error.code === "functions/invalid-argument") {
-      toast.error("Please check your input and try again.");
-    } else if (error.code === "functions/unauthenticated") {
-      toast.error("Authentication required. Please refresh the page.");
-    } else {
-      toast.error(
-        error.message || "Failed to send message. Please try again."
-      );
+    if (
+      !formData.name ||
+      !formData.email ||
+      !formData.subject ||
+      !formData.message
+    ) {
+      toast.error("Please fill in all required fields");
+      return;
     }
-  } finally {
-    setLoading(false);
-  }
-};
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      console.log("Attempting to send contact email with data:", formData);
+
+      // Send email via Firebase Function
+      const sendContactEmail = httpsCallable(functions, "sendContactEmail");
+      const result = await sendContactEmail(formData);
+
+      console.log("Email sent successfully:", result);
+
+      setSubmitted(true);
+      toast.success("Message sent successfully!");
+    } catch (error) {
+      console.error("Contact form error details:", error);
+
+      if (error.code === "functions/internal") {
+        toast.error("Server error. Please try again later.");
+      } else if (error.code === "functions/invalid-argument") {
+        toast.error("Please check your input and try again.");
+      } else if (error.code === "functions/unauthenticated") {
+        toast.error("Authentication required. Please refresh the page.");
+      } else {
+        toast.error(
+          error.message || "Failed to send message. Please try again."
+        );
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const categories = [
     { value: "general", label: "General Inquiry" },

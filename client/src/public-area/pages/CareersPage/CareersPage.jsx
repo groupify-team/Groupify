@@ -20,7 +20,7 @@ import {
   GiftIcon,
   MapPinIcon,
 } from "@heroicons/react/24/outline";
-import { toast } from "react-hot-toast";
+import { toast } from "@shared/utils/toast";
 
 // Extract components for better organization
 const CultureSection = ({ cultureValues }) => (
@@ -328,11 +328,11 @@ const ApplicationModal = ({ job, onClose }) => {
     if (file) {
       // Check file type
       const allowedTypes = [
-        'application/pdf',
-        'application/msword',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        "application/pdf",
+        "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
       ];
-      
+
       if (!allowedTypes.includes(file.type)) {
         toast.error("Please upload a PDF, DOC, or DOCX file", {
           duration: 3000,
@@ -615,71 +615,71 @@ const ApplicationModal = ({ job, onClose }) => {
                   onChange={handleFileUpload}
                   className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                   id="cv-upload"
-                  key={cvFile ? cvFile.name : 'empty'} // Force re-render when file changes
+                  key={cvFile ? cvFile.name : "empty"} // Force re-render when file changes
                 />
                 <div className="flex items-center justify-center w-full h-24 sm:h-28 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:border-indigo-500 dark:hover:border-indigo-400 transition-all duration-200 bg-gray-50 dark:bg-gray-700/50 hover:bg-indigo-50 dark:hover:bg-indigo-900/20">
-                    {cvFile ? (
-                      <div className="flex flex-row items-center">
-                        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
-                          <svg
-                            className="w-5 h-5 sm:w-6 sm:h-6 text-green-600 dark:text-green-400"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                            />
-                          </svg>
-                        </div>
-                        <div className="flex-1 text-left">
-                          <p className="text-sm font-medium text-green-700 dark:text-green-400 mb-1">
-                            File Selected
-                          </p>
-                          <p className="text-xs text-gray-600 dark:text-gray-400 truncate max-w-[200px]">
-                            {cvFile.name}
-                          </p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                            Click to change file
-                          </p>
-                        </div>
+                  {cvFile ? (
+                    <div className="flex flex-row items-center">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
+                        <svg
+                          className="w-5 h-5 sm:w-6 sm:h-6 text-green-600 dark:text-green-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
+                        </svg>
                       </div>
-                    ) : (
-                      <div className="flex flex-row items-center">
-                        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-indigo-100 dark:bg-indigo-900/30 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
-                          <svg
-                            className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-600 dark:text-indigo-400"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                            />
-                          </svg>
-                        </div>
-                        <div className="flex-1 text-left">
-                          <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            <span className="text-indigo-600 dark:text-indigo-400 font-semibold">
-                              Click to upload
-                            </span>{" "}
-                            or drag and drop
-                          </p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
-                            PDF, DOC, DOCX (max 10MB)
-                          </p>
-                        </div>
+                      <div className="flex-1 text-left">
+                        <p className="text-sm font-medium text-green-700 dark:text-green-400 mb-1">
+                          File Selected
+                        </p>
+                        <p className="text-xs text-gray-600 dark:text-gray-400 truncate max-w-[200px]">
+                          {cvFile.name}
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                          Click to change file
+                        </p>
                       </div>
-                    )}
-                  </div>
+                    </div>
+                  ) : (
+                    <div className="flex flex-row items-center">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-indigo-100 dark:bg-indigo-900/30 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
+                        <svg
+                          className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-600 dark:text-indigo-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                          />
+                        </svg>
+                      </div>
+                      <div className="flex-1 text-left">
+                        <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                          <span className="text-indigo-600 dark:text-indigo-400 font-semibold">
+                            Click to upload
+                          </span>{" "}
+                          or drag and drop
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          PDF, DOC, DOCX (max 10MB)
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
+            </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">

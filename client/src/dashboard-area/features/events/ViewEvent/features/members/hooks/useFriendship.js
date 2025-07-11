@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect } from "react";
-import { toast } from "react-hot-toast";
+import { toast } from "@shared/utils/toast";
 import {
   getFriends,
   sendFriendRequest,

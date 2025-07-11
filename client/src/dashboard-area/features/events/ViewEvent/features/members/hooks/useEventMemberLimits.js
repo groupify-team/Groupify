@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo } from "react";
 import { usePlanLimits } from "@shared/hooks/usePlanLimits";
-import { toast } from "react-hot-toast";
+import { toast } from "@shared/utils/toast";
 import { eventsService } from "../../../../services/eventsService";
 /**
  * Enhanced hook for event member invitation validation with comprehensive plan limits

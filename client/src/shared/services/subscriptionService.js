@@ -1,4 +1,4 @@
-import { toast } from "react-hot-toast";
+import { toast } from "@shared/utils/toast";
 class SubscriptionService {
   constructor() {
     this.listeners = new Set();

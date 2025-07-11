@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { toast } from "react-hot-toast";
+import { toast } from "@shared/utils/toast";
 import { doc, deleteDoc } from "firebase/firestore";
 import { ref, deleteObject } from "firebase/storage";
 import { db, storage } from "@shared/services/firebase/config";
@@ -43,7 +43,7 @@ const AllPhotosModal = ({
   const maxPhotos = useMemo(() => {
     if (!subscription) return 30; // Free plan default
     const limit = subscription.features?.photosPerEvent;
-    return limit === "unlimited" ? Infinity : (limit || 30);
+    return limit === "unlimited" ? Infinity : limit || 30;
   }, [subscription]);
 
   const fixPhotoUrl = (url) => {
@@ -79,7 +79,7 @@ const AllPhotosModal = ({
       selectedCount: localSelectedPhotos.length,
       photos: localSelectedPhotos,
       isAdmin,
-      eventId
+      eventId,
     });
 
     if (!localSelectedPhotos.length) return;
@@ -325,7 +325,7 @@ const AllPhotosModal = ({
                 onClick={() => {
                   console.log("✅ Confirm delete clicked", {
                     localSelectedPhotos: localSelectedPhotos.length,
-                    loading
+                    loading,
                   });
                   onConfirm();
                 }}
@@ -386,10 +386,11 @@ const AllPhotosModal = ({
                       {filteredPhotos.length} Photos
                     </span>
                     <span className="text-xs text-gray-500 dark:text-gray-400">
-                      {maxPhotos === Infinity 
-                        ? "unlimited storage" 
-                        : `${Math.round((localPhotos.length / maxPhotos) * 100)}% storage used`
-                      }
+                      {maxPhotos === Infinity
+                        ? "unlimited storage"
+                        : `${Math.round(
+                            (localPhotos.length / maxPhotos) * 100
+                          )}% storage used`}
                     </span>
                     {localSelectMode && localSelectedPhotos.length > 0 && (
                       <span className="text-sm font-semibold text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/30 px-3 py-1 rounded-full">
@@ -504,11 +505,14 @@ const AllPhotosModal = ({
                     {localSelectedPhotos.length > 0 && (
                       <button
                         onClick={() => {
-                          console.log("🗑️ Delete button clicked - deleting immediately", {
-                            isAdmin,
-                            localSelectedPhotos: localSelectedPhotos.length,
-                            loading
-                          });
+                          console.log(
+                            "🗑️ Delete button clicked - deleting immediately",
+                            {
+                              isAdmin,
+                              localSelectedPhotos: localSelectedPhotos.length,
+                              loading,
+                            }
+                          );
                           handleDeletePhotos();
                         }}
                         disabled={loading}
