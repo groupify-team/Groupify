@@ -25,20 +25,21 @@ const AccessibilityModal = ({ isOpen, onClose, theme, toggleTheme }) => {
   useEffect(() => {
     if (isOpen && accessibilitySettings.isInitialized) {
       const root = document.documentElement;
-      
+
       // Apply font size
       const fontSizeMap = {
         small: "14px",
-        medium: "16px", 
-        large: "18px"
+        medium: "16px",
+        large: "18px",
       };
-      root.style.fontSize = fontSizeMap[accessibilitySettings.fontSize] || "16px";
+      root.style.fontSize =
+        fontSizeMap[accessibilitySettings.fontSize] || "16px";
 
       // Apply high contrast with proper dark mode detection
       if (accessibilitySettings.highContrast) {
         root.classList.add("high-contrast-mode");
         // Ensure dark mode class is also present if theme is dark
-        if (theme === 'dark') {
+        if (theme === "dark") {
           root.classList.add("dark");
         }
       } else {
@@ -52,7 +53,14 @@ const AccessibilityModal = ({ isOpen, onClose, theme, toggleTheme }) => {
         root.classList.remove("reduce-motion");
       }
     }
-  }, [isOpen, accessibilitySettings.fontSize, accessibilitySettings.highContrast, accessibilitySettings.reducedMotion, accessibilitySettings.isInitialized, theme]);
+  }, [
+    isOpen,
+    accessibilitySettings.fontSize,
+    accessibilitySettings.highContrast,
+    accessibilitySettings.reducedMotion,
+    accessibilitySettings.isInitialized,
+    theme,
+  ]);
 
   if (!isOpen) return null;
 
@@ -88,17 +96,29 @@ const AccessibilityModal = ({ isOpen, onClose, theme, toggleTheme }) => {
           {/* Scrollable Content */}
           <div className="p-6 space-y-6 overflow-y-auto flex-1">
             {/* Appearance Section */}
-            <AppearanceSettings 
-              theme={theme} 
-              toggleTheme={toggleTheme} 
-            />
+            <AppearanceSettings theme={theme} toggleTheme={toggleTheme} />
 
             {/* Visual Accessibility Section */}
             <div>
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
-                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                <svg
+                  className="w-5 h-5 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                  />
                 </svg>
                 Visual Accessibility
               </h3>
@@ -163,5 +183,3 @@ const AccessibilityModal = ({ isOpen, onClose, theme, toggleTheme }) => {
 };
 
 export default AccessibilityModal;
-
-

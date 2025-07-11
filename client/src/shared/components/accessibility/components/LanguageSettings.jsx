@@ -137,17 +137,34 @@ const LanguageSettings = ({
         </div>
       </div>
 
-      {/* FIXED: Full-screen language modal with highest z-index */}
+      {/* YOUR ORIGINAL MODAL + FULL SCREEN BACKDROP TO BLOCK DONE BUTTON */}
       {showLanguageModal && (
         <>
-          {/* Full-screen backdrop that covers EVERYTHING with maximum z-index */}
+          {/* ADDED: Full screen backdrop that blocks Done button */}
+          <div
+            className="fixed inset-0"
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              width: "100vw",
+              height: "100vh",
+              zIndex: 999998,
+              backgroundColor: "transparent",
+              pointerEvents: "auto",
+            }}
+            onClick={() => setShowLanguageModal(false)}
+          />
+
+          {/* YOUR ORIGINAL MODAL CODE - UNCHANGED */}
           <div
             className="fixed inset-0 bg-black/60 backdrop-blur-sm animate-fade-in"
             style={{ zIndex: 99999 }}
             onClick={() => setShowLanguageModal(false)}
           />
 
-          {/* Modal positioned in center of full screen with higher z-index */}
           <div
             className="fixed inset-0 flex items-center justify-center p-4"
             style={{ zIndex: 100000 }}
