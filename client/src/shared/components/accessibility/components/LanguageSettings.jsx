@@ -137,30 +137,23 @@ const LanguageSettings = ({
         </div>
       </div>
 
-      {/* SIMPLE: Language modal with backdrop that blocks everything */}
+      {/* FIXED: Full-screen language modal with highest z-index */}
       {showLanguageModal && (
         <>
-          {/* Backdrop that blocks all clicks */}
+          {/* Full-screen backdrop that covers EVERYTHING with maximum z-index */}
           <div
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm z-20 rounded-2xl animate-fade-in"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm animate-fade-in"
+            style={{ zIndex: 99999 }}
             onClick={() => setShowLanguageModal(false)}
           />
 
-          {/* Modal positioned above footer */}
+          {/* Modal positioned in center of full screen with higher z-index */}
           <div
-            className="absolute inset-x-4 z-30"
-            style={{
-              top: "20%",
-              bottom: "80px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              pointerEvents: "none",
-            }}
+            className="fixed inset-0 flex items-center justify-center p-4"
+            style={{ zIndex: 100000 }}
           >
             <div
               className="bg-white dark:bg-gray-800 rounded-xl w-full max-w-xs p-6 shadow-2xl border border-gray-200 dark:border-gray-700 relative animate-slide-in-scale"
-              style={{ pointerEvents: "auto" }}
               onClick={(e) => e.stopPropagation()}
             >
               <div className="text-center">
