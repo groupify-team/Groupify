@@ -47,16 +47,34 @@ export const usePublicNavigation = () => {
     `;
 
     overlay.innerHTML = `
-      <div class="flex flex-col items-center space-y-6">
-        <div class="gradient-spinner"></div>
-        <div class="text-center">
-          <p class="text-gray-700 dark:text-gray-300 font-medium mb-2">Loading...</p>
-          <div class="w-32 h-1 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-            <div class="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-500 rounded-full loading-shimmer"></div>
-          </div>
-        </div>
+  <div class="flex flex-col items-center space-y-6">
+    <!-- Groupify Logo Spinner -->
+    <div class="relative">
+      <!-- Rotating ring around logo -->
+      <div class="absolute inset-0 w-16 h-16 border-4 border-transparent bg-gradient-to-r from-indigo-400 via-purple-400 to-blue-400 rounded-2xl animate-spin opacity-60" 
+           style="mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); mask-composite: xor; -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; animation-duration: 2s;"></div>
+      
+      <!-- Logo container with pulse effect -->
+      <div class="relative w-16 h-16 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl flex items-center justify-center shadow-2xl animate-pulse">
+        <!-- Camera Icon -->
+        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+        </svg>
+        
+        <!-- Glow effect -->
+        <div class="absolute inset-0 w-16 h-16 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl blur-xl opacity-40 animate-pulse"></div>
       </div>
-    `;
+    </div>
+    
+    <div class="text-center">
+      <p class="text-gray-700 dark:text-gray-300 font-medium mb-2">Loading...</p>
+      <div class="w-32 h-1 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+        <div class="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-500 rounded-full loading-shimmer"></div>
+      </div>
+    </div>
+  </div>
+`;
 
     document.body.appendChild(overlay);
 
