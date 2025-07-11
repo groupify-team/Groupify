@@ -11,7 +11,7 @@ import {
   CheckCircleIcon,
 } from "@heroicons/react/24/outline";
 import { useAuth } from "@auth/hooks/useAuth";
-import { toast } from "react-hot-toast";
+import { toast } from "@shared/utils/toast";
 
 import { eventsService } from "../services/eventsService";
 import { usePlanLimits } from "../../../../shared/hooks/usePlanLimits";
@@ -200,12 +200,16 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
     // Check plan limits
     const planFeatures = getPlanFeatures();
     const eventLimit = planFeatures?.events || 5;
-    
+
     if (currentEventCount >= eventLimit && eventLimit !== "unlimited") {
-      setError(`You've reached your ${isFreePlan ? "Free" : "Premium"} plan limit of ${eventLimit} events`);
-      
+      setError(
+        `You've reached your ${
+          isFreePlan ? "Free" : "Premium"
+        } plan limit of ${eventLimit} events`
+      );
+
       toast.error(
-        `You've reached your ${isFreePlan ? "Free" : "Premium"} plan limit!`, 
+        `You've reached your ${isFreePlan ? "Free" : "Premium"} plan limit!`,
         {
           duration: 8000,
           action: {
@@ -246,8 +250,10 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
       // Show success toast with remaining events info
       const planFeatures = getPlanFeatures();
       const remaining =
-        planFeatures?.events === "unlimited" ? "unlimited" : planFeatures?.events - (currentEventCount + 1);
-      
+        planFeatures?.events === "unlimited"
+          ? "unlimited"
+          : planFeatures?.events - (currentEventCount + 1);
+
       toast.success(
         `Event "${name}" created successfully! ${
           remaining !== "unlimited"
@@ -263,7 +269,7 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
       setLocation("");
       setStartDate("");
       setEndDate("");
-      
+
       // Notify parent component
       if (onEventCreated) {
         onEventCreated(newEvent);
@@ -273,13 +279,16 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
       setShowSuccessModal(true);
     } catch (error) {
       console.error("Error creating event:", error);
-      
-      if (error.message.includes("Event limit reached") || error.message.includes("limit reached")) {
+
+      if (
+        error.message.includes("Event limit reached") ||
+        error.message.includes("limit reached")
+      ) {
         setError(error.message);
         toast.error(error.message, {
           duration: 6000,
           action: {
-            label: "Upgrade Plan", 
+            label: "Upgrade Plan",
             onClick: () => {
               const targetPlan = isFreePlan ? "premium" : "pro";
               navigate(`/pricing?from=events-error&plan=${targetPlan}`);
@@ -372,7 +381,9 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
                     <button
                       onClick={() => {
                         const targetPlan = isFreePlan ? "premium" : "pro";
-                        navigate(`/pricing?from=events-modal&plan=${targetPlan}`);
+                        navigate(
+                          `/pricing?from=events-modal&plan=${targetPlan}`
+                        );
                       }}
                       className="flex items-center gap-1 text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium"
                     >
@@ -409,33 +420,40 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
           )}
 
           {/* Event Limit Warning Banner */}
-          {!planLoading && planFeatures && currentEventCount >= (planFeatures?.events || 5) && planFeatures?.events !== "unlimited" && (
-            <div className="mx-6 mt-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl p-4">
-              <div className="flex items-center gap-3">
-                <ExclamationTriangleIcon className="w-5 h-5 text-yellow-600 dark:text-yellow-400 flex-shrink-0" />
-                <div className="flex-1">
-                  <h4 className="font-semibold text-yellow-800 dark:text-yellow-200 text-sm mb-1">
-                    Event Limit Reached ({currentEventCount}/{planFeatures?.events || 5})
-                  </h4>
-                  <p className="text-yellow-700 dark:text-yellow-300 text-sm">
-                    You've reached your {isFreePlan ? "Free" : "Premium"} plan limit. 
-                    {isFreePlan ? " Upgrade to Premium for 50 events or Pro for unlimited events!" : " Upgrade to Pro for unlimited events!"}
-                  </p>
+          {!planLoading &&
+            planFeatures &&
+            currentEventCount >= (planFeatures?.events || 5) &&
+            planFeatures?.events !== "unlimited" && (
+              <div className="mx-6 mt-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl p-4">
+                <div className="flex items-center gap-3">
+                  <ExclamationTriangleIcon className="w-5 h-5 text-yellow-600 dark:text-yellow-400 flex-shrink-0" />
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-yellow-800 dark:text-yellow-200 text-sm mb-1">
+                      Event Limit Reached ({currentEventCount}/
+                      {planFeatures?.events || 5})
+                    </h4>
+                    <p className="text-yellow-700 dark:text-yellow-300 text-sm">
+                      You've reached your {isFreePlan ? "Free" : "Premium"} plan
+                      limit.
+                      {isFreePlan
+                        ? " Upgrade to Premium for 50 events or Pro for unlimited events!"
+                        : " Upgrade to Pro for unlimited events!"}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      const targetPlan = isFreePlan ? "premium" : "pro";
+                      handleClose();
+                      navigate(`/pricing?from=events-limit&plan=${targetPlan}`);
+                    }}
+                    className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors inline-flex items-center gap-2 flex-shrink-0"
+                  >
+                    <StarIcon className="w-4 h-4" />
+                    Upgrade to {isFreePlan ? "Premium" : "Pro"}
+                  </button>
                 </div>
-                <button
-                  onClick={() => {
-                    const targetPlan = isFreePlan ? "premium" : "pro";
-                    handleClose();
-                    navigate(`/pricing?from=events-limit&plan=${targetPlan}`);
-                  }}
-                  className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors inline-flex items-center gap-2 flex-shrink-0"
-                >
-                  <StarIcon className="w-4 h-4" />
-                  Upgrade to {isFreePlan ? "Premium" : "Pro"}
-                </button>
               </div>
-            </div>
-          )}
+            )}
 
           {/* Compact Form */}
           <div className="p-6 space-y-4">

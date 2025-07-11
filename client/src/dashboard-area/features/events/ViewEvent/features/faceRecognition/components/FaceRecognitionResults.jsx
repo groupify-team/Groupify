@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { toast } from "react-hot-toast";
+import { toast } from "@shared/utils/toast";
 import {
   XMarkIcon,
   CheckIcon,
@@ -573,7 +573,3 @@ const FaceRecognitionResults = ({
 };
 
 export default FaceRecognitionResults;
-
-
-
-

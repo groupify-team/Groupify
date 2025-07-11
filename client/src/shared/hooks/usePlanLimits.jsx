@@ -3,7 +3,7 @@ import { useAuth } from "@auth/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import navigationService from "@shared/services/navigationService";
 import subscriptionService from "@shared/services/subscriptionService";
-import { toast } from "react-hot-toast";
+import { toast } from "@shared/utils/toast";
 
 export const usePlanLimits = () => {
   const { currentUser } = useAuth();
@@ -81,7 +81,8 @@ export const usePlanLimits = () => {
       }
 
       const limits = CORE_LIMITS[subscription.plan] || CORE_LIMITS.free;
-      const planName = subscription.plan.charAt(0).toUpperCase() + subscription.plan.slice(1);
+      const planName =
+        subscription.plan.charAt(0).toUpperCase() + subscription.plan.slice(1);
 
       switch (action) {
         case "create_event":
@@ -90,9 +91,10 @@ export const usePlanLimits = () => {
             additionalData.currentEventCount >= limits.events
           ) {
             // FIXED: More helpful error message
-            const nextPlan = subscription.plan === 'free' ? 'Premium' : 'Pro';
-            const nextPlanLimit = subscription.plan === 'free' ? '50 events' : 'unlimited events';
-            
+            const nextPlan = subscription.plan === "free" ? "Premium" : "Pro";
+            const nextPlanLimit =
+              subscription.plan === "free" ? "50 events" : "unlimited events";
+
             return {
               allowed: false,
               reason: `Event limit reached! Your ${planName} plan allows ${limits.events} events. You currently participate in ${additionalData.currentEventCount} events`,
@@ -101,7 +103,7 @@ export const usePlanLimits = () => {
               limit: limits.events,
               suggestedPlan: nextPlan,
               suggestedPlanLimit: nextPlanLimit,
-              upgradeMessage: `Upgrade to ${nextPlan} for ${nextPlanLimit}!`
+              upgradeMessage: `Upgrade to ${nextPlan} for ${nextPlanLimit}!`,
             };
           }
           break;
@@ -251,10 +253,10 @@ export const usePlanLimits = () => {
           origin: "upgrade-prompt",
           returnPath: window.location.pathname + window.location.search,
           section: "upgrade",
-          metadata: { 
+          metadata: {
             reason,
             currentPlan: subscription?.plan,
-            triggeredBy: "plan-limits"
+            triggeredBy: "plan-limits",
           },
         });
 
@@ -266,7 +268,8 @@ export const usePlanLimits = () => {
             label: "Upgrade Plan",
             onClick: () => {
               // Navigate to pricing page
-              const suggestedPlan = subscription?.plan === "free" ? "premium" : "pro";
+              const suggestedPlan =
+                subscription?.plan === "free" ? "premium" : "pro";
               window.location.href = `/pricing?plan=${suggestedPlan}&from=upgrade-prompt`;
             },
           },

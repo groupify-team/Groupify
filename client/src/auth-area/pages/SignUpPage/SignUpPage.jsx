@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
-import { toast } from "react-hot-toast";
+import { toast } from "@shared/utils/toast";
 import {
   CheckIcon,
   ChevronUpIcon,

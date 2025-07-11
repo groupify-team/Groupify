@@ -9,7 +9,7 @@ import {
   ClockIcon,
 } from "@heroicons/react/24/outline";
 import subscriptionService from "@shared/services/subscriptionService";
-import { toast } from "react-hot-toast";
+import { toast } from "@shared/utils/toast";
 
 const BillingHistoryModal = ({ isOpen, onClose }) => {
   const [subscription, setSubscription] = useState(null);
@@ -677,7 +677,3 @@ const BillingHistoryModal = ({ isOpen, onClose }) => {
 };
 
 export default BillingHistoryModal;
-
-
-
-

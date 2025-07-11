@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { toast } from "react-hot-toast";
-import { 
-  CheckCircleIcon, 
-  ArrowLeftIcon, 
+import { toast } from "@shared/utils/toast";
+import {
+  CheckCircleIcon,
+  ArrowLeftIcon,
   CameraIcon,
   LockClosedIcon,
-  ShieldCheckIcon 
+  ShieldCheckIcon,
 } from "@heroicons/react/24/outline";
 
 // New modular components and hooks
@@ -31,7 +31,7 @@ const ForgotPasswordPage = () => {
   // Handle input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   // Handle form submission
@@ -61,7 +61,7 @@ const ForgotPasswordPage = () => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            data: { email: formData.email }
+            data: { email: formData.email },
           }),
         }
       );
@@ -80,18 +80,22 @@ const ForgotPasswordPage = () => {
       }
     } catch (error) {
       console.error("Password reset error:", error);
-      
+
       // Handle specific error messages
       let errorMessage = "Failed to send reset email. Please try again.";
-      
-      if (error.message?.includes('User not found') || error.message?.includes('No user found')) {
-        errorMessage = "No account found with this email address. Please check your email or sign up.";
-      } else if (error.message?.includes('Invalid email')) {
+
+      if (
+        error.message?.includes("User not found") ||
+        error.message?.includes("No user found")
+      ) {
+        errorMessage =
+          "No account found with this email address. Please check your email or sign up.";
+      } else if (error.message?.includes("Invalid email")) {
         errorMessage = "Please enter a valid email address.";
       } else if (error.message) {
         errorMessage = error.message;
       }
-      
+
       toast.error(errorMessage);
     } finally {
       setLoading(false);
@@ -116,10 +120,11 @@ const ForgotPasswordPage = () => {
 
           {/* Title */}
           <h2 className="text-3xl font-bold mb-6">Check your email</h2>
-          
+
           {/* Subtitle */}
           <p className="text-lg mb-8 text-green-100 leading-relaxed">
-            We've sent password reset instructions to your email address. Follow the link to create a new password.
+            We've sent password reset instructions to your email address. Follow
+            the link to create a new password.
           </p>
 
           {/* Email Info */}
@@ -128,7 +133,9 @@ const ForgotPasswordPage = () => {
               <CheckCircleIcon className="w-5 h-5 mr-3 text-green-200" />
               <span className="text-green-100">Reset link sent to:</span>
             </div>
-            <div className="text-white font-medium mt-1 truncate">{formData.email}</div>
+            <div className="text-white font-medium mt-1 truncate">
+              {formData.email}
+            </div>
           </div>
 
           {/* Features */}
@@ -148,7 +155,7 @@ const ForgotPasswordPage = () => {
             ))}
           </div>
         </div>
-        
+
         {/* Background decoration */}
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-10 left-10 w-32 h-32 bg-white bg-opacity-10 rounded-full blur-xl"></div>
@@ -234,7 +241,7 @@ const ForgotPasswordPage = () => {
                 >
                   {loading ? "Sending..." : "Resend email"}
                 </button>
-                
+
                 <button
                   onClick={() => navigateWithTransition("/signin")}
                   className="w-full flex justify-center items-center py-2 sm:py-2.5 md:py-3 px-3 sm:px-4 border border-transparent rounded-lg shadow-sm text-xs sm:text-sm font-medium bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-300 ease-in-out transform scale-100 hover:scale-[1.02] hover:shadow-md"
@@ -292,10 +299,11 @@ const ForgotPasswordPage = () => {
 
         {/* Title */}
         <h2 className="text-3xl font-bold mb-6">Secure password recovery</h2>
-        
+
         {/* Subtitle */}
         <p className="text-lg mb-8 text-blue-100 leading-relaxed">
-          Reset your password safely and securely. We'll help you get back to organizing your memories in no time.
+          Reset your password safely and securely. We'll help you get back to
+          organizing your memories in no time.
         </p>
 
         {/* Features */}
@@ -303,7 +311,7 @@ const ForgotPasswordPage = () => {
           {[
             "Secure reset process",
             "Email verification required",
-            "Strong password requirements", 
+            "Strong password requirements",
             "Account protection",
           ].map((feature, index) => (
             <div key={index} className="flex items-center">
@@ -315,7 +323,7 @@ const ForgotPasswordPage = () => {
           ))}
         </div>
       </div>
-      
+
       {/* Background decoration */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-10 left-10 w-32 h-32 bg-white bg-opacity-10 rounded-full blur-xl"></div>
@@ -326,11 +334,7 @@ const ForgotPasswordPage = () => {
   );
 
   return (
-    <AuthLayout
-      layoutType="split"
-      leftContent={leftContent}
-      showHeader={false}
-    >
+    <AuthLayout layoutType="split" leftContent={leftContent} showHeader={false}>
       {/* Form Container */}
       <div className="flex-1 flex flex-col justify-center py-2 sm:py-4 md:py-6 lg:py-8 px-3 sm:px-4 md:px-6 lg:px-12 xl:px-20 2xl:px-24 bg-white dark:bg-gray-900 min-h-0">
         <div className="mx-auto w-full max-w-[280px] sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-md">
@@ -363,7 +367,8 @@ const ForgotPasswordPage = () => {
                 Forgot your password?
               </h2>
               <p className="mt-1 sm:mt-2 text-xs [@media(min-width:375px)]:text-xs sm:text-sm md:text-base text-gray-600 dark:text-gray-400">
-                No worries! Enter your email address and we'll send you a link to reset your password.
+                No worries! Enter your email address and we'll send you a link
+                to reset your password.
               </p>
             </div>
           </div>
@@ -399,5 +404,3 @@ const ForgotPasswordPage = () => {
 };
 
 export default ForgotPasswordPage;
-
-

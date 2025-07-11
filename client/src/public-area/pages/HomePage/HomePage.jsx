@@ -8,7 +8,7 @@ import PageTransition, {
   SectionTransition,
 } from "@/shared/components/ui/PageTransition";
 
-import { toast } from "react-hot-toast";
+import { toast } from "@shared/utils/toast";
 import {
   CameraIcon,
   UserGroupIcon,

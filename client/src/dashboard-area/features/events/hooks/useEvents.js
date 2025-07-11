@@ -6,7 +6,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { eventsService } from "../services/eventsService";
 import { usePlanLimits } from "../../../shared/hooks/usePlanLimits";
-import { toast } from "react-hot-toast";
+import { toast } from "@shared/utils/toast";
 
 export const useEvents = (userId) => {
   const [events, setevents] = useState([]);

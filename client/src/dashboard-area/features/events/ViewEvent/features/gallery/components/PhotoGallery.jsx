@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback, memo } from "react";
-import { toast } from "react-hot-toast";
+import { toast } from "@shared/utils/toast";
 import { uploadPhoto } from "@shared/services/firebase/storage";
 import { useAuth } from "@auth/hooks/useAuth";
 import { usePlanLimits } from "@shared/hooks/usePlanLimits";
@@ -33,7 +33,7 @@ const PhotoGallery = memo(
     const maxPhotos = useMemo(() => {
       if (!subscription) return 30; // Free plan default
       const limit = subscription.features?.photosPerEvent;
-      return limit === "unlimited" ? Infinity : (limit || 30);
+      return limit === "unlimited" ? Infinity : limit || 30;
     }, [subscription]);
 
     useEffect(() => {
@@ -71,21 +71,31 @@ const PhotoGallery = memo(
       async (files) => {
         if (!files?.length || !eventId || !currentUser?.uid) return;
 
-        const availableSlots = maxPhotos === Infinity ? files.length : maxPhotos - localPhotos.length;
-        
+        const availableSlots =
+          maxPhotos === Infinity
+            ? files.length
+            : maxPhotos - localPhotos.length;
+
         // Show popup if trying to upload more than allowed
         if (availableSlots <= 0) {
-          toast.error("Photo limit reached! Please upgrade your plan to add more photos.", {
-            duration: 4000,
-            icon: "🚫",
-          });
+          toast.error(
+            "Photo limit reached! Please upgrade your plan to add more photos.",
+            {
+              duration: 4000,
+              icon: "🚫",
+            }
+          );
           return;
         }
 
         // Show popup if trying to upload more files than available slots
         if (files.length > availableSlots) {
           toast.error(
-            `You can only upload ${availableSlots} more photo${availableSlots === 1 ? '' : 's'}. ${files.length - availableSlots} photo${files.length - availableSlots === 1 ? '' : 's'} will be skipped.`,
+            `You can only upload ${availableSlots} more photo${
+              availableSlots === 1 ? "" : "s"
+            }. ${files.length - availableSlots} photo${
+              files.length - availableSlots === 1 ? "" : "s"
+            } will be skipped.`,
             {
               duration: 5000,
               icon: "⚠️",
@@ -130,7 +140,13 @@ const PhotoGallery = memo(
           setLoading(false);
         }
       },
-      [eventId, currentUser?.uid, maxPhotos, localPhotos.length, onPhotoUploaded]
+      [
+        eventId,
+        currentUser?.uid,
+        maxPhotos,
+        localPhotos.length,
+        onPhotoUploaded,
+      ]
     );
 
     // PERFORMANCE: Memoize Modal component
@@ -152,7 +168,7 @@ const PhotoGallery = memo(
       <>
         {/* Photo Limit Banner */}
         <PhotoLimitBanner currentPhotoCount={localPhotos.length} />
-        
+
         <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-xl shadow-lg border border-white/20 dark:border-gray-700/50">
           {/* Header */}
           <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 dark:from-purple-900/30 dark:to-pink-900/30 p-4 border-b border-purple-200/30 dark:border-purple-800/30">
@@ -167,10 +183,12 @@ const PhotoGallery = memo(
                   </h2>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
                     {localPhotos.length} photos •{" "}
-                    {maxPhotos === Infinity 
-                      ? "unlimited slots" 
-                      : `${Math.max(0, maxPhotos - localPhotos.length)} slots left`
-                    }
+                    {maxPhotos === Infinity
+                      ? "unlimited slots"
+                      : `${Math.max(
+                          0,
+                          maxPhotos - localPhotos.length
+                        )} slots left`}
                   </p>
                 </div>
               </div>
@@ -178,7 +196,10 @@ const PhotoGallery = memo(
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setShowModal("upload")}
-                  disabled={loading || (maxPhotos !== Infinity && localPhotos.length >= maxPhotos)}
+                  disabled={
+                    loading ||
+                    (maxPhotos !== Infinity && localPhotos.length >= maxPhotos)
+                  }
                   className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-3 py-2 rounded-lg text-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   title={
                     maxPhotos !== Infinity && localPhotos.length >= maxPhotos
@@ -208,7 +229,9 @@ const PhotoGallery = memo(
                 </p>
                 <button
                   onClick={() => setShowModal("upload")}
-                  disabled={maxPhotos !== Infinity && localPhotos.length >= maxPhotos}
+                  disabled={
+                    maxPhotos !== Infinity && localPhotos.length >= maxPhotos
+                  }
                   className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-6 py-3 rounded-xl font-medium flex items-center gap-2 mx-auto disabled:opacity-50 disabled:cursor-not-allowed"
                   title={
                     maxPhotos !== Infinity && localPhotos.length >= maxPhotos
@@ -280,10 +303,13 @@ const PhotoGallery = memo(
             <div className="bg-gradient-to-r from-indigo-500 to-purple-500 p-4 rounded-t-xl">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-lg font-bold text-white">Upload Photos</h3>
+                  <h3 className="text-lg font-bold text-white">
+                    Upload Photos
+                  </h3>
                   {maxPhotos !== Infinity && (
                     <p className="text-indigo-100 text-sm">
-                      {Math.max(0, maxPhotos - localPhotos.length)} slots available
+                      {Math.max(0, maxPhotos - localPhotos.length)} slots
+                      available
                     </p>
                   )}
                 </div>
@@ -322,13 +348,19 @@ const PhotoGallery = memo(
                       const files = e.target.files;
                       if (files?.length) {
                         // Check limit before processing
-                        const availableSlots = maxPhotos === Infinity ? files.length : maxPhotos - localPhotos.length;
+                        const availableSlots =
+                          maxPhotos === Infinity
+                            ? files.length
+                            : maxPhotos - localPhotos.length;
                         if (availableSlots <= 0) {
-                          toast.error("Photo limit reached! Please upgrade your plan to add more photos.", {
-                            duration: 4000,
-                            icon: "🚫",
-                          });
-                          e.target.value = ''; // Reset file input
+                          toast.error(
+                            "Photo limit reached! Please upgrade your plan to add more photos.",
+                            {
+                              duration: 4000,
+                              icon: "🚫",
+                            }
+                          );
+                          e.target.value = ""; // Reset file input
                           return;
                         }
                         handleFileUpload(files);
