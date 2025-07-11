@@ -144,14 +144,6 @@
     z-index: var(--z-toast) !important;
   }
 
-  /* React Hot Toast container and elements */
-  div[data-testid="toast-container"],
-  div[data-testid="toast"],
-  .react-hot-toast,
-  .react-hot-toast > div {
-    z-index: var(--z-toast) !important;
-  }
-
   /* Toaster wrapper */
   .Toaster {
     z-index: var(--z-toast) !important;
