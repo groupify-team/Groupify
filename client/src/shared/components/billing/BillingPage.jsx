@@ -34,6 +34,7 @@ const BillingPage = () => {
   const [nameOnCard, setNameOnCard] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("card");
   const [validationErrors, setValidationErrors] = useState({});
+  const [loadingPlan, setLoadingPlan] = useState(null);
 
   // Payment success/failure modal states
   const [showPaymentModal, setShowPaymentModal] = useState(false);
