@@ -1,13 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@auth/hooks/useAuth";
-import { usePublicNavigation } from "../../hooks/usePublicNavigation";
-import AccessibilityButton from "@shared/components/accessibility/AccessibilityButton";
-
-import PageTransition, {
-  SectionTransition,
-} from "@/shared/components/ui/PageTransition";
-
 import { toast } from "@shared/utils/toast";
 import {
   CameraIcon,
@@ -16,14 +9,18 @@ import {
   SparklesIcon,
   ArrowRightIcon,
   CheckIcon,
-  CogIcon,
 } from "@heroicons/react/24/outline";
+import PageTransition, {
+  SectionTransition,
+} from "@/shared/components/ui/PageTransition";
 import PublicFooter from "../../components/layout/PublicFooter";
-
-// Import components that provide functionality
+import HomeHeader from "../../components/layout/HomeHeader";
 import AccessibilityModal from "@/shared/components/accessibility/AccessibilityModal";
+import { usePublicNavigation } from "../../hooks/usePublicNavigation";
+import AccessibilityButton from "@shared/components/accessibility/AccessibilityButton";
+import FloatingAccessibilityButton from "@shared/components/accessibility/FloatingAccessibilityButton";
 
-// Launch Animation Component (keep exactly as before)
+// Launch Animation Component
 const LaunchAnimation = ({ onAnimationComplete }) => {
   const [progress, setProgress] = useState(0);
   const [currentText, setCurrentText] = useState(0);
@@ -37,15 +34,12 @@ const LaunchAnimation = ({ onAnimationComplete }) => {
   ];
 
   useEffect(() => {
-    // Simulate loading progress
     const progressInterval = setInterval(() => {
       setProgress((prev) => {
         if (prev >= 100) {
           clearInterval(progressInterval);
-          // Start exit animation
           setTimeout(() => {
             setIsExiting(true);
-            // Complete animation after exit transition
             setTimeout(() => {
               onAnimationComplete?.();
             }, 800);
@@ -56,11 +50,9 @@ const LaunchAnimation = ({ onAnimationComplete }) => {
       });
     }, 50);
 
-    // Cycle through loading texts
     const textInterval = setInterval(() => {
       setCurrentText((prev) => (prev + 1) % loadingTexts.length);
     }, 1200);
-
     return () => {
       clearInterval(progressInterval);
       clearInterval(textInterval);
@@ -106,15 +98,10 @@ const LaunchAnimation = ({ onAnimationComplete }) => {
 
       {/* Main Content */}
       <div className="flex flex-col items-center justify-center min-h-screen px-4">
-        {/* Animated Logo */}
         <div className="relative mb-8">
-          {/* Glow Effect */}
           <div className="absolute inset-0 w-24 h-24 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-3xl blur-xl opacity-60 animate-pulse"></div>
-
-          {/* Logo Container */}
           <div className="relative w-24 h-24 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-3xl flex items-center justify-center shadow-2xl transform transition-all duration-1000 hover:scale-110">
             <CameraIcon className="w-12 h-12 text-white animate-pulse" />
-
             {/* Rotating Border */}
             <div
               className="absolute inset-0 w-24 h-24 border-4 border-transparent bg-gradient-to-r from-indigo-400 via-purple-400 to-blue-400 rounded-3xl animate-spin"
@@ -130,12 +117,9 @@ const LaunchAnimation = ({ onAnimationComplete }) => {
           </div>
         </div>
 
-        {/* Brand Name */}
         <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 bg-clip-text text-transparent mb-4 animate-pulse">
           Groupify
         </h1>
-
-        {/* Tagline with Icon */}
         <div className="flex items-center mb-12 px-6 py-3 bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-full border border-white/20 dark:border-gray-700/50">
           <SparklesIcon
             className="w-5 h-5 text-indigo-600 dark:text-indigo-400 mr-2 animate-spin"
@@ -145,35 +129,24 @@ const LaunchAnimation = ({ onAnimationComplete }) => {
             AI-Powered Photo Management
           </span>
         </div>
-
-        {/* Loading Text */}
         <div className="mb-8 h-6">
           <p className="text-lg text-gray-600 dark:text-gray-300 text-center transition-all duration-500 transform">
             {loadingTexts[currentText]}
           </p>
         </div>
-
-        {/* Progress Bar */}
         <div className="w-80 max-w-sm">
-          {/* Progress Container */}
           <div className="relative w-full h-3 bg-white/40 dark:bg-gray-800/40 backdrop-blur-sm rounded-full border border-white/20 dark:border-gray-700/50 overflow-hidden">
-            {/* Progress Fill */}
             <div
               className="absolute left-0 top-0 h-full bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 rounded-full transition-all duration-300 ease-out"
               style={{ width: `${progress}%` }}
             >
-              {/* Shimmer Effect */}
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer"></div>
             </div>
-
-            {/* Progress Glow */}
             <div
               className="absolute left-0 top-0 h-full bg-gradient-to-r from-indigo-400 to-purple-400 rounded-full blur-sm opacity-50 transition-all duration-300"
               style={{ width: `${progress}%` }}
             ></div>
           </div>
-
-          {/* Progress Percentage */}
           <div className="text-center mt-4">
             <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
               {progress}%
@@ -181,7 +154,6 @@ const LaunchAnimation = ({ onAnimationComplete }) => {
           </div>
         </div>
 
-        {/* Loading Dots */}
         <div className="flex space-x-2 mt-8">
           {[...Array(3)].map((_, i) => (
             <div
@@ -192,20 +164,6 @@ const LaunchAnimation = ({ onAnimationComplete }) => {
           ))}
         </div>
       </div>
-
-      <style>{`
-        @keyframes shimmer {
-          0% {
-            transform: translateX(-100%);
-          }
-          100% {
-            transform: translateX(200%);
-          }
-        }
-        .animate-shimmer {
-          animation: shimmer 2s infinite;
-        }
-      `}</style>
     </div>
   );
 };
@@ -254,7 +212,6 @@ const HomePage = () => {
     return () => document.body.classList.remove("page-enter");
   }, []);
 
-  // ADD THIS CHECK TO SHOW LAUNCH ANIMATION FIRST
   if (showLaunch) {
     return <LaunchAnimation onAnimationComplete={handleAnimationComplete} />;
   }
@@ -297,60 +254,10 @@ const HomePage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 transition-colors duration-500">
-      {/* Navigation Header - UPDATED: Accessibility icon */}
-      <nav className="relative z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            {/* Logo */}
-            <div className="flex items-center">
-              <div className="flex-shrink-0 flex items-center">
-                <div className="w-8 h-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
-                  <CameraIcon className="w-5 h-5 text-white" />
-                </div>
-                <span className="ml-2 text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                  Groupify
-                </span>
-              </div>
-            </div>
-
-            {/* Navigation Links - Accessibility Settings */}
-            <div className="flex items-center space-x-4">
-              {/* Accessibility Settings */}
-              <AccessibilityButton
-                onSettingsClick={openAccessibilitySettings}
-                size="default"
-                variant="default"
-              />
-
-              {/* Auth Links */}
-              {!currentUser && (
-                <div className="flex items-center space-x-3">
-                  <Link
-                    to="/signin"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleSmoothNavigation("/signin");
-                    }}
-                    className="text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                  >
-                    Sign In
-                  </Link>
-                  <Link
-                    to="/signup"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleSmoothNavigation("/signup");
-                    }}
-                    className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-md hover:shadow-lg btn-flow smooth-hover focus-visible-enhanced"
-                  >
-                    Get Started
-                  </Link>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </nav>
+      <HomeHeader
+        onSettingsClick={openAccessibilitySettings}
+        handleSmoothNavigation={handleSmoothNavigation}
+      />
       {/* Hero Section - Enhanced with smooth transitions */}
       <PageTransition variant="fadeIn" trigger={isLoaded}>
         <div className="relative overflow-hidden">
@@ -366,7 +273,6 @@ const HomePage = () => {
                 </div>
               </SectionTransition>
 
-              {/* Hero Title */}
               <SectionTransition variant="slideInFromBottom" delay={0.3}>
                 <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-gray-900 dark:text-white mb-6">
                   <span className="block">Share Your</span>
@@ -374,8 +280,6 @@ const HomePage = () => {
                     Event Memories
                   </span>
                 </h1>
-
-                {/* Hero Subtitle */}
                 <p className="max-w-3xl mx-auto text-xl md:text-2xl text-gray-600 dark:text-gray-300 mb-12 leading-relaxed">
                   Upload photos, find yourself with AI face recognition, and
                   relive the moments together. The smartest way to organize and
@@ -383,7 +287,6 @@ const HomePage = () => {
                 </p>
               </SectionTransition>
 
-              {/* Success Message Banner */}
               <SectionTransition variant="slideInFromBottom" delay={0.4}>
                 {location.state?.verified && (
                   <div className="mb-8 max-w-2xl mx-auto">
@@ -417,7 +320,6 @@ const HomePage = () => {
                 )}
               </SectionTransition>
 
-              {/* CTA Buttons - Enhanced with smooth transitions */}
               <SectionTransition variant="slideInFromBottom" delay={0.6}>
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
                   <Link
@@ -446,17 +348,14 @@ const HomePage = () => {
             </div>
           </div>
 
-          {/* Background Decoration */}
           <div className="absolute inset-0 -z-10">
             <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-purple-400/20 to-blue-400/20 rounded-full blur-3xl"></div>
             <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-indigo-400/20 to-purple-400/20 rounded-full blur-3xl"></div>
           </div>
         </div>
       </PageTransition>
-      {/* Features Section */}
       <div className="py-24 bg-white/40 dark:bg-gray-800/40 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Section Header */}
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
               Everything you need to organize your memories
@@ -467,7 +366,6 @@ const HomePage = () => {
             </p>
           </div>
 
-          {/* Features Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {features.map((feature, index) => (
               <div
@@ -492,11 +390,9 @@ const HomePage = () => {
           </div>
         </div>
       </div>
-      {/* Benefits Section */}
       <div className="py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            {/* Benefits List */}
             <div>
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-8">
                 Why choose Groupify?
@@ -522,7 +418,6 @@ const HomePage = () => {
               </div>
             </div>
 
-            {/* Visual Element */}
             <div className="relative">
               <div className="aspect-square bg-gradient-to-br from-indigo-500/20 to-purple-500/20 rounded-3xl flex items-center justify-center backdrop-blur-sm border border-white/20 dark:border-gray-700/50">
                 <div className="grid grid-cols-3 gap-4 p-8">
@@ -542,7 +437,6 @@ const HomePage = () => {
           </div>
         </div>
       </div>
-      {/* CTA Section */}
       <div className="py-24 bg-gradient-to-r from-indigo-600 to-purple-600">
         <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
@@ -571,10 +465,11 @@ const HomePage = () => {
           </Link>
         </div>
       </div>
-      {/* Footer */}
       <PublicFooter handleSmoothNavigation={handleSmoothNavigation} />{" "}
-      {/* Settings Modal - Contains accessibility settings including dark mode toggle */}
       <AccessibilityModal {...accessibilityModalProps} />
+      <FloatingAccessibilityButton
+        onSettingsClick={openAccessibilitySettings}
+      />
     </div>
   );
 };

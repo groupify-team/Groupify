@@ -9,43 +9,10 @@ const PublicHeader = ({
   backButtonLink = "/",
   onSettingsClick = null,
   className = "",
-  actions = null,
-  handleSmoothNavigation = null, // This should be the logo animation function
 }) => {
   const handleHomeClick = (e) => {
-    if (handleSmoothNavigation) {
-      e.preventDefault();
-      // For going home, we can use simple navigation since it's not auth
-      // But if you want logo animation for all header navigation, use handleSmoothNavigation
-      window.scrollTo(0, 0);
-      setTimeout(() => {
-        window.location.href = "/";
-      }, 100);
-    } else {
-      window.scrollTo(0, 0);
-    }
-  };
-
-  const handleBackClick = (e) => {
-    if (
-      handleSmoothNavigation &&
-      (backButtonLink === "/signin" || backButtonLink === "/signup")
-    ) {
-      // If going back to auth page, use animation
-      e.preventDefault();
-      console.log(
-        "🎭 PublicHeader using logo animation for back to:",
-        backButtonLink
-      );
-      handleSmoothNavigation(backButtonLink);
-    } else {
-      // For non-auth pages, simple navigation
-      e.preventDefault();
-      window.scrollTo(0, 0);
-      setTimeout(() => {
-        window.location.href = backButtonLink;
-      }, 100);
-    }
+    e.preventDefault();
+    window.location.href = "/";
   };
 
   return (
@@ -70,30 +37,24 @@ const PublicHeader = ({
             </Link>
           </div>
 
-          {/* Navigation */}
+          {/* Navigation Back Home */}
           <div className="flex items-center space-x-2 sm:space-x-4">
-            {/* Custom Actions (for specific pages like Blog) */}
-            {actions && (
-              <div className="flex items-center space-x-2">{actions}</div>
-            )}
-
-            {/* Accessibility Button - Always show */}
-            <AccessibilityButton
-              onSettingsClick={onSettingsClick}
-              size="default"
-              variant="default"
-            />
-
             {showBackButton && (
               <Link
                 to={backButtonLink}
-                onClick={handleBackClick}
                 className="inline-flex items-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
               >
                 <ArrowLeftIcon className="w-5 h-5 sm:mr-2" />
                 <span className="hidden sm:inline">{backButtonText}</span>
               </Link>
             )}
+
+            {/* Accessibility Button */}
+            <AccessibilityButton
+              onSettingsClick={onSettingsClick}
+              size="default"
+              variant="default"
+            />
           </div>
         </div>
       </div>

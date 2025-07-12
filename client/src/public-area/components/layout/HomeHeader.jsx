@@ -39,15 +39,8 @@ const HomeHeader = ({
             </div>
           </div>
 
-          {/* Navigation Links */}
-          <div className="flex items-center space-x-0">
-            {/* Accessibility Settings */}
-            <AccessibilityButton
-              onSettingsClick={onSettingsClick}
-              size="default"
-              variant="default"
-            />
-
+          {/* Navigation Links - FIXED ORDER */}
+          <div className="flex items-center space-x-1 sm:space-x-2">
             {/* Auth Links */}
             {!currentUser && (
               <div className="flex items-center space-x-1 sm:space-x-2">
@@ -65,12 +58,19 @@ const HomeHeader = ({
                     e.preventDefault();
                     handleLinkClick("/signup");
                   }}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors shadow-md hover:shadow-lg"
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors shadow-md hover:shadow-lg btn-flow smooth-hover focus-visible-enhanced"
                 >
                   Get Started
                 </button>
               </div>
             )}
+
+            {/* Accessibility Settings - NOW PROPERLY OUTSIDE AUTH CONTAINER */}
+            <AccessibilityButton
+              onSettingsClick={onSettingsClick}
+              size="default"
+              variant="default"
+            />
           </div>
         </div>
       </div>
