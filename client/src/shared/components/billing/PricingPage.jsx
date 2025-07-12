@@ -239,40 +239,30 @@ const PricingPage = () => {
 
   const handlePlanSelect = (plan) => {
     if (currentUser) {
+      if (currentSubscription?.plan === plan.name.toLowerCase()) {
+        toast.info(`You already have the ${plan.name} plan!`);
+        return;
+      }
+
       if (plan.name === "Free") {
-        if (currentSubscription?.plan === "free") {
-          toast.success("You're already on the free plan!");
-          handleBackNavigation();
-        } else {
-          setShowGroupifyAnimation(true);
-          setTimeout(() => {
-            subscriptionService.updateSubscription({
-              plan: "free",
-              billing: "monthly",
-              price: 0,
-            });
-            toast.success("Switched to free plan successfully!");
-            navigate("/dashboard/settings", { replace: true });
-          }, 2000);
-        }
+        handleSmoothNavigation("/dashboard/settings");
+        setTimeout(() => {
+          subscriptionService.updateSubscription({
+            plan: "free",
+            billing: "monthly",
+            price: 0,
+          });
+          toast.success("Switched to free plan successfully!");
+        }, 1000);
       } else if (plan.name === "Enterprise") {
         setShowEnterpriseModal(true);
       } else if (plan.name === "Premium" || plan.name === "Pro") {
-        if (currentSubscription?.plan === plan.name.toLowerCase()) {
-          toast.info(`You already have the ${plan.name} plan!`);
-          return;
-        }
         const planParam = plan.name === "Premium" ? "premium" : "pro";
-        document.body.style.transition = "opacity 0.3s ease-in-out";
-        document.body.style.opacity = "0.7";
-        setTimeout(() => {
-          navigate(
-            `/billing?plan=${planParam}&billing=${billingCycle}&from=pricing`
-          );
-        }, 150);
+        handleSmoothNavigation(
+          `/billing?plan=${planParam}&billing=${billingCycle}&from=pricing`
+        );
       }
     } else {
-      // User is NOT logged in - show plan selection modal
       if (plan.name === "Enterprise") {
         setShowEnterpriseModal(true);
       } else {
@@ -386,23 +376,7 @@ const PricingPage = () => {
             <div className="bg-blue-50 dark:bg-blue-900/20 border-b border-blue-200 dark:border-blue-800">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
                 <div className="flex items-center justify-between">
-                  {/* Back to Settings Button - LEFT */}
-                  {navigationContext ? (
-                    <button
-                      onClick={handleBackNavigation}
-                      className="inline-flex items-center text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 transition-colors"
-                    >
-                      <ArrowLeftIcon className="w-4 h-4 mr-2" />
-                      Back to{" "}
-                      {navigationContext.origin === "dashboard-settings"
-                        ? "Settings"
-                        : "Previous Page"}
-                    </button>
-                  ) : (
-                    <div></div>
-                  )}
-
-                  {/* Current Plan Info - RIGHT */}
+                  {/* Current Plan Info - LEFT */}
                   {currentUser && currentSubscription ? (
                     <div className="flex items-center gap-3">
                       <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
@@ -429,6 +403,22 @@ const PricingPage = () => {
                         </span>
                       )}
                     </div>
+                  ) : (
+                    <div></div>
+                  )}
+
+                  {/* Back to Settings Button - RIGHT */}
+                  {navigationContext ? (
+                    <button
+                      onClick={handleBackNavigation}
+                      className="inline-flex items-center text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 transition-colors"
+                    >
+                      <ArrowLeftIcon className="w-4 h-4 mr-2" />
+                      Back to{" "}
+                      {navigationContext.origin === "dashboard-settings"
+                        ? "Settings"
+                        : "Previous Page"}
+                    </button>
                   ) : (
                     <div></div>
                   )}
