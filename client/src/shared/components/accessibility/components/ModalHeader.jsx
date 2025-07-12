@@ -9,35 +9,46 @@ const AccessibilityIcon = ({ className }) => (
 );
 
 const ModalHeader = ({ onClose }) => {
+  const handleCloseClick = (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    setTimeout(() => {
+      onClose();
+    }, 0);
+  };
+
   return (
     <div className="flex items-center justify-between p-6 border-b border-gray-200/50 dark:border-gray-700/50 flex-shrink-0">
-      <div className="flex items-center">
-        <div className="w-10 h-10 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center mr-3">
+      <div className="flex items-center flex-1">
+        <div className="w-10 h-10 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center mr-3 flex-shrink-0">
           <AccessibilityIcon className="w-5 h-5 text-white" />
         </div>
-        <div>
+        <div className="min-w-0 flex-1">
           <h2
             id="accessibility-title"
-            className="text-xl font-bold text-gray-900 dark:text-white"
+            className="text-xl font-bold text-gray-900 dark:text-white truncate"
           >
             Accessibility Settings
           </h2>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
+          <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
             Customize your experience
           </p>
         </div>
       </div>
-      <button
-        onClick={onClose}
-        className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-        aria-label="Close accessibility settings"
-      >
-        <XMarkIcon className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-      </button>
+
+      {/* Fixed close button with stable positioning */}
+      <div className="flex-shrink-0 ml-4">
+        <button
+          onClick={handleCloseClick}
+          className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
+          aria-label="Close accessibility settings"
+          type="button"
+        >
+          <XMarkIcon className="w-5 h-5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors duration-150" />
+        </button>
+      </div>
     </div>
   );
 };
 
 export default ModalHeader;
-
-

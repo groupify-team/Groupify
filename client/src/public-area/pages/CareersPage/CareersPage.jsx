@@ -168,49 +168,60 @@ const JobCard = ({ job, onApply }) => (
   </div>
 );
 
-const OpenPositionsSection = ({ jobListings, onApply }) => (
-  <div
-    id="open-positions"
-    className="py-12 sm:py-16 md:py-20 bg-white/40 dark:bg-gray-800/40 backdrop-blur-sm"
-  >
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div className="text-center mb-12 sm:mb-16 flex flex-col items-center">
-        <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-3 sm:mb-4">
-          Open Positions
-        </h2>
-        <p className="text-base sm:text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-          Join our growing team and help shape the future of photo sharing and
-          organization
-        </p>
-      </div>
+const OpenPositionsSection = ({
+  jobListings,
+  onApply,
+  handleSmoothNavigation,
+}) => {
+  const handleGetInTouchClick = (e) => {
+    e.preventDefault();
+    handleSmoothNavigation("/contact");
+  };
 
-      <div className="space-y-4 sm:space-y-6 flex flex-col items-center lg:items-stretch">
-        {jobListings.map((job) => (
-          <JobCard key={job.id} job={job} onApply={onApply} />
-        ))}
-      </div>
-
-      <div className="text-center mt-12 sm:mt-16">
-        <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-2xl border border-white/20 dark:border-gray-700/50 p-4 sm:p-6 md:p-8">
-          <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-3 sm:mb-4">
-            Don't See a Perfect Match?
-          </h3>
-          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 mb-4 sm:mb-6 leading-relaxed">
-            We're always looking for talented individuals to join our team. If
-            you're passionate about our mission and think you'd be a great fit,
-            we'd love to hear from you.
+  return (
+    <div
+      id="open-positions"
+      className="py-12 sm:py-16 md:py-20 bg-white/40 dark:bg-gray-800/40 backdrop-blur-sm"
+    >
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-12 sm:mb-16 flex flex-col items-center">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-3 sm:mb-4">
+            Open Positions
+          </h2>
+          <p className="text-base sm:text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+            Join our growing team and help shape the future of photo sharing and
+            organization
           </p>
-          <a
-            href="/contact"
-            className="inline-flex items-center bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 sm:px-6 sm:py-3 rounded-lg font-semibold transition-colors shadow-md hover:shadow-lg text-sm sm:text-base"
-          >
-            Get in Touch
-          </a>
+        </div>
+
+        <div className="space-y-4 sm:space-y-6 flex flex-col items-center lg:items-stretch">
+          {jobListings.map((job) => (
+            <JobCard key={job.id} job={job} onApply={onApply} />
+          ))}
+        </div>
+
+        <div className="text-center mt-12 sm:mt-16">
+          <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-2xl border border-white/20 dark:border-gray-700/50 p-4 sm:p-6 md:p-8">
+            <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-3 sm:mb-4">
+              Don't See a Perfect Match?
+            </h3>
+            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 mb-4 sm:mb-6 leading-relaxed">
+              We're always looking for talented individuals to join our team. If
+              you're passionate about our mission and think you'd be a great
+              fit, we'd love to hear from you.
+            </p>
+            <button
+              onClick={handleGetInTouchClick}
+              className="inline-flex items-center bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 sm:px-6 sm:py-3 rounded-lg font-semibold transition-colors shadow-md hover:shadow-lg text-sm sm:text-base"
+            >
+              Get in Touch
+            </button>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 const HiringProcessSection = () => (
   <div className="py-12 sm:py-16 md:py-20">
@@ -280,34 +291,41 @@ const HiringProcessSection = () => (
   </div>
 );
 
-const CallToActionSection = ({ handleGetStarted }) => (
-  <div className="py-12 sm:py-16 md:py-20 bg-gradient-to-r from-indigo-600 to-purple-600">
-    <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
-      <RocketLaunchIcon className="w-12 h-12 sm:w-16 sm:h-16 text-white mx-auto mb-4 sm:mb-6" />
-      <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-4 sm:mb-6">
-        Ready to Shape the Future?
-      </h2>
-      <p className="text-base sm:text-lg md:text-xl text-indigo-100 mb-6 sm:mb-8 leading-relaxed max-w-2xl mx-auto">
-        Join our mission to help people organize and share their most precious
-        memories. Apply today and be part of something amazing.
-      </p>
-      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
-        <a
-          href="#open-positions"
-          className="inline-flex items-center justify-center bg-white text-indigo-600 px-6 py-3 sm:px-8 sm:py-4 rounded-xl text-base sm:text-lg font-semibold hover:bg-gray-50 transition-all duration-200 shadow-xl hover:shadow-2xl hover:scale-105"
-        >
-          Browse Open Positions
-        </a>
-        <a
-          href="/contact"
-          className="inline-flex items-center justify-center bg-white/20 backdrop-blur-sm text-white px-6 py-3 sm:px-8 sm:py-4 rounded-xl text-base sm:text-lg font-semibold border border-white/30 hover:bg-white/30 transition-all duration-200"
-        >
-          Contact Us
-        </a>
+const CallToActionSection = ({ handleGetStarted, handleSmoothNavigation }) => {
+  const handleContactUsClick = (e) => {
+    e.preventDefault();
+    handleSmoothNavigation("/contact");
+  };
+
+  return (
+    <div className="py-12 sm:py-16 md:py-20 bg-gradient-to-r from-indigo-600 to-purple-600">
+      <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
+        <RocketLaunchIcon className="w-12 h-12 sm:w-16 sm:h-16 text-white mx-auto mb-4 sm:mb-6" />
+        <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-4 sm:mb-6">
+          Ready to Shape the Future?
+        </h2>
+        <p className="text-base sm:text-lg md:text-xl text-indigo-100 mb-6 sm:mb-8 leading-relaxed max-w-2xl mx-auto">
+          Join our mission to help people organize and share their most precious
+          memories. Apply today and be part of something amazing.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
+          <a
+            href="#open-positions"
+            className="inline-flex items-center justify-center bg-white text-indigo-600 px-6 py-3 sm:px-8 sm:py-4 rounded-xl text-base sm:text-lg font-semibold hover:bg-gray-50 transition-all duration-200 shadow-xl hover:shadow-2xl hover:scale-105"
+          >
+            Browse Open Positions
+          </a>
+          <button
+            onClick={handleContactUsClick}
+            className="inline-flex items-center justify-center bg-white/20 backdrop-blur-sm text-white px-6 py-3 sm:px-8 sm:py-4 rounded-xl text-base sm:text-lg font-semibold border border-white/30 hover:bg-white/30 transition-all duration-200"
+          >
+            Contact Us
+          </button>
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 const ApplicationModal = ({ job, onClose }) => {
   const [formData, setFormData] = useState({
@@ -485,22 +503,25 @@ const ApplicationModal = ({ job, onClose }) => {
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-2xl w-full max-h-[90vh] flex flex-col">
-        {/* Fixed Header */}
-        <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between bg-white dark:bg-gray-800 rounded-t-2xl relative">
-          <div className="flex-1 text-center sm:text-left">
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
-              Apply for {job.title}
-            </h2>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-              {job.department} • {job.location}
-            </p>
+        {/* Header with close button on same line */}
+        <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-t-2xl">
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
+                Apply for {job.title}
+              </h2>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                {job.department} • {job.location}
+              </p>
+            </div>
+
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors flex-shrink-0 ml-4"
+            >
+              ✕
+            </button>
           </div>
-          <button
-            onClick={onClose}
-            className="absolute top-2 right-2 sm:top-3 sm:right-3 p-1.5 sm:p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors z-10 text-lg sm:text-xl"
-          >
-            ✕
-          </button>
         </div>
         {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto">
@@ -613,11 +634,13 @@ const ApplicationModal = ({ job, onClose }) => {
                   required
                   accept=".pdf,.doc,.docx"
                   onChange={handleFileUpload}
-                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                  className="sr-only"
                   id="cv-upload"
-                  key={cvFile ? cvFile.name : "empty"} // Force re-render when file changes
                 />
-                <div className="flex items-center justify-center w-full h-24 sm:h-28 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:border-indigo-500 dark:hover:border-indigo-400 transition-all duration-200 bg-gray-50 dark:bg-gray-700/50 hover:bg-indigo-50 dark:hover:bg-indigo-900/20">
+                <label
+                  htmlFor="cv-upload"
+                  className="flex items-center justify-center w-full h-24 sm:h-28 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:border-indigo-500 dark:hover:border-indigo-400 bg-gray-50 dark:bg-gray-700/50 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 cursor-pointer"
+                >
                   {cvFile ? (
                     <div className="flex flex-row items-center">
                       <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
@@ -677,7 +700,7 @@ const ApplicationModal = ({ job, onClose }) => {
                       </div>
                     </div>
                   )}
-                </div>
+                </label>
               </div>
             </div>
 
@@ -770,8 +793,13 @@ const ApplicationModal = ({ job, onClose }) => {
 
 const Careers = () => {
   const navigate = useNavigate();
-  const { handleGetStarted, headerProps, accessibilityModalProps } =
-    usePublicNavigation();
+  const {
+    handleGetStarted,
+    handleSmoothNavigation,
+    headerProps,
+    accessibilityModalProps,
+  } = usePublicNavigation();
+
   const [showApplicationModal, setShowApplicationModal] = useState(false);
   const [selectedJobId, setSelectedJobId] = useState(null);
 
@@ -1039,13 +1067,17 @@ const Careers = () => {
       <OpenPositionsSection
         jobListings={jobListings}
         onApply={handleApplyToJob}
+        handleSmoothNavigation={handleSmoothNavigation}
       />
 
       {/* Application Process Section */}
       <HiringProcessSection />
 
       {/* Call to Action Section */}
-      <CallToActionSection handleGetStarted={handleGetStarted} />
+      <CallToActionSection
+        handleGetStarted={handleGetStarted}
+        handleSmoothNavigation={handleSmoothNavigation}
+      />
 
       {/* Application Modal */}
       {showApplicationModal && (
