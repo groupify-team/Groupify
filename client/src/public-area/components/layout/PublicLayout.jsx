@@ -13,26 +13,45 @@ const PublicLayout = ({
   className = "",
   containerClassName = "",
 }) => {
-  const { handleSmoothNavigation } = usePublicNavigation();
+  const {
+    handleSmoothNavigation,
+    handleFooterNavigation,
+    footerProps: defaultFooterProps,
+  } = usePublicNavigation();
+
+  // Debug: Let's make sure we have both functions
+  console.log("Layout functions:", {
+    hasHandleFooterNavigation: !!handleFooterNavigation,
+    hasHandleSmoothNavigation: !!handleSmoothNavigation,
+  });
 
   const renderHeader = () => {
+    // Pass the logo animation function to headers
+    const headerPropsWithNavigation = {
+      ...headerProps,
+      handleSmoothNavigation, // Logo animation for headers
+    };
+
     switch (headerType) {
       case "home":
-        return <HomeHeader {...headerProps} />;
+        return <HomeHeader {...headerPropsWithNavigation} />;
       case "public":
-        return <PublicHeader {...headerProps} />;
+        return <PublicHeader {...headerPropsWithNavigation} />;
       case "none":
         return null;
       default:
-        return <PublicHeader {...headerProps} />;
+        return <PublicHeader {...headerPropsWithNavigation} />;
     }
   };
 
   const renderFooter = () => {
+    // Use the preconfigured footer props from the hook, merged with any custom props
     const allFooterProps = {
-      handleSmoothNavigation,
-      ...footerProps,
+      ...defaultFooterProps, // This includes handleSmoothNavigation: handleFooterNavigation
+      ...footerProps, // Allow overrides
     };
+
+    console.log("Footer props:", allFooterProps); // Debug
 
     switch (footerType) {
       case "simple":

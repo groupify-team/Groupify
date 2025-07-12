@@ -23,6 +23,7 @@ export const usePublicNavigation = () => {
     window.scrollTo(0, 0);
   }, []);
 
+  // Original smooth navigation with overlay (for sign-in/sign-up)
   const handleSmoothNavigation = (to, delay = 350) => {
     // Prevent multiple rapid clicks
     if (window.navigationInProgress) return;
@@ -41,6 +42,17 @@ export const usePublicNavigation = () => {
     const overlay = document.createElement("div");
     overlay.className = "enhanced-loading-overlay";
     overlay.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
       opacity: 0;
       transform: scale(0.98);
       transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
@@ -116,6 +128,22 @@ export const usePublicNavigation = () => {
     }, delay);
   };
 
+  // NEW: Simple footer navigation (no animation, just scroll up and navigate)
+  const handleFooterNavigation = (to) => {
+    // Prevent multiple rapid clicks
+    if (window.footerNavigationInProgress) return;
+    window.footerNavigationInProgress = true;
+
+    // Simply scroll to top immediately and navigate
+    window.scrollTo(0, 0);
+
+    // Navigate immediately after scroll
+    setTimeout(() => {
+      navigate(to);
+      window.footerNavigationInProgress = false;
+    }, 100); // Very short delay just to ensure scroll completes
+  };
+
   const handleGetStarted = (e) => {
     e?.preventDefault();
 
@@ -126,16 +154,19 @@ export const usePublicNavigation = () => {
       ? "/signup?plan=pro&billing=monthly&redirect=billing"
       : "/signup";
 
+    // Use logo animation for auth navigation
     handleSmoothNavigation(targetPath);
   };
 
   const handleSignIn = (e) => {
     e?.preventDefault();
+    // Use logo animation for sign in
     handleSmoothNavigation("/signin");
   };
 
   const handleSignUp = (e) => {
     e?.preventDefault();
+    // Use logo animation for sign up
     handleSmoothNavigation("/signup");
   };
 
@@ -144,11 +175,12 @@ export const usePublicNavigation = () => {
   const closeSettings = () => setShowSettings(false);
 
   return {
-    // Navigation
-    handleSmoothNavigation,
-    handleGetStarted,
-    handleSignIn,
-    handleSignUp,
+    // Navigation functions
+    handleSmoothNavigation, // Logo animation (for auth and CTAs)
+    handleFooterNavigation, // Simple scroll (for footer links)
+    handleGetStarted, // Logo animation (goes to auth)
+    handleSignIn, // Logo animation (goes to auth)
+    handleSignUp, // Logo animation (goes to auth)
     currentUser,
 
     // Settings & Theme
@@ -167,7 +199,12 @@ export const usePublicNavigation = () => {
 
     // Pre-configured props for components
     headerProps: {
-      onSettingsClick: openAccessibilitySettings, // Use accessibility settings instead
+      onSettingsClick: openAccessibilitySettings,
+      handleSmoothNavigation, // Headers should use logo animation
+    },
+    footerProps: {
+      handleSmoothNavigation: handleFooterNavigation, // Footer uses simple scroll
+      handleAuthNavigation: handleSmoothNavigation, // Footer auth links use logo animation
     },
     settingsProps: {
       isOpen: showSettings,

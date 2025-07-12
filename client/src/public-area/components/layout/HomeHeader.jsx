@@ -7,15 +7,18 @@ import { CameraIcon, CogIcon } from "@heroicons/react/24/outline";
 
 const HomeHeader = ({
   onSettingsClick,
-  handleSmoothNavigation,
+  handleSmoothNavigation, // This should be the logo animation function
   className = "",
 }) => {
   const { currentUser } = useAuth();
 
   const handleLinkClick = (path) => {
     if (handleSmoothNavigation) {
+      // Use logo animation for auth links
+      console.log("🎭 HomeHeader using logo animation for:", path);
       handleSmoothNavigation(path);
     } else {
+      // Fallback
       window.location.href = path;
     }
   };
@@ -48,8 +51,7 @@ const HomeHeader = ({
             {/* Auth Links */}
             {!currentUser && (
               <div className="flex items-center space-x-1 sm:space-x-2">
-                <Link
-                  to="/signin"
+                <button
                   onClick={(e) => {
                     e.preventDefault();
                     handleLinkClick("/signin");
@@ -57,9 +59,8 @@ const HomeHeader = ({
                   className="text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 px-2 sm:px-3 py-1.5 sm:py-2 rounded-md text-xs sm:text-sm font-medium transition-colors"
                 >
                   Sign In
-                </Link>
-                <Link
-                  to="/signup"
+                </button>
+                <button
                   onClick={(e) => {
                     e.preventDefault();
                     handleLinkClick("/signup");
@@ -67,7 +68,7 @@ const HomeHeader = ({
                   className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors shadow-md hover:shadow-lg"
                 >
                   Get Started
-                </Link>
+                </button>
               </div>
             )}
           </div>

@@ -7,26 +7,44 @@ const PublicHeader = ({
   showBackButton = true,
   backButtonText = "Back to Home",
   backButtonLink = "/",
-  onSettingsClick = null, // Add settings callback
+  onSettingsClick = null,
   className = "",
-  actions = null, // For custom actions like in BlogPage
-  handleSmoothNavigation = null, // Add smooth navigation prop
+  actions = null,
+  handleSmoothNavigation = null, // This should be the logo animation function
 }) => {
   const handleHomeClick = (e) => {
     if (handleSmoothNavigation) {
       e.preventDefault();
-      handleSmoothNavigation("/");
+      // For going home, we can use simple navigation since it's not auth
+      // But if you want logo animation for all header navigation, use handleSmoothNavigation
+      window.scrollTo(0, 0);
+      setTimeout(() => {
+        window.location.href = "/";
+      }, 100);
     } else {
       window.scrollTo(0, 0);
     }
   };
 
   const handleBackClick = (e) => {
-    if (handleSmoothNavigation) {
+    if (
+      handleSmoothNavigation &&
+      (backButtonLink === "/signin" || backButtonLink === "/signup")
+    ) {
+      // If going back to auth page, use animation
       e.preventDefault();
+      console.log(
+        "🎭 PublicHeader using logo animation for back to:",
+        backButtonLink
+      );
       handleSmoothNavigation(backButtonLink);
     } else {
+      // For non-auth pages, simple navigation
+      e.preventDefault();
       window.scrollTo(0, 0);
+      setTimeout(() => {
+        window.location.href = backButtonLink;
+      }, 100);
     }
   };
 
