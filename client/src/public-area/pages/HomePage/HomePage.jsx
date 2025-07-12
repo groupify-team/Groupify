@@ -351,7 +351,6 @@ const HomePage = () => {
           </div>
         </div>
       </nav>
-
       {/* Hero Section - Enhanced with smooth transitions */}
       <PageTransition variant="fadeIn" trigger={isLoaded}>
         <div className="relative overflow-hidden">
@@ -454,7 +453,6 @@ const HomePage = () => {
           </div>
         </div>
       </PageTransition>
-
       {/* Features Section */}
       <div className="py-24 bg-white/40 dark:bg-gray-800/40 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -494,7 +492,6 @@ const HomePage = () => {
           </div>
         </div>
       </div>
-
       {/* Benefits Section */}
       <div className="py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -545,7 +542,6 @@ const HomePage = () => {
           </div>
         </div>
       </div>
-
       {/* CTA Section */}
       <div className="py-24 bg-gradient-to-r from-indigo-600 to-purple-600">
         <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
@@ -560,6 +556,12 @@ const HomePage = () => {
             to="/signup"
             onClick={(e) => {
               e.preventDefault();
+              const ctaSection = e.target.closest(".py-24.bg-gradient-to-r");
+              if (ctaSection) {
+                ctaSection.style.opacity = "0";
+                ctaSection.style.pointerEvents = "none";
+                ctaSection.style.transition = "opacity 0.1s ease-out";
+              }
               handleSmoothNavigation("/signup");
             }}
             className="inline-flex items-center bg-white text-indigo-600 px-8 py-4 rounded-xl text-lg font-semibold hover:bg-gray-50 transition-all duration-200 shadow-xl hover:shadow-2xl btn-flow smooth-hover focus-visible-enhanced"
@@ -569,9 +571,8 @@ const HomePage = () => {
           </Link>
         </div>
       </div>
-
       {/* Footer */}
-      <PublicFooter />
+      <PublicFooter handleSmoothNavigation={handleSmoothNavigation} />{" "}
       {/* Settings Modal - Contains accessibility settings including dark mode toggle */}
       <AccessibilityModal {...accessibilityModalProps} />
     </div>

@@ -885,17 +885,10 @@ const PostDetailModal = ({ post, onClose, onLike }) => {
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-4xl w-full max-h-[90vh] flex flex-col">
-        {/* Fixed Header */}
-        <div className="bg-white dark:bg-gray-800 rounded-t-2xl relative">
-          <button
-            onClick={onClose}
-            className="absolute top-1 right-1 sm:top-2 sm:right-2 p-1 sm:p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors z-10 text-lg"
-          >
-            <XMarkIcon className="w-5 h-5 sm:w-6 sm:h-6 text-gray-500" />
-          </button>
-
-          <div className="p-4 sm:p-6 text-center sm:text-left">
-            <div className="flex items-center justify-center sm:justify-start space-x-4 mb-4">
+        {/* Header with close button on the same line as badges */}
+        <div className="bg-white dark:bg-gray-800 rounded-t-2xl px-4 sm:px-6 pt-4 sm:pt-6 pb-4 sm:pb-6 border-b border-gray-200 dark:border-gray-700">
+          <div className="flex items-start justify-between mb-4">
+            <div className="flex items-center space-x-4">
               <span className="px-3 py-1 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-full text-sm font-medium capitalize">
                 {post.category}
               </span>
@@ -906,30 +899,39 @@ const PostDetailModal = ({ post, onClose, onLike }) => {
               )}
             </div>
 
-            <h1 className="text-xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-4">
-              {post.title}
-            </h1>
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors flex-shrink-0"
+            >
+              <XMarkIcon className="w-5 h-5 text-gray-500" />
+            </button>
+          </div>
 
-            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 text-sm text-gray-600 dark:text-gray-400 pb-4 border-b border-gray-200 dark:border-gray-700">
-              <div className="flex items-center">
-                <UserIcon className="w-4 h-4 mr-1" />
-                {post.author}
-              </div>
-              <div className="flex items-center">
-                <CalendarIcon className="w-4 h-4 mr-1" />
-                {new Date(post.date).toLocaleDateString()}
-              </div>
-              <div className="flex items-center">
-                <ClockIcon className="w-4 h-4 mr-1" />
-                {post.readTime}
-              </div>
-              <div className="flex items-center">
-                <EyeIcon className="w-4 h-4 mr-1" />
-                {post.views} views
-              </div>
+          <h1 className="text-xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-4">
+            {post.title}
+          </h1>
+
+          <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 text-sm text-gray-600 dark:text-gray-400">
+            <div className="flex items-center">
+              <UserIcon className="w-4 h-4 mr-1" />
+              {post.author}
+            </div>
+            <div className="flex items-center">
+              <CalendarIcon className="w-4 h-4 mr-1" />
+              {new Date(post.date).toLocaleDateString()}
+            </div>
+            <div className="flex items-center">
+              <ClockIcon className="w-4 h-4 mr-1" />
+              {post.readTime}
+            </div>
+            <div className="flex items-center">
+              <EyeIcon className="w-4 h-4 mr-1" />
+              {post.views} views
             </div>
           </div>
         </div>
+        {/* Content Header Removed */}
+        <div className="bg-white dark:bg-gray-800"></div>
 
         {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto">
@@ -988,5 +990,4 @@ const PostDetailModal = ({ post, onClose, onLike }) => {
     </div>
   );
 };
-
 export default BlogPage;

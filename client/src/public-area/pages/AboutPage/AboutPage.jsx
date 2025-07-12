@@ -167,6 +167,10 @@ const AboutPage = () => {
             secondaryCTA={{
               text: "Contact Us",
               href: "/contact",
+              onClick: (e) => {
+                e.preventDefault();
+                handleSmoothNavigation("/contact");
+              },
             }}
           />
         </SectionTransition>
@@ -463,6 +467,10 @@ const AboutPage = () => {
                 </button>
                 <Link
                   to="/contact"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleSmoothNavigation("/contact");
+                  }}
                   className="inline-flex items-center justify-center bg-white/20 backdrop-blur-sm text-white px-6 py-3 sm:px-8 sm:py-4 rounded-xl text-base sm:text-lg font-semibold border border-white/30 hover:bg-white/30 transition-all duration-200"
                 >
                   Contact Us
