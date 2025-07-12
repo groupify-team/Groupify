@@ -167,17 +167,13 @@ const BillingPage = () => {
     }
   };
 
-  // Card validation functions
   const getCardType = (number) => {
     const cleaned = number.replace(/\s+/g, "").replace(/[^0-9]/gi, "");
-    if (/^4[0-9]{0,15}$/.test(cleaned)) return "visa";
-    if (
-      /^5[1-5][0-9]{0,14}$/.test(cleaned) ||
-      /^2[2-7][0-9]{0,14}$/.test(cleaned)
-    )
-      return "mastercard";
-    if (/^3[47][0-9]{0,13}$/.test(cleaned)) return "amex";
-    if (/^6[0-9]{0,15}$/.test(cleaned)) return "discover";
+    if (/^4/.test(cleaned)) return "visa";
+    if (/^5[1-5]/.test(cleaned) || /^2[2-7]/.test(cleaned)) return "mastercard";
+    if (/^3[47]/.test(cleaned)) return "amex";
+    if (/^6/.test(cleaned)) return "discover";
+
     return null;
   };
 
@@ -436,10 +432,7 @@ const BillingPage = () => {
                 className="inline-flex items-center text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 transition-colors"
               >
                 <ArrowLeftIcon className="w-4 h-4 mr-2" />
-                Back to{" "}
-                {navigationContext?.origin === "dashboard-settings"
-                  ? "Settings"
-                  : "Pricing"}
+                Back to Pricing
               </button>
             </div>
           </div>
@@ -745,19 +738,23 @@ const PaymentForm = ({
               Card Number
             </label>
             <div className="relative">
+              {/* Gray background div */}
+              <div className="absolute inset-0 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg"></div>
+
+              {/* Transparent input on top */}
               <input
                 type="text"
                 value={cardNumber}
                 onChange={handleCardNumberChange}
                 placeholder="1234 5678 9012 3456"
-                className={`w-full pl-4 pr-24 py-3 bg-white dark:bg-gray-700 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-gray-900 dark:text-white ${
-                  validationErrors.cardNumber
-                    ? "border-red-500 dark:border-red-500"
-                    : "border-gray-300 dark:border-gray-600"
+                className={`relative w-full pl-4 pr-20 py-3 bg-transparent border-0 focus:ring-2 focus:ring-indigo-500 rounded-lg text-gray-900 dark:text-white z-20 ${
+                  validationErrors.cardNumber ? "focus:ring-red-500" : ""
                 }`}
                 disabled={loading}
               />
-              <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex space-x-1">
+
+              {/* Card logos - now visible on gray background */}
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex space-x-1 pointer-events-none z-10">
                 <CardLogo type="visa" active={cardType === "visa"} />
                 <CardLogo
                   type="mastercard"
@@ -1240,9 +1237,10 @@ const InfoModal = ({ showInfoModal, setShowInfoModal }) => {
           </div>
           <button
             onClick={() => setShowInfoModal(false)}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-1 absolute top-4 right-4"
+            className="absolute top-4 right-4 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors z-10"
+            style={{ position: "absolute", top: "16px", right: "16px" }}
           >
-            <XMarkIcon className="w-5 h-5" />
+            <XMarkIcon className="w-5 h-5 text-gray-500" />
           </button>
         </div>
 
