@@ -10,11 +10,6 @@ const PublicHeader = ({
   onSettingsClick = null,
   className = "",
 }) => {
-  const handleHomeClick = (e) => {
-    e.preventDefault();
-    window.location.href = "/";
-  };
-
   return (
     <nav
       className={`relative z-10 bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm border-b border-white/20 dark:border-gray-700/50 ${className}`}
@@ -23,11 +18,7 @@ const PublicHeader = ({
         <div className="flex items-center justify-between h-14 sm:h-16">
           {/* Logo */}
           <div className="flex items-center">
-            <Link
-              to="/"
-              onClick={handleHomeClick}
-              className="flex items-center"
-            >
+            <Link to="/" className="flex items-center">
               <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
                 <CameraIcon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
               </div>

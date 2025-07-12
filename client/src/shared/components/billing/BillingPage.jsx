@@ -396,21 +396,54 @@ const BillingPage = () => {
         customText: "© 2025 Groupify. Secure payments, powerful features.",
       }}
     >
-      {/* Navigation Breadcrumb */}
-      <div className="bg-white/40 dark:bg-gray-800/40 backdrop-blur-sm border-b border-gray-200/50 dark:border-gray-700/50">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-          <button
-            onClick={handleBackNavigation}
-            className="inline-flex items-center text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
-          >
-            <ArrowLeftIcon className="w-4 h-4 mr-2" />
-            Back to{" "}
-            {navigationContext?.origin === "dashboard-settings"
-              ? "Settings"
-              : "Pricing"}
-          </button>
+      {/* Navigation with Current Plan */}
+      {currentUser && (
+        <div className="bg-blue-50 dark:bg-blue-900/20 border-b border-blue-200 dark:border-blue-800">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+            <div className="flex items-center justify-between">
+              {/* Current Plan Info - LEFT */}
+              {currentSubscription && (
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  <span className="text-sm text-blue-800 dark:text-blue-200">
+                    Current plan:{" "}
+                    <strong className="capitalize">
+                      {currentSubscription.plan}
+                    </strong>
+                    {currentSubscription.isTrial && (
+                      <span className="ml-2 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 px-2 py-0.5 rounded text-xs">
+                        Trial - {currentSubscription.trialDaysRemaining} days
+                        left
+                      </span>
+                    )}
+                  </span>
+                  {currentSubscription.plan !== "free" &&
+                    currentSubscription.nextBillingDate && (
+                      <span className="text-xs text-blue-600 dark:text-blue-400">
+                        Next billing:{" "}
+                        {new Date(
+                          currentSubscription.nextBillingDate
+                        ).toLocaleDateString()}
+                      </span>
+                    )}
+                </div>
+              )}
+
+              {/* Back Button - RIGHT */}
+              <button
+                onClick={handleBackNavigation}
+                className="inline-flex items-center text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 transition-colors"
+              >
+                <ArrowLeftIcon className="w-4 h-4 mr-2" />
+                Back to{" "}
+                {navigationContext?.origin === "dashboard-settings"
+                  ? "Settings"
+                  : "Pricing"}
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Hero Section */}
       <HeroSection
@@ -421,7 +454,7 @@ const BillingPage = () => {
         }, you're upgrading to ${currentPlan.name}`}
         primaryCTA={{
           text: "Back to Pricing",
-          action: handleBackToPricing,
+          onClick: handleBackToPricing,
           variant: "secondary",
         }}
       />

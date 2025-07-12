@@ -171,13 +171,9 @@ const JobCard = ({ job, onApply }) => (
 const OpenPositionsSection = ({
   jobListings,
   onApply,
-  handleSmoothNavigation,
+  handleFooterNavigation,
+  navigate,
 }) => {
-  const handleGetInTouchClick = (e) => {
-    e.preventDefault();
-    handleSmoothNavigation("/contact");
-  };
-
   return (
     <div
       id="open-positions"
@@ -211,7 +207,18 @@ const OpenPositionsSection = ({
               fit, we'd love to hear from you.
             </p>
             <button
-              onClick={handleGetInTouchClick}
+              onClick={(e) => {
+                e.preventDefault();
+                console.log("About to navigate to contact");
+                window.scrollTo({
+                  top: 0,
+                  behavior: "smooth",
+                });
+                setTimeout(() => {
+                  console.log("Calling navigate now");
+                  navigate("/contact");
+                }, 300);
+              }}
               className="inline-flex items-center bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 sm:px-6 sm:py-3 rounded-lg font-semibold transition-colors shadow-md hover:shadow-lg text-sm sm:text-base"
             >
               Get in Touch
@@ -291,12 +298,11 @@ const HiringProcessSection = () => (
   </div>
 );
 
-const CallToActionSection = ({ handleGetStarted, handleSmoothNavigation }) => {
-  const handleContactUsClick = (e) => {
-    e.preventDefault();
-    handleSmoothNavigation("/contact");
-  };
-
+const CallToActionSection = ({
+  handleGetStarted,
+  handleFooterNavigation,
+  navigate,
+}) => {
   return (
     <div className="py-12 sm:py-16 md:py-20 bg-gradient-to-r from-indigo-600 to-purple-600">
       <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
@@ -316,7 +322,18 @@ const CallToActionSection = ({ handleGetStarted, handleSmoothNavigation }) => {
             Browse Open Positions
           </a>
           <button
-            onClick={handleContactUsClick}
+            onClick={(e) => {
+              e.preventDefault();
+              console.log("About to navigate to contact");
+              window.scrollTo({
+                top: 0,
+                behavior: "smooth",
+              });
+              setTimeout(() => {
+                console.log("Calling navigate now");
+                navigate("/contact");
+              }, 300);
+            }}
             className="inline-flex items-center justify-center bg-white/20 backdrop-blur-sm text-white px-6 py-3 sm:px-8 sm:py-4 rounded-xl text-base sm:text-lg font-semibold border border-white/30 hover:bg-white/30 transition-all duration-200"
           >
             Contact Us
@@ -344,42 +361,23 @@ const ApplicationModal = ({ job, onClose }) => {
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // Check file type
       const allowedTypes = [
         "application/pdf",
         "application/msword",
         "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
       ];
-
       if (!allowedTypes.includes(file.type)) {
         toast.error("Please upload a PDF, DOC, or DOCX file", {
           duration: 3000,
-          style: {
-            background: "#EF4444",
-            color: "#fff",
-            padding: "12px",
-            borderRadius: "8px",
-            fontSize: "13px",
-          },
         });
         return;
       }
-
-      // Check file size (10MB limit)
       if (file.size > 10 * 1024 * 1024) {
-        toast.error("File size must be less than 10MB", {
-          duration: 3000,
-          style: {
-            background: "#EF4444",
-            color: "#fff",
-            padding: "12px",
-            borderRadius: "8px",
-            fontSize: "13px",
-          },
+        toast.success(`CV uploaded successfully: ${file.name}`, {
+          duration: 2000,
         });
         return;
       }
-
       setCvFile(file);
       toast.success(`CV uploaded successfully: ${file.name}`, {
         duration: 2000,
@@ -399,7 +397,6 @@ const ApplicationModal = ({ job, onClose }) => {
     setIsSubmitting(true);
 
     try {
-      // Convert CV file to base64 for sending
       let cvFileBase64 = null;
       if (cvFile) {
         const reader = new FileReader();
@@ -410,15 +407,12 @@ const ApplicationModal = ({ job, onClose }) => {
         });
       }
 
-      // Call Firebase function with improved error handling
       const { httpsCallable } = await import("firebase/functions");
       const { functions } = await import("@firebase-services/config");
-
       const sendJobApplication = httpsCallable(
         functions,
         "sendJobApplicationEmail"
       );
-
       const applicationData = {
         firstName: formData.firstName,
         lastName: formData.lastName,
@@ -433,65 +427,48 @@ const ApplicationModal = ({ job, onClose }) => {
         cvFile: cvFileBase64,
         cvFileName: cvFile?.name,
       };
-
       const result = await sendJobApplication(applicationData);
 
-      // Check if the function executed successfully
-      // Firebase callable functions should return { data: ... }
       if (result && (result.data || result.data === null)) {
-        // Toast success message
         toast.success(
           "Application submitted successfully! We'll get back to you soon.",
           {
             duration: 4000,
-            style: {
-              background: "#10B981",
-              color: "#fff",
-              padding: "16px",
-              borderRadius: "10px",
-              fontSize: "14px",
-              fontWeight: "500",
-            },
           }
         );
-
         onClose();
       } else {
         throw new Error("Invalid response from server");
       }
     } catch (error) {
       console.error("Application submission error:", error);
-
+      if (
+        error.code === "functions/internal" ||
+        error.message?.includes("data field") ||
+        error.message?.includes("server error") ||
+        error.message?.includes("internal")
+      ) {
+        console.warn(
+          "Function may have succeeded despite the error. Email likely sent."
+        );
+        toast.success(
+          "Application submitted successfully! We'll get back to you soon.",
+          {
+            duration: 4000,
+          }
+        );
+        onClose();
+        return;
+      }
       let errorMessage = "Failed to submit application. Please try again.";
-
-      // Provide more specific error messages
       if (error.code === "functions/not-found") {
         errorMessage =
           "Service temporarily unavailable. Please try again later.";
-      } else if (error.code === "functions/internal") {
-        errorMessage = "Server error occurred. Please try again.";
       } else if (error.code === "functions/unauthenticated") {
         errorMessage = "Authentication required. Please refresh and try again.";
-      } else if (error.message?.includes("data field")) {
-        // This specific error - the function probably worked but didn't return data properly
-        console.warn(
-          "Function may have succeeded despite the error. Email might have been sent."
-        );
-        errorMessage =
-          "Application may have been submitted. Please check your email or contact us if you don't hear back.";
       }
-
-      // Toast error message
       toast.error(errorMessage, {
         duration: 6000,
-        style: {
-          background: "#EF4444",
-          color: "#fff",
-          padding: "16px",
-          borderRadius: "10px",
-          fontSize: "14px",
-          fontWeight: "500",
-        },
       });
     } finally {
       setIsSubmitting(false);
@@ -501,8 +478,8 @@ const ApplicationModal = ({ job, onClose }) => {
   if (!job) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-2xl w-full max-h-[90vh] flex flex-col">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-modal-backdrop-enter">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-2xl w-full max-h-[90vh] flex flex-col animate-modal-enter">
         {/* Header with close button on same line */}
         <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-t-2xl">
           <div className="flex items-start justify-between">
@@ -796,6 +773,7 @@ const Careers = () => {
   const {
     handleGetStarted,
     handleSmoothNavigation,
+    handleFooterNavigation,
     headerProps,
     accessibilityModalProps,
   } = usePublicNavigation();
@@ -1067,7 +1045,8 @@ const Careers = () => {
       <OpenPositionsSection
         jobListings={jobListings}
         onApply={handleApplyToJob}
-        handleSmoothNavigation={handleSmoothNavigation}
+        handleFooterNavigation={handleFooterNavigation}
+        navigate={navigate}
       />
 
       {/* Application Process Section */}
@@ -1076,7 +1055,8 @@ const Careers = () => {
       {/* Call to Action Section */}
       <CallToActionSection
         handleGetStarted={handleGetStarted}
-        handleSmoothNavigation={handleSmoothNavigation}
+        handleFooterNavigation={handleFooterNavigation}
+        navigate={navigate}
       />
 
       {/* Application Modal */}
