@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 // New Architecture Components
 import PublicLayout from "../../components/layout/PublicLayout";
@@ -33,10 +33,12 @@ const AboutPage = () => {
   const {
     handleGetStarted,
     handleSmoothNavigation,
+    handleFooterNavigation,
     headerProps,
     accessibilityModalProps,
   } = usePublicNavigation();
   const [isLoaded, setIsLoaded] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -169,7 +171,7 @@ const AboutPage = () => {
               href: "/contact",
               onClick: (e) => {
                 e.preventDefault();
-                handleSmoothNavigation("/contact");
+                handleFooterNavigation("/contact");
               },
             }}
           />
@@ -469,7 +471,22 @@ const AboutPage = () => {
                   to="/contact"
                   onClick={(e) => {
                     e.preventDefault();
-                    handleSmoothNavigation("/contact");
+                    e.stopPropagation();
+                    if (
+                      window.navigationInProgress ||
+                      window.footerNavigationInProgress
+                    ) {
+                      return;
+                    }
+                    window.footerNavigationInProgress = true;
+                    window.scrollTo({
+                      top: 0,
+                      behavior: "smooth",
+                    });
+                    setTimeout(() => {
+                      navigate("/contact");
+                      window.footerNavigationInProgress = false;
+                    }, 200);
                   }}
                   className="inline-flex items-center justify-center bg-white/20 backdrop-blur-sm text-white px-6 py-3 sm:px-8 sm:py-4 rounded-xl text-base sm:text-lg font-semibold border border-white/30 hover:bg-white/30 transition-all duration-200"
                 >

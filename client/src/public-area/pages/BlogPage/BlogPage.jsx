@@ -180,7 +180,7 @@ const BlogPage = () => {
 
       // Check if email already exists
       if (existingSubscribers.includes(email.toLowerCase())) {
-        toast.error("This email is already subscribed!", toastOptions);
+        toast.success("This email is already subscribed!", toastOptions);
         setIsSubscribing(false);
         return;
       }
@@ -249,7 +249,7 @@ const BlogPage = () => {
     <PublicLayout
       headerType="public"
       headerProps={combinedHeaderProps}
-      footerType="simple"
+      footerType="default"
     >
       {/* Hero Section */}
       <HeroSection
@@ -883,8 +883,8 @@ const PostDetailModal = ({ post, onClose, onLike }) => {
   if (!post) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-4xl w-full max-h-[90vh] flex flex-col">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-modal-backdrop-enter">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-4xl w-full max-h-[90vh] flex flex-col animate-modal-enter">
         {/* Header with close button on the same line as badges */}
         <div className="bg-white dark:bg-gray-800 rounded-t-2xl px-4 sm:px-6 pt-4 sm:pt-6 pb-4 sm:pb-6 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-start justify-between mb-4">

@@ -21,8 +21,7 @@ import {
   ShieldCheckIcon,
   HeartIcon,
   BoltIcon,
-  ChevronDownIcon,
-  ChevronUpIcon,
+  ChevronRightIcon,
   ArrowRightIcon,
   ArrowLeftIcon,
 } from "@heroicons/react/24/outline";
@@ -32,19 +31,18 @@ const PricingPage = () => {
   const { currentUser } = useAuth();
   const { handleSmoothNavigation, headerProps, accessibilityModalProps } =
     usePublicNavigation();
-
   const [isLoaded, setIsLoaded] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [billingCycle, setBillingCycle] = useState("monthly");
   const [openFaq, setOpenFaq] = useState(null);
   const [showFreeModal, setShowFreeModal] = useState(false);
   const [showEnterpriseModal, setShowEnterpriseModal] = useState(false);
-
-  // Navigation context and subscription data
   const [navigationContext, setNavigationContext] = useState(null);
   const [currentSubscription, setCurrentSubscription] = useState(null);
+  const [showPlanModal, setShowPlanModal] = useState(false);
+  const [selectedPlanData, setSelectedPlanData] = useState(null);
+  const [showGroupifyAnimation, setShowGroupifyAnimation] = useState(false);
 
-  // Initialize component
   useEffect(() => {
     const initializeComponent = async () => {
       try {
@@ -240,46 +238,46 @@ const PricingPage = () => {
   ];
 
   const handlePlanSelect = (plan) => {
-    if (plan.name === "Free") {
-      if (currentUser) {
-        // Check if user already has free plan
+    if (currentUser) {
+      if (plan.name === "Free") {
         if (currentSubscription?.plan === "free") {
           toast.success("You're already on the free plan!");
           handleBackNavigation();
         } else {
-          // Downgrade to free plan
-          subscriptionService.updateSubscription({
-            plan: "free",
-            billing: "monthly",
-            price: 0,
-          });
-          toast.success("Switched to free plan successfully!");
-          handleBackNavigation();
+          setShowGroupifyAnimation(true);
+          setTimeout(() => {
+            subscriptionService.updateSubscription({
+              plan: "free",
+              billing: "monthly",
+              price: 0,
+            });
+            toast.success("Switched to free plan successfully!");
+            navigate("/dashboard/settings", { replace: true });
+          }, 2000);
         }
-      } else {
-        setShowFreeModal(true);
-      }
-    } else if (plan.name === "Enterprise") {
-      setShowEnterpriseModal(true);
-    } else if (plan.name === "Premium" || plan.name === "Pro") {
-      if (currentUser) {
-        // User is logged in - check for conflicts first
+      } else if (plan.name === "Enterprise") {
+        setShowEnterpriseModal(true);
+      } else if (plan.name === "Premium" || plan.name === "Pro") {
         if (currentSubscription?.plan === plan.name.toLowerCase()) {
           toast.info(`You already have the ${plan.name} plan!`);
           return;
         }
-
-        // Navigate to billing with proper plan mapping
         const planParam = plan.name === "Premium" ? "premium" : "pro";
-        navigate(
-          `/billing?plan=${planParam}&billing=${billingCycle}&from=pricing`
-        );
+        document.body.style.transition = "opacity 0.3s ease-in-out";
+        document.body.style.opacity = "0.7";
+        setTimeout(() => {
+          navigate(
+            `/billing?plan=${planParam}&billing=${billingCycle}&from=pricing`
+          );
+        }, 150);
+      }
+    } else {
+      // User is NOT logged in - show plan selection modal
+      if (plan.name === "Enterprise") {
+        setShowEnterpriseModal(true);
       } else {
-        // User not logged in - go to signup with plan info
-        const planParam = plan.name === "Premium" ? "premium" : "pro";
-        navigate(
-          `/signup?plan=${planParam}&billing=${billingCycle}&redirect=billing&from=pricing`
-        );
+        setSelectedPlanData(plan);
+        setShowPlanModal(true);
       }
     }
   };
@@ -383,58 +381,61 @@ const PricingPage = () => {
         </div>
       ) : (
         <PageTransition variant="fadeIn" trigger={isLoaded}>
-          {/* Navigation Breadcrumb */}
-          {navigationContext && (
-            <div className="bg-white/40 dark:bg-gray-800/40 backdrop-blur-sm border-b border-gray-200/50 dark:border-gray-700/50">
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-                <button
-                  onClick={handleBackNavigation}
-                  className="inline-flex items-center text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
-                >
-                  <ArrowLeftIcon className="w-4 h-4 mr-2" />
-                  Back to{" "}
-                  {navigationContext.origin === "dashboard-settings"
-                    ? "Settings"
-                    : "Previous Page"}
-                </button>
-              </div>
-            </div>
-          )}
-
           {/* Current Plan Notice */}
-          {currentUser && currentSubscription && (
+          {(currentUser && currentSubscription) || navigationContext ? (
             <div className="bg-blue-50 dark:bg-blue-900/20 border-b border-blue-200 dark:border-blue-800">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                    <span className="text-sm text-blue-800 dark:text-blue-200">
-                      Current plan:{" "}
-                      <strong className="capitalize">
-                        {currentSubscription.plan}
-                      </strong>
-                      {currentSubscription.isTrial && (
-                        <span className="ml-2 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 px-2 py-0.5 rounded text-xs">
-                          Trial - {currentSubscription.trialDaysRemaining} days
-                          left
+                  {/* Back to Settings Button - LEFT */}
+                  {navigationContext ? (
+                    <button
+                      onClick={handleBackNavigation}
+                      className="inline-flex items-center text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 transition-colors"
+                    >
+                      <ArrowLeftIcon className="w-4 h-4 mr-2" />
+                      Back to{" "}
+                      {navigationContext.origin === "dashboard-settings"
+                        ? "Settings"
+                        : "Previous Page"}
+                    </button>
+                  ) : (
+                    <div></div>
+                  )}
+
+                  {/* Current Plan Info - RIGHT */}
+                  {currentUser && currentSubscription ? (
+                    <div className="flex items-center gap-3">
+                      <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                      <span className="text-sm text-blue-800 dark:text-blue-200">
+                        Current plan:{" "}
+                        <strong className="capitalize">
+                          {currentSubscription.plan}
+                        </strong>
+                        {currentSubscription.isTrial && (
+                          <span className="ml-2 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 px-2 py-0.5 rounded text-xs">
+                            Trial - {currentSubscription.trialDaysRemaining}{" "}
+                            days left
+                          </span>
+                        )}
+                      </span>
+                      {currentSubscription.plan !== "free" && (
+                        <span className="text-xs text-blue-600 dark:text-blue-400">
+                          Next billing:{" "}
+                          {currentSubscription.nextBillingDate
+                            ? new Date(
+                                currentSubscription.nextBillingDate
+                              ).toLocaleDateString()
+                            : "N/A"}
                         </span>
                       )}
-                    </span>
-                  </div>
-                  {currentSubscription.plan !== "free" && (
-                    <span className="text-xs text-blue-600 dark:text-blue-400">
-                      Next billing:{" "}
-                      {currentSubscription.nextBillingDate
-                        ? new Date(
-                            currentSubscription.nextBillingDate
-                          ).toLocaleDateString()
-                        : "N/A"}
-                    </span>
+                    </div>
+                  ) : (
+                    <div></div>
                   )}
                 </div>
               </div>
             </div>
-          )}
+          ) : null}
 
           {/* Hero Section */}
           <HeroSection
@@ -693,11 +694,11 @@ const PricingPage = () => {
                         <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white pr-8">
                           {faq.question}
                         </h3>
-                        {openFaq === index ? (
-                          <ChevronUpIcon className="w-5 h-5 text-gray-500 dark:text-gray-400 flex-shrink-0" />
-                        ) : (
-                          <ChevronDownIcon className="w-5 h-5 text-gray-500 dark:text-gray-400 flex-shrink-0" />
-                        )}
+                        <ChevronRightIcon
+                          className={`w-5 h-5 text-gray-500 dark:text-gray-400 flex-shrink-0 transition-transform duration-300 ${
+                            openFaq === index ? "rotate-90" : "rotate-0"
+                          }`}
+                        />
                       </div>
                     </button>
                     <div
@@ -750,12 +751,19 @@ const PricingPage = () => {
 
           {/* Free Plan Confirmation Modal */}
           {showFreeModal && (
-            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-              <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-lg w-full p-6 sm:p-8 relative animate-in fade-in zoom-in duration-300">
+            <div
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+              onClick={() => setShowFreeModal(false)}
+            >
+              <div
+                className="bg-white dark:bg-gray-800 rounded-2xl max-w-lg w-full p-6 sm:p-8 relative animate-in fade-in zoom-in duration-300"
+                onClick={(e) => e.stopPropagation()}
+              >
                 {/* Close Button */}
                 <button
                   onClick={() => setShowFreeModal(false)}
-                  className="absolute top-4 right-4 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                  className="absolute top-4 right-4 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors z-10"
+                  style={{ position: "absolute", top: "16px", right: "16px" }}
                 >
                   <XMarkIcon className="w-5 h-5 text-gray-500" />
                 </button>
@@ -835,12 +843,19 @@ const PricingPage = () => {
 
           {/* Enterprise Plan Confirmation Modal */}
           {showEnterpriseModal && (
-            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-              <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-xl w-full p-6 sm:p-8 relative animate-in fade-in zoom-in duration-300">
+            <div
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+              onClick={() => setShowEnterpriseModal(false)}
+            >
+              <div
+                className="bg-white dark:bg-gray-800 rounded-2xl max-w-xl w-full p-6 sm:p-8 relative animate-in fade-in zoom-in duration-300"
+                onClick={(e) => e.stopPropagation()}
+              >
                 {/* Close Button */}
                 <button
                   onClick={() => setShowEnterpriseModal(false)}
-                  className="absolute top-4 right-4 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                  className="absolute top-4 right-4 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors z-10"
+                  style={{ position: "absolute", top: "16px", right: "16px" }}
                 >
                   <XMarkIcon className="w-5 h-5 text-gray-500" />
                 </button>
@@ -923,6 +938,315 @@ const PricingPage = () => {
                     </button>
                   </div>
                 </div>
+              </div>
+            </div>
+          )}
+          {/* Plan Selection Modal for Guests */}
+          {showPlanModal && selectedPlanData && (
+            <div
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+              onClick={() => setShowPlanModal(false)}
+            >
+              <div
+                className="bg-white dark:bg-gray-800 rounded-2xl max-w-lg w-full p-6 sm:p-8 relative animate-in fade-in zoom-in duration-300"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Close Button */}
+                <button
+                  onClick={() => setShowPlanModal(false)}
+                  className="absolute top-4 right-4 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors z-10"
+                  style={{ position: "absolute", top: "16px", right: "16px" }}
+                >
+                  <XMarkIcon className="w-5 h-5 text-gray-500" />
+                </button>
+
+                {/* Modal Content */}
+                <div className="text-center">
+                  <div
+                    className={`w-16 h-16 ${
+                      selectedPlanData.name === "Free"
+                        ? "bg-gradient-to-r from-yellow-500 to-orange-500"
+                        : "bg-gradient-to-r from-green-500 to-blue-600"
+                    } rounded-full flex items-center justify-center mx-auto mb-4`}
+                  >
+                    {selectedPlanData.name === "Free" ? (
+                      <svg
+                        className="w-8 h-8 text-white"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.99-.833-2.76 0L4.054 16.5c-.77.833.192 2.5 1.732 2.5z"
+                        />
+                      </svg>
+                    ) : (
+                      <CheckIcon className="w-8 h-8 text-white" />
+                    )}
+                  </div>
+
+                  <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-3">
+                    {selectedPlanData.name === "Free"
+                      ? "Wait! Before You Go Free... 🤔"
+                      : "Great Choice! 🎉"}
+                  </h3>
+
+                  <p className="text-gray-600 dark:text-gray-400 mb-6 leading-relaxed">
+                    {selectedPlanData.name === "Free" ? (
+                      <>
+                        The free plan is great for trying out Groupify, but
+                        you'll be{" "}
+                        <span className="font-semibold text-red-600 dark:text-red-400">
+                          limited to just 5 events and 30 photos per event
+                        </span>
+                        .
+                        <br />
+                        <br />
+                        <span className="font-semibold text-indigo-600 dark:text-indigo-400">
+                          Premium gives you 20x more storage, advanced AI
+                          recognition, and unlimited sharing - plus a 14-day
+                          free trial!
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        You've selected the{" "}
+                        <span className="font-semibold text-indigo-600 dark:text-indigo-400">
+                          {selectedPlanData.name} plan
+                        </span>{" "}
+                        - perfect for{" "}
+                        {selectedPlanData.name === "Premium"
+                          ? "active photo enthusiasts"
+                          : "unlimited photo organization"}
+                        !
+                      </>
+                    )}
+                  </p>
+
+                  <div className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-lg p-4 mb-6">
+                    <div className="flex items-center justify-center mb-2">
+                      <span className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
+                        {typeof selectedPlanData.price[billingCycle] ===
+                        "number"
+                          ? `$${selectedPlanData.price[billingCycle]}${
+                              selectedPlanData.price[billingCycle] > 0
+                                ? `/${
+                                    billingCycle === "yearly" ? "year" : "month"
+                                  }`
+                                : ""
+                            }`
+                          : selectedPlanData.price[billingCycle]}
+                      </span>
+                      {selectedPlanData.name !== "Free" && (
+                        <span className="ml-2 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 px-2 py-1 rounded text-sm font-medium">
+                          14-day trial
+                        </span>
+                      )}
+                    </div>
+                    {selectedPlanData.name !== "Free" && (
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        Cancel anytime during trial
+                      </p>
+                    )}
+                  </div>
+
+                  {selectedPlanData.name !== "Free" && (
+                    <p className="text-gray-700 dark:text-gray-300 mb-6 font-medium">
+                      Do you already have a Groupify account?
+                    </p>
+                  )}
+
+                  <div className="space-y-3">
+                    {selectedPlanData.name === "Free" ? (
+                      <>
+                        <button
+                          onClick={() => {
+                            setShowPlanModal(false);
+                            setSelectedPlanData(
+                              pricingPlans.find((p) => p.name === "Premium")
+                            );
+                            setShowPlanModal(true);
+                          }}
+                          className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+                        >
+                          Try Premium Instead (14-day free trial)
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            setShowPlanModal(false);
+                            navigate("/signup?plan=free&from=pricing");
+                          }}
+                          className="w-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-6 py-3 rounded-xl font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                        >
+                          Continue with Free Plan
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          onClick={() => {
+                            setShowPlanModal(false);
+                            const planParam =
+                              selectedPlanData.name === "Premium"
+                                ? "premium"
+                                : selectedPlanData.name === "Pro"
+                                ? "pro"
+                                : "free";
+                            navigate(
+                              `/signin?plan=${planParam}&billing=${billingCycle}&redirect=billing&from=pricing`
+                            );
+                          }}
+                          className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+                        >
+                          Yes, Sign Me In
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            setShowPlanModal(false);
+                            const planParam =
+                              selectedPlanData.name === "Premium"
+                                ? "premium"
+                                : selectedPlanData.name === "Pro"
+                                ? "pro"
+                                : "free";
+                            navigate(
+                              `/signup?plan=${planParam}&billing=${billingCycle}&redirect=billing&from=pricing`
+                            );
+                          }}
+                          className="w-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-6 py-3 rounded-xl font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                        >
+                          No, Create New Account
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Enterprise Plan Confirmation Modal */}
+          {showEnterpriseModal && (
+            <div
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+              onClick={() => setShowEnterpriseModal(false)}
+            >
+              <div
+                className="bg-white dark:bg-gray-800 rounded-2xl max-w-xl w-full p-6 sm:p-8 relative animate-in fade-in zoom-in duration-300"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Close Button */}
+                <button
+                  onClick={() => setShowEnterpriseModal(false)}
+                  className="absolute top-4 right-4 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors z-10"
+                  style={{ position: "absolute", top: "16px", right: "16px" }}
+                >
+                  <XMarkIcon className="w-5 h-5 text-gray-500" />
+                </button>
+
+                {/* Modal Content */}
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-gradient-to-r from-emerald-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg
+                      className="w-8 h-8 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H3m2 0h-2m8 0V9a2 2 0 012-2h2a2 2 0 012 2v8m-6 0v-6"
+                      />
+                    </svg>
+                  </div>
+
+                  <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-3">
+                    Transform Your Organization's Photo Management
+                  </h3>
+
+                  <p className="text-gray-600 dark:text-gray-400 mb-6 leading-relaxed">
+                    Join leading companies using Groupify Enterprise for team
+                    events, corporate retreats, and organizational memories.
+                    <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                      {" "}
+                      Get custom pricing and dedicated support.
+                    </span>
+                  </p>
+
+                  <div className="bg-gradient-to-r from-emerald-50 to-blue-50 dark:from-emerald-900/20 dark:to-blue-900/20 rounded-lg p-4 mb-6">
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div className="flex items-center">
+                        <CheckIcon className="w-4 h-4 text-emerald-600 mr-2" />
+                        <span>Unlimited Storage</span>
+                      </div>
+                      <div className="flex items-center">
+                        <CheckIcon className="w-4 h-4 text-emerald-600 mr-2" />
+                        <span>Custom Integrations</span>
+                      </div>
+                      <div className="flex items-center">
+                        <CheckIcon className="w-4 h-4 text-emerald-600 mr-2" />
+                        <span>Dedicated Manager</span>
+                      </div>
+                      <div className="flex items-center">
+                        <CheckIcon className="w-4 h-4 text-emerald-600 mr-2" />
+                        <span>24/7 Priority Support</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 mb-6">
+                    <p className="text-sm text-blue-800 dark:text-blue-200 font-medium">
+                      💼 Perfect for: Corporate Events • Team Building • Company
+                      Retreats • Product Launches
+                    </p>
+                  </div>
+
+                  <div className="space-y-3">
+                    <button
+                      onClick={() => {
+                        setShowEnterpriseModal(false);
+                        navigate("/contact?from=pricing-enterprise");
+                      }}
+                      className="w-full bg-gradient-to-r from-emerald-600 to-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-emerald-700 hover:to-blue-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+                    >
+                      Get Custom Enterprise Quote
+                    </button>
+
+                    <button
+                      onClick={() => setShowEnterpriseModal(false)}
+                      className="w-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-6 py-3 rounded-xl font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                    >
+                      Maybe Later
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          {/* Groupify Animation Modal */}
+          {showGroupifyAnimation && (
+            <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[9999] flex items-center justify-center">
+              <div className="text-center">
+                {/* Here you can add your Groupify logo animation */}
+                <div className="w-32 h-32 mx-auto mb-6 animate-pulse">
+                  {/* Placeholder for Groupify logo - replace with your animated logo */}
+                  <div className="w-full h-full bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full flex items-center justify-center">
+                    <span className="text-white text-2xl font-bold">G</span>
+                  </div>
+                </div>
+                <h3 className="text-xl font-semibold text-white mb-2">
+                  Switching to Free Plan...
+                </h3>
+                <p className="text-indigo-200">
+                  Taking you to your dashboard settings
+                </p>
               </div>
             </div>
           )}

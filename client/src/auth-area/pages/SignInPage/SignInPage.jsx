@@ -17,6 +17,9 @@ import { useAuth } from "@auth/hooks/useAuth";
 import { useAuthValidation } from "../../hooks/useAuthValidation";
 
 const SignInPage = () => {
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
   const [formData, setFormData] = useState({
     email: "",
     password: "",

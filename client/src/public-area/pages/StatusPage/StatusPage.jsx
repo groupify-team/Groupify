@@ -309,11 +309,28 @@ const StatusPage = () => {
     setIsSubscribing(true);
 
     try {
-      // Simulate API call - in real app would be actual subscription
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // Get existing subscribers from localStorage (same as BlogPage)
+      const existingSubscribers = JSON.parse(
+        localStorage.getItem("groupify_subscribers") || "[]"
+      );
+
+      // Check if email already exists
+      if (existingSubscribers.includes(email.toLowerCase())) {
+        toast.success("This email is already subscribed!", toastOptions);
+        setEmail("");
+        setIsSubscribing(false);
+        return;
+      }
+
+      // Add new subscriber
+      const updatedSubscribers = [...existingSubscribers, email.toLowerCase()];
+      localStorage.setItem(
+        "groupify_subscribers",
+        JSON.stringify(updatedSubscribers)
+      );
 
       toast.success(
-        "Successfully subscribed! Thank you for joining us.",
+        "Successfully subscribed! You'll receive status updates and notifications.",
         toastOptions
       );
       setEmail("");
@@ -323,13 +340,11 @@ const StatusPage = () => {
       setIsSubscribing(false);
     }
   };
-
   // Create status badge content for hero
+  const StatusIcon = getStatusIcon(overallStatus);
   const statusBadgeContent = (
     <div className="inline-flex items-center">
-      {React.createElement(getStatusIcon(overallStatus), {
-        className: "w-4 h-4 sm:w-5 sm:h-5 text-white mr-2",
-      })}
+      <StatusIcon className="w-4 h-4 sm:w-5 sm:h-5 text-white mr-2" />
       <span className="text-white font-medium text-sm sm:text-base">
         {overallStatus === "operational" && "All Systems Operational"}
         {overallStatus === "degraded" && "Some Systems Degraded"}
@@ -371,7 +386,13 @@ const StatusPage = () => {
       <HeroSection
         variant="status"
         badge={{
-          content: statusBadgeContent,
+          text:
+            overallStatus === "operational"
+              ? "All Systems Operational"
+              : overallStatus === "degraded"
+              ? "Some Systems Degraded"
+              : "Service Disruption",
+          icon: getStatusIcon(overallStatus),
         }}
         title="Groupify System Status"
         description="Real-time status and performance monitoring for all Groupify services. We're committed to transparency and keeping you informed."

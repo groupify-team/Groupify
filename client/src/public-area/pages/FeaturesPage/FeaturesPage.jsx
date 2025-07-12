@@ -1,25 +1,20 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+
 import {
   SparklesIcon,
   UserGroupIcon,
   CloudIcon,
   ShieldCheckIcon,
   DevicePhoneMobileIcon,
-  GlobeAltIcon,
   MagnifyingGlassIcon,
   PhotoIcon,
   FaceSmileIcon,
   ShareIcon,
   LockClosedIcon,
-  ClockIcon,
-  CogIcon,
-  ChartBarIcon,
-  DocumentTextIcon,
-  PrinterIcon,
   PlayIcon,
   FolderIcon,
   TagIcon,
-  HeartIcon,
   StarIcon,
   ArrowRightIcon,
   CheckIcon,
@@ -29,7 +24,6 @@ import {
   UsersIcon,
   DocumentArrowDownIcon,
 } from "@heroicons/react/24/outline";
-
 
 import { usePublicNavigation } from "../../hooks/usePublicNavigation";
 import PublicLayout from "../../components/layout/PublicLayout";
@@ -235,7 +229,7 @@ const ComingSoonSection = ({ comingSoonFeatures }) => (
   </div>
 );
 
-const CallToActionSection = ({ handleGetStarted }) => (
+const CallToActionSection = ({ handleGetStarted, navigate }) => (
   <div className="py-12 sm:py-16 md:py-20 bg-gradient-to-r from-indigo-600 to-purple-600">
     <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
       <StarIcon className="w-12 h-12 sm:w-16 sm:h-16 text-white mx-auto mb-4 sm:mb-6" />
@@ -254,28 +248,40 @@ const CallToActionSection = ({ handleGetStarted }) => (
           Start Free Trial
           <ArrowRightIcon className="ml-2 w-5 h-5" />
         </button>
-        <a
-          href="/pricing"
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            window.scrollTo({
+              top: 0,
+              behavior: "smooth",
+            });
+            setTimeout(() => {
+              navigate("/pricing");
+            }, 300);
+          }}
           className="inline-flex items-center justify-center bg-white/20 backdrop-blur-sm text-white px-6 py-3 sm:px-8 sm:py-4 rounded-xl text-base sm:text-lg font-semibold border border-white/30 hover:bg-white/30 transition-all duration-200"
         >
           View Pricing
-        </a>
+        </button>
       </div>
     </div>
   </div>
 );
 
 const Features = () => {
-  const { handleSmoothNavigation, headerProps, accessibilityModalProps } =
-    usePublicNavigation();
+  const navigate = useNavigate();
+  const {
+    handleSmoothNavigation,
+    handleFooterNavigation,
+    headerProps,
+    accessibilityModalProps,
+  } = usePublicNavigation();
 
   const [isLoaded, setIsLoaded] = useState(false);
   const [activeCategory, setActiveCategory] = useState("all");
 
-  // Single handleGetStarted function
   const handleGetStarted = () => {
-    // Navigate to sign up or dashboard
-    window.location.href = "/sign-up";
+    handleSmoothNavigation("/signup");
   };
 
   // Scroll to top on component mount
@@ -627,8 +633,10 @@ const Features = () => {
       <ComingSoonSection comingSoonFeatures={comingSoonFeatures} />
 
       {/* CTA Section */}
-      <CallToActionSection handleGetStarted={handleGetStarted} />
-
+      <CallToActionSection
+        handleGetStarted={handleGetStarted}
+        navigate={navigate}
+      />
       {/* Settings Modal*/}
 
       <AccessibilityModal {...accessibilityModalProps} />
