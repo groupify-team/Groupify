@@ -48,6 +48,10 @@ const CreateEventModal = lazy(() =>
   import("@/dashboard-area/features/events/components/CreateEventModal")
 );
 
+const UpgradePlanModal = lazy(() =>
+  import("@/dashboard-area/features/events/components/UpgradePlanModal")
+);
+
 // Utils
 import {
   filterevents,
@@ -55,10 +59,7 @@ import {
 } from "@/dashboard-area/utils/dashboardHelpers";
 
 // Services
-import {
-  getUserEventCount,
-  MAX_EVENTS_PER_USER,
-} from "@firebase-services/events";
+import { MAX_EVENTS_PER_USER } from "@firebase-services/events";
 
 const EventsSection = () => {
   const { currentUser } = useAuth();
@@ -82,19 +83,15 @@ const EventsSection = () => {
   } = useDashboardLayout();
 
   // Dashboard data and actions
-    const {
-  events,
-  eventInvitations,
-  loading: eventContextLoading,
-  acceptEventInvitation,
-  rejectEventInvitation,
-} = useEventContext();
+  const {
+    events,
+    eventInvitations,
+    loading: eventContextLoading,
+    acceptEventInvitation,
+    rejectEventInvitation,
+  } = useEventContext();
 
-
-    const {
-  showSuccessMessage,
-  showErrorMessage,
-} = useDashboardData();
+  const { showSuccessMessage, showErrorMessage } = useDashboardData();
 
   // Modal state
   const {
@@ -106,81 +103,72 @@ const EventsSection = () => {
   const loading = eventContextLoading;
 
   console.log("🎯 EventsSection: Using real-time data:", {
-  eventsCount: events.length,
-  eventInvitationsCount: eventInvitations.length,
-  loading,
-});
-
-const uniqueEvents = useMemo(() => {
-  const seen = new Set();
-  return events.filter(event => {
-    if (seen.has(event.id)) {
-      console.warn("🔍 EventsSection: Removing duplicate event:", event.id);
-      return false;
-    }
-    seen.add(event.id);
-    return true;
+    eventsCount: events.length,
+    eventInvitationsCount: eventInvitations.length,
+    loading,
   });
-}, [events]);
+
+  const uniqueEvents = useMemo(() => {
+    const seen = new Set();
+    return events.filter((event) => {
+      if (seen.has(event.id)) {
+        console.warn("🔍 EventsSection: Removing duplicate event:", event.id);
+        return false;
+      }
+      seen.add(event.id);
+      return true;
+    });
+  }, [events]);
 
   const [canAcceptMoreInvitations, setCanAcceptMoreInvitations] =
     useState(true);
   const [currentEventCount, setCurrentEventCount] = useState(0);
   const [processingInviteId, setProcessingInviteId] = useState(null);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
-  // Memoize filtered events to prevent unnecessary recalculations
   const filteredevents = useMemo(() => {
     return filterevents(uniqueEvents, searchTerm, dateFilter);
-},  [uniqueEvents, searchTerm, dateFilter]);
+  }, [uniqueEvents, searchTerm, dateFilter]);
 
-  // Click outside ref for filter dropdown
   const filterDropdownRef = useClickOutside(() => closeFilterDropdown());
 
-  // CHECK event ACCEPTANCE ABILITY ON LOAD AND WHEN events CHANGE
   useEffect(() => {
     const checkEventAcceptanceAbility = async () => {
-    if (currentUser?.uid) {
-      try {
-        // FIXED: Use real-time events.length instead of fetching again
-        const eventCount = events.length;
-        setCurrentEventCount(eventCount);
+      if (currentUser?.uid) {
+        try {
+          const eventCount = events.length;
+          setCurrentEventCount(eventCount);
 
-        const usageInfo = getUsageInfo();
-        if (usageInfo?.events) {
-          const { limit } = usageInfo.events; // FIXED: Declare limit properly
-          setCanAcceptMoreInvitations(
-            limit === "unlimited" || eventCount < limit
-          );
+          const usageInfo = getUsageInfo();
+          if (usageInfo?.events) {
+            const { limit } = usageInfo.events;
+            setCanAcceptMoreInvitations(
+              limit === "unlimited" || eventCount < limit
+            );
 
-          console.log("🔍 EventsSection: Event acceptance check:", {
-            eventCount,
-            limit,
-            canAcceptMore: limit === "unlimited" || eventCount < limit,
-          });
+            console.log("🔍 EventsSection: Event acceptance check:", {
+              eventCount,
+              limit,
+              canAcceptMore: limit === "unlimited" || eventCount < limit,
+            });
+          }
+        } catch (error) {
+          console.error("Error checking event acceptance ability:", error);
         }
-      } catch (error) {
-        console.error("Error checking event acceptance ability:", error);
       }
-    }
-  };
+    };
 
     checkEventAcceptanceAbility();
   }, [currentUser?.uid, events.length, getUsageInfo]);
 
-  // Enhanced Create Event Handler with Performance Optimization
   const handlecreateEvent = useCallback(async () => {
     try {
-      // Use plan limits validation instead of hardcoded check
       const limitCheck = canPerformAction("create_event", {
         currentEventCount: uniqueEvents.length,
-
       });
 
       if (!limitCheck.allowed) {
-        showUpgradePrompt(limitCheck.reason, {
-          title: "Upgrade to Create More Events",
-          persistent: true,
-        });
+        setShowUpgradeModal(true);
         return;
       }
 
@@ -189,116 +177,126 @@ const uniqueEvents = useMemo(() => {
       console.error("Error checking event creation limit:", error);
       showErrorMessage("Failed to check event limit. Please try again.");
     }
-  }, [canPerformAction, events.length, showUpgradePrompt, showErrorMessage]);
+  }, [canPerformAction, uniqueEvents.length, showErrorMessage]);
 
-  // Enhanced Accept Invite Handler with Validation and Performance Optimization
- const handleAcceptEventInvite = useCallback(
-  async (invite) => {
-    if (processingInviteId === invite.id) return; // Prevent double-processing
+  const handleAcceptEventInvite = useCallback(
+    async (invite) => {
+      if (processingInviteId === invite.id) return;
 
-    try {
-      setProcessingInviteId(invite.id);
-      console.log("🔍 EVENTS SECTION - Accepting invitation:", {
-        inviteId: invite.id,
-        currentEventCount,
-        canAcceptMoreInvitations
-      });
+      try {
+        setProcessingInviteId(invite.id);
+        console.log("🔍 EVENTS SECTION - Accepting invitation:", {
+          inviteId: invite.id,
+          currentEventCount,
+          canAcceptMoreInvitations,
+        });
 
-      // FIXED: Check if user can accept more events using simple logic
-      if (!canAcceptMoreInvitations) {
+        if (!canAcceptMoreInvitations) {
+          const usageInfo = getUsageInfo();
+          showUpgradePrompt(
+            `You've reached your event limit (${currentEventCount}/${
+              usageInfo?.events?.limit || 5
+            } events). Upgrade to accept more invitations!`,
+            {
+              title: "Upgrade to Accept Invitation",
+              persistent: true,
+            }
+          );
+          return;
+        }
+
+        // Use EventContext function
+        await acceptEventInvitation(invite.id, invite.eventId);
+
+        // Update local state
+        const newEventCount = currentEventCount + 1;
+        setCurrentEventCount(newEventCount);
+
+        // FIXED: Check if user can still accept more invitations
         const usageInfo = getUsageInfo();
-        showUpgradePrompt(
-          `You've reached your event limit (${currentEventCount}/${usageInfo?.events?.limit || 5} events). Upgrade to accept more invitations!`,
-          {
-            title: "Upgrade to Accept Invitation",
-            persistent: true,
-          }
+        if (usageInfo?.events) {
+          const { limit } = usageInfo.events;
+          const stillCanAccept = limit === "unlimited" || newEventCount < limit;
+          console.log("🔍 EVENTS SECTION - Updated can accept:", {
+            newEventCount,
+            limit,
+            stillCanAccept,
+          });
+          setCanAcceptMoreInvitations(stillCanAccept);
+        }
+
+        // Show success message with usage info
+        showSuccessMessage(
+          `Joined ${invite.eventName || invite.eventTitle}! (${newEventCount}/${
+            usageInfo?.events?.limit === "unlimited"
+              ? "∞"
+              : usageInfo?.events?.limit
+          } events)`
         );
-        return;
+      } catch (error) {
+        console.error(
+          "❌ EVENTS SECTION - Error accepting event invite:",
+          error
+        );
+
+        // Check if error is related to plan limits
+        if (
+          error.message?.includes("limit") ||
+          error.message?.includes("upgrade")
+        ) {
+          showErrorMessage(error.message);
+          showUpgradePrompt(error.message, {
+            title: "Upgrade Required",
+            persistent: true,
+          });
+        } else {
+          showErrorMessage("Failed to accept Event invitation");
+        }
+      } finally {
+        setProcessingInviteId(null);
       }
-
-      // Use EventContext function
-      await acceptEventInvitation(invite.id, invite.eventId);
-      
-      // Update local state
-      const newEventCount = currentEventCount + 1;
-      setCurrentEventCount(newEventCount);
-
-      // FIXED: Check if user can still accept more invitations
-      const usageInfo = getUsageInfo();
-      if (usageInfo?.events) {
-        const { limit } = usageInfo.events;
-        const stillCanAccept = limit === "unlimited" || newEventCount < limit;
-        console.log("🔍 EVENTS SECTION - Updated can accept:", {
-          newEventCount,
-          limit,
-          stillCanAccept
-        });
-        setCanAcceptMoreInvitations(stillCanAccept);
-      }
-
-      // Show success message with usage info
-      showSuccessMessage(
-        `Joined ${invite.eventName || invite.eventTitle}! (${newEventCount}/${
-          usageInfo?.events?.limit === "unlimited" ? "∞" : usageInfo?.events?.limit
-        } events)`
-      );
-    } catch (error) {
-      console.error("❌ EVENTS SECTION - Error accepting event invite:", error);
-
-      // Check if error is related to plan limits
-      if (
-        error.message?.includes("limit") ||
-        error.message?.includes("upgrade")
-      ) {
-        showErrorMessage(error.message);
-        showUpgradePrompt(error.message, {
-          title: "Upgrade Required",
-          persistent: true,
-        });
-      } else {
-        showErrorMessage("Failed to accept Event invitation");
-      }
-    } finally {
-      setProcessingInviteId(null);
-    }
-  },
-  [
-  processingInviteId,
-  currentEventCount,
-  canAcceptMoreInvitations,
-  showUpgradePrompt,
-  acceptEventInvitation,
-  getUsageInfo,
-  showSuccessMessage,
-  showErrorMessage,
-]
-);
+    },
+    [
+      processingInviteId,
+      currentEventCount,
+      canAcceptMoreInvitations,
+      showUpgradePrompt,
+      acceptEventInvitation,
+      getUsageInfo,
+      showSuccessMessage,
+      showErrorMessage,
+    ]
+  );
 
   // Decline invite handler with Performance Optimization
   const handleDeclineEventInvite = useCallback(
-  async (invite) => {
-    if (processingInviteId === invite.id) return;
+    async (invite) => {
+      if (processingInviteId === invite.id) return;
 
-    try {
-      setProcessingInviteId(invite.id);
-      // Use EventContext function directly
-      await rejectEventInvitation(invite.id);
-      showSuccessMessage("Event invitation declined");
-    } catch (error) {
-      console.error("Error declining event invite:", error);
-      showErrorMessage("Failed to decline Event invitation");
-    } finally {
-      setProcessingInviteId(null);
-    }
-  },
-  [processingInviteId, showSuccessMessage, showErrorMessage, rejectEventInvitation]
-);
+      try {
+        setProcessingInviteId(invite.id);
+        // Use EventContext function directly
+        await rejectEventInvitation(invite.id);
+        showSuccessMessage("Event invitation declined");
+      } catch (error) {
+        console.error("Error declining event invite:", error);
+        showErrorMessage("Failed to decline Event invitation");
+      } finally {
+        setProcessingInviteId(null);
+      }
+    },
+    [
+      processingInviteId,
+      showSuccessMessage,
+      showErrorMessage,
+      rejectEventInvitation,
+    ]
+  );
 
   const handleEventCreated = useCallback(() => {
-  // FIXED: No need to manually refresh since EventContext handles real-time updates
+    // FIXED: No need to manually refresh since EventContext handles real-time updates
     showSuccessMessage("Event Created Successfully!");
-}, [showSuccessMessage]);
+  }, [showSuccessMessage]);
 
   const handleViewEvent = useCallback(
     (eventId) => {
@@ -317,65 +315,65 @@ const uniqueEvents = useMemo(() => {
 
   // Helper function to render invitation action buttons
   const renderInvitationButtons = useCallback(
-  (invite) => {
-    const isProcessing = processingInviteId === invite.id;
-    const canAccept = canAcceptMoreInvitations && !isProcessing;
-    
-    // Debug logging for each button
-    console.log("🔍 EVENTS SECTION - Button render:", {
-      inviteId: invite.id,
-      canAcceptMoreInvitations,
-      isProcessing,
-      canAccept,
-      currentEventCount
-    });
+    (invite) => {
+      const isProcessing = processingInviteId === invite.id;
+      const canAccept = canAcceptMoreInvitations && !isProcessing;
 
-    return (
-      <div className="flex gap-2">
-        <button
-          onClick={() => handleAcceptEventInvite(invite)}
-          disabled={!canAccept}
-          className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-1 ${
-            canAccept
-              ? "bg-green-600 hover:bg-green-700 text-white"
-              : "bg-gray-300 text-gray-500 cursor-not-allowed"
-          }`}
-          title={
-            !canAcceptMoreInvitations
-              ? `Event limit reached (${currentEventCount}/5) - upgrade to accept`
-              : "Accept invitation"
-          }
-        >
-          {isProcessing ? (
-            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-          ) : (
-            <CheckCircleIcon className="w-4 h-4" />
-          )}
-          Accept
-        </button>
-        <button
-          onClick={() => handleDeclineEventInvite(invite)}
-          disabled={isProcessing}
-          className="bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-1"
-        >
-          {isProcessing ? (
-            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-          ) : (
-            <XCircleIcon className="w-4 h-4" />
-          )}
-          Decline
-        </button>
-      </div>
-    );
-  },
-  [
-    processingInviteId,
-    canAcceptMoreInvitations,
-    currentEventCount,
-    handleAcceptEventInvite,
-    handleDeclineEventInvite,
-  ]
-);
+      // Debug logging for each button
+      console.log("🔍 EVENTS SECTION - Button render:", {
+        inviteId: invite.id,
+        canAcceptMoreInvitations,
+        isProcessing,
+        canAccept,
+        currentEventCount,
+      });
+
+      return (
+        <div className="flex gap-2">
+          <button
+            onClick={() => handleAcceptEventInvite(invite)}
+            disabled={!canAccept}
+            className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-1 ${
+              canAccept
+                ? "bg-green-600 hover:bg-green-700 text-white"
+                : "bg-gray-300 text-gray-500 cursor-not-allowed"
+            }`}
+            title={
+              !canAcceptMoreInvitations
+                ? `Event limit reached (${currentEventCount}/5) - upgrade to accept`
+                : "Accept invitation"
+            }
+          >
+            {isProcessing ? (
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <CheckCircleIcon className="w-4 h-4" />
+            )}
+            Accept
+          </button>
+          <button
+            onClick={() => handleDeclineEventInvite(invite)}
+            disabled={isProcessing}
+            className="bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-1"
+          >
+            {isProcessing ? (
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <XCircleIcon className="w-4 h-4" />
+            )}
+            Decline
+          </button>
+        </div>
+      );
+    },
+    [
+      processingInviteId,
+      canAcceptMoreInvitations,
+      currentEventCount,
+      handleAcceptEventInvite,
+      handleDeclineEventInvite,
+    ]
+  );
 
   // Helper function to render mobile invitation buttons
   const renderMobileInvitationButtons = useCallback(
@@ -505,9 +503,7 @@ const uniqueEvents = useMemo(() => {
 
       {/* Events Limit Banner - NEW ADDITION */}
       {eventsActiveTab === "events" && (
-        <EventsLimitBanner 
-          currentEventCount={uniqueEvents.length}
-        />
+        <EventsLimitBanner currentEventCount={uniqueEvents.length} />
       )}
 
       {/* Mobile Tab Switcher */}
@@ -763,6 +759,25 @@ const uniqueEvents = useMemo(() => {
           isOpen={showCreateModal}
           onClose={() => setShowCreateModal(false)}
           onEventCreated={handleEventCreated}
+        />
+      </Suspense>
+
+      {/* Upgrade Plan Modal - NEW */}
+      <Suspense fallback={<div>Loading modal...</div>}>
+        <UpgradePlanModal
+          isOpen={showUpgradeModal}
+          onClose={() => setShowUpgradeModal(false)}
+          currentPlan={(() => {
+            const usageInfo = getUsageInfo();
+            if (usageInfo?.events?.limit === 5) return "free";
+            if (usageInfo?.events?.limit === 50) return "premium";
+            return "pro";
+          })()}
+          currentEventCount={uniqueEvents.length}
+          eventLimit={(() => {
+            const usageInfo = getUsageInfo();
+            return usageInfo?.events?.limit || 5;
+          })()}
         />
       </Suspense>
     </div>

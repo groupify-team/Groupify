@@ -1,9 +1,9 @@
-// components/createEventModal.jsx
 import React, { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "@shared/utils/toast";
+
 import {
   XMarkIcon,
-  MapPinIcon,
-  CalendarIcon,
   SparklesIcon,
   ExclamationTriangleIcon,
   StarIcon,
@@ -11,14 +11,12 @@ import {
   CheckCircleIcon,
 } from "@heroicons/react/24/outline";
 import { useAuth } from "@auth/hooks/useAuth";
-import { toast } from "@shared/utils/toast";
-
 import { eventsService } from "../services/eventsService";
 import { usePlanLimits } from "../../../../shared/hooks/usePlanLimits";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "@shared/services/firebase/config";
 import subscriptionService from "@shared/services/subscriptionService";
-import { useNavigate } from "react-router-dom";
+import UpgradePlanModal from "./UpgradePlanModal";
 
 const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
   const navigate = useNavigate();
@@ -35,8 +33,8 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
   const [locationSuggestions, setLocationSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [currentEventCount, setCurrentEventCount] = useState(0);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
-  // Plan limits integration
   const {
     canPerformAction,
     getUsageInfo,
@@ -47,7 +45,6 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
     loading: planLoading,
   } = usePlanLimits();
 
-  // Handle modal close
   const handleClose = useCallback(() => {
     if (!loading) {
       setName("");
@@ -63,38 +60,21 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
   const loadEventCount = useCallback(async () => {
     try {
       if (currentUser?.uid) {
-        // Check subscription service first
         const subscription = subscriptionService.getCurrentSubscription();
         const usageFromService = subscription?.usage?.events?.used || 0;
-
-        // Force a fresh query from Firestore
         const eventsQuery = query(
           collection(db, "events"),
           where("members", "array-contains", currentUser.uid)
         );
         const querySnapshot = await getDocs(eventsQuery);
         const actualCount = querySnapshot.size;
-
-        console.log("🔍 Event Count Debug:", {
-          actualFirestoreCount: actualCount,
-          subscriptionServiceCount: usageFromService,
-          previousStateCount: currentEventCount,
-          userId: currentUser.uid,
-          events: querySnapshot.docs.map((doc) => ({
-            id: doc.id,
-            name: doc.data().name,
-            createdBy: doc.data().createdBy,
-            members: doc.data().members,
-          })),
-        });
-
         setCurrentEventCount(actualCount);
         subscriptionService.updateUsage({ events: actualCount });
       }
     } catch (error) {
       console.error("Error loading event count:", error);
     }
-  }, [currentUser]); // Removed currentEventCount from dependencies
+  }, [currentUser]);
 
   useEffect(() => {
     const handleEscape = (e) => {
@@ -108,60 +88,32 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
       return () => document.removeEventListener("keydown", handleEscape);
     }
   }, [isOpen, loading, handleClose]);
-
-  // Load current event count when modal opens
   useEffect(() => {
     if (isOpen && currentUser) {
       loadEventCount();
     }
   }, [isOpen, currentUser, loadEventCount]);
-
-  // FIXED: Also reload when modal opens again (to catch events created outside this modal)
   useEffect(() => {
     if (isOpen) {
-      // Always reload the event count when modal opens to ensure accuracy
       loadEventCount();
     }
   }, [isOpen, loadEventCount]);
 
   useEffect(() => {
     if (isOpen) {
-      // Store current padding right to restore it later
-      const scrollBarWidth =
-        window.innerWidth - document.documentElement.clientWidth;
-      document.body.style.paddingRight = `${scrollBarWidth}px`;
-
-      // Add body class to help with z-index management
-      document.body.classList.add("modal-open");
-
-      // Prevent body scroll without shifting content
       document.body.style.overflow = "hidden";
-      document.body.style.position = "relative";
     } else {
-      // Remove body class
-      document.body.classList.remove("modal-open");
-
-      // Restore body scroll and remove padding
       document.body.style.overflow = "";
-      document.body.style.paddingRight = "";
-      document.body.style.position = "";
     }
-
-    // Cleanup on unmount
     return () => {
-      document.body.classList.remove("modal-open");
       document.body.style.overflow = "";
-      document.body.style.paddingRight = "";
-      document.body.style.position = "";
     };
   }, [isOpen]);
-
   const handleLocationSearch = async (query) => {
     if (query.length < 2) {
       setShowSuggestions(false);
       return;
     }
-
     try {
       const response = await fetch(
         `http://localhost:3001/api/city-search?q=${encodeURIComponent(query)}`
@@ -181,9 +133,6 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
       setShowSuggestions(false);
     }
   };
-
-  // Replace the handleSubmit function in CreateEventModal.jsx (around line 140-230)
-
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
 
@@ -191,37 +140,8 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
       setError("Event name is required");
       return;
     }
-
     if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
       setError("End date must be after start date");
-      return;
-    }
-
-    // Check plan limits
-    const planFeatures = getPlanFeatures();
-    const eventLimit = planFeatures?.events || 5;
-
-    if (currentEventCount >= eventLimit && eventLimit !== "unlimited") {
-      setError(
-        `You've reached your ${
-          isFreePlan ? "Free" : "Premium"
-        } plan limit of ${eventLimit} events`
-      );
-
-      toast.error(
-        `You've reached your ${isFreePlan ? "Free" : "Premium"} plan limit!`,
-        {
-          duration: 8000,
-          action: {
-            label: `Upgrade to ${isFreePlan ? "Premium" : "Pro"}`,
-            onClick: () => {
-              const targetPlan = isFreePlan ? "premium" : "pro";
-              handleClose();
-              navigate(`/pricing?from=events-limit&plan=${targetPlan}`);
-            },
-          },
-        }
-      );
       return;
     }
 
@@ -241,13 +161,8 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
         photoCount: 0,
       });
 
-      // Update usage statistics
       setCurrentEventCount((prev) => prev + 1);
-
-      // Store Event name for success modal
       setcreatedEventName(name);
-
-      // Show success toast with remaining events info
       const planFeatures = getPlanFeatures();
       const remaining =
         planFeatures?.events === "unlimited"
@@ -263,26 +178,26 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
         { duration: 4000 }
       );
 
-      // Reset form
       setName("");
       setDescription("");
       setLocation("");
       setStartDate("");
       setEndDate("");
 
-      // Notify parent component
       if (onEventCreated) {
         onEventCreated(newEvent);
       }
 
-      // Show success modal (don't close main modal yet)
       setShowSuccessModal(true);
     } catch (error) {
       console.error("Error creating event:", error);
 
       if (
         error.message.includes("Event limit reached") ||
-        error.message.includes("limit reached")
+        error.message.includes("limit reached") ||
+        error.message.includes("Free plan allows") ||
+        error.message.includes("Premium plan allows") ||
+        error.message.includes("Pro plan allows")
       ) {
         setError(error.message);
         toast.error(error.message, {
@@ -295,6 +210,8 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
             },
           },
         });
+
+        setShowUpgradeModal(true); // This will show your modal!
       } else {
         const fallbackError = "Failed to create event. Please try again.";
         setError(fallbackError);
@@ -316,15 +233,11 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
       onClick={handleClose}
     >
       <div className="relative w-full max-w-md mx-auto">
-        {/* Background blur effect */}
         <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-2xl blur opacity-20"></div>
-
-        {/* Modal content */}
         <div
           className="create-event-modal-content bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20 dark:border-gray-700/50 overflow-hidden animate-slide-in-scale"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Compact Header */}
           <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -347,7 +260,6 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
             </div>
           </div>
 
-          {/* Plan Status Bar */}
           {!planLoading && usageInfo && (
             <div className="px-6 py-3 bg-gray-50/50 dark:bg-gray-700/30 border-b border-gray-200/50 dark:border-gray-600/50">
               <div className="flex items-center justify-between text-xs">
@@ -612,7 +524,6 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
           style={{ width: "100vw", height: "100vh", overflowY: "auto" }}
         >
           <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20 dark:border-gray-700/50 p-8 max-w-md w-full text-center animate-slide-in-scale">
-            {/* Success Icon */}
             <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
               <CheckCircleIcon className="w-8 h-8 text-green-600 dark:text-green-400" />
             </div>
@@ -629,17 +540,16 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
                 What you can do now:
               </h4>
               <ul className="text-blue-700 dark:text-blue-400 text-sm space-y-1">
-                <li>� Upload photos and create shared memories</li>
-                <li>� Use face recognition to find your photos instantly</li>
-                <li>� Invite friends to join and contribute photos</li>
-                <li>� No more searching through endless folders!</li>
+                <li>• Upload photos and create shared memories</li>
+                <li>• Use face recognition to find your photos instantly</li>
+                <li>• Invite friends to join and contribute photos</li>
+                <li>• No more searching through endless folders!</li>
               </ul>
             </div>
 
             <button
               onClick={() => {
                 setShowSuccessModal(false);
-                // Close the main modal after success modal is dismissed
                 onClose();
               }}
               className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white py-3 px-4 rounded-xl font-medium transition-all"
@@ -649,6 +559,15 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
           </div>
         </div>
       )}
+
+      {/* Upgrade Modal */}
+      <UpgradePlanModal
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+        currentPlan={isFreePlan ? "free" : isPremiumPlan ? "premium" : "pro"}
+        currentEventCount={currentEventCount}
+        eventLimit={planFeatures?.events || 5}
+      />
     </div>
   );
 };
