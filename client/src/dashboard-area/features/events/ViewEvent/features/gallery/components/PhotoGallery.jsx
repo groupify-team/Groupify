@@ -168,7 +168,6 @@ const PhotoGallery = memo(
       <>
         {/* Photo Limit Banner */}
         <PhotoLimitBanner currentPhotoCount={localPhotos.length} />
-
         <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-xl shadow-lg border border-white/20 dark:border-gray-700/50">
           {/* Header */}
           <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 dark:from-purple-900/30 dark:to-pink-900/30 p-4 border-b border-purple-200/30 dark:border-purple-800/30">
@@ -296,81 +295,90 @@ const PhotoGallery = memo(
             )}
           </div>
         </div>
-
         {/* Upload Modal */}
         {showModal === "upload" && (
-          <Modal onClose={() => !loading && setShowModal(null)}>
-            <div className="bg-gradient-to-r from-indigo-500 to-purple-500 p-4 rounded-t-xl">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-lg font-bold text-white">
-                    Upload Photos
-                  </h3>
-                  {maxPhotos !== Infinity && (
-                    <p className="text-indigo-100 text-sm">
-                      {Math.max(0, maxPhotos - localPhotos.length)} slots
-                      available
-                    </p>
+          <div
+            className="modal-backdrop-standard event-modal-backdrop-enter"
+            onClick={(e) =>
+              e.target === e.currentTarget && !loading && setShowModal(null)
+            }
+          >
+            <div
+              className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-lg w-full border border-gray-200 dark:border-gray-700 event-modal-enter cursor-default modal-content-standard"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="bg-gradient-to-r from-indigo-500 to-purple-500 p-4 rounded-t-xl">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-lg font-bold text-white">
+                      Upload Photos
+                    </h3>
+                    {maxPhotos !== Infinity && (
+                      <p className="text-indigo-100 text-sm">
+                        {Math.max(0, maxPhotos - localPhotos.length)} slots
+                        available
+                      </p>
+                    )}
+                  </div>
+                  {!loading && (
+                    <button
+                      onClick={() => setShowModal(null)}
+                      className="text-white hover:bg-white/20 p-1 rounded"
+                    >
+                      <XMarkIcon className="w-5 h-5" />
+                    </button>
                   )}
                 </div>
-                {!loading && (
-                  <button
-                    onClick={() => setShowModal(null)}
-                    className="text-white hover:bg-white/20 p-1 rounded"
+              </div>
+              <div className="p-6">
+                <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 text-center hover:border-indigo-400 transition-colors">
+                  <CameraIcon className="w-12 h-12 text-indigo-500 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                    Drop photos here
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400 mb-4">
+                    or click to browse files
+                  </p>
+                  <label
+                    className={`bg-indigo-500 hover:bg-indigo-600 text-white px-6 py-3 rounded-lg font-medium cursor-pointer transition-all ${
+                      loading ? "opacity-50 cursor-not-allowed" : ""
+                    }`}
                   >
-                    <XMarkIcon className="w-5 h-5" />
-                  </button>
-                )}
-              </div>
-            </div>
-            <div className="p-6">
-              <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 text-center hover:border-indigo-400 transition-colors">
-                <CameraIcon className="w-12 h-12 text-indigo-500 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                  Drop photos here
-                </h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-4">
-                  or click to browse files
-                </p>
-                <label
-                  className={`bg-indigo-500 hover:bg-indigo-600 text-white px-6 py-3 rounded-lg font-medium cursor-pointer transition-all ${
-                    loading ? "opacity-50 cursor-not-allowed" : ""
-                  }`}
-                >
-                  {loading ? "Uploading..." : "Choose Files"}
-                  <input
-                    type="file"
-                    multiple
-                    accept="image/*"
-                    className="hidden"
-                    disabled={loading}
-                    onChange={(e) => {
-                      const files = e.target.files;
-                      if (files?.length) {
-                        // Check limit before processing
-                        const availableSlots =
-                          maxPhotos === Infinity
-                            ? files.length
-                            : maxPhotos - localPhotos.length;
-                        if (availableSlots <= 0) {
-                          toast.error(
-                            "Photo limit reached! Please upgrade your plan to add more photos.",
-                            {
-                              duration: 4000,
-                              icon: "🚫",
-                            }
-                          );
-                          e.target.value = ""; // Reset file input
-                          return;
+                    {loading ? "Uploading..." : "Choose Files"}
+                    <input
+                      type="file"
+                      multiple
+                      accept="image/*"
+                      className="hidden"
+                      disabled={loading}
+                      onChange={(e) => {
+                        const files = e.target.files;
+                        if (files?.length) {
+                          // Check limit before processing
+                          const availableSlots =
+                            maxPhotos === Infinity
+                              ? files.length
+                              : maxPhotos - localPhotos.length;
+                          if (availableSlots <= 0) {
+                            toast.error(
+                              "Photo limit reached! Please upgrade your plan to add more photos.",
+                              {
+                                duration: 4000,
+                                icon: "🚫",
+                              }
+                            );
+                            e.target.value = ""; // Reset file input
+                            return;
+                          }
+                          handleFileUpload(files);
                         }
-                        handleFileUpload(files);
-                      }
-                    }}
-                  />
-                </label>
+                      }}
+                    />
+                  </label>
+                </div>
               </div>
             </div>
-          </Modal>
+          </div>
         )}
       </>
     );
