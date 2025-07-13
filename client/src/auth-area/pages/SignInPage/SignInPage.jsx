@@ -1,25 +1,22 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation, Link } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "@shared/utils/toast";
-import {
-  ExclamationTriangleIcon,
-  ArrowLeftIcon,
-  CameraIcon,
-} from "@heroicons/react/24/outline";
+import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 
 import AuthLayout from "../../components/layout/AuthLayout";
-import EnhancedAuthForm from "../../components/ui/EnhancedAuthForm";
+import AuthFormHeader from "../../components/ui/AuthFormHeader";
+import AuthForm from "../../components/ui/AuthForm";
 import PageTransition, {
   SectionTransition,
 } from "@/shared/components/ui/PageTransition";
 import { useAuth } from "@auth/hooks/useAuth";
-
 import { useAuthValidation } from "../../hooks/useAuthValidation";
 
 const SignInPage = () => {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
+
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -29,6 +26,7 @@ const SignInPage = () => {
   const [loading, setLoading] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [showVerificationAlert, setShowVerificationAlert] = useState(false);
+
   const { signin, signInWithGoogle } = useAuth();
   const { validateSignIn } = useAuthValidation();
   const navigate = useNavigate();
@@ -166,7 +164,7 @@ const SignInPage = () => {
   const handleResendVerification = async () => {
     try {
       const response = await fetch(
-        "https://us-central1-groupify-77202.cloudfunctions.net/sendVerificationEmail", // Changed from resendVerificationCode
+        "https://us-central1-groupify-77202.cloudfunctions.net/sendVerificationEmail",
         {
           method: "POST",
           headers: {
@@ -175,7 +173,7 @@ const SignInPage = () => {
           body: JSON.stringify({
             data: {
               email: formData.email,
-              name: "User", // sendVerificationEmail requires a name parameter
+              name: "User",
             },
           }),
         }
@@ -189,8 +187,6 @@ const SignInPage = () => {
 
       if (result.success) {
         toast.success("Verification email sent! Check your inbox.");
-
-        // Navigate to the confirmation page with email parameter
         setTimeout(() => {
           navigate(
             `/confirm-email?email=${encodeURIComponent(formData.email)}`
@@ -202,7 +198,6 @@ const SignInPage = () => {
     } catch (error) {
       console.error("Resend error:", error);
 
-      // Handle specific error messages from the HTTP function
       let errorMessage = "Failed to resend email. Please try again.";
 
       if (error.message?.includes("already verified")) {
@@ -257,19 +252,14 @@ const SignInPage = () => {
   const leftContent = (
     <div className="w-full h-full bg-gradient-to-br from-indigo-500 via-purple-500 to-purple-600 flex items-center justify-center p-12 relative overflow-hidden">
       <div className="max-w-md text-center text-white z-10">
-        {/* Title */}
         <h2 className="text-3xl font-bold mb-6">
           Organize your travel memories with AI
         </h2>
-
-        {/* Subtitle */}
         <p className="text-lg mb-8 text-purple-100 leading-relaxed">
           Upload photos from your events and let our AI automatically find the
           ones with you in them. Share albums with friends and never lose track
           of your memories again.
         </p>
-
-        {/* Features list */}
         <div className="space-y-4 text-left">
           {[
             "AI-powered face recognition",
@@ -298,8 +288,6 @@ const SignInPage = () => {
           ))}
         </div>
       </div>
-
-      {/* Background decoration */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-10 left-10 w-32 h-32 bg-white bg-opacity-10 rounded-full blur-xl"></div>
         <div className="absolute bottom-20 right-16 w-24 h-24 bg-white bg-opacity-10 rounded-full blur-xl"></div>
@@ -311,50 +299,23 @@ const SignInPage = () => {
   return (
     <AuthLayout layoutType="split" leftContent={leftContent} showHeader={false}>
       <PageTransition variant="fadeIn" trigger={isLoaded}>
-        {/* Form Container */}
         <div className="flex-1 flex flex-col justify-center py-2 sm:py-4 md:py-6 lg:py-8 px-3 sm:px-4 md:px-6 lg:px-12 xl:px-20 2xl:px-24 bg-white dark:bg-gray-900 min-h-0">
           <div className="mx-auto w-full max-w-[280px] sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-md">
-            {/* Header */}
+            {/* Reusable Header */}
             <SectionTransition variant="slideInFromTop" delay={0.1}>
-              <div className="mb-4 sm:mb-6 md:mb-8">
-                {/* Navigation */}
-                <div className="flex items-center justify-between mb-2 sm:mb-4 md:mb-6 lg:mb-8 pt-2 sm:pt-3 md:pt-4">
-                  <Link
-                    to="/"
-                    className="inline-flex items-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
-                  >
-                    <ArrowLeftIcon className="w-5 h-5 sm:mr-2" />
-                    <span className="hidden sm:inline">Back to Home</span>
-                  </Link>
-                </div>
-
-                {/* Logo positioned in middle between top and title */}
-                <div className="flex items-center justify-center md:justify-start mb-4 sm:mb-6 md:mb-8">
-                  <div className="w-10 h-10 [@media(min-width:375px)]:w-12 [@media(min-width:375px)]:h-12 sm:w-14 sm:h-14 md:w-12 md:h-12 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl flex items-center justify-center">
-                    <CameraIcon className="w-5 h-5 [@media(min-width:375px)]:w-6 [@media(min-width:375px)]:h-6 sm:w-8 sm:h-8 md:w-6 md:h-6 text-white" />
-                  </div>
-                  <span className="ml-2 text-xl [@media(min-width:375px)]:text-2xl sm:text-3xl md:text-3xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
-                    Groupify
-                  </span>
-                </div>
-
-                {/* Title section */}
-                <div className="text-center md:text-left mb-3 sm:mb-4 md:mb-6">
-                  <h2 className="text-lg [@media(min-width:375px)]:text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
-                    Welcome back
-                  </h2>
-                  <p className="mt-1 sm:mt-2 text-xs [@media(min-width:375px)]:text-xs sm:text-sm md:text-base text-gray-600 dark:text-gray-400">
-                    Sign in to your account to continue organizing your memories
-                  </p>
-                </div>
-              </div>
+              <AuthFormHeader
+                title="Welcome back"
+                subtitle="Sign in to your account to continue organizing your memories"
+                showBackButton={true}
+                backTo="/"
+                backText="Back to Home"
+              />
             </SectionTransition>
 
-            {/* Enhanced Form Section with SignUpPage styling */}
+            {/* Form Section */}
             <SectionTransition variant="slideInFromBottom" delay={0.2}>
               <div className="space-y-3 sm:space-y-4 md:space-y-5 text-sm md:text-base">
-                {/* Main Form */}
-                <EnhancedAuthForm
+                <AuthForm
                   config={formConfig}
                   formData={formData}
                   showPassword={showPassword}
@@ -364,7 +325,7 @@ const SignInPage = () => {
                   loading={loading}
                 />
 
-                {/* Conditional Verification Alert */}
+                {/* Verification Alert */}
                 {showVerificationAlert && (
                   <div className="mt-4 sm:mt-5 md:mt-6 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3 sm:p-4">
                     <div className="flex">
@@ -388,7 +349,7 @@ const SignInPage = () => {
                   </div>
                 )}
 
-                {/* Social Login - Fixed Google Button with SignUpPage styling */}
+                {/* Social Login */}
                 <div className="mt-4 sm:mt-6 md:mt-8">
                   <div className="relative">
                     <div className="absolute inset-0 flex items-center">
@@ -442,7 +403,7 @@ const SignInPage = () => {
                   </button>
                 </div>
 
-                {/* Sign Up Link with SignUpPage styling */}
+                {/* Sign Up Link */}
                 <p className="mt-4 sm:mt-6 md:mt-8 text-center text-xs sm:text-sm text-gray-600 dark:text-gray-400">
                   Don't have an account?{" "}
                   <button
