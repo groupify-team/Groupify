@@ -193,10 +193,11 @@ const UserProfileModal = ({
     return (
       <div className="flex justify-center mb-4">
         <span
-          className={`inline-flex items-center gap-2 bg-gradient-to-r ${config.gradient} text-white px-6 py-2.5 rounded-2xl text-sm font-bold ${config.shadow} border border-white/20`}
+          className={`inline-flex items-center gap-2 bg-gradient-to-r ${config.gradient} text-white px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl text-sm font-bold ${config.shadow} border border-white/20`}
         >
-          <span className="text-base">{config.icon}</span>
-          {config.text}
+          <span className="text-sm sm:text-base">{config.icon}</span>
+          <span className="hidden sm:inline">{config.text}</span>
+          <span className="sm:hidden">{config.text.split(" ")[1]}</span>
         </span>
       </div>
     );
@@ -207,7 +208,7 @@ const UserProfileModal = ({
     if (isOwnProfile) return null;
 
     const buttonBaseClasses =
-      "w-full flex items-center justify-center gap-3 px-6 py-4 rounded-2xl font-bold text-lg transition-all duration-300 transform hover:scale-[1.02] shadow-lg hover:shadow-xl disabled:opacity-50 disabled:hover:scale-100";
+      "w-full flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-bold text-sm sm:text-lg transition-all duration-300 transform hover:scale-[1.02] shadow-lg hover:shadow-xl disabled:opacity-50 disabled:hover:scale-100";
 
     return (
       <div className="space-y-3">
@@ -217,7 +218,7 @@ const UserProfileModal = ({
             disabled={loading}
             className={`${buttonBaseClasses} bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white border border-blue-500/20`}
           >
-            <UserPlusIcon className="w-6 h-6" />
+            <UserPlusIcon className="w-5 h-5 sm:w-6 sm:h-6" />
             Add Friend
           </button>
         )}
@@ -228,7 +229,7 @@ const UserProfileModal = ({
             disabled={loading}
             className={`${buttonBaseClasses} bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white border border-amber-400/20`}
           >
-            <ClockIcon className="w-6 h-6" />
+            <ClockIcon className="w-5 h-5 sm:w-6 sm:h-6" />
             Cancel Request
           </button>
         )}
@@ -239,7 +240,7 @@ const UserProfileModal = ({
             disabled={loading}
             className={`${buttonBaseClasses} bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white border border-emerald-400/20`}
           >
-            <CheckCircleIcon className="w-6 h-6" />
+            <CheckCircleIcon className="w-5 h-5 sm:w-6 sm:h-6" />
             Friends
           </button>
         )}
@@ -257,9 +258,9 @@ const UserProfileModal = ({
           <button
             onClick={() => handleAction(() => onInviteToEvent(user.uid))}
             disabled={loading}
-            className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-6 py-4 rounded-2xl font-bold text-lg transition-all duration-300 transform hover:scale-[1.02] shadow-lg hover:shadow-xl disabled:opacity-50 border border-indigo-500/20"
+            className="w-full flex items-center justify-center gap-2 sm:gap-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-4 sm:px-6 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-bold text-sm sm:text-lg transition-all duration-300 transform hover:scale-[1.02] shadow-lg hover:shadow-xl disabled:opacity-50 border border-indigo-500/20"
           >
-            <UserPlusIcon className="w-6 h-6" />
+            <UserPlusIcon className="w-5 h-5 sm:w-6 sm:h-6" />
             Invite to Event
           </button>
         )}
@@ -272,9 +273,14 @@ const UserProfileModal = ({
       className="modal-backdrop-standard event-modal-backdrop-enter"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="min-h-full flex items-center justify-center p-4">
+      <div className="min-h-full flex items-center justify-center p-2 sm:p-4 lg:p-8">
         <div
-          className="relative bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl rounded-3xl shadow-2xl w-full max-w-2xl mx-auto overflow-visible border border-white/60 dark:border-slate-600/40 transform transition-all duration-300 animate-in slide-in-from-bottom-4"
+          className="relative bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl rounded-3xl shadow-2xl 
+                     w-full 
+                     min-w-[400px] max-w-[500px] sm:max-w-[600px] md:max-w-[700px] lg:max-w-[800px] xl:max-w-[900px] 
+                     mx-auto overflow-visible 
+                     border border-white/60 dark:border-slate-600/40 
+                     transform transition-all duration-300 animate-in slide-in-from-bottom-4"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Beautiful Background Pattern */}
@@ -286,7 +292,7 @@ const UserProfileModal = ({
           </div>
 
           {/* Header with Action Menu and Close Button */}
-          <div className="relative flex justify-between items-center p-6 pb-2">
+          <div className="relative flex justify-between items-center p-4 sm:p-6 pb-2">
             {/* Manage Button */}
             {context === "event" &&
               !isOwnProfile &&
@@ -298,7 +304,7 @@ const UserProfileModal = ({
                     onClick={() => setShowActionMenu(!showActionMenu)}
                     className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white transition-colors p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-slate-700"
                   >
-                    <EllipsisVerticalIcon className="w-6 h-6" />
+                    <EllipsisVerticalIcon className="w-5 h-5 sm:w-6 sm:h-6" />
                   </button>
 
                   {showActionMenu && (
@@ -307,7 +313,7 @@ const UserProfileModal = ({
                         className="fixed inset-0 z-20"
                         onClick={() => setShowActionMenu(false)}
                       />
-                      <div className="absolute top-full left-0 mt-2 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-gray-200/60 dark:border-slate-600/40 overflow-hidden z-50 min-w-64 w-64">
+                      <div className="absolute top-full left-0 mt-2 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-gray-200/60 dark:border-slate-600/40 overflow-hidden z-50 min-w-48 sm:min-w-64 w-48 sm:w-64">
                         {!isUserAdmin && (
                           <button
                             onClick={(e) => {
@@ -315,9 +321,9 @@ const UserProfileModal = ({
                               setConfirmAction("promote");
                               setShowActionMenu(false);
                             }}
-                            className="w-full text-left px-6 py-4 text-gray-900 dark:text-white hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors font-medium flex items-center gap-3"
+                            className="w-full text-left px-4 sm:px-6 py-3 sm:py-4 text-gray-900 dark:text-white hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors font-medium flex items-center gap-3 text-sm sm:text-base"
                           >
-                            <span className="text-lg">🛡️</span>
+                            <span className="text-base sm:text-lg">🛡️</span>
                             <span>Promote to Admin</span>
                           </button>
                         )}
@@ -329,9 +335,9 @@ const UserProfileModal = ({
                               setConfirmAction("demote");
                               setShowActionMenu(false);
                             }}
-                            className="w-full text-left px-6 py-4 text-gray-900 dark:text-white hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors font-medium flex items-center gap-3"
+                            className="w-full text-left px-4 sm:px-6 py-3 sm:py-4 text-gray-900 dark:text-white hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors font-medium flex items-center gap-3 text-sm sm:text-base"
                           >
-                            <span className="text-lg">⬇️</span>
+                            <span className="text-base sm:text-lg">⬇️</span>
                             <span>Remove Admin</span>
                           </button>
                         )}
@@ -342,9 +348,9 @@ const UserProfileModal = ({
                             setConfirmAction("kick");
                             setShowActionMenu(false);
                           }}
-                          className="w-full text-left px-6 py-4 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors font-medium flex items-center gap-3 border-t border-gray-100 dark:border-slate-700"
+                          className="w-full text-left px-4 sm:px-6 py-3 sm:py-4 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors font-medium flex items-center gap-3 border-t border-gray-100 dark:border-slate-700 text-sm sm:text-base"
                         >
-                          <span className="text-lg">🚫</span>
+                          <span className="text-base sm:text-lg">🚫</span>
                           <span>Remove from Event</span>
                         </button>
                       </div>
@@ -367,16 +373,16 @@ const UserProfileModal = ({
               onClick={onClose}
               className="text-gray-400 hover:text-gray-600 dark:hover:text-white transition-colors p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-slate-700"
             >
-              <XMarkIcon className="w-6 h-6" />
+              <XMarkIcon className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
           </div>
 
           {/* Profile Section */}
-          <div className="relative px-8 pb-8">
+          <div className="relative px-4 sm:px-6 lg:px-8 pb-6 sm:pb-8">
             {/* Profile Image */}
-            <div className="text-center mb-6">
+            <div className="text-center mb-4 sm:mb-6 -mt-6 sm:-mt-8">
               <div className="relative inline-block">
-                <div className="w-36 h-36 rounded-full bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 p-1 mx-auto shadow-2xl">
+                <div className="w-24 h-24 sm:w-32 sm:h-32 lg:w-36 lg:h-36 rounded-full bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 p-1 mx-auto shadow-2xl">
                   <img
                     src={
                       user.photoURL ||
@@ -388,8 +394,8 @@ const UserProfileModal = ({
                 </div>
 
                 {/* Online Status with Better Design */}
-                <div className="absolute bottom-3 right-3 w-10 h-10 bg-emerald-500 border-4 border-white dark:border-slate-800 rounded-full shadow-xl flex items-center justify-center">
-                  <div className="w-4 h-4 bg-white rounded-full animate-pulse"></div>
+                <div className="absolute bottom-1 right-1 sm:bottom-3 sm:right-3 w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 bg-emerald-500 border-2 sm:border-4 border-white dark:border-slate-800 rounded-full shadow-xl flex items-center justify-center">
+                  <div className="w-2 h-2 sm:w-3 sm:h-3 lg:w-4 lg:h-4 bg-white rounded-full animate-pulse"></div>
                 </div>
               </div>
             </div>
@@ -398,63 +404,82 @@ const UserProfileModal = ({
             {renderRoleBadge()}
 
             {/* User Info */}
-            <div className="text-center mb-6">
-              <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-3 leading-tight">
+            <div className="text-center mb-4 sm:mb-6">
+              <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white mb-2 sm:mb-3 leading-tight px-2">
                 {user.displayName || "Unknown User"}
                 {isOwnProfile && (
-                  <span className="text-blue-600 dark:text-blue-400 text-lg ml-2 font-medium bg-blue-50 dark:bg-blue-900/30 px-3 py-1 rounded-full">
+                  <span className="text-blue-600 dark:text-blue-400 text-sm sm:text-base lg:text-lg ml-2 font-medium bg-blue-50 dark:bg-blue-900/30 px-2 sm:px-3 py-1 rounded-full">
                     You
                   </span>
                 )}
               </h2>
 
-              <div className="flex items-center justify-center gap-2 mb-6">
-                <EnvelopeIcon className="w-5 h-5 text-gray-500" />
-                <p className="text-gray-600 dark:text-slate-400 text-base">
+              <div className="flex items-center justify-center gap-2 mb-4 sm:mb-6 px-2">
+                <EnvelopeIcon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 flex-shrink-0" />
+                <p className="text-gray-600 dark:text-slate-400 text-sm sm:text-base break-all">
                   {user.email}
                 </p>
               </div>
 
               {/* Stats */}
               {showStats && (
-                <div className="flex justify-center gap-12 mb-8">
-                  <div className="text-center">
-                    <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-3xl flex items-center justify-center mx-auto mb-3 shadow-lg">
-                      <CalendarIcon className="w-8 h-8 text-white" />
+                <div className="space-y-4 mb-6 sm:mb-8 max-w-lg mx-auto">
+                  {/* Main Stats Row */}
+                  <div className="grid grid-cols-2 gap-4 sm:gap-6">
+                    <div className="text-center">
+                      <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-2 shadow-md">
+                        <CalendarIcon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                      </div>
+                      <div className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-1">
+                        {userStats.loading ? (
+                          <div className="w-4 h-4 border-2 border-gray-300 dark:border-slate-400 border-t-blue-500 rounded-full animate-spin mx-auto"></div>
+                        ) : userStats.error ? (
+                          <span className="text-gray-400">-</span>
+                        ) : (
+                          <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                            {userStats.eventsCount}
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-xs text-gray-500 dark:text-slate-400 uppercase tracking-wide font-semibold">
+                        Events
+                      </div>
                     </div>
-                    <div className="text-3xl font-bold text-gray-900 dark:text-white h-10 flex items-center justify-center">
-                      {userStats.loading ? (
-                        <div className="w-5 h-5 border-2 border-gray-300 dark:border-slate-400 border-t-blue-500 rounded-full animate-spin"></div>
-                      ) : userStats.error ? (
-                        <span className="text-gray-400 text-xl">-</span>
-                      ) : (
-                        <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                          {userStats.eventsCount}
-                        </span>
-                      )}
-                    </div>
-                    <div className="text-sm text-gray-500 dark:text-slate-400 uppercase tracking-wide font-semibold">
-                      Events
+
+                    <div className="text-center">
+                      <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-pink-500 to-red-500 rounded-2xl flex items-center justify-center mx-auto mb-2 shadow-md">
+                        <UsersIcon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                      </div>
+                      <div className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-1">
+                        {userStats.loading ? (
+                          <div className="w-4 h-4 border-2 border-gray-300 dark:border-slate-400 border-t-pink-500 rounded-full animate-spin mx-auto"></div>
+                        ) : userStats.error ? (
+                          <span className="text-gray-400">-</span>
+                        ) : (
+                          <span className="bg-gradient-to-r from-pink-600 to-red-600 bg-clip-text text-transparent">
+                            {userStats.friendsCount}
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-xs text-gray-500 dark:text-slate-400 uppercase tracking-wide font-semibold">
+                        Friends
+                      </div>
                     </div>
                   </div>
 
-                  <div className="text-center">
-                    <div className="w-16 h-16 bg-gradient-to-br from-pink-500 to-red-500 rounded-3xl flex items-center justify-center mx-auto mb-3 shadow-lg">
-                      <UsersIcon className="w-8 h-8 text-white" />
-                    </div>
-                    <div className="text-3xl font-bold text-gray-900 dark:text-white h-10 flex items-center justify-center">
-                      {userStats.loading ? (
-                        <div className="w-5 h-5 border-2 border-gray-300 dark:border-slate-400 border-t-pink-500 rounded-full animate-spin"></div>
-                      ) : userStats.error ? (
-                        <span className="text-gray-400 text-xl">-</span>
-                      ) : (
-                        <span className="bg-gradient-to-r from-pink-600 to-red-600 bg-clip-text text-transparent">
-                          {userStats.friendsCount}
+                  {/* Quick Info Bar */}
+                  <div className="bg-gradient-to-r from-slate-50 to-gray-50 dark:from-slate-800/50 dark:to-slate-700/50 rounded-2xl p-3 border border-slate-200/50 dark:border-slate-600/30">
+                    <div className="flex items-center justify-between text-sm">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                        <span className="text-gray-600 dark:text-slate-300 font-medium">
+                          Online now
                         </span>
-                      )}
-                    </div>
-                    <div className="text-sm text-gray-500 dark:text-slate-400 uppercase tracking-wide font-semibold">
-                      Friends
+                      </div>
+                      <div className="flex items-center gap-2 text-gray-500 dark:text-slate-400">
+                        <ClockIcon className="w-4 h-4" />
+                        <span>Active today</span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -463,7 +488,7 @@ const UserProfileModal = ({
 
             {/* Actions */}
             {showActions && (
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4 max-w-md mx-auto">
                 {renderFriendActions()}
                 {renderEventActions()}
               </div>
@@ -480,19 +505,23 @@ const UserProfileModal = ({
             e.target === e.currentTarget && setConfirmAction(null)
           }
         >
-          <div className="min-h-full flex items-center justify-center p-2 sm:p-4 event-modal-enter">
+          <div className="min-h-full flex items-center justify-center p-4 event-modal-enter">
             <div
-              className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl rounded-3xl p-8 max-w-sm w-full border border-white/60 dark:border-slate-600/40 shadow-2xl transform transition-all duration-300 animate-in slide-in-from-bottom-4 event-modal-enter cursor-default modal-content-standard"
+              className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl rounded-3xl p-6 sm:p-8 
+                         w-full max-w-xs sm:max-w-sm 
+                         border border-white/60 dark:border-slate-600/40 shadow-2xl 
+                         transform transition-all duration-300 animate-in slide-in-from-bottom-4 
+                         event-modal-enter cursor-default modal-content-standard"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="text-center mb-6">
-                <div className="w-18 h-18 bg-gradient-to-br from-amber-500 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-xl border-2 border-white/20">
-                  <SparklesIcon className="w-9 h-9 text-white" />
+                <div className="w-16 h-16 sm:w-18 sm:h-18 bg-gradient-to-br from-amber-500 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-xl border-2 border-white/20">
+                  <SparklesIcon className="w-8 h-8 sm:w-9 sm:h-9 text-white" />
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-2">
                   Confirm Action
                 </h3>
-                <p className="text-gray-600 dark:text-slate-300">
+                <p className="text-sm sm:text-base text-gray-600 dark:text-slate-300 px-2">
                   {confirmAction === "remove-friend" &&
                     "Are you sure you want to remove this friend?"}
                   {confirmAction === "cancel-request" &&
@@ -510,14 +539,14 @@ const UserProfileModal = ({
               <div className="flex gap-3">
                 <button
                   onClick={() => setConfirmAction(null)}
-                  className="flex-1 px-6 py-3 bg-gray-100 hover:bg-gray-200 dark:bg-slate-600 dark:hover:bg-slate-700 text-gray-900 dark:text-white rounded-2xl font-bold transition-colors"
+                  className="flex-1 px-4 sm:px-6 py-3 bg-gray-100 hover:bg-gray-200 dark:bg-slate-600 dark:hover:bg-slate-700 text-gray-900 dark:text-white rounded-2xl font-bold transition-colors text-sm sm:text-base"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleConfirmedAction}
                   disabled={loading}
-                  className="flex-1 px-6 py-3 bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white rounded-2xl font-bold transition-all duration-300 disabled:opacity-50"
+                  className="flex-1 px-4 sm:px-6 py-3 bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white rounded-2xl font-bold transition-all duration-300 disabled:opacity-50 text-sm sm:text-base"
                 >
                   {loading ? "Processing..." : "Confirm"}
                 </button>
