@@ -243,43 +243,6 @@ const SignUpPage = () => {
     }
   };
 
-  const handleNavigateToSignIn = () => {
-    // Create loading overlay
-    const overlay = document.createElement("div");
-    overlay.className =
-      "fixed inset-0 bg-white dark:bg-gray-900 z-50 flex items-center justify-center transition-opacity duration-300";
-    overlay.style.opacity = "0";
-    overlay.innerHTML = `
-      <div class="flex flex-col items-center space-y-4">
-        <div class="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
-        <p class="text-gray-600 dark:text-gray-400 text-sm">Loading...</p>
-      </div>
-    `;
-    document.body.appendChild(overlay);
-
-    // Fade in overlay
-    requestAnimationFrame(() => {
-      overlay.style.opacity = "1";
-    });
-
-    // Navigate after overlay is visible
-    setTimeout(() => {
-      navigate("/signin");
-
-      // Remove overlay after navigation
-      setTimeout(() => {
-        if (overlay && overlay.parentNode) {
-          overlay.style.opacity = "0";
-          setTimeout(() => {
-            if (overlay.parentNode) {
-              overlay.parentNode.removeChild(overlay);
-            }
-          }, 300);
-        }
-      }, 100);
-    }, 300);
-  };
-
   const passwordStrength = getPasswordStrength(formData.password);
 
   const leftContent = (
@@ -455,21 +418,43 @@ const SignUpPage = () => {
                         required
                         value={formData.password}
                         onChange={handleInputChange}
-                        className="input-primary pr-12 py-1.5 sm:py-2 md:py-3"
+                        className="input-primary py-1.5 sm:py-2 md:py-3"
                         placeholder="••••••••"
                         disabled={loading}
+                        style={{
+                          paddingRight: "48px",
+                          fontFamily: "inherit",
+                          fontSize: "inherit",
+                        }}
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute inset-y-0 right-0 pr-3 flex items-center"
                         disabled={loading}
+                        style={{
+                          position: "absolute",
+                          right: "0",
+                          top: "0",
+                          bottom: "0",
+                          width: "48px",
+                          minWidth: "48px",
+                          maxWidth: "48px",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          border: "none",
+                          background: "transparent",
+                          cursor: loading ? "not-allowed" : "pointer",
+                          transform: "none",
+                        }}
                       >
-                        {showPassword ? (
-                          <EyeIcon className="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
-                        ) : (
-                          <EyeSlashIcon className="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
-                        )}
+                        <span className="w-5 h-5 flex items-center justify-center">
+                          {showPassword ? (
+                            <EyeIcon className="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
+                          ) : (
+                            <EyeSlashIcon className="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
+                          )}
+                        </span>
                       </button>
                     </div>
 
@@ -644,23 +629,45 @@ const SignUpPage = () => {
                         required
                         value={formData.confirmPassword}
                         onChange={handleInputChange}
-                        className="input-primary pr-12 py-1.5 sm:py-2 md:py-3"
+                        className="input-primary py-1.5 sm:py-2 md:py-3"
                         placeholder="••••••••"
                         disabled={loading}
+                        style={{
+                          paddingRight: "48px",
+                          fontFamily: "inherit",
+                          fontSize: "inherit",
+                        }}
                       />
                       <button
                         type="button"
                         onClick={() =>
                           setShowConfirmPassword(!showConfirmPassword)
                         }
-                        className="absolute inset-y-0 right-0 pr-3 flex items-center"
                         disabled={loading}
+                        style={{
+                          position: "absolute",
+                          right: "0",
+                          top: "0",
+                          bottom: "0",
+                          width: "48px",
+                          minWidth: "48px",
+                          maxWidth: "48px",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          border: "none",
+                          background: "transparent",
+                          cursor: loading ? "not-allowed" : "pointer",
+                          transform: "none",
+                        }}
                       >
-                        {showConfirmPassword ? (
-                          <EyeIcon className="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
-                        ) : (
-                          <EyeSlashIcon className="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
-                        )}
+                        <span className="w-5 h-5 flex items-center justify-center">
+                          {showConfirmPassword ? (
+                            <EyeIcon className="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
+                          ) : (
+                            <EyeSlashIcon className="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
+                          )}
+                        </span>
                       </button>
                     </div>
                   </div>
@@ -811,7 +818,7 @@ const SignUpPage = () => {
                 <p className="mt-4 sm:mt-6 md:mt-8 text-center text-xs sm:text-sm text-gray-600 dark:text-gray-400">
                   Already have an account?{" "}
                   <button
-                    onClick={handleNavigateToSignIn}
+                    onClick={() => navigate("/signin")}
                     className="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300 bg-transparent border-none cursor-pointer"
                   >
                     Sign in instead

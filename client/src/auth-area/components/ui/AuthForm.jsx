@@ -43,6 +43,11 @@ export const AuthInput = forwardRef(
                 ? "border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/10"
                 : "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
             } text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
+            style={{
+              paddingRight: "48px",
+              fontFamily: "inherit",
+              fontSize: "inherit",
+            }}
             {...props}
           />
 
@@ -51,7 +56,20 @@ export const AuthInput = forwardRef(
               type="button"
               onClick={onPasswordToggle}
               disabled={disabled}
-              className="absolute inset-y-0 right-0 pr-3 flex items-center"
+              className="absolute inset-y-0 right-0 w-12 flex items-center justify-center"
+              style={{
+                width: "48px",
+                minWidth: "48px",
+                maxWidth: "48px",
+                position: "absolute",
+                right: "0",
+                top: "0",
+                bottom: "0",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                transform: "none",
+              }}
             >
               {showPassword ? (
                 <EyeIcon className="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
