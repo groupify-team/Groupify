@@ -235,7 +235,12 @@ const EditEventModal = ({
       onClick={handleClose}
     >
       <div className="min-h-full flex items-center justify-center p-2 sm:p-4 event-modal-enter">
-        <div className="relative w-full max-w-[300px] sm:max-w-sm md:max-w-md my-0 mx-2 max-[320px]:max-w-[280px]">
+        <div
+          className={`relative bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg rounded-lg sm:rounded-xl md:rounded-2xl shadow-2xl border border-white/20 dark:border-gray-700/50 overflow-hidden ${
+            showDeleteConfirm ? "w-full min-w-[380px] sm:min-w-[420px]" : ""
+          }`}
+          onClick={(e) => e.stopPropagation()}
+        >
           {/* Background blur effect */}
           <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 via-cyan-500 to-teal-500 rounded-2xl blur opacity-20"></div>
 
@@ -285,8 +290,8 @@ const EditEventModal = ({
 
               {/* Delete Confirmation View */}
               {showDeleteConfirm ? (
-                <div className="space-y-4">
-                  <div className="bg-red-50/80 dark:bg-red-900/30 border border-red-200/50 dark:border-red-800/50 rounded-lg sm:rounded-xl p-4">
+                <div className="space-y-4 sm:space-y-5 md:space-y-6">
+                  <div className="bg-red-50/80 dark:bg-red-900/30 border border-red-200/50 dark:border-red-800/50 rounded-lg sm:rounded-xl p-4 sm:p-5 md:p-6">
                     <div className="flex items-center gap-3 mb-3">
                       <div className="w-8 h-8 bg-red-500 rounded-lg flex items-center justify-center">
                         <ExclamationTriangleIcon className="w-4 h-4 text-white" />
