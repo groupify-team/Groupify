@@ -1,8 +1,5 @@
 import React, { useEffect } from "react";
 import AuthHeader from "./AuthHeader";
-import AccessibilityModal from "@shared/components/accessibility/AccessibilityModal";
-import AccessibilityButton from "@shared/components/accessibility/AccessibilityButton";
-import { useGlobalAccessibility } from "@shared/components/accessibility/hooks/useGlobalAccessibility";
 
 const AuthLayout = ({
   children,
@@ -12,8 +9,6 @@ const AuthLayout = ({
   leftContent = null,
   className = "",
 }) => {
-  const { accessibilityModalProps, openAccessibilitySettings } =
-    useGlobalAccessibility();
   useEffect(() => {
     document.body.style.opacity = "1";
     document.body.style.transition = "opacity 0.5s ease-in-out";
@@ -37,23 +32,8 @@ const AuthLayout = ({
         {/* Right Side - Form */}
         <div className="flex-1 flex flex-col bg-white dark:bg-gray-900">
           {showHeader && <AuthHeader {...headerProps} />}
-
-          {/* Floating Accessibility Button when header is hidden */}
-          {!showHeader && (
-            <div className="absolute top-4 right-4 z-50">
-              <AccessibilityButton
-                onSettingsClick={openAccessibilitySettings}
-                size="default"
-                variant="default"
-              />
-            </div>
-          )}
-
           <main className="flex-1">{children}</main>
         </div>
-
-        {/* Global Accessibility Modal */}
-        <AccessibilityModal {...accessibilityModalProps} />
       </div>
     );
   }
@@ -65,24 +45,9 @@ const AuthLayout = ({
         className={`min-h-screen bg-gradient-to-br from-blue-100 to-blue-300 dark:from-gray-800 dark:to-gray-900 ${className}`}
       >
         {showHeader && <AuthHeader {...headerProps} />}
-
-        {/* Floating Accessibility Button when header is hidden */}
-        {!showHeader && (
-          <div className="absolute top-4 right-4 z-50">
-            <AccessibilityButton
-              onSettingsClick={openAccessibilitySettings}
-              size="default"
-              variant="default"
-            />
-          </div>
-        )}
-
         <main className="flex-1 flex items-center justify-center px-4 py-8">
           {children}
         </main>
-
-        {/* Global Accessibility Modal */}
-        <AccessibilityModal {...accessibilityModalProps} />
       </div>
     );
   }
@@ -91,22 +56,7 @@ const AuthLayout = ({
   return (
     <div className={`min-h-screen ${className}`}>
       {showHeader && <AuthHeader {...headerProps} />}
-
-      {/* Floating Accessibility Button when header is hidden */}
-      {!showHeader && (
-        <div className="absolute top-4 right-4 z-50">
-          <AccessibilityButton
-            onSettingsClick={openAccessibilitySettings}
-            size="default"
-            variant="default"
-          />
-        </div>
-      )}
-
       <main className="flex-1">{children}</main>
-
-      {/* Global Accessibility Modal */}
-      <AccessibilityModal {...accessibilityModalProps} />
     </div>
   );
 };

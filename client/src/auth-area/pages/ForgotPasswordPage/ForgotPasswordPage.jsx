@@ -11,7 +11,7 @@ import {
 
 // New modular components and hooks
 import AuthLayout from "../../components/layout/AuthLayout";
-import EnhancedAuthForm from "../../components/ui/EnhancedAuthForm";
+import AuthForm from "../../components/ui/AuthForm";
 import { useAuthValidation } from "../../hooks/useAuthValidation";
 import { useAuthAnimations } from "../../hooks/useAuthAnimations";
 
@@ -376,7 +376,7 @@ const ForgotPasswordPage = () => {
           {/* Form Section */}
           <div className="space-y-3 sm:space-y-4 md:space-y-5 text-sm md:text-base">
             {/* Main Form */}
-            <EnhancedAuthForm
+            <AuthForm
               config={formConfig}
               formData={formData}
               onInputChange={handleInputChange}
