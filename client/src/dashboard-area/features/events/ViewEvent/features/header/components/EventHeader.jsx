@@ -6,16 +6,16 @@ import {
   ArrowRightOnRectangleIcon,
 } from "@heroicons/react/24/outline";
 
-const EventHeader = ({ 
-  event, 
-  photos, 
-  eventMembers, 
-  isAdmin, 
+const EventHeader = ({
+  event,
+  photos,
+  eventMembers,
+  isAdmin,
   isCreator,
   isMember,
   currentUserId,
   onEditEvent,
-  onLeaveEvent 
+  onLeaveEvent,
 }) => {
   // Note: photos and eventMembers are passed but not used in current implementation
   const formatDateRange = (startDate, endDate) => {
@@ -79,21 +79,23 @@ const EventHeader = ({
               </div>
             </div>
             {shouldShowActionButton && (
-              <div className="ml-3">
+              <div className="ml-3 flex items-center gap-2">
                 {shouldShowEditButton && (
                   <button
                     onClick={onEditEvent}
-                    className="p-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg transition-all duration-300"
+                    className="group relative p-2.5 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 backdrop-blur-sm border border-blue-400/20"
                   >
-                    <PencilIcon className="w-4 h-4" />
+                    <PencilIcon className="w-4 h-4 relative z-10" />
+                    <div className="absolute inset-0 bg-white/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   </button>
                 )}
                 {shouldShowLeaveButton && (
                   <button
                     onClick={onLeaveEvent}
-                    className="p-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg transition-all duration-300"
+                    className="group relative p-2.5 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 backdrop-blur-sm border border-red-400/20"
                   >
-                    <ArrowRightOnRectangleIcon className="w-4 h-4" />
+                    <ArrowRightOnRectangleIcon className="w-4 h-4 relative z-10" />
+                    <div className="absolute inset-0 bg-white/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   </button>
                 )}
               </div>
@@ -130,25 +132,26 @@ const EventHeader = ({
               </div>
             </div>
 
-            {/* Right - Action Buttons */}
             {shouldShowActionButton && (
-              <div>
+              <div className="flex items-center gap-3">
                 {shouldShowEditButton && (
                   <button
                     onClick={onEditEvent}
-                    className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center gap-2"
+                    className="group relative bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center gap-2 backdrop-blur-sm border border-blue-400/20 overflow-hidden"
                   >
-                    <PencilIcon className="w-5 h-5" />
-                    Edit event
+                    <div className="absolute inset-0 bg-white/10 translate-x-[-100%] group-hover:translate-x-0 transition-transform duration-300"></div>
+                    <PencilIcon className="w-5 h-5 relative z-10" />
+                    <span className="relative z-10">Edit Event</span>
                   </button>
                 )}
                 {shouldShowLeaveButton && (
                   <button
                     onClick={onLeaveEvent}
-                    className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center gap-2"
+                    className="group relative bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center gap-2 backdrop-blur-sm border border-red-400/20 overflow-hidden"
                   >
-                    <ArrowRightOnRectangleIcon className="w-5 h-5" />
-                    Leave Event
+                    <div className="absolute inset-0 bg-white/10 translate-x-[-100%] group-hover:translate-x-0 transition-transform duration-300"></div>
+                    <ArrowRightOnRectangleIcon className="w-5 h-5 relative z-10" />
+                    <span className="relative z-10">Leave Event</span>
                   </button>
                 )}
               </div>

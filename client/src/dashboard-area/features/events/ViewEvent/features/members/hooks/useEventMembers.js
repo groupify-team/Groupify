@@ -4,6 +4,7 @@ import { toast } from "@shared/utils/toast";
 import { sendEventInvite } from "@shared/services/firebase/events";
 import { useFriendsContext } from "@shared/contexts/FriendsContext";
 import { useEventContext } from "@shared/contexts/EventContext";
+import { modalToast } from "@shared/utils/modalToast";
 
 export const useEventMembers = (currentUserId, event, setEvent) => {
   // Get global friends state
@@ -145,8 +146,14 @@ export const useEventMembers = (currentUserId, event, setEvent) => {
         ...prevUser,
         __isFriend: false,
       }));
+      modalToast.success("Friend removed successfully", {
+        duration: 3000,
+      });
     } catch (error) {
       console.error("Failed to remove friend:", error);
+      modalToast.error("Failed to remove friend. Please try again.", {
+        duration: 4000,
+      });
       throw error;
     }
   };

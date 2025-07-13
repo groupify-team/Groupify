@@ -11,37 +11,38 @@ import React, {
 import { useParams, useNavigate } from "react-router-dom";
 import { useRenderTracker } from "@shared/hooks/usePerformanceMonitor";
 import { useAuth } from "@auth/hooks/useAuth";
-import { useEventContext } from "@shared/contexts/EventContext"; // NEW: EventContext import
-import EventHeader from "./features/header/components/EventHeader";
-import EventMembersCard from "./features/members/components/EventMembersCard";
-import InvitePeopleCard from "./features/members/components/InvitePeopleCard";
-import EventStatistics from "./features/statistics/components/EventStatistics";
-import PhotoGallery from "./features/gallery/components/PhotoGallery";
-import { useEventPhotos } from "./hooks/useEventPhotos"; // NEW: Separate photos hook
-import { usePhotoOperations } from "./features/gallery/hooks/usePhotoOperations";
-import { useEventMembers } from "./features/members/hooks/useEventMembers";
-import { usePhotoModal } from "./features/gallery/hooks/usePhotoModal";
-import { useFaceRecognition } from "./features/faceRecognition/hooks/useFaceRecognition";
+import { useEventContext } from "@shared/contexts/EventContext";
+import { useEnhancedNavigation } from "@shared/hooks/useEnhancedNavigation";
 import { modalToast } from "@shared/utils/modalToast";
-
-
-
 import {
   getPhotoLimitStatus,
   getRemainingPhotoSlots,
 } from "./features/gallery/utils/photoHelpers";
 
+// Import components
+import EventHeader from "./features/header/components/EventHeader";
+import EventMembersCard from "./features/members/components/EventMembersCard";
+import InvitePeopleCard from "./features/members/components/InvitePeopleCard";
+import EventStatistics from "./features/statistics/components/EventStatistics";
+import PhotoGallery from "./features/gallery/components/PhotoGallery";
+
+// Import hooks
+import { useEventPhotos } from "./hooks/useEventPhotos";
+import { usePhotoOperations } from "./features/gallery/hooks/usePhotoOperations";
+import { useEventMembers } from "./features/members/hooks/useEventMembers";
+import { usePhotoModal } from "./features/gallery/hooks/usePhotoModal";
+import { useFaceRecognition } from "./features/faceRecognition/hooks/useFaceRecognition";
+
+// Lazy load heavy components
 const UserProfileModal = lazy(() =>
-  import("@shared/components/user/UserProfileModal").then((module) => {
-    return { default: module.default };
-  })
+  import("@shared/components/user/UserProfileModal").then((module) => ({
+    default: module.default,
+  }))
 );
 
 const FaceRecognitionCard = lazy(() =>
   import("./features/faceRecognition/components/FaceRecognitionCard").then(
-    (module) => {
-      return { default: module.default };
-    }
+    (module) => ({ default: module.default })
   )
 );
 
@@ -63,7 +64,8 @@ const EditEventModal = lazy(() =>
   import("./features/header/hooks/EditEventModal")
 );
 
-const EventLoadingSpinner = () => (
+// Loading Spinner Component
+const EventLoadingSpinner = memo(() => (
   <div className="flex items-center justify-center min-h-[60vh]">
     <div className="text-center">
       <div className="relative mb-8">
@@ -86,9 +88,11 @@ const EventLoadingSpinner = () => (
       </p>
     </div>
   </div>
-);
+));
 
-// Performance: Memoized error component
+EventLoadingSpinner.displayName = "EventLoadingSpinner";
+
+// Error Display Component
 const ErrorDisplay = memo(({ error }) => (
   <div className="flex items-center justify-center min-h-[60vh] p-4">
     <div className="text-center max-w-md mx-auto">
@@ -109,7 +113,44 @@ const ErrorDisplay = memo(({ error }) => (
 
 ErrorDisplay.displayName = "ErrorDisplay";
 
-// Performance: Memoized mobile tab switcher
+// Leaving Event Overlay Component
+const LeavingEventOverlay = memo(() => (
+  <div className="fixed inset-0 bg-white/95 dark:bg-gray-900/95 z-50 flex items-center justify-center backdrop-blur-sm">
+    <div className="flex flex-col items-center space-y-6">
+      <div className="relative">
+        <div className="w-16 h-16 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl flex items-center justify-center shadow-2xl animate-pulse">
+          <svg
+            className="w-8 h-8 text-white"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+            ></path>
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+            ></path>
+          </svg>
+        </div>
+        <div className="absolute inset-0 w-16 h-16 border-4 border-indigo-300 border-t-indigo-600 rounded-2xl animate-spin"></div>
+      </div>
+      <p className="text-gray-700 dark:text-gray-300 font-medium">
+        Leaving event...
+      </p>
+    </div>
+  </div>
+));
+
+LeavingEventOverlay.displayName = "LeavingEventOverlay";
+
+// Mobile Tab Switcher Component
 const MobileTabSwitcher = memo(({ activeTab, setActiveTab }) => (
   <div className="xl:hidden relative mb-6">
     <div className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-lg shadow-lg p-1.5 border border-white/20 dark:border-gray-700/50">
@@ -127,7 +168,7 @@ const MobileTabSwitcher = memo(({ activeTab, setActiveTab }) => (
               : "text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
           }`}
         >
-          event
+          Event
         </button>
         <button
           onClick={() => setActiveTab("members")}
@@ -145,15 +186,18 @@ const MobileTabSwitcher = memo(({ activeTab, setActiveTab }) => (
 ));
 
 MobileTabSwitcher.displayName = "MobileTabSwitcher";
-
-const EventDetailView = ({ eventId: propeventId }) => {
-  const { eventId: parameventId } = useParams();
-  const eventId = propeventId || parameventId;
+const EventDetailView = ({ eventId: propEventId }) => {
+  // ===== ROUTE & AUTH SETUP =====
+  const { eventId: paramEventId } = useParams();
+  const eventId = propEventId || paramEventId;
   const navigate = useNavigate();
   const { currentUser } = useAuth();
   const [isPending, startTransition] = useTransition();
 
-  // NEW: Get real-time event data from EventContext
+  // ===== NAVIGATION SETUP =====
+  const { smoothNavigate } = useEnhancedNavigation();
+
+  // ===== EVENT CONTEXT SETUP =====
   const {
     getEventById,
     getEventMembers,
@@ -165,7 +209,14 @@ const EventDetailView = ({ eventId: propeventId }) => {
     error: eventError,
   } = useEventContext();
 
-  // NEW: Get real-time event data
+  // ===== STATE MANAGEMENT =====
+  const [isLeavingEvent, setIsLeavingEvent] = useState(false);
+  const [localEvent, setLocalEvent] = useState(null);
+  const [showLeaveConfirmation, setShowLeaveConfirmation] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [modalSource, setModalSource] = useState(null);
+
+  // ===== COMPUTED VALUES =====
   const event = useMemo(() => {
     return eventId ? getEventById(eventId) : null;
   }, [eventId, getEventById]);
@@ -174,21 +225,25 @@ const EventDetailView = ({ eventId: propeventId }) => {
     return eventId ? getEventMembers(eventId) : [];
   }, [eventId, getEventMembers]);
 
-  // NEW: Check permissions using EventContext
   const isAdmin = useMemo(() => {
-    return currentUser?.uid && eventId ? isEventAdmin(eventId, currentUser.uid) : false;
+    return currentUser?.uid && eventId
+      ? isEventAdmin(eventId, currentUser.uid)
+      : false;
   }, [eventId, currentUser?.uid, isEventAdmin]);
 
   const isCreator = useMemo(() => {
-    return currentUser?.uid && eventId ? isEventCreator(eventId, currentUser.uid) : false;
+    return currentUser?.uid && eventId
+      ? isEventCreator(eventId, currentUser.uid)
+      : false;
   }, [eventId, currentUser?.uid, isEventCreator]);
 
-  //check if the user is a member of the event
   const isMember = useMemo(() => {
-    return currentUser?.uid && eventId ? isEventMember(eventId, currentUser.uid) : false;
+    return currentUser?.uid && eventId
+      ? isEventMember(eventId, currentUser.uid)
+      : false;
   }, [eventId, currentUser?.uid, isEventMember]);
 
-  // NEW: Use separate hook for photos
+  // ===== HOOKS SETUP =====
   const {
     photos,
     loading: photosLoading,
@@ -196,37 +251,6 @@ const EventDetailView = ({ eventId: propeventId }) => {
     setPhotos,
   } = useEventPhotos(eventId);
 
-  // Combine loading states
-  const loading = eventLoading || photosLoading;
-  const error = eventError || photosError;
-
-  // NEW: State for local event updates (for compatibility with existing components)
-  const [localEvent, setLocalEvent] = useState(event);
-
-  // Initialize local event with context data
-  const [showLeaveConfirmation, setShowLeaveConfirmation] = useState(false);
-
-  // NEW: Update local event when context changes
-  useEffect(() => {
-    if (event && JSON.stringify(event) !== JSON.stringify(localEvent)) {
-      console.log("🔄 EventDetailView: Updating local event from context", event);
-      setLocalEvent(event);
-    }
-  }, [event, localEvent]);
-
-  // Performance logging - track what causes re-renders
-  useRenderTracker("EventDetailView", {
-    eventId,
-    currentUserId: currentUser?.uid,
-    hasEvent: !!event,
-    photosLength: photos?.length,
-    eventMembersLength: eventMembers?.length,
-    loading,
-    error: !!error,
-    isPending,
-  });
-
-  // PERFORMANCE: Lazy load face recognition only when there are photos
   const shouldLoadFaceRecognition = useMemo(() => {
     return photos && photos.length > 0;
   }, [photos]);
@@ -238,73 +262,6 @@ const EventDetailView = ({ eventId: propeventId }) => {
     eventId
   );
 
-  const handleLeaveEventFromHeader = useCallback(() => {
-    setShowLeaveConfirmation(true);
-  }, []);
-
-  const handleConfirmLeaveEvent = useCallback(async () => {
-  if (!currentUser?.uid || !eventId) return;
-  
-  try {
-    setShowLeaveConfirmation(false);
-    
-    // Show loading toast
-    const loadingToast = modalToast.loading("Leaving event...", {
-      icon: "🚪",
-    });
-
-    console.log("🚪 Leaving event from header:", eventId);
-    await leaveEvent(eventId);
-    
-    // Dismiss loading and show success
-    modalToast.dismiss(loadingToast);
-    modalToast.success("You've successfully left the event", {
-      duration: 3000,
-      icon: "👋",
-    });
-    
-    // Navigate away after leaving
-    setTimeout(() => {
-      navigate("/dashboard/events", {
-        replace: true,
-        state: {
-          leftEventId: eventId,
-          forceRefresh: true,
-          timestamp: Date.now(),
-        },
-      });
-    }, 1500);
-    
-  } catch (error) {
-    console.error("Error leaving event:", error);
-    modalToast.error("Failed to leave event. Please try again.", {
-      duration: 4000,
-      icon: "❌",
-    });
-  }
-}, [leaveEvent, currentUser?.uid, eventId, navigate]);
-
-  // Only destructure face recognition if we need it
-  const {
-    hasProfile,
-    isLoadingProfile,
-    isProcessingFaces,
-    filterActive,
-    filteredPhotos,
-    faceRecognitionProgress,
-    showScanModal,
-    showResultsModal,
-    setShowScanModal,
-    setShowResultsModal,
-    enhancedHandleFindMyPhotos,
-    enhancedHandleCancelFaceRecognition,
-    setFilteredPhotos,
-    handleFindMyPhotos,
-    handleClearScan,
-    lastScanInfo,
-  } = shouldLoadFaceRecognition ? faceRecognitionHook : {};
-
-  // Rest of your existing hooks...
   const {
     showUploadForm,
     showAllPhotosModal,
@@ -314,12 +271,14 @@ const EventDetailView = ({ eventId: propeventId }) => {
   } = usePhotoOperations(
     eventId,
     photos,
-    localEvent, // Use localEvent for compatibility
+    localEvent,
     setPhotos,
-    setLocalEvent, // Update localEvent
-    filteredPhotos,
-    setFilteredPhotos,
-    filterActive
+    setLocalEvent,
+    shouldLoadFaceRecognition ? faceRecognitionHook.filteredPhotos : undefined,
+    shouldLoadFaceRecognition
+      ? faceRecognitionHook.setFilteredPhotos
+      : undefined,
+    shouldLoadFaceRecognition ? faceRecognitionHook.filterActive : false
   );
 
   const {
@@ -340,6 +299,103 @@ const EventDetailView = ({ eventId: propeventId }) => {
     handleLeaveEvent,
   } = useEventMembers(currentUser?.uid, localEvent, setLocalEvent);
 
+  const {
+    selectedPhoto,
+    mobileActiveTab,
+    setSelectedPhoto,
+    setMobileActiveTab,
+    navigateToNext,
+    navigateToPrevious,
+  } = usePhotoModal();
+
+  // ===== COMPUTED STATE =====
+  const loading = eventLoading || photosLoading;
+  const error = eventError || photosError;
+
+  const photoLimitStatus = useMemo(() => {
+    return getPhotoLimitStatus(photos?.length || 0);
+  }, [photos?.length]);
+
+  const remainingPhotoSlots = useMemo(() => {
+    return getRemainingPhotoSlots(photos?.length || 0);
+  }, [photos?.length]);
+
+  // ===== EFFECTS =====
+  useEffect(() => {
+    if (event && JSON.stringify(event) !== JSON.stringify(localEvent)) {
+      console.log(
+        "🔄 EventDetailView: Updating local event from context",
+        event
+      );
+      setLocalEvent(event);
+    }
+  }, [event, localEvent]);
+
+  // Performance logging
+  useRenderTracker("EventDetailView", {
+    eventId,
+    currentUserId: currentUser?.uid,
+    hasEvent: !!event,
+    photosLength: photos?.length,
+    eventMembersLength: eventMembers?.length,
+    loading,
+    error: !!error,
+    isPending,
+    isLeavingEvent,
+  });
+
+  // ===== EVENT HANDLERS =====
+  const handleLeaveEventFromHeader = useCallback(() => {
+    setShowLeaveConfirmation(true);
+  }, []);
+
+  const handleConfirmLeaveEvent = useCallback(async () => {
+    if (!currentUser?.uid || !eventId) return;
+
+    try {
+      // Close modal and start leaving process
+      setShowLeaveConfirmation(false);
+
+      // Wait for modal to close smoothly
+      setTimeout(async () => {
+        setIsLeavingEvent(true);
+
+        try {
+          console.log("🚪 Leaving event:", eventId);
+          await leaveEvent(eventId);
+
+          // Use smooth navigation to dashboard
+          smoothNavigate("/dashboard/events", {
+            delay: 100,
+            showLoader: true,
+            replace: true,
+          });
+
+          // Show success message after navigation starts
+          setTimeout(() => {
+            modalToast.success("You've successfully left the event", {
+              duration: 3000,
+              icon: "👋",
+            });
+          }, 300);
+        } catch (leaveError) {
+          console.error("Error leaving event:", leaveError);
+          setIsLeavingEvent(false);
+          modalToast.error("Failed to leave event. Please try again.", {
+            duration: 4000,
+            icon: "❌",
+          });
+        }
+      }, 200);
+    } catch (error) {
+      console.error("Error in leave event handler:", error);
+      modalToast.error("Failed to leave event. Please try again.", {
+        duration: 4000,
+        icon: "❌",
+      });
+    }
+  }, [leaveEvent, currentUser?.uid, eventId, smoothNavigate]);
+
   const handleLeaveEventWithNavigation = useCallback(async () => {
     try {
       await handleLeaveEvent();
@@ -356,48 +412,21 @@ const EventDetailView = ({ eventId: propeventId }) => {
     }
   }, [handleLeaveEvent, navigate, eventId]);
 
-  const {
-    selectedPhoto,
-    mobileActiveTab,
-    setSelectedPhoto,
-    setMobileActiveTab,
-    navigateToNext,
-    navigateToPrevious,
-  } = usePhotoModal();
-
-  // Additional handlers
-  const [showEditModal, setShowEditModal] = useState(false);
-
-  // PERFORMANCE: Memoize expensive calculations
-  const photoLimitStatus = useMemo(() => {
-    return getPhotoLimitStatus(photos?.length || 0);
-  }, [photos?.length]);
-
-  const remainingPhotoSlots = useMemo(() => {
-    return getRemainingPhotoSlots(photos?.length || 0);
-  }, [photos?.length]);
-
-  const [modalSource, setModalSource] = useState(null);
-
-  // PERFORMANCE: Memoized event handlers with transitions
-  const handleEventUpdated = useCallback(
-    (updatedEvent) => {
-      startTransition(() => {
-        setLocalEvent(updatedEvent); // Update local state
-        setShowEditModal(false);
-      });
-    },
-    [setLocalEvent]
-  );
+  const handleEventUpdated = useCallback((updatedEvent) => {
+    startTransition(() => {
+      setLocalEvent(updatedEvent);
+      setShowEditModal(false);
+    });
+  }, []);
 
   const handleEventDeleted = useCallback(
-    (deletedeventId) => {
+    (deletedEventId) => {
       setShowEditModal(false);
       startTransition(() => {
         navigate("/dashboard", {
           replace: true,
           state: {
-            deletedeventId: deletedeventId,
+            deletedEventId: deletedEventId,
             forceRefresh: true,
             timestamp: Date.now(),
           },
@@ -419,7 +448,6 @@ const EventDetailView = ({ eventId: propeventId }) => {
     });
   }, []);
 
-  // Performance: Memoized mobile tab handler
   const handleMobileTabChange = useCallback(
     (tab) => {
       startTransition(() => {
@@ -429,28 +457,40 @@ const EventDetailView = ({ eventId: propeventId }) => {
     [setMobileActiveTab]
   );
 
-  // Loading state
-  if (loading) {
+  // ===== RENDER CONDITIONS =====
+  // If we're leaving the event, show custom overlay
+  if (isLeavingEvent) {
+    return <LeavingEventOverlay />;
+  }
+
+  // Don't show loading or errors if we're in the process of leaving
+  if (loading && !isLeavingEvent) {
     return <EventLoadingSpinner />;
   }
 
-  // Error state
-  if (error) {
+  if (error && !isLeavingEvent) {
     return <ErrorDisplay error={error} />;
   }
 
-  if (!event) {
-    return <ErrorDisplay error="Event not found or you don't have access to this event." />;
+  if (!event && !isLeavingEvent) {
+    return (
+      <ErrorDisplay error="Event not found or you don't have access to this event." />
+    );
   }
 
+  // Don't render anything if we don't have an event and we're not loading
+  if (!event) {
+    return null;
+  }
+  // ===== MAIN RENDER =====
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50/50 via-indigo-50/50 to-purple-50/50 dark:from-gray-900 dark:via-blue-900/20 dark:to-purple-900/20 animate-fade-in-smooth">
       <div className="space-y-4 sm:space-y-8 p-3 sm:p-6 max-w-7xl mx-auto pb-20 sm:pb-6 animate-slide-in-smooth">
-        {/* event header - NOW USES REAL-TIME DATA */}
+        {/* ===== EVENT HEADER ===== */}
         <EventHeader
-          event={event} // Real-time event data from EventContext
+          event={event}
           photos={photos || []}
-          eventMembers={eventMembers || []} // Real-time member data from EventContext
+          eventMembers={eventMembers || []}
           isAdmin={isAdmin}
           isCreator={isCreator}
           isMember={isMember}
@@ -463,21 +503,21 @@ const EventDetailView = ({ eventId: propeventId }) => {
           onToggleUploadForm={handleToggleUploadForm}
         />
 
-        {/* Mobile Tab Switcher */}
+        {/* ===== MOBILE TAB SWITCHER ===== */}
         <MobileTabSwitcher
           activeTab={mobileActiveTab}
           setActiveTab={handleMobileTabChange}
         />
 
-        {/* Main Content Grid */}
+        {/* ===== MAIN CONTENT GRID ===== */}
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 min-h-0 xl:items-start">
-          {/* Main Content - Photos and Face Recognition */}
+          {/* ===== LEFT COLUMN - PHOTOS & FACE RECOGNITION ===== */}
           <div
             className={`xl:col-span-2 space-y-6 ${
               mobileActiveTab === "event" ? "block" : "hidden xl:block"
             }`}
           >
-            {/* Photo Upload Section */}
+            {/* Photo Upload Modal */}
             {showUploadForm && (
               <div
                 className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in"
@@ -512,65 +552,81 @@ const EventDetailView = ({ eventId: propeventId }) => {
                   }
                 >
                   <FaceRecognitionCard
-                    hasProfile={hasProfile}
-                    isLoadingProfile={isLoadingProfile}
-                    isLoadingFaceRecognition={isProcessingFaces}
-                    filterActive={filterActive}
-                    filteredPhotos={filteredPhotos}
-                    onFindMyPhotos={enhancedHandleFindMyPhotos}
+                    hasProfile={faceRecognitionHook.hasProfile}
+                    isLoadingProfile={faceRecognitionHook.isLoadingProfile}
+                    isLoadingFaceRecognition={
+                      faceRecognitionHook.isProcessingFaces
+                    }
+                    filterActive={faceRecognitionHook.filterActive}
+                    filteredPhotos={faceRecognitionHook.filteredPhotos}
+                    onFindMyPhotos={
+                      faceRecognitionHook.enhancedHandleFindMyPhotos
+                    }
                     onPhotoSelect={setSelectedPhoto}
-                    onViewAllResults={() => setShowResultsModal(true)}
-                    onClearScan={handleClearScan}
-                    lastScanInfo={lastScanInfo}
+                    onViewAllResults={() =>
+                      faceRecognitionHook.setShowResultsModal(true)
+                    }
+                    onClearScan={faceRecognitionHook.handleClearScan}
+                    lastScanInfo={faceRecognitionHook.lastScanInfo}
                   />
                 </Suspense>
 
+                {/* Face Recognition Modal */}
                 <Suspense fallback={<div>Loading modal...</div>}>
                   <FaceRecognitionModal
-                    isOpen={showScanModal}
-                    hasProfile={hasProfile}
-                    isProcessingFaces={isProcessingFaces}
-                    faceRecognitionProgress={faceRecognitionProgress}
-                    onClose={() => setShowScanModal(false)}
-                    onStartFaceRecognition={handleFindMyPhotos}
-                    onCancelProcessing={enhancedHandleCancelFaceRecognition}
+                    isOpen={faceRecognitionHook.showScanModal}
+                    hasProfile={faceRecognitionHook.hasProfile}
+                    isProcessingFaces={faceRecognitionHook.isProcessingFaces}
+                    faceRecognitionProgress={
+                      faceRecognitionHook.faceRecognitionProgress
+                    }
+                    onClose={() => faceRecognitionHook.setShowScanModal(false)}
+                    onStartFaceRecognition={
+                      faceRecognitionHook.handleFindMyPhotos
+                    }
+                    onCancelProcessing={
+                      faceRecognitionHook.enhancedHandleCancelFaceRecognition
+                    }
                     onNavigateToProfile={() => {
-                      setShowScanModal(false);
+                      faceRecognitionHook.setShowScanModal(false);
                       navigate("/dashboard/settings");
                     }}
                   />
                 </Suspense>
 
+                {/* Face Recognition Results */}
                 <Suspense fallback={<div>Loading results...</div>}>
                   <FaceRecognitionResults
-                    isOpen={showResultsModal}
-                    filteredPhotos={filteredPhotos}
-                    onClose={() => setShowResultsModal(false)}
+                    isOpen={faceRecognitionHook.showResultsModal}
+                    filteredPhotos={faceRecognitionHook.filteredPhotos}
+                    onClose={() =>
+                      faceRecognitionHook.setShowResultsModal(false)
+                    }
                     onPhotoSelect={setSelectedPhoto}
-                    onRescan={enhancedHandleFindMyPhotos}
-                    onClearScan={handleClearScan}
+                    onRescan={faceRecognitionHook.enhancedHandleFindMyPhotos}
+                    onClearScan={faceRecognitionHook.handleClearScan}
                   />
                 </Suspense>
               </div>
             )}
 
-            {/* event Statistics - NOW USES REAL-TIME DATA */}
+            {/* Event Statistics */}
             <EventStatistics
-              event={event} // Real-time event data
+              event={event}
               photos={photos || []}
-              eventMembers={eventMembers || []} // Real-time member data
+              eventMembers={eventMembers || []}
             />
           </div>
 
-          {/* Sidebar - Members and Invites */}
+          {/* ===== RIGHT COLUMN - MEMBERS & INVITES ===== */}
           <div
             className={`xl:col-span-1 space-y-6 ${
               mobileActiveTab === "members" ? "block" : "hidden xl:block"
             }`}
           >
-            {/* event Members - NOW GETS REAL-TIME UPDATES */}
+            {/* Event Members */}
             <EventMembersCard
-              event={event} // Real-time event data from EventContext
+              event={event}
               currentUserId={currentUser?.uid}
               onMemberClick={(member) =>
                 handleMemberClick(member, currentUser?.uid)
@@ -581,11 +637,11 @@ const EventDetailView = ({ eventId: propeventId }) => {
               onLeaveEvent={handleLeaveEventWithNavigation}
             />
 
-            {/* Invite People - NOW USES REAL-TIME MEMBER IDS */}
+            {/* Invite People */}
             <InvitePeopleCard
               currentUser={currentUser}
               eventId={eventId}
-              eventMembers={event?.members || []} // Real-time member IDs from EventContext
+              eventMembers={event?.members || []}
               onFriendClick={(friend) => {
                 setSelectedUser({
                   ...friend,
@@ -597,7 +653,8 @@ const EventDetailView = ({ eventId: propeventId }) => {
           </div>
         </div>
 
-        {/* PERFORMANCE: Lazy load modals only when needed */}
+        {/* ===== MODALS ===== */}
+
         {/* Photo Modal */}
         {selectedPhoto && (
           <Suspense fallback={<div>Loading photo modal...</div>}>
@@ -639,13 +696,13 @@ const EventDetailView = ({ eventId: propeventId }) => {
           </Suspense>
         )}
 
-        {/* Edit event modal */}
+        {/* Edit Event Modal */}
         {showEditModal && (
           <Suspense fallback={<div>Loading edit modal...</div>}>
             <EditEventModal
               isOpen={showEditModal}
               onClose={() => setShowEditModal(false)}
-              event={localEvent} // Use localEvent for editing
+              event={localEvent}
               onEventUpdated={handleEventUpdated}
               onEventDeleted={handleEventDeleted}
             />
@@ -654,36 +711,28 @@ const EventDetailView = ({ eventId: propeventId }) => {
 
         {/* User Profile Modal */}
         {selectedUser && (
-          <>
-            {console.log("🔍 DEBUG - Selected User Data:", {
-              user: selectedUser,
-              isPending: selectedUser.__isPending,
-              pendingRequests: pendingFriendRequests,
-              friends: friends,
-            })}
-            <Suspense fallback={<div>Loading user profile...</div>}>
-              <UserProfileModal
-                isOpen={!!selectedUser}
-                user={selectedUser}
-                currentUserId={currentUser?.uid}
-                context="event"
-                friends={friends || []}
-                pendingRequests={pendingFriendRequests || []}
-                onAddFriend={handleAddFriend}
-                onRemoveFriend={handleRemoveFriend}
-                onCancelRequest={handleCancelFriendRequest}
-                event={localEvent} // Use localEvent for user profile context
-                onPromoteToAdmin={handlePromoteToAdmin}
-                onDemoteFromAdmin={handleDemoteFromAdmin}
-                onRemoveFromEvent={handleRemoveFromEvent}
-                onInviteToEvent={handleInviteToEvent}
-                onClose={() => setSelectedUser(null)}
-              />
-            </Suspense>
-          </>
+          <Suspense fallback={<div>Loading user profile...</div>}>
+            <UserProfileModal
+              isOpen={!!selectedUser}
+              user={selectedUser}
+              currentUserId={currentUser?.uid}
+              context="event"
+              friends={friends || []}
+              pendingRequests={pendingFriendRequests || []}
+              onAddFriend={handleAddFriend}
+              onRemoveFriend={handleRemoveFriend}
+              onCancelRequest={handleCancelFriendRequest}
+              event={localEvent}
+              onPromoteToAdmin={handlePromoteToAdmin}
+              onDemoteFromAdmin={handleDemoteFromAdmin}
+              onRemoveFromEvent={handleRemoveFromEvent}
+              onInviteToEvent={handleInviteToEvent}
+              onClose={() => setSelectedUser(null)}
+            />
+          </Suspense>
         )}
 
-        {/* Success Notifications */}
+        {/* ===== SUCCESS NOTIFICATIONS ===== */}
         {showSuccess && (
           <div className="fixed top-8 right-8 bg-gradient-to-r from-green-500 to-emerald-500 text-white px-6 py-4 rounded-xl shadow-2xl z-50 transform animate-bounce backdrop-blur-lg border border-green-400/30">
             <div className="flex items-center gap-3">
@@ -729,51 +778,62 @@ const EventDetailView = ({ eventId: propeventId }) => {
         )}
       </div>
 
-      {/* Leave Event Confirmation Modal */}
-{showLeaveConfirmation && (
-  <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
-    <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 max-w-md w-full shadow-2xl animate-scale-in">
-      <div className="text-center">
-        <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-          <svg className="w-8 h-8 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-          </svg>
+      {/* ===== LEAVE EVENT CONFIRMATION MODAL ===== */}
+      {showLeaveConfirmation && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 max-w-md w-full shadow-2xl animate-scale-in">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg
+                  className="w-8 h-8 text-red-600 dark:text-red-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                  />
+                </svg>
+              </div>
+
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                Leave Event?
+              </h3>
+
+              <p className="text-gray-600 dark:text-gray-400 mb-6 leading-relaxed">
+                Are you sure you want to leave{" "}
+                <span className="font-semibold">{event?.name}</span>?
+              </p>
+
+              <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3 mb-6">
+                <ul className="text-sm text-yellow-800 dark:text-yellow-200 text-left space-y-1">
+                  <li>• You won't be able to see photos anymore</li>
+                  <li>• You'll lose access to event updates</li>
+                  <li>• You'll need to be re-invited to rejoin</li>
+                </ul>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowLeaveConfirmation(false)}
+                  className="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-xl font-medium transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleConfirmLeaveEvent}
+                  className="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl font-medium transition-colors"
+                >
+                  Leave Event
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
-        
-        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-          Leave Event?
-        </h3>
-        
-        <p className="text-gray-600 dark:text-gray-400 mb-6 leading-relaxed">
-          Are you sure you want to leave <span className="font-semibold">{event?.name}</span>?
-        </p>
-        
-        <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3 mb-6">
-          <ul className="text-sm text-yellow-800 dark:text-yellow-200 text-left space-y-1">
-            <li>• You won't be able to see photos anymore</li>
-            <li>• You'll lose access to event updates</li>
-            <li>• You'll need to be re-invited to rejoin</li>
-          </ul>
-        </div>
-        
-        <div className="flex gap-3">
-          <button
-            onClick={() => setShowLeaveConfirmation(false)}
-            className="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-xl font-medium transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleConfirmLeaveEvent}
-            className="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl font-medium transition-colors"
-          >
-            Leave Event
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-)}
+      )}
     </div>
   );
 };
