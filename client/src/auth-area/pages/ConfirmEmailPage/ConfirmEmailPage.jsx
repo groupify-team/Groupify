@@ -12,18 +12,15 @@ import {
   ExclamationCircleIcon,
   ClockIcon,
   CreditCardIcon,
-  ArrowLeftIcon,
-  CameraIcon,
 } from "@heroicons/react/24/outline";
 
-// New modular components and hooks
 import AuthLayout from "../../components/layout/AuthLayout";
-import { useAuth } from "@auth/hooks/useAuth";
+import AuthHeader from "../../components/layout/AuthHeader";
 
+import { useAuth } from "@auth/hooks/useAuth";
 import { useAuthAnimations } from "../../hooks/useAuthAnimations";
 
 const ConfirmEmailPage = () => {
-  // State
   const [verificationCode, setVerificationCode] = useState([
     "",
     "",
@@ -36,26 +33,19 @@ const ConfirmEmailPage = () => {
   const [resendLoading, setResendLoading] = useState(false);
   const [timeLeft, setTimeLeft] = useState(120);
   const [canResend, setCanResend] = useState(false);
-
-  // Hooks
   const { currentUser, resendVerificationEmail } = useAuth();
   const { navigateWithTransition } = useAuthAnimations();
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
-
-  // Get data from location state or URL params
   const email = location.state?.email || searchParams.get("email");
   const plan = location.state?.plan;
   const redirectToBilling = location.state?.redirectToBilling;
   const billingParams = location.state?.billingParams;
   const codeFromUrl = searchParams.get("code");
-
-  // Handle when user gets verified and returns to the app
   useEffect(() => {
     if (currentUser && currentUser.emailVerified) {
       if (redirectToBilling && billingParams) {
-        // User verified email and needs to go to billing
         toast.success("Email verified! Redirecting to checkout...");
         setTimeout(() => {
           navigate(
@@ -63,34 +53,25 @@ const ConfirmEmailPage = () => {
           );
         }, 2000);
       } else if (plan && plan !== "free") {
-        // User has a plan but no billing redirect (shouldn't happen, but safety)
         toast.success("Email verified! Welcome to Groupify!");
         navigate("/dashboard");
       } else {
-        // Free plan or no plan
         toast.success("Email verified! Welcome to Groupify!");
         navigate("/dashboard");
       }
     }
   }, [currentUser, redirectToBilling, billingParams, plan, navigate]);
-
-  // Redirect if no email
   useEffect(() => {
     if (!email) {
       navigate("/signup");
       return;
     }
-
-    // If code is in URL, auto-fill it
     if (codeFromUrl && codeFromUrl.length === 6) {
       const codeArray = codeFromUrl.split("");
       setVerificationCode(codeArray);
-      // Auto-verify if code is provided in URL
       handleVerifyWithCode(codeFromUrl);
     }
   }, [email, codeFromUrl, navigate]);
-
-  // Timer countdown
   useEffect(() => {
     if (timeLeft > 0) {
       const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
@@ -99,18 +80,15 @@ const ConfirmEmailPage = () => {
       setCanResend(true);
     }
   }, [timeLeft]);
-
   const handleResendCode = async () => {
     if (!email) {
       toast.error("Email address is required");
       return;
     }
-
     try {
       setResendLoading(true);
-
       const response = await fetch(
-        "https://us-central1-groupify-77202.cloudfunctions.net/sendVerificationEmail", // Changed from resendVerificationCode
+        "https://us-central1-groupify-77202.cloudfunctions.net/sendVerificationEmail",
         {
           method: "POST",
           headers: {
@@ -119,7 +97,7 @@ const ConfirmEmailPage = () => {
           body: JSON.stringify({
             data: {
               email,
-              name: "User", // sendVerificationEmail requires a name parameter
+              name: "User",
             },
           }),
         }
@@ -373,21 +351,14 @@ const ConfirmEmailPage = () => {
   const leftContent = (
     <div className="w-full h-full bg-gradient-to-br from-purple-600 via-indigo-600 to-blue-600 flex items-center justify-center p-12 relative overflow-hidden">
       <div className="max-w-md text-center text-white z-10">
-        {/* Icon */}
         <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mb-8 backdrop-blur-sm mx-auto">
           <EnvelopeIcon className="w-8 h-8" />
         </div>
-
-        {/* Title */}
         <h2 className="text-3xl font-bold mb-6">Check your email</h2>
-
-        {/* Subtitle */}
         <p className="text-lg mb-8 text-purple-100 leading-relaxed">
           We've sent a 6-digit verification code to your email address. Enter
           the code below to verify your account and get started.
         </p>
-
-        {/* Email Info */}
         <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 mb-8">
           <div className="flex items-center justify-center">
             <EnvelopeIcon className="w-5 h-5 mr-3 text-purple-200" />
@@ -395,8 +366,6 @@ const ConfirmEmailPage = () => {
           </div>
           <div className="text-white font-medium mt-1 truncate">{email}</div>
         </div>
-
-        {/* Features */}
         <div className="space-y-4 text-left">
           {[
             "Secure email verification",
@@ -412,8 +381,6 @@ const ConfirmEmailPage = () => {
           ))}
         </div>
       </div>
-
-      {/* Background decoration */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-10 left-10 w-32 h-32 bg-white bg-opacity-10 rounded-full blur-xl"></div>
         <div className="absolute bottom-20 right-16 w-24 h-24 bg-white bg-opacity-10 rounded-full blur-xl"></div>
@@ -424,44 +391,15 @@ const ConfirmEmailPage = () => {
 
   return (
     <AuthLayout layoutType="split" leftContent={leftContent} showHeader={false}>
-      {/* Form Container */}
       <div className="flex-1 flex flex-col justify-center py-2 sm:py-4 md:py-6 lg:py-8 px-3 sm:px-4 md:px-6 lg:px-12 xl:px-20 2xl:px-24 bg-white dark:bg-gray-900 min-h-0">
         <div className="mx-auto w-full max-w-[280px] sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-md">
-          {/* Header */}
-          <div className="mb-4 sm:mb-6 md:mb-8">
-            {/* Navigation */}
-            <div className="flex items-center justify-between mb-2 sm:mb-4 md:mb-6 lg:mb-8 pt-2 sm:pt-3 md:pt-4">
-              <Link
-                to="/signup"
-                className="inline-flex items-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
-              >
-                <ArrowLeftIcon className="w-5 h-5 sm:mr-2" />
-                <span className="hidden sm:inline">Back to Sign Up</span>
-              </Link>
-            </div>
-
-            {/* Logo positioned in middle between top and title */}
-            <div className="flex items-center justify-center md:justify-start mb-4 sm:mb-6 md:mb-8">
-              <div className="w-10 h-10 [@media(min-width:375px)]:w-12 [@media(min-width:375px)]:h-12 sm:w-14 sm:h-14 md:w-12 md:h-12 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl flex items-center justify-center">
-                <CameraIcon className="w-5 h-5 [@media(min-width:375px)]:w-6 [@media(min-width:375px)]:h-6 sm:w-8 sm:h-8 md:w-6 md:h-6 text-white" />
-              </div>
-              <span className="ml-2 text-xl [@media(min-width:375px)]:text-2xl sm:text-3xl md:text-3xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
-                Groupify
-              </span>
-            </div>
-
-            {/* Title section */}
-            <div className="text-center md:text-left mb-3 sm:mb-4 md:mb-6">
-              <h2 className="text-lg [@media(min-width:375px)]:text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
-                Verify your email
-              </h2>
-              <p className="mt-1 sm:mt-2 text-xs [@media(min-width:375px)]:text-xs sm:text-sm md:text-base text-gray-600 dark:text-gray-400">
-                Enter the 6-digit code we sent to your email address
-              </p>
-            </div>
-          </div>
-
-          {/* Plan Info Banner */}
+          <AuthHeader
+            title="Verify your email"
+            subtitle="Enter the 6-digit code we sent to your email address"
+            showBackButton={true}
+            backTo="/signup"
+            backText="Back to Sign Up"
+          />
           {redirectToBilling && billingParams && (
             <div className="mb-4 sm:mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-3 sm:p-4">
               <div className="flex items-center text-center md:text-left">
@@ -479,13 +417,11 @@ const ConfirmEmailPage = () => {
             </div>
           )}
 
-          {/* Verification Form */}
           <div className="space-y-3 sm:space-y-4 md:space-y-5 text-sm md:text-base">
             <form
               onSubmit={handleVerify}
               className="space-y-4 sm:space-y-5 md:space-y-6"
             >
-              {/* Code Input */}
               <div>
                 <label
                   htmlFor="code-0"
@@ -513,8 +449,6 @@ const ConfirmEmailPage = () => {
                   ))}
                 </div>
               </div>
-
-              {/* Timer and Resend */}
               <div className="text-center">
                 {!canResend ? (
                   <div className="flex items-center justify-center text-xs sm:text-sm text-gray-600 dark:text-gray-400">
@@ -533,7 +467,6 @@ const ConfirmEmailPage = () => {
                 )}
               </div>
 
-              {/* Submit Button */}
               <button
                 type="submit"
                 disabled={loading || verificationCode.join("").length !== 6}
@@ -555,8 +488,6 @@ const ConfirmEmailPage = () => {
                 )}
               </button>
             </form>
-
-            {/* Help Text */}
             <div className="mt-4 sm:mt-5 md:mt-6">
               <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 sm:p-4">
                 <div className="flex">
@@ -575,8 +506,6 @@ const ConfirmEmailPage = () => {
                 </div>
               </div>
             </div>
-
-            {/* Footer */}
             <p className="mt-4 sm:mt-5 md:mt-6 text-center text-xs sm:text-sm text-gray-600 dark:text-gray-400">
               Need help?{" "}
               <Link
