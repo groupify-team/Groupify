@@ -380,7 +380,7 @@ const UserProfileModal = ({
           {/* Profile Section */}
           <div className="relative px-4 sm:px-6 lg:px-8 pb-6 sm:pb-8">
             {/* Profile Image */}
-            <div className="text-center mb-4 sm:mb-6 -mt-6 sm:-mt-8">
+            <div className="text-center mb-2 sm:mb-3 -mt-8 sm:-mt-12">
               <div className="relative inline-block">
                 <div className="w-24 h-24 sm:w-32 sm:h-32 lg:w-36 lg:h-36 rounded-full bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 p-1 mx-auto shadow-2xl">
                   <img
@@ -394,7 +394,7 @@ const UserProfileModal = ({
                 </div>
 
                 {/* Online Status with Better Design */}
-                <div className="absolute bottom-1 right-1 sm:bottom-3 sm:right-3 w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 bg-emerald-500 border-2 sm:border-4 border-white dark:border-slate-800 rounded-full shadow-xl flex items-center justify-center">
+                <div className="absolute -bottom-1 -right-1 sm:-bottom-1 sm:-right-1 w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 bg-emerald-500 border-2 sm:border-4 border-white dark:border-slate-800 rounded-full shadow-xl flex items-center justify-center">
                   <div className="w-2 h-2 sm:w-3 sm:h-3 lg:w-4 lg:h-4 bg-white rounded-full animate-pulse"></div>
                 </div>
               </div>
@@ -421,64 +421,89 @@ const UserProfileModal = ({
                 </p>
               </div>
 
-              {/* Stats */}
+              {/* Stats Section - From main stats to online indicator */}
               {showStats && (
-                <div className="space-y-4 mb-6 sm:mb-8 max-w-lg mx-auto">
-                  {/* Main Stats Row */}
-                  <div className="grid grid-cols-2 gap-4 sm:gap-6">
-                    <div className="text-center">
-                      <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-2 shadow-md">
-                        <CalendarIcon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                      </div>
-                      <div className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-1">
-                        {userStats.loading ? (
-                          <div className="w-4 h-4 border-2 border-gray-300 dark:border-slate-400 border-t-blue-500 rounded-full animate-spin mx-auto"></div>
-                        ) : userStats.error ? (
-                          <span className="text-gray-400">-</span>
-                        ) : (
-                          <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                            {userStats.eventsCount}
-                          </span>
-                        )}
-                      </div>
-                      <div className="text-xs text-gray-500 dark:text-slate-400 uppercase tracking-wide font-semibold">
-                        Events
+                <div className="space-y-4 mb-3 sm:mb-3 max-w-lg mx-auto">
+                  {/* Primary Stats Grid - Compact */}
+                  <div className="grid grid-cols-2 gap-4">
+                    {/* Events Stat */}
+                    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-3 border border-blue-200/30 dark:border-blue-700/20">
+                      <div className="text-center">
+                        <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center mx-auto mb-2">
+                          <CalendarIcon className="w-4 h-4 text-white" />
+                        </div>
+                        <div className="text-lg font-bold text-gray-900 dark:text-white mb-1">
+                          {userStats.loading ? (
+                            <div className="w-4 h-4 border-2 border-blue-300 border-t-blue-600 rounded-full animate-spin mx-auto"></div>
+                          ) : userStats.error ? (
+                            <span className="text-gray-400">--</span>
+                          ) : (
+                            <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                              {userStats.eventsCount}
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-xs text-blue-600 dark:text-blue-400 uppercase tracking-wide font-semibold">
+                          Events Joined
+                        </div>
                       </div>
                     </div>
 
-                    <div className="text-center">
-                      <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-pink-500 to-red-500 rounded-2xl flex items-center justify-center mx-auto mb-2 shadow-md">
-                        <UsersIcon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                      </div>
-                      <div className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-1">
-                        {userStats.loading ? (
-                          <div className="w-4 h-4 border-2 border-gray-300 dark:border-slate-400 border-t-pink-500 rounded-full animate-spin mx-auto"></div>
-                        ) : userStats.error ? (
-                          <span className="text-gray-400">-</span>
-                        ) : (
-                          <span className="bg-gradient-to-r from-pink-600 to-red-600 bg-clip-text text-transparent">
-                            {userStats.friendsCount}
-                          </span>
-                        )}
-                      </div>
-                      <div className="text-xs text-gray-500 dark:text-slate-400 uppercase tracking-wide font-semibold">
-                        Friends
+                    {/* Friends Stat */}
+                    <div className="bg-gradient-to-br from-pink-50 to-rose-50 dark:from-pink-900/20 dark:to-rose-900/20 rounded-xl p-3 border border-pink-200/30 dark:border-pink-700/20">
+                      <div className="text-center">
+                        <div className="w-8 h-8 bg-gradient-to-br from-pink-500 to-rose-600 rounded-lg flex items-center justify-center mx-auto mb-2">
+                          <UsersIcon className="w-4 h-4 text-white" />
+                        </div>
+                        <div className="text-lg font-bold text-gray-900 dark:text-white mb-1">
+                          {userStats.loading ? (
+                            <div className="w-4 h-4 border-2 border-pink-300 border-t-pink-600 rounded-full animate-spin mx-auto"></div>
+                          ) : userStats.error ? (
+                            <span className="text-gray-400">--</span>
+                          ) : (
+                            <span className="bg-gradient-to-r from-pink-600 to-rose-600 bg-clip-text text-transparent">
+                              {userStats.friendsCount}
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-xs text-pink-600 dark:text-pink-400 uppercase tracking-wide font-semibold">
+                          Friends
+                        </div>
                       </div>
                     </div>
                   </div>
 
-                  {/* Quick Info Bar */}
-                  <div className="bg-gradient-to-r from-slate-50 to-gray-50 dark:from-slate-800/50 dark:to-slate-700/50 rounded-2xl p-3 border border-slate-200/50 dark:border-slate-600/30">
-                    <div className="flex items-center justify-between text-sm">
+                  {/* Member Since - Compact */}
+                  <div className="bg-gradient-to-r from-purple-50 to-violet-50 dark:from-purple-900/20 dark:to-violet-900/20 rounded-xl p-3 border border-purple-200/30 dark:border-purple-700/20">
+                    <div className="flex items-center justify-center gap-2">
+                      <StarIcon className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Member since
+                      </span>
+                      <span className="text-sm font-bold text-purple-600 dark:text-purple-400">
+                        Jan 2024
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Status Bar - Compact */}
+                  <div className="bg-gradient-to-r from-slate-50 via-white to-slate-50 dark:from-slate-800/50 dark:via-slate-700/30 dark:to-slate-800/50 rounded-xl p-3 border border-slate-200/50 dark:border-slate-600/30">
+                    <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-                        <span className="text-gray-600 dark:text-slate-300 font-medium">
+                        <span className="text-gray-900 dark:text-white font-medium text-sm">
                           Online now
                         </span>
                       </div>
-                      <div className="flex items-center gap-2 text-gray-500 dark:text-slate-400">
-                        <ClockIcon className="w-4 h-4" />
-                        <span>Active today</span>
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1">
+                          <div className="w-1.5 h-1.5 bg-blue-400 rounded-full opacity-60"></div>
+                          <div className="w-1.5 h-1.5 bg-purple-400 rounded-full opacity-40"></div>
+                          <div className="w-1.5 h-1.5 bg-pink-400 rounded-full opacity-60"></div>
+                        </div>
+                        <span className="text-xs font-medium text-gray-500 dark:text-slate-400">
+                          Social Hub Member
+                        </span>
                       </div>
                     </div>
                   </div>
