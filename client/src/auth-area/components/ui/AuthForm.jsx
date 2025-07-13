@@ -1,5 +1,6 @@
 import React, { forwardRef } from "react";
 import { CameraIcon, EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
+import PasswordInput from "./PasswordInput";
 
 // Input field component
 export const AuthInput = forwardRef(
@@ -39,10 +40,15 @@ export const AuthInput = forwardRef(
             placeholder={placeholder}
             disabled={disabled}
             className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 transition-colors ${
+              showPasswordToggle ? "" : ""
+            } ${
               error
                 ? "border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/10"
                 : "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
             } text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
+            style={{
+              paddingRight: showPasswordToggle ? "48px" : "12px",
+            }}
             {...props}
           />
 
@@ -51,13 +57,42 @@ export const AuthInput = forwardRef(
               type="button"
               onClick={onPasswordToggle}
               disabled={disabled}
-              className="absolute inset-y-0 right-0 pr-3 flex items-center"
+              className="absolute inset-y-0 right-0 w-12 flex items-center justify-center"
+              style={{
+                width: "48px",
+                minWidth: "48px",
+                maxWidth: "48px",
+                position: "absolute",
+                right: "0",
+                top: "0",
+                bottom: "0",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
             >
-              {showPassword ? (
-                <EyeIcon className="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
-              ) : (
-                <EyeSlashIcon className="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
-              )}
+              <div
+                style={{
+                  width: "20px",
+                  height: "20px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                }}
+              >
+                {showPassword ? (
+                  <EyeIcon
+                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                    style={{ width: "20px", height: "20px", display: "block" }}
+                  />
+                ) : (
+                  <EyeSlashIcon
+                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                    style={{ width: "20px", height: "20px", display: "block" }}
+                  />
+                )}
+              </div>
             </button>
           )}
         </div>
@@ -161,23 +196,32 @@ export const PasswordRequirements = ({
     </div>
   );
 };
-
-const AuthForm = ({
-  config,
-  formData,
-  showPassword,
-  showConfirmPassword,
-  onInputChange,
-  onPasswordToggle,
-  onSubmit,
-  loading,
-}) => {
+const AuthForm = ({ config, formData, onInputChange, onSubmit, loading }) => {
   const renderField = (field) => {
     const isPasswordField = field.type === "password";
-    const shouldShowToggle = field.showToggle || isPasswordField;
-    const currentShowPassword =
-      field.name === "confirmPassword" ? showConfirmPassword : showPassword;
 
+    // Always use PasswordInput for password fields to avoid state conflicts
+    if (isPasswordField) {
+      return (
+        <div key={field.name}>
+          <PasswordInput
+            id={field.name}
+            name={field.name}
+            value={formData[field.name] || ""}
+            onChange={onInputChange}
+            label={field.label}
+            placeholder={field.placeholder}
+            required={field.required}
+            autoComplete={field.autoComplete}
+            disabled={loading}
+          />
+          {/* Render custom component if provided */}
+          {field.customComponent}
+        </div>
+      );
+    }
+
+    // For non-password fields, use regular AuthInput WITHOUT password toggle
     return (
       <div key={field.name}>
         <AuthInput
@@ -190,9 +234,9 @@ const AuthForm = ({
           required={field.required}
           autoComplete={field.autoComplete}
           disabled={loading}
-          showPasswordToggle={shouldShowToggle}
-          showPassword={currentShowPassword}
-          onPasswordToggle={field.onPasswordToggle || onPasswordToggle}
+          showPasswordToggle={false}
+          showPassword={false}
+          onPasswordToggle={() => {}}
         />
 
         {/* Render custom component if provided */}
