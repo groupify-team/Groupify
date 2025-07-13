@@ -1,5 +1,6 @@
 import React, { forwardRef } from "react";
 import { CameraIcon, EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
+import PasswordInput from "./PasswordInput";
 
 // Input field component
 export const AuthInput = forwardRef(
@@ -39,6 +40,8 @@ export const AuthInput = forwardRef(
             placeholder={placeholder}
             disabled={disabled}
             className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 transition-colors ${
+              showPasswordToggle ? "" : ""
+            } ${
               error
                 ? "border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/10"
                 : "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
@@ -179,23 +182,32 @@ export const PasswordRequirements = ({
     </div>
   );
 };
-
-const AuthForm = ({
-  config,
-  formData,
-  showPassword,
-  showConfirmPassword,
-  onInputChange,
-  onPasswordToggle,
-  onSubmit,
-  loading,
-}) => {
+const AuthForm = ({ config, formData, onInputChange, onSubmit, loading }) => {
   const renderField = (field) => {
     const isPasswordField = field.type === "password";
-    const shouldShowToggle = field.showToggle || isPasswordField;
-    const currentShowPassword =
-      field.name === "confirmPassword" ? showConfirmPassword : showPassword;
 
+    // Always use PasswordInput for password fields to avoid state conflicts
+    if (isPasswordField) {
+      return (
+        <div key={field.name}>
+          <PasswordInput
+            id={field.name}
+            name={field.name}
+            value={formData[field.name] || ""}
+            onChange={onInputChange}
+            label={field.label}
+            placeholder={field.placeholder}
+            required={field.required}
+            autoComplete={field.autoComplete}
+            disabled={loading}
+          />
+          {/* Render custom component if provided */}
+          {field.customComponent}
+        </div>
+      );
+    }
+
+    // For non-password fields, use regular AuthInput WITHOUT password toggle
     return (
       <div key={field.name}>
         <AuthInput
@@ -208,9 +220,9 @@ const AuthForm = ({
           required={field.required}
           autoComplete={field.autoComplete}
           disabled={loading}
-          showPasswordToggle={shouldShowToggle}
-          showPassword={currentShowPassword}
-          onPasswordToggle={field.onPasswordToggle || onPasswordToggle}
+          showPasswordToggle={false}
+          showPassword={false}
+          onPasswordToggle={() => {}}
         />
 
         {/* Render custom component if provided */}
