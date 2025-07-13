@@ -47,7 +47,9 @@ export const AuthInput = forwardRef(
                 : "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
             } text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
             style={{
-              paddingRight: showPasswordToggle ? "48px" : "12px",
+              paddingRight: "48px",
+              fontFamily: "inherit",
+              fontSize: "inherit",
             }}
             {...props}
           />
@@ -69,30 +71,14 @@ export const AuthInput = forwardRef(
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
+                transform: "none",
               }}
             >
-              <div
-                style={{
-                  width: "20px",
-                  height: "20px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexShrink: 0,
-                }}
-              >
-                {showPassword ? (
-                  <EyeIcon
-                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                    style={{ width: "20px", height: "20px", display: "block" }}
-                  />
-                ) : (
-                  <EyeSlashIcon
-                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                    style={{ width: "20px", height: "20px", display: "block" }}
-                  />
-                )}
-              </div>
+              {showPassword ? (
+                <EyeIcon className="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
+              ) : (
+                <EyeSlashIcon className="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
+              )}
             </button>
           )}
         </div>

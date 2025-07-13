@@ -13,7 +13,7 @@ import {
 // New modular components and hooks
 import AuthLayout from "../../components/layout/AuthLayout";
 import AuthHeader from "../../components/layout/AuthHeader";
-import AuthForm from "../../components/ui/Enhanced";
+import AuthForm from "../../components/ui/AuthForm";
 import { useAuthValidation } from "../../hooks/useAuthValidation";
 import { useAuthAnimations } from "../../hooks/useAuthAnimations";
 
