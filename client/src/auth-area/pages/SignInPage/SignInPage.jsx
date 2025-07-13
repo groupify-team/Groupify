@@ -4,7 +4,7 @@ import { toast } from "@shared/utils/toast";
 import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 
 import AuthLayout from "../../components/layout/AuthLayout";
-import AuthFormHeader from "../../components/ui/AuthFormHeader";
+import AuthHeader from "../../components/layout/AuthHeader";
 import AuthForm from "../../components/ui/AuthForm";
 import PageTransition, {
   SectionTransition,
@@ -303,7 +303,7 @@ const SignInPage = () => {
           <div className="mx-auto w-full max-w-[280px] sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-md">
             {/* Reusable Header */}
             <SectionTransition variant="slideInFromTop" delay={0.1}>
-              <AuthFormHeader
+              <AuthHeader
                 title="Welcome back"
                 subtitle="Sign in to your account to continue organizing your memories"
                 showBackButton={true}

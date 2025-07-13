@@ -1,19 +1,17 @@
 import React from "react";
+import { createPortal } from "react-dom";
 import { Link } from "react-router-dom";
+import { ArrowLeftIcon, CameraIcon } from "@heroicons/react/24/outline";
 import { useGlobalAccessibility } from "@shared/components/accessibility/hooks/useGlobalAccessibility";
-import {
-  CameraIcon,
-  SunIcon,
-  MoonIcon,
-  ArrowLeftIcon,
-} from "@heroicons/react/24/outline";
 import AccessibilityButton from "@shared/components/accessibility/AccessibilityButton";
 import AccessibilityModal from "@shared/components/accessibility/AccessibilityModal";
 
 const AuthHeader = ({
+  title,
+  subtitle,
   showBackButton = true,
   backTo = "/",
-  showLogo = true,
+  backText = "Back to Home",
   className = "",
 }) => {
   const {
@@ -23,60 +21,79 @@ const AuthHeader = ({
     accessibilityModalProps,
   } = useGlobalAccessibility();
 
+  // Debug logging
+  console.log("🔍 AuthHeader render - Modal props:", accessibilityModalProps);
+
   return (
     <>
-      <div
-        className={`flex items-center justify-between p-4 sm:p-6 md:px-6 lg:px-12 xl:px-20 2xl:px-24 md:py-8 lg:py-12 ${className}`}
-      >
-        {/* Left Side - Back Button or Logo */}
-        <div className="flex items-center">
+      <div className={`mb-4 sm:mb-6 md:mb-8 ${className}`}>
+        {/* Top Navigation Bar - Back Home + Accessibility */}
+        <div className="flex items-center justify-between mb-4 sm:mb-6 md:mb-8 pt-2 sm:pt-3 md:pt-4">
           {showBackButton ? (
             <Link
               to={backTo}
               className="inline-flex items-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
             >
               <ArrowLeftIcon className="w-5 h-5 sm:mr-2" />
-              <span className="hidden sm:inline">Back to Home</span>
-            </Link>
-          ) : showLogo ? (
-            <Link to="/" className="flex items-center">
-              <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
-                <CameraIcon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-              </div>
-              <span className="ml-2 text-xl sm:text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                Groupify
-              </span>
+              <span className="hidden sm:inline">{backText}</span>
             </Link>
           ) : (
-            <div></div> // Empty div for spacing
+            <div></div>
           )}
-        </div>
 
-        {/* Right Side - Accessibility & Theme Toggle */}
-        <div className="flex items-center gap-2">
-          {/* Accessibility Button */}
           <AccessibilityButton
             {...accessibilityButtonProps}
             size="default"
             variant="default"
           />
-
-          {/* Theme Toggle */}
-          <button
-            onClick={toggleTheme}
-            className="p-2 rounded-lg text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-          >
-            {theme === "dark" ? (
-              <SunIcon className="w-5 h-5" />
-            ) : (
-              <MoonIcon className="w-5 h-5" />
-            )}
-          </button>
         </div>
+
+        {/* Logo Section */}
+        <div className="flex items-center justify-center md:justify-start mb-4 sm:mb-6 md:mb-8">
+          <div className="w-8 h-8 [@media(min-width:375px)]:w-9 [@media(min-width:375px)]:h-9 sm:w-10 sm:h-10 md:w-9 md:h-9 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl flex items-center justify-center">
+            <CameraIcon className="w-5 h-5 [@media(min-width:375px)]:w-6 [@media(min-width:375px)]:h-6 sm:w-8 sm:h-8 md:w-6 md:h-6 text-white" />
+          </div>
+          <span className="ml-2 text-xl [@media(min-width:375px)]:text-2xl sm:text-3xl md:text-3xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
+            Groupify
+          </span>
+        </div>
+
+        {/* Title section */}
+        {title && (
+          <div className="text-center md:text-left mb-3 sm:mb-4 md:mb-6">
+            <h2 className="text-lg [@media(min-width:375px)]:text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
+              {title}
+            </h2>
+            {subtitle && (
+              <p className="mt-1 sm:mt-2 text-xs [@media(min-width:375px)]:text-xs sm:text-sm md:text-base text-gray-600 dark:text-gray-400">
+                {subtitle}
+              </p>
+            )}
+          </div>
+        )}
       </div>
 
-      {/* Global Accessibility Modal */}
-      <AccessibilityModal {...accessibilityModalProps} />
+      {/* Debug indicator */}
+      <div
+        style={{
+          position: "fixed",
+          top: "10px",
+          right: "10px",
+          background: accessibilityModalProps.isOpen ? "green" : "red",
+          color: "white",
+          padding: "5px",
+          zIndex: 100000,
+          fontSize: "12px",
+        }}
+      >
+        Modal: {accessibilityModalProps.isOpen ? "OPEN" : "CLOSED"}
+      </div>
+
+      {/* MODAL - Rendered with Portal to escape layout constraints */}
+      {createPortal(
+        <AccessibilityModal {...accessibilityModalProps} />,
+        document.body
+      )}
     </>
   );
 };

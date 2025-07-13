@@ -21,7 +21,7 @@ const AccessibilityModal = ({ isOpen, onClose, theme, toggleTheme }) => {
 
   const accessibilitySettings = useAccessibilitySettings();
 
-  // Apply settings when modal opens (backup to ensure settings are applied)
+  // Apply settings when modal opens
   useEffect(() => {
     if (isOpen && accessibilitySettings.isInitialized) {
       const root = document.documentElement;
@@ -38,7 +38,6 @@ const AccessibilityModal = ({ isOpen, onClose, theme, toggleTheme }) => {
       // Apply high contrast with proper dark mode detection
       if (accessibilitySettings.highContrast) {
         root.classList.add("high-contrast-mode");
-        // Ensure dark mode class is also present if theme is dark
         if (theme === "dark") {
           root.classList.add("dark");
         }
@@ -62,24 +61,57 @@ const AccessibilityModal = ({ isOpen, onClose, theme, toggleTheme }) => {
     theme,
   ]);
 
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = "unset";
+      };
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   return (
     <>
-      {/* Backdrop */}
+      {/* Backdrop - FIXED to viewport */}
       <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 transition-opacity duration-300"
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[99998] transition-opacity duration-300"
         onClick={onClose}
         aria-hidden="true"
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          width: "100vw",
+          height: "100vh",
+          zIndex: 99998,
+        }}
       />
 
-      {/* Modal */}
+      {/* Modal Container - FIXED to viewport, always centered */}
       <div
-        className="fixed inset-0 z-50 flex items-center justify-center p-4"
+        className="fixed inset-0 z-[99999] flex items-center justify-center p-4"
         role="dialog"
         aria-modal="true"
         aria-labelledby="accessibility-title"
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "1rem",
+          zIndex: 99999,
+        }}
       >
+        {/* Modal Content */}
         <div
           ref={modalRef}
           className="accessibility-modal bg-white/95 dark:bg-gray-800/95 backdrop-blur-md rounded-2xl border border-white/20 dark:border-gray-700/50 shadow-2xl max-w-md w-full max-h-[85vh] overflow-hidden flex flex-col"
@@ -88,6 +120,8 @@ const AccessibilityModal = ({ isOpen, onClose, theme, toggleTheme }) => {
             animation: isOpen
               ? "slideIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards"
               : "slideOut 0.3s ease-out forwards",
+            maxWidth: "28rem",
+            width: "100%",
           }}
         >
           {/* Header */}
@@ -153,31 +187,6 @@ const AccessibilityModal = ({ isOpen, onClose, theme, toggleTheme }) => {
           </div>
         </div>
       </div>
-
-      {/* Animation Styles */}
-      <style>{`
-        @keyframes slideIn {
-          from { 
-            opacity: 0;
-            transform: scale(0.9) translateY(-20px);
-          }
-          to { 
-            opacity: 1;
-            transform: scale(1) translateY(0);
-          }
-        }
-        
-        @keyframes slideOut {
-          from { 
-            opacity: 1;
-            transform: scale(1) translateY(0);
-          }
-          to { 
-            opacity: 0;
-            transform: scale(0.9) translateY(-20px);
-          }
-        }
-      `}</style>
     </>
   );
 };
