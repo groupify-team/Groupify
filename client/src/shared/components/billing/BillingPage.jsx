@@ -167,17 +167,13 @@ const BillingPage = () => {
     }
   };
 
-  // Card validation functions
   const getCardType = (number) => {
     const cleaned = number.replace(/\s+/g, "").replace(/[^0-9]/gi, "");
-    if (/^4[0-9]{0,15}$/.test(cleaned)) return "visa";
-    if (
-      /^5[1-5][0-9]{0,14}$/.test(cleaned) ||
-      /^2[2-7][0-9]{0,14}$/.test(cleaned)
-    )
-      return "mastercard";
-    if (/^3[47][0-9]{0,13}$/.test(cleaned)) return "amex";
-    if (/^6[0-9]{0,15}$/.test(cleaned)) return "discover";
+    if (/^4/.test(cleaned)) return "visa";
+    if (/^5[1-5]/.test(cleaned) || /^2[2-7]/.test(cleaned)) return "mastercard";
+    if (/^3[47]/.test(cleaned)) return "amex";
+    if (/^6/.test(cleaned)) return "discover";
+
     return null;
   };
 
@@ -436,10 +432,7 @@ const BillingPage = () => {
                 className="inline-flex items-center text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 transition-colors"
               >
                 <ArrowLeftIcon className="w-4 h-4 mr-2" />
-                Back to{" "}
-                {navigationContext?.origin === "dashboard-settings"
-                  ? "Settings"
-                  : "Pricing"}
+                Back to Pricing
               </button>
             </div>
           </div>
@@ -680,18 +673,30 @@ const PaymentForm = ({
 
     {/* Payment Method Selection */}
     <div className="mb-6">
-      <div className="grid grid-cols-3 gap-2 sm:gap-3">
+      <div className="grid grid-cols-4 gap-3">
         <button
           type="button"
           onClick={() => setPaymentMethod("card")}
-          className={`p-3 sm:p-4 rounded-xl border-2 transition-all ${
+          className={`p-4 rounded-xl border-2 transition-all duration-300 transform hover:scale-105 ${
             paymentMethod === "card"
-              ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20"
-              : "border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500"
+              ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 shadow-lg scale-105"
+              : "border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 hover:shadow-md"
           }`}
         >
-          <CreditCardIcon className="w-5 h-5 sm:w-6 sm:h-6 mx-auto mb-1 sm:mb-2 text-gray-600 dark:text-gray-400" />
-          <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white block">
+          <CreditCardIcon
+            className={`w-6 h-6 mx-auto mb-2 transition-colors ${
+              paymentMethod === "card"
+                ? "text-indigo-600 dark:text-indigo-400"
+                : "text-gray-600 dark:text-gray-400"
+            }`}
+          />
+          <span
+            className={`text-sm font-medium block transition-colors ${
+              paymentMethod === "card"
+                ? "text-indigo-700 dark:text-indigo-300"
+                : "text-gray-900 dark:text-white"
+            }`}
+          >
             Credit Card
           </span>
         </button>
@@ -699,37 +704,59 @@ const PaymentForm = ({
         <button
           type="button"
           onClick={() => setShowPayPalModal(true)}
-          className="p-3 sm:p-4 rounded-xl border-2 border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 transition-all"
+          className="p-4 rounded-xl border-2 border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 transition-all duration-300 transform hover:scale-105 hover:shadow-md"
         >
-          <div className="w-5 h-5 sm:w-6 sm:h-6 mx-auto mb-1 sm:mb-2 bg-blue-600 rounded text-white text-xs flex items-center justify-center font-bold">
-            <svg
-              className="w-3 h-3 sm:w-4 sm:h-4"
-              fill="currentColor"
-              viewBox="0 0 24 24"
-            >
+          <div className="w-6 h-6 mx-auto mb-2 bg-blue-600 rounded text-white text-xs flex items-center justify-center font-bold">
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
               <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106zm14.146-14.42a3.35 3.35 0 0 0-.34-.77c-.58-1.08-1.74-1.79-3.65-1.79H12.18c-.45 0-.83.32-.92.76L9.53 13.7c-.08.46.24.88.72.88h2.19c3.42 0 5.93-1.39 6.69-5.40.23-1.21.13-2.23-.3-3.06z" />
             </svg>
           </div>
-          <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white block">
+          <span className="text-sm font-medium text-gray-900 dark:text-white block">
             PayPal
           </span>
         </button>
 
         <button
           type="button"
-          onClick={() => setShowApplePayModal(true)}
-          className="p-3 sm:p-4 rounded-xl border-2 border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 transition-all"
+          onClick={() => setShowGooglePayModal(true)}
+          className="p-4 rounded-xl border-2 border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 transition-all duration-300 transform hover:scale-105 hover:shadow-md"
         >
-          <div className="w-5 h-5 sm:w-6 sm:h-6 mx-auto mb-1 sm:mb-2 bg-black rounded text-white text-xs flex items-center justify-center font-bold">
-            <svg
-              className="w-3 h-3 sm:w-4 sm:h-4"
-              fill="currentColor"
-              viewBox="0 0 24 24"
-            >
+          <div className="w-6 h-6 mx-auto mb-2 bg-white border border-gray-300 rounded text-gray-700 text-xs flex items-center justify-center font-bold">
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+              <path
+                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                fill="#4285F4"
+              />
+              <path
+                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                fill="#34A853"
+              />
+              <path
+                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                fill="#FBBC05"
+              />
+              <path
+                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                fill="#EA4335"
+              />
+            </svg>
+          </div>
+          <span className="text-sm font-medium text-gray-900 dark:text-white block">
+            Google Pay
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setShowApplePayModal(true)}
+          className="p-4 rounded-xl border-2 border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 transition-all duration-300 transform hover:scale-105 hover:shadow-md"
+        >
+          <div className="w-6 h-6 mx-auto mb-2 bg-black rounded text-white text-xs flex items-center justify-center font-bold border border-gray-300">
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
               <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
             </svg>
           </div>
-          <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white block">
+          <span className="text-sm font-medium text-gray-900 dark:text-white block">
             Apple Pay
           </span>
         </button>
@@ -745,19 +772,23 @@ const PaymentForm = ({
               Card Number
             </label>
             <div className="relative">
+              {/* Gray background div */}
+              <div className="absolute inset-0 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg"></div>
+
+              {/* Transparent input on top */}
               <input
                 type="text"
                 value={cardNumber}
                 onChange={handleCardNumberChange}
                 placeholder="1234 5678 9012 3456"
-                className={`w-full pl-4 pr-24 py-3 bg-white dark:bg-gray-700 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-gray-900 dark:text-white ${
-                  validationErrors.cardNumber
-                    ? "border-red-500 dark:border-red-500"
-                    : "border-gray-300 dark:border-gray-600"
+                className={`relative w-full pl-4 pr-20 py-3 bg-transparent border-0 focus:ring-2 focus:ring-indigo-500 rounded-lg text-gray-900 dark:text-white z-20 ${
+                  validationErrors.cardNumber ? "focus:ring-red-500" : ""
                 }`}
                 disabled={loading}
               />
-              <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex space-x-1">
+
+              {/* Card logos - now visible on gray background */}
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex space-x-1 pointer-events-none z-10">
                 <CardLogo type="visa" active={cardType === "visa"} />
                 <CardLogo
                   type="mastercard"
@@ -1240,9 +1271,10 @@ const InfoModal = ({ showInfoModal, setShowInfoModal }) => {
           </div>
           <button
             onClick={() => setShowInfoModal(false)}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-1 absolute top-4 right-4"
+            className="absolute top-4 right-4 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors z-10"
+            style={{ position: "absolute", top: "16px", right: "16px" }}
           >
-            <XMarkIcon className="w-5 h-5" />
+            <XMarkIcon className="w-5 h-5 text-gray-500" />
           </button>
         </div>
 
@@ -1339,9 +1371,9 @@ const PayPalModal = ({
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-2xl shadow-2xl max-w-md w-full p-6 border border-white/20 dark:border-gray-700/50 animate-in fade-in zoom-in duration-300">
         <div className="text-center">
-          <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
             <svg
-              className="w-8 h-8 text-blue-600 dark:text-blue-400"
+              className="w-8 h-8 text-white"
               fill="currentColor"
               viewBox="0 0 24 24"
             >
@@ -1399,16 +1431,15 @@ const ApplePayModal = ({
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-2xl shadow-2xl max-w-md w-full p-6 border border-white/20 dark:border-gray-700/50 animate-in fade-in zoom-in duration-300">
         <div className="text-center">
-          <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-black rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-gray-300">
             <svg
-              className="w-8 h-8 text-gray-600 dark:text-gray-400"
+              className="w-8 h-8 text-white"
               fill="currentColor"
               viewBox="0 0 24 24"
             >
               <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
             </svg>
           </div>
-
           <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">
             Apple Pay Coming Soon! 🍎
           </h3>

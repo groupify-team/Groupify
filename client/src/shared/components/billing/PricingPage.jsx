@@ -243,7 +243,16 @@ const PricingPage = () => {
         toast.info(`You already have the ${plan.name} plan!`);
         return;
       }
-
+      if (
+        (currentSubscription?.plan === "premium" ||
+          currentSubscription?.plan === "pro") &&
+        plan.name !== "Enterprise"
+      ) {
+        toast.error(
+          `Please cancel your current ${currentSubscription.plan} plan first before switching to another plan.`
+        );
+        return;
+      }
       if (plan.name === "Free") {
         handleSmoothNavigation("/dashboard/settings");
         setTimeout(() => {
