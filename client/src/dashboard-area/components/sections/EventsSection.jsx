@@ -1,4 +1,3 @@
-// EventsSection.jsx - Performance Optimized with Plan Limit Validation
 import React, {
   useState,
   useEffect,
@@ -9,6 +8,7 @@ import React, {
   Suspense,
 } from "react";
 import { useNavigate } from "react-router-dom";
+import { useEnhancedNavigation } from "@shared/hooks/useEnhancedNavigation";
 import { useClickOutside } from "@/shared/hooks/useClickOutside";
 
 // Icons
@@ -64,6 +64,7 @@ import { MAX_EVENTS_PER_USER } from "@firebase-services/events";
 const EventsSection = () => {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
+  const { smoothNavigate } = useEnhancedNavigation();
 
   // Plan Limits Hook
   const { canPerformAction, showUpgradePrompt, getUsageInfo } = usePlanLimits();
@@ -300,17 +301,24 @@ const EventsSection = () => {
 
   const handleViewEvent = useCallback(
     (eventId) => {
-      const EventCard = document.querySelector(`[data-event-id="${eventId}"]`);
-      if (EventCard) {
-        EventCard.style.transform = "scale(0.95)";
-        EventCard.style.opacity = "0.7";
+      // Enhanced card animation
+      const eventCard = document.querySelector(`[data-event-id="${eventId}"]`);
+      if (eventCard) {
+        eventCard.style.transition = "all 0.2s ease-out";
+        eventCard.style.transform = "scale(0.96)";
+        eventCard.style.opacity = "0.8";
       }
 
+      // Use smooth navigation with Groupify logo
       setTimeout(() => {
-        navigate(`/dashboard/event/${eventId}`);
+        smoothNavigate(`/dashboard/event/${eventId}`, {
+          delay: 100,
+          showLoader: true,
+          replace: false,
+        });
       }, 150);
     },
-    [navigate]
+    [smoothNavigate]
   );
 
   // Helper function to render invitation action buttons
@@ -422,7 +430,7 @@ const EventsSection = () => {
     ]
   );
 
-  // Show loading state
+  // ===== LOADING STATE =====
   if (loading) {
     return (
       <div className="space-y-3 sm:space-y-6">
@@ -452,16 +460,17 @@ const EventsSection = () => {
     );
   }
 
+  // ===== MAIN RENDER =====
   return (
     <div className="space-y-3 sm:space-y-6">
-      {/* Header Section */}
+      {/* ===== HEADER SECTION ===== */}
       <div className="flex justify-between items-start gap-2 sm:gap-4">
         <div className="flex-1 min-w-0">
           <h1
             className="text-lg sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white"
             style={{ fontSize: window.innerWidth <= 320 ? "0.99rem" : "" }}
           >
-            My events
+            My Events
           </h1>
           <p
             className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 mt-0.5 sm:mt-1"
@@ -471,7 +480,7 @@ const EventsSection = () => {
           </p>
         </div>
 
-        {/* Create Event Button with dynamic limit display */}
+        {/* Create Event Button */}
         {eventsActiveTab === "events" && (
           <button
             onClick={handlecreateEvent}
@@ -501,12 +510,12 @@ const EventsSection = () => {
         )}
       </div>
 
-      {/* Events Limit Banner - NEW ADDITION */}
+      {/* ===== EVENTS LIMIT BANNER ===== */}
       {eventsActiveTab === "events" && (
         <EventsLimitBanner currentEventCount={uniqueEvents.length} />
       )}
 
-      {/* Mobile Tab Switcher */}
+      {/* ===== MOBILE TAB SWITCHER ===== */}
       {isMobile && (
         <div
           className="mb-6"
@@ -518,7 +527,7 @@ const EventsSection = () => {
             tabs={[
               {
                 id: "events",
-                label: "events",
+                label: "Events",
                 icon: MapIcon,
                 badge: uniqueEvents.length,
                 badgeColor: "indigo",
@@ -535,9 +544,10 @@ const EventsSection = () => {
         </div>
       )}
 
-      {/* Desktop Event Invitations Section */}
+      {/* ===== DESKTOP EVENT INVITATIONS SECTION ===== */}
       {!isMobile && (
         <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-2xl shadow-lg border border-white/20 dark:border-gray-700/50">
+          {/* Invitations Header */}
           <div className="flex justify-between items-center p-4 border-b border-gray-200/50 dark:border-gray-700/50">
             <h2 className="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
               <MapIcon className="w-6 h-6 text-purple-600 dark:text-purple-400" />
@@ -560,6 +570,7 @@ const EventsSection = () => {
             </button>
           </div>
 
+          {/* Invitations Content */}
           <div
             className={`overflow-hidden transition-all duration-500 ease-in-out ${
               eventInvitesExpanded
@@ -568,7 +579,7 @@ const EventsSection = () => {
             }`}
           >
             <div className="p-6">
-              {/* Plan limit warning for desktop */}
+              {/* Plan Limit Warning for Desktop */}
               {!canAcceptMoreInvitations && eventInvitations.length > 0 && (
                 <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
                   <div className="flex items-start gap-2">
@@ -586,10 +597,11 @@ const EventsSection = () => {
                 </div>
               )}
 
+              {/* Invitations List */}
               {eventInvitations.length === 0 ? (
                 <div className="text-center py-4">
                   <p className="text-gray-500 dark:text-gray-400 text-sm">
-                    No pending Event invitations
+                    No pending event invitations
                   </p>
                 </div>
               ) : (
@@ -617,7 +629,7 @@ const EventsSection = () => {
         </div>
       )}
 
-      {/* Filters - only show on desktop or when on events tab on mobile */}
+      {/* ===== FILTERS SECTION ===== */}
       {(eventsActiveTab === "events" || !isMobile) && (
         <div
           className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-xl sm:rounded-2xl shadow-lg p-2 sm:p-4 lg:p-6 border border-white/20 dark:border-gray-700/50"
@@ -654,12 +666,13 @@ const EventsSection = () => {
         </div>
       )}
 
-      {/* Content based on active tab */}
+      {/* ===== MAIN CONTENT AREA ===== */}
       <div className={isMobile ? "" : "hidden lg:block"}>
         {!isMobile || eventsActiveTab === "events" ? (
-          /* events Grid */
+          /* ===== EVENTS GRID ===== */
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-3 gap-3 sm:gap-4 lg:gap-5 xl:gap-6 transition-all duration-300">
             {filteredevents.length === 0 ? (
+              /* Empty State */
               <div className="col-span-full text-center py-16 animate-fade-in">
                 <div className="w-24 h-24 bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/30 dark:to-purple-900/30 rounded-2xl flex items-center justify-center mx-auto mb-6">
                   <MapIcon className="w-12 h-12 text-indigo-500 dark:text-indigo-400" />
@@ -679,11 +692,12 @@ const EventsSection = () => {
                     onClick={handlecreateEvent}
                     className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-semibold transition-colors"
                   >
-                    Create Your First event
+                    Create Your First Event
                   </button>
                 )}
               </div>
             ) : (
+              /* Events List */
               filteredevents.map((event, index) => (
                 <div
                   key={event.id}
@@ -693,15 +707,19 @@ const EventsSection = () => {
                     animationFillMode: "both",
                   }}
                 >
-                  <EventCard event={event} onViewEvent={handleViewEvent} />
+                  <EventCard
+                    event={event}
+                    onViewEvent={handleViewEvent}
+                    data-event-id={event.id}
+                  />
                 </div>
               ))
             )}
           </div>
         ) : (
-          /* Mobile Event Invitations */
+          /* ===== MOBILE EVENT INVITATIONS ===== */
           <div className="space-y-4">
-            {/* Plan limit warning for mobile */}
+            {/* Plan Limit Warning for Mobile */}
             {!canAcceptMoreInvitations && eventInvitations.length > 0 && (
               <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl">
                 <div className="flex items-start gap-3">
@@ -719,6 +737,7 @@ const EventsSection = () => {
               </div>
             )}
 
+            {/* Mobile Invitations Content */}
             {eventInvitations.length === 0 ? (
               <div className="text-center py-16">
                 <div className="w-24 h-24 bg-gradient-to-br from-purple-100 to-indigo-100 dark:from-purple-900/30 dark:to-indigo-900/30 rounded-2xl flex items-center justify-center mx-auto mb-6">
@@ -728,7 +747,7 @@ const EventsSection = () => {
                   No event invitations
                 </h3>
                 <p className="text-gray-500 dark:text-gray-400">
-                  When someone invites you to a event, it will appear here
+                  When someone invites you to an event, it will appear here
                 </p>
               </div>
             ) : (
@@ -753,6 +772,8 @@ const EventsSection = () => {
         )}
       </div>
 
+      {/* ===== MODALS ===== */}
+
       {/* Create Event Modal */}
       <Suspense fallback={<div>Loading modal...</div>}>
         <CreateEventModal
@@ -762,7 +783,7 @@ const EventsSection = () => {
         />
       </Suspense>
 
-      {/* Upgrade Plan Modal - NEW */}
+      {/* Upgrade Plan Modal */}
       <Suspense fallback={<div>Loading modal...</div>}>
         <UpgradePlanModal
           isOpen={showUpgradeModal}
