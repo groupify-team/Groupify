@@ -43,24 +43,21 @@ const ConfirmEmailPage = () => {
   const redirectToBilling = location.state?.redirectToBilling;
   const billingParams = location.state?.billingParams;
   const codeFromUrl = searchParams.get("code");
+
   useEffect(() => {
     if (currentUser && currentUser.emailVerified) {
       if (redirectToBilling && billingParams) {
-        toast.success("Email verified! Redirecting to checkout...");
         setTimeout(() => {
           navigate(
             `/billing?plan=${billingParams.plan}&billing=${billingParams.billing}`
           );
-        }, 2000);
-      } else if (plan && plan !== "free") {
-        toast.success("Email verified! Welcome to Groupify!");
-        navigate("/dashboard");
+        }, 1000);
       } else {
-        toast.success("Email verified! Welcome to Groupify!");
         navigate("/dashboard");
       }
     }
-  }, [currentUser, redirectToBilling, billingParams, plan, navigate]);
+  }, [currentUser, redirectToBilling, billingParams, navigate]);
+
   useEffect(() => {
     if (!email) {
       navigate("/signup");
@@ -72,6 +69,7 @@ const ConfirmEmailPage = () => {
       handleVerifyWithCode(codeFromUrl);
     }
   }, [email, codeFromUrl, navigate]);
+
   useEffect(() => {
     if (timeLeft > 0) {
       const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
@@ -80,6 +78,7 @@ const ConfirmEmailPage = () => {
       setCanResend(true);
     }
   }, [timeLeft]);
+
   const handleResendCode = async () => {
     if (!email) {
       toast.error("Email address is required");
@@ -263,12 +262,8 @@ const ConfirmEmailPage = () => {
       const result = await response.json();
 
       if (result.success) {
-        toast.success("Email verified successfully!");
         try {
           if (redirectToBilling && billingParams) {
-            toast.success(
-              "Email verified! Please sign in to continue to checkout."
-            );
             setTimeout(() => {
               navigate(
                 `/signin?verified=true&redirect=billing&plan=${billingParams.plan}&billing=${billingParams.billing}`

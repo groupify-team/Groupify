@@ -462,14 +462,16 @@ const SignUpPage = () => {
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                        className="absolute inset-y-0 right-0 w-12 flex items-center justify-center"
                         disabled={loading}
                       >
-                        {showPassword ? (
-                          <EyeIcon className="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
-                        ) : (
-                          <EyeSlashIcon className="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
-                        )}
+                        <span className="w-5 h-5 flex items-center justify-center">
+                          {showPassword ? (
+                            <EyeIcon className="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
+                          ) : (
+                            <EyeSlashIcon className="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
+                          )}
+                        </span>
                       </button>
                     </div>
 
@@ -653,14 +655,16 @@ const SignUpPage = () => {
                         onClick={() =>
                           setShowConfirmPassword(!showConfirmPassword)
                         }
-                        className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                        className="absolute inset-y-0 right-0 w-12 flex items-center justify-center"
                         disabled={loading}
                       >
-                        {showConfirmPassword ? (
-                          <EyeIcon className="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
-                        ) : (
-                          <EyeSlashIcon className="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
-                        )}
+                        <span className="w-5 h-5 flex items-center justify-center">
+                          {showConfirmPassword ? (
+                            <EyeIcon className="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
+                          ) : (
+                            <EyeSlashIcon className="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
+                          )}
+                        </span>
                       </button>
                     </div>
                   </div>
