@@ -19,7 +19,6 @@
 @import "./components/modals.css";
 @import "./components/loading.css";
 @import "./components/layout.css";
-@import "./components/toast.css";
 
 /* === UTILITIES LAYER === */
 @import "./utilities/utilities.css";
@@ -591,16 +590,46 @@
 }
 
 /* ========================================
-   TOAST NOTIFICATION OVERRIDES
+   TOAST NOTIFICATION STYLES
    ======================================== */
-.Toaster__toast--success {
+
+/* React Hot Toast Global Styles */
+.react-hot-toast {
+  z-index: var(--z-toast) !important;
+  position: fixed !important;
+}
+
+/* Toast Container */
+div[data-testid="toast-container"] {
+  z-index: var(--z-toast) !important;
+  position: fixed !important;
+  top: 20px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+}
+
+/* Toast Above Modal Class */
+.toast-above-modal {
+  z-index: var(--z-toast) !important;
+  position: fixed !important;
+}
+
+/* Toast Override Class */
+.toast-override {
+  z-index: var(--z-toast) !important;
+  position: fixed !important;
+}
+
+/* Success Toast */
+.react-hot-toast[data-type="success"] {
   background: var(--color-success) !important;
+  color: white !important;
 }
 
-.Toaster__toast--error {
+/* Error Toast */
+.react-hot-toast[data-type="error"] {
   background: var(--color-error) !important;
+  color: white !important;
 }
 
-.Toaster__toast--loading {
-  background: var(--color-info) !important;
-}
+/* Loading Toast */
