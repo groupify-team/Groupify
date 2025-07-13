@@ -138,22 +138,23 @@ const UserCard = ({
     );
   };
 
-  // Design Variants
   const getVariantClasses = () => {
     const baseTransition = "transition-all duration-300 ease-out";
     const baseHover = onClick ? "cursor-pointer" : "";
+    // Add this line to control width:
+    const widthConstraint = "w-full max-w-md min-w-0"; // Adjust max-w-md as needed
 
     switch (variant) {
       case "glass":
         return `
-          ${baseTransition} ${baseHover}
-          bg-white/20 dark:bg-slate-800/20 backdrop-blur-xl
-          border border-white/30 dark:border-slate-600/30
-          shadow-lg hover:shadow-2xl
-          hover:bg-white/30 dark:hover:bg-slate-800/30
-          hover:-translate-y-1 hover:scale-[1.02]
-          rounded-3xl
-        `;
+        ${baseTransition} ${baseHover} ${widthConstraint}
+        bg-white/20 dark:bg-slate-800/20 backdrop-blur-xl
+        border border-white/30 dark:border-slate-600/30
+        shadow-lg hover:shadow-2xl
+        hover:bg-white/30 dark:hover:bg-slate-800/30
+        hover:-translate-y-1 hover:scale-[1.02]
+        rounded-3xl
+      `;
 
       case "minimal":
         return `
@@ -211,7 +212,7 @@ const UserCard = ({
 
   return (
     <div
-      className={`flex items-center ${getSizeClasses()} ${getVariantClasses()} ${className}`}
+      className={`flex items-center ${getSizeClasses()} ${getVariantClasses()} ${className} w-80`} // Fixed width
       onClick={onClick}
     >
       {/* Floating Orbs for Premium Variant */}
@@ -251,24 +252,24 @@ const UserCard = ({
         )}
       </div>
 
-      {/* User Info Section */}
-      <div className="flex-1 min-w-0 z-10">
+      <div className="flex-1 min-w-0 max-w-xs z-10">
+        {" "}
+        {/* Added max-w-xs */}
         <div className="flex items-center gap-2 mb-1">
           <h4
-            className={`font-semibold text-gray-900 dark:text-white ${textSizes.name} truncate leading-tight`}
+            className={`font-semibold text-gray-900 dark:text-white ${textSizes.name} truncate leading-tight max-w-full`}
           >
             {userDisplayName}
             {isCurrentUser && (
-              <span className="text-blue-600 dark:text-blue-400 text-xs ml-2 font-bold bg-blue-50 dark:bg-blue-900/40 px-2.5 py-1 rounded-full border border-blue-200/50 dark:border-blue-800/50">
+              <span className="text-blue-600 dark:text-blue-400 text-xs ml-2 font-bold bg-blue-50 dark:bg-blue-900/40 px-2.5 py-1 rounded-full border border-blue-200/50 dark:border-blue-800/50 flex-shrink-0">
                 You
               </span>
             )}
           </h4>
         </div>
-
         {userEmail && (
           <p
-            className={`text-gray-600 dark:text-slate-400 ${textSizes.email} truncate leading-tight font-medium`}
+            className={`text-gray-600 dark:text-slate-400 ${textSizes.email} truncate leading-tight font-medium max-w-full`}
           >
             {userEmail}
           </p>
