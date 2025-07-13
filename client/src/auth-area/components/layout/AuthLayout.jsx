@@ -5,7 +5,7 @@ const AuthLayout = ({
   children,
   showHeader = true,
   headerProps = {},
-  layoutType = "split", // "split", "centered", "full"
+  layoutType = "split",
   leftContent = null,
   className = "",
 }) => {
@@ -24,12 +24,9 @@ const AuthLayout = ({
       <div
         className={`min-h-screen flex route-transition-enter route-transition-enter-active ${className}`}
       >
-        {/* Left Side - Content/Visual */}
         {leftContent && (
           <div className="hidden md:flex md:flex-1">{leftContent}</div>
         )}
-
-        {/* Right Side - Form */}
         <div className="flex-1 flex flex-col bg-white dark:bg-gray-900">
           {showHeader && <AuthHeader {...headerProps} />}
           <main className="flex-1">{children}</main>
@@ -37,8 +34,6 @@ const AuthLayout = ({
       </div>
     );
   }
-
-  // Centered layout (for forgot password, confirm email, etc.)
   if (layoutType === "centered") {
     return (
       <div
@@ -51,8 +46,6 @@ const AuthLayout = ({
       </div>
     );
   }
-
-  // Full layout (for special pages)
   return (
     <div className={`min-h-screen ${className}`}>
       {showHeader && <AuthHeader {...headerProps} />}

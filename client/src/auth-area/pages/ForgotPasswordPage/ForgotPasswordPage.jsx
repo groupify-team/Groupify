@@ -3,14 +3,11 @@ import { useNavigate, Link } from "react-router-dom";
 import { toast } from "@shared/utils/toast";
 import {
   CheckCircleIcon,
-  ArrowLeftIcon,
-  CameraIcon,
   LockClosedIcon,
   ShieldCheckIcon,
 } from "@heroicons/react/24/outline";
-
-// New modular components and hooks
 import AuthLayout from "../../components/layout/AuthLayout";
+import AuthHeader from "../../components/layout/AuthHeader";
 import AuthForm from "../../components/ui/AuthForm";
 import { useAuthValidation } from "../../hooks/useAuthValidation";
 import { useAuthAnimations } from "../../hooks/useAuthAnimations";
@@ -23,22 +20,18 @@ const ForgotPasswordPage = () => {
   const [loading, setLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
 
-  // Hooks
   const { validateEmail } = useAuthValidation();
   const { navigateWithTransition } = useAuthAnimations();
   const navigate = useNavigate();
 
-  // Handle input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validate email
     if (!formData.email) {
       toast.error("Please enter your email address");
       return;
@@ -52,7 +45,6 @@ const ForgotPasswordPage = () => {
     try {
       setLoading(true);
 
-      // Call the HTTP function directly (similar to verification email)
       const response = await fetch(
         "https://us-central1-groupify-77202.cloudfunctions.net/sendPasswordResetEmail",
         {
@@ -81,7 +73,6 @@ const ForgotPasswordPage = () => {
     } catch (error) {
       console.error("Password reset error:", error);
 
-      // Handle specific error messages
       let errorMessage = "Failed to send reset email. Please try again.";
 
       if (
@@ -102,32 +93,22 @@ const ForgotPasswordPage = () => {
     }
   };
 
-  // Handle resend email
   const handleResendEmail = async () => {
     await handleSubmit({ preventDefault: () => {} });
   };
 
-  // Success state with consistent styling
   if (emailSent) {
-    // Left side visual content for success state
     const successLeftContent = (
       <div className="w-full h-full bg-gradient-to-br from-green-500 via-emerald-600 to-teal-600 flex items-center justify-center p-12 relative overflow-hidden">
         <div className="max-w-md text-center text-white z-10">
-          {/* Icon */}
           <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mb-8 backdrop-blur-sm mx-auto">
             <CheckCircleIcon className="w-8 h-8" />
           </div>
-
-          {/* Title */}
           <h2 className="text-3xl font-bold mb-6">Check your email</h2>
-
-          {/* Subtitle */}
           <p className="text-lg mb-8 text-green-100 leading-relaxed">
             We've sent password reset instructions to your email address. Follow
             the link to create a new password.
           </p>
-
-          {/* Email Info */}
           <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 mb-8">
             <div className="flex items-center justify-center">
               <CheckCircleIcon className="w-5 h-5 mr-3 text-green-200" />
@@ -137,8 +118,6 @@ const ForgotPasswordPage = () => {
               {formData.email}
             </div>
           </div>
-
-          {/* Features */}
           <div className="space-y-4 text-left">
             {[
               "Secure reset process",
@@ -156,7 +135,6 @@ const ForgotPasswordPage = () => {
           </div>
         </div>
 
-        {/* Background decoration */}
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-10 left-10 w-32 h-32 bg-white bg-opacity-10 rounded-full blur-xl"></div>
           <div className="absolute bottom-20 right-16 w-24 h-24 bg-white bg-opacity-10 rounded-full blur-xl"></div>
@@ -171,49 +149,23 @@ const ForgotPasswordPage = () => {
         leftContent={successLeftContent}
         showHeader={false}
       >
-        {/* Form Container */}
         <div className="flex-1 flex flex-col justify-center py-2 sm:py-4 md:py-6 lg:py-8 px-3 sm:px-4 md:px-6 lg:px-12 xl:px-20 2xl:px-24 bg-white dark:bg-gray-900 min-h-0">
           <div className="mx-auto w-full max-w-[280px] sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-md">
-            {/* Header */}
-            <div className="mb-4 sm:mb-6 md:mb-8">
-              {/* Navigation */}
-              <div className="flex items-center justify-between mb-2 sm:mb-4 md:mb-6 lg:mb-8 pt-2 sm:pt-3 md:pt-4">
-                <Link
-                  to="/signin"
-                  className="inline-flex items-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
-                >
-                  <ArrowLeftIcon className="w-5 h-5 sm:mr-2" />
-                  <span className="hidden sm:inline">Back to Sign In</span>
-                </Link>
-              </div>
-
-              {/* Logo positioned in middle between top and title */}
-              <div className="flex items-center justify-center md:justify-start mb-4 sm:mb-6 md:mb-8">
-                <div className="w-10 h-10 [@media(min-width:375px)]:w-12 [@media(min-width:375px)]:h-12 sm:w-14 sm:h-14 md:w-12 md:h-12 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl flex items-center justify-center">
-                  <CameraIcon className="w-5 h-5 [@media(min-width:375px)]:w-6 [@media(min-width:375px)]:h-6 sm:w-8 sm:h-8 md:w-6 md:h-6 text-white" />
-                </div>
-                <span className="ml-2 text-xl [@media(min-width:375px)]:text-2xl sm:text-3xl md:text-3xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
-                  Groupify
-                </span>
-              </div>
-
-              {/* Title section */}
-              <div className="text-center md:text-left mb-3 sm:mb-4 md:mb-6">
-                <h2 className="text-lg [@media(min-width:375px)]:text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
-                  Email sent!
-                </h2>
-                <p className="mt-1 sm:mt-2 text-xs [@media(min-width:375px)]:text-xs sm:text-sm md:text-base text-gray-600 dark:text-gray-400">
+            <AuthHeader
+              title="Email sent!"
+              subtitle={
+                <>
                   We've sent a password reset link to{" "}
                   <span className="font-medium text-indigo-600 dark:text-indigo-400">
                     {formData.email}
                   </span>
-                </p>
-              </div>
-            </div>
-
-            {/* Success Content */}
+                </>
+              }
+              showBackButton={true}
+              backTo="/signin"
+              backText="Back to Sign In"
+            />
             <div className="space-y-4 sm:space-y-5 md:space-y-6">
-              {/* Instructions */}
               <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 sm:p-4">
                 <div className="text-left">
                   <h3 className="text-sm font-medium text-blue-900 dark:text-blue-200 mb-2">
@@ -228,7 +180,6 @@ const ForgotPasswordPage = () => {
                 </div>
               </div>
 
-              {/* Action Buttons */}
               <div className="space-y-3">
                 <button
                   onClick={handleResendEmail}
@@ -250,7 +201,6 @@ const ForgotPasswordPage = () => {
                 </button>
               </div>
 
-              {/* Help Text */}
               <div className="mt-4 sm:mt-6 text-center">
                 <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                   Didn't receive the email? Check your spam folder or{" "}
@@ -272,7 +222,6 @@ const ForgotPasswordPage = () => {
     );
   }
 
-  // Form configuration - REMOVED title and subtitle to avoid duplication
   const formConfig = {
     submitText: loading ? "Sending reset link..." : "Send reset link",
     submitDisabled: loading || !formData.email,
@@ -288,25 +237,17 @@ const ForgotPasswordPage = () => {
     ],
   };
 
-  // Left side visual content for form state
   const leftContent = (
     <div className="w-full h-full bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600 flex items-center justify-center p-12 relative overflow-hidden">
       <div className="max-w-md text-center text-white z-10">
-        {/* Icon */}
         <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mb-8 backdrop-blur-sm mx-auto">
           <LockClosedIcon className="w-8 h-8" />
         </div>
-
-        {/* Title */}
         <h2 className="text-3xl font-bold mb-6">Secure password recovery</h2>
-
-        {/* Subtitle */}
         <p className="text-lg mb-8 text-blue-100 leading-relaxed">
           Reset your password safely and securely. We'll help you get back to
           organizing your memories in no time.
         </p>
-
-        {/* Features */}
         <div className="space-y-4 text-left">
           {[
             "Secure reset process",
@@ -324,7 +265,6 @@ const ForgotPasswordPage = () => {
         </div>
       </div>
 
-      {/* Background decoration */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-10 left-10 w-32 h-32 bg-white bg-opacity-10 rounded-full blur-xl"></div>
         <div className="absolute bottom-20 right-16 w-24 h-24 bg-white bg-opacity-10 rounded-full blur-xl"></div>
@@ -335,47 +275,17 @@ const ForgotPasswordPage = () => {
 
   return (
     <AuthLayout layoutType="split" leftContent={leftContent} showHeader={false}>
-      {/* Form Container */}
       <div className="flex-1 flex flex-col justify-center py-2 sm:py-4 md:py-6 lg:py-8 px-3 sm:px-4 md:px-6 lg:px-12 xl:px-20 2xl:px-24 bg-white dark:bg-gray-900 min-h-0">
         <div className="mx-auto w-full max-w-[280px] sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-md">
-          {/* Header */}
-          <div className="mb-4 sm:mb-6 md:mb-8">
-            {/* Navigation */}
-            <div className="flex items-center justify-between mb-2 sm:mb-4 md:mb-6 lg:mb-8 pt-2 sm:pt-3 md:pt-4">
-              <Link
-                to="/signin"
-                className="inline-flex items-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
-              >
-                <ArrowLeftIcon className="w-5 h-5 sm:mr-2" />
-                <span className="hidden sm:inline">Back to Sign In</span>
-              </Link>
-            </div>
+          <AuthHeader
+            title="Forgot your password?"
+            subtitle="No worries! Enter your email address and we'll send you a link to reset your password."
+            showBackButton={true}
+            backTo="/signin"
+            backText="Back to Sign In"
+          />
 
-            {/* Logo positioned in middle between top and title */}
-            <div className="flex items-center justify-center md:justify-start mb-4 sm:mb-6 md:mb-8">
-              <div className="w-10 h-10 [@media(min-width:375px)]:w-12 [@media(min-width:375px)]:h-12 sm:w-14 sm:h-14 md:w-12 md:h-12 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl flex items-center justify-center">
-                <CameraIcon className="w-5 h-5 [@media(min-width:375px)]:w-6 [@media(min-width:375px)]:h-6 sm:w-8 sm:h-8 md:w-6 md:h-6 text-white" />
-              </div>
-              <span className="ml-2 text-xl [@media(min-width:375px)]:text-2xl sm:text-3xl md:text-3xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
-                Groupify
-              </span>
-            </div>
-
-            {/* Title section */}
-            <div className="text-center md:text-left mb-3 sm:mb-4 md:mb-6">
-              <h2 className="text-lg [@media(min-width:375px)]:text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
-                Forgot your password?
-              </h2>
-              <p className="mt-1 sm:mt-2 text-xs [@media(min-width:375px)]:text-xs sm:text-sm md:text-base text-gray-600 dark:text-gray-400">
-                No worries! Enter your email address and we'll send you a link
-                to reset your password.
-              </p>
-            </div>
-          </div>
-
-          {/* Form Section */}
           <div className="space-y-3 sm:space-y-4 md:space-y-5 text-sm md:text-base">
-            {/* Main Form */}
             <AuthForm
               config={formConfig}
               formData={formData}
@@ -383,8 +293,6 @@ const ForgotPasswordPage = () => {
               onSubmit={handleSubmit}
               loading={loading}
             />
-
-            {/* Help Text */}
             <div className="mt-4 sm:mt-6 text-center">
               <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
                 Remember your password?{" "}

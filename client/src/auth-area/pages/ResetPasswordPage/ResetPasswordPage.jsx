@@ -12,6 +12,7 @@ import {
 
 // New modular components and hooks
 import AuthLayout from "../../components/layout/AuthLayout";
+import AuthHeader from "../../components/layout/AuthHeader";
 import AuthForm from "../../components/ui/Enhanced";
 import { useAuthValidation } from "../../hooks/useAuthValidation";
 import { useAuthAnimations } from "../../hooks/useAuthAnimations";
@@ -36,7 +37,6 @@ const ResetPasswordPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  // Password validation
   const validatePassword = (password) => {
     const checks = {
       length: password.length >= 6,
@@ -54,7 +54,6 @@ const ResetPasswordPage = () => {
     formData.newPassword === formData.confirmPassword &&
     formData.confirmPassword !== "";
 
-  // Verify token when component mounts
   useEffect(() => {
     const emailParam = searchParams.get("email");
     const tokenParam = searchParams.get("token");
@@ -70,7 +69,6 @@ const ResetPasswordPage = () => {
     verifyResetToken(emailParam, tokenParam);
   }, [searchParams, navigate]);
 
-  // Verify reset token
   const verifyResetToken = async (email, token) => {
     try {
       setVerifyingToken(true);
@@ -111,17 +109,14 @@ const ResetPasswordPage = () => {
     }
   };
 
-  // Handle input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validation
     if (!formData.newPassword || !formData.confirmPassword) {
       toast.error("Please fill in both password fields");
       return;
@@ -182,7 +177,6 @@ const ResetPasswordPage = () => {
     }
   };
 
-  // Loading state while verifying token - Enhanced with consistent styling
   if (verifyingToken) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-900">
@@ -201,13 +195,9 @@ const ResetPasswordPage = () => {
       </div>
     );
   }
-
-  // If token is not valid, don't render the form
   if (!tokenValid) {
     return null;
   }
-
-  // Form configuration - REMOVED title and subtitle to avoid duplication
   const formConfig = {
     submitText: loading ? "Resetting password..." : "Reset Password",
     submitDisabled: loading || !isPasswordValid || !passwordsMatch,
@@ -219,53 +209,51 @@ const ResetPasswordPage = () => {
         placeholder: "Enter your new password",
         required: true,
         showToggle: true,
-        customComponent:
-          // Password Requirements
-          formData.newPassword && (
-            <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 sm:p-4 mt-3">
-              <p className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 sm:mb-3">
-                Password requirements:
-              </p>
-              <div className="space-y-1 sm:space-y-2">
-                {[
-                  {
-                    check: passwordChecks.length,
-                    label: "At least 6 characters",
-                  },
-                  {
-                    check: passwordChecks.hasUpperCase,
-                    label: "One uppercase letter",
-                  },
-                  {
-                    check: passwordChecks.hasLowerCase,
-                    label: "One lowercase letter",
-                  },
-                  { check: passwordChecks.hasNumber, label: "One number" },
-                  {
-                    check: passwordChecks.hasSpecialChar,
-                    label: "One special character (!@#$%^&*)",
-                  },
-                ].map((requirement, index) => (
-                  <div key={index} className="flex items-center">
-                    {requirement.check ? (
-                      <CheckCircleIcon className="w-3 h-3 sm:w-4 sm:h-4 text-green-500 mr-1 sm:mr-2" />
-                    ) : (
-                      <ExclamationTriangleIcon className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400 mr-1 sm:mr-2" />
-                    )}
-                    <span
-                      className={`text-xs sm:text-sm ${
-                        requirement.check
-                          ? "text-green-600 dark:text-green-400"
-                          : "text-gray-500 dark:text-gray-400"
-                      }`}
-                    >
-                      {requirement.label}
-                    </span>
-                  </div>
-                ))}
-              </div>
+        customComponent: formData.newPassword && (
+          <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 sm:p-4 mt-3">
+            <p className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 sm:mb-3">
+              Password requirements:
+            </p>
+            <div className="space-y-1 sm:space-y-2">
+              {[
+                {
+                  check: passwordChecks.length,
+                  label: "At least 6 characters",
+                },
+                {
+                  check: passwordChecks.hasUpperCase,
+                  label: "One uppercase letter",
+                },
+                {
+                  check: passwordChecks.hasLowerCase,
+                  label: "One lowercase letter",
+                },
+                { check: passwordChecks.hasNumber, label: "One number" },
+                {
+                  check: passwordChecks.hasSpecialChar,
+                  label: "One special character (!@#$%^&*)",
+                },
+              ].map((requirement, index) => (
+                <div key={index} className="flex items-center">
+                  {requirement.check ? (
+                    <CheckCircleIcon className="w-3 h-3 sm:w-4 sm:h-4 text-green-500 mr-1 sm:mr-2" />
+                  ) : (
+                    <ExclamationTriangleIcon className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400 mr-1 sm:mr-2" />
+                  )}
+                  <span
+                    className={`text-xs sm:text-sm ${
+                      requirement.check
+                        ? "text-green-600 dark:text-green-400"
+                        : "text-gray-500 dark:text-gray-400"
+                    }`}
+                  >
+                    {requirement.label}
+                  </span>
+                </div>
+              ))}
             </div>
-          ),
+          </div>
+        ),
       },
       {
         name: "confirmPassword",
@@ -276,45 +264,36 @@ const ResetPasswordPage = () => {
         showToggle: true,
         showPasswordState: showConfirmPassword,
         onPasswordToggle: () => setShowConfirmPassword(!showConfirmPassword),
-        customComponent:
-          // Password match indicator
-          formData.confirmPassword && (
-            <div className="mt-1 sm:mt-2">
-              {!passwordsMatch ? (
-                <p className="text-xs sm:text-sm text-red-600 dark:text-red-400">
-                  Passwords do not match
-                </p>
-              ) : (
-                <p className="text-xs sm:text-sm text-green-600 dark:text-green-400 flex items-center">
-                  <CheckCircleIcon className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
-                  Passwords match
-                </p>
-              )}
-            </div>
-          ),
+        customComponent: formData.confirmPassword && (
+          <div className="mt-1 sm:mt-2">
+            {!passwordsMatch ? (
+              <p className="text-xs sm:text-sm text-red-600 dark:text-red-400">
+                Passwords do not match
+              </p>
+            ) : (
+              <p className="text-xs sm:text-sm text-green-600 dark:text-green-400 flex items-center">
+                <CheckCircleIcon className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                Passwords match
+              </p>
+            )}
+          </div>
+        ),
       },
     ],
   };
 
-  // Left side visual content
   const leftContent = (
     <div className="w-full h-full bg-gradient-to-br from-indigo-500 via-purple-600 to-blue-600 flex items-center justify-center p-12 relative overflow-hidden">
       <div className="max-w-md text-center text-white z-10">
-        {/* Icon */}
         <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mb-8 backdrop-blur-sm mx-auto">
           <LockClosedIcon className="w-8 h-8" />
         </div>
-
-        {/* Title */}
         <h2 className="text-3xl font-bold mb-6">Secure your account</h2>
-
-        {/* Subtitle */}
         <p className="text-lg mb-8 text-indigo-100 leading-relaxed">
           Create a strong password to keep your travel memories safe and secure.
           Your account protection is our priority.
         </p>
 
-        {/* Features */}
         <div className="space-y-4 text-left">
           {[
             "Strong password requirements",
@@ -332,7 +311,6 @@ const ResetPasswordPage = () => {
         </div>
       </div>
 
-      {/* Background decoration */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-10 left-10 w-32 h-32 bg-white bg-opacity-10 rounded-full blur-xl"></div>
         <div className="absolute bottom-20 right-16 w-24 h-24 bg-white bg-opacity-10 rounded-full blur-xl"></div>
@@ -343,49 +321,16 @@ const ResetPasswordPage = () => {
 
   return (
     <AuthLayout layoutType="split" leftContent={leftContent} showHeader={false}>
-      {/* Form Container */}
       <div className="flex-1 flex flex-col justify-center py-2 sm:py-4 md:py-6 lg:py-8 px-3 sm:px-4 md:px-6 lg:px-12 xl:px-20 2xl:px-24 bg-white dark:bg-gray-900 min-h-0">
         <div className="mx-auto w-full max-w-[280px] sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-md">
-          {/* Header */}
-          <div className="mb-4 sm:mb-6 md:mb-8">
-            {/* Navigation */}
-            <div className="flex items-center justify-between mb-2 sm:mb-4 md:mb-6 lg:mb-8 pt-2 sm:pt-3 md:pt-4">
-              <Link
-                to="/signin"
-                className="inline-flex items-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
-              >
-                <ArrowLeftIcon className="w-5 h-5 sm:mr-2" />
-                <span className="hidden sm:inline">Back to Sign In</span>
-              </Link>
-            </div>
-
-            {/* Logo positioned in middle between top and title */}
-            <div className="flex items-center justify-center md:justify-start mb-4 sm:mb-6 md:mb-8">
-              <div className="w-10 h-10 [@media(min-width:375px)]:w-12 [@media(min-width:375px)]:h-12 sm:w-14 sm:h-14 md:w-12 md:h-12 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl flex items-center justify-center">
-                <CameraIcon className="w-5 h-5 [@media(min-width:375px)]:w-6 [@media(min-width:375px)]:h-6 sm:w-8 sm:h-8 md:w-6 md:h-6 text-white" />
-              </div>
-              <span className="ml-2 text-xl [@media(min-width:375px)]:text-2xl sm:text-3xl md:text-3xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
-                Groupify
-              </span>
-            </div>
-
-            {/* Title section */}
-            <div className="text-center md:text-left mb-3 sm:mb-4 md:mb-6">
-              <h2 className="text-lg [@media(min-width:375px)]:text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
-                Reset your password
-              </h2>
-              <p className="mt-1 sm:mt-2 text-xs [@media(min-width:375px)]:text-xs sm:text-sm md:text-base text-gray-600 dark:text-gray-400">
-                Creating a new password for{" "}
-                <span className="font-medium text-indigo-600 dark:text-indigo-400">
-                  {email}
-                </span>
-              </p>
-            </div>
-          </div>
-
-          {/* Form Section */}
+          <AuthHeader
+            title="Reset your password"
+            subtitle={`Creating a new password for ${email}`}
+            showBackButton={true}
+            backTo="/signin"
+            backText="Back to Sign In"
+          />
           <div className="space-y-3 sm:space-y-4 md:space-y-5 text-sm md:text-base">
-            {/* Main Form */}
             <AuthForm
               config={formConfig}
               formData={formData}
@@ -396,8 +341,6 @@ const ResetPasswordPage = () => {
               onSubmit={handleSubmit}
               loading={loading}
             />
-
-            {/* Security Notice */}
             <div className="mt-4 sm:mt-5 md:mt-6 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3 sm:p-4">
               <div className="flex">
                 <ExclamationTriangleIcon className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-600 dark:text-yellow-400 mt-0.5 mr-2 sm:mr-3 flex-shrink-0" />

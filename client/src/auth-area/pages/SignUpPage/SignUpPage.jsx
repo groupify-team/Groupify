@@ -6,8 +6,6 @@ import {
   ChevronUpIcon,
   EyeIcon,
   EyeSlashIcon,
-  CameraIcon,
-  ArrowLeftIcon,
 } from "@heroicons/react/24/outline";
 
 import AuthLayout from "../../components/layout/AuthLayout";
@@ -15,8 +13,8 @@ import PageTransition, {
   SectionTransition,
 } from "@/shared/components/ui/PageTransition";
 import { useAuth } from "@auth/hooks/useAuth";
-
 import { useAuthValidation } from "../../hooks/useAuthValidation";
+import AuthHeader from "../../components/layout/AuthHeader";
 
 const SignUpPage = () => {
   // Form state
@@ -377,40 +375,15 @@ const SignUpPage = () => {
               </div>
             )}
 
-            {/* Header */}
+            {/* Reusable Header */}
             <SectionTransition variant="slideInFromTop" delay={0.1}>
-              <div className="mb-4 sm:mb-6 md:mb-8">
-                {/* Navigation */}
-                <div className="flex items-center justify-between mb-2 sm:mb-4 md:mb-6 lg:mb-8 pt-2 sm:pt-3 md:pt-4">
-                  <Link
-                    to="/"
-                    className="inline-flex items-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
-                  >
-                    <ArrowLeftIcon className="w-5 h-5 sm:mr-2" />
-                    <span className="hidden sm:inline">Back to Home</span>
-                  </Link>
-                </div>
-
-                {/* Logo positioned in middle between top and title */}
-                <div className="flex items-center justify-center md:justify-start mb-4 sm:mb-6 md:mb-8">
-                  <div className="w-10 h-10 [@media(min-width:375px)]:w-12 [@media(min-width:375px)]:h-12 sm:w-14 sm:h-14 md:w-12 md:h-12 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl flex items-center justify-center">
-                    <CameraIcon className="w-5 h-5 [@media(min-width:375px)]:w-6 [@media(min-width:375px)]:h-6 sm:w-8 sm:h-8 md:w-6 md:h-6 text-white" />
-                  </div>
-                  <span className="ml-2 text-xl [@media(min-width:375px)]:text-2xl sm:text-3xl md:text-3xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
-                    Groupify
-                  </span>
-                </div>
-
-                {/* Title section */}
-                <div className="text-center md:text-left mb-3 sm:mb-4 md:mb-6">
-                  <h2 className="text-lg [@media(min-width:375px)]:text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
-                    Create your account
-                  </h2>
-                  <p className="mt-1 sm:mt-2 text-xs [@media(min-width:375px)]:text-xs sm:text-sm md:text-base text-gray-600 dark:text-gray-400">
-                    Join Groupify and start organizing your travel memories
-                  </p>
-                </div>
-              </div>
+              <AuthHeader
+                title="Create your account"
+                subtitle="Join Groupify and start organizing your travel memories"
+                showBackButton={true}
+                backTo="/"
+                backText="Back to Home"
+              />
             </SectionTransition>
 
             {/* Form Section */}

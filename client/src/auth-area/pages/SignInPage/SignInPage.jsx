@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "@shared/utils/toast";
 import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
-
 import AuthLayout from "../../components/layout/AuthLayout";
 import AuthHeader from "../../components/layout/AuthHeader";
 import AuthForm from "../../components/ui/AuthForm";

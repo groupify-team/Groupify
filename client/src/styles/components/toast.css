@@ -5,12 +5,23 @@
 
 @layer components {
   /* === CONTAINER POSITIONING === */
+  div[data-react-hot-toast] {
+    position: fixed !important;
+    top: 20px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    z-index: 100002 !important;
+    pointer-events: none !important;
+  }
+
+  /* Alternative selector if the above doesn't work */
+  .react-hot-toast-container,
   #_rht_toaster {
     position: fixed !important;
     top: 20px !important;
     left: 50% !important;
     transform: translateX(-50%) !important;
-    z-index: 100001 !important;
+    z-index: 100002 !important;
     pointer-events: none !important;
   }
 
@@ -27,6 +38,8 @@
 
   /* === MOBILE RESPONSIVE === */
   @media (max-width: 640px) {
+    div[data-react-hot-toast],
+    .react-hot-toast-container,
     #_rht_toaster {
       top: 16px !important;
       left: 16px !important;

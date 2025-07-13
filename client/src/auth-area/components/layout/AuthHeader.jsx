@@ -14,20 +14,12 @@ const AuthHeader = ({
   backText = "Back to Home",
   className = "",
 }) => {
-  const {
-    theme,
-    toggleTheme,
-    accessibilityButtonProps,
-    accessibilityModalProps,
-  } = useGlobalAccessibility();
-
-  // Debug logging
-  console.log("🔍 AuthHeader render - Modal props:", accessibilityModalProps);
+  const { accessibilityButtonProps, accessibilityModalProps } =
+    useGlobalAccessibility();
 
   return (
     <>
       <div className={`mb-4 sm:mb-6 md:mb-8 ${className}`}>
-        {/* Top Navigation Bar - Back Home + Accessibility */}
         <div className="flex items-center justify-between mb-4 sm:mb-6 md:mb-8 pt-2 sm:pt-3 md:pt-4">
           {showBackButton ? (
             <Link
@@ -48,7 +40,6 @@ const AuthHeader = ({
           />
         </div>
 
-        {/* Logo Section */}
         <div className="flex items-center justify-center md:justify-start mb-4 sm:mb-6 md:mb-8">
           <div className="w-8 h-8 [@media(min-width:375px)]:w-9 [@media(min-width:375px)]:h-9 sm:w-10 sm:h-10 md:w-9 md:h-9 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl flex items-center justify-center">
             <CameraIcon className="w-5 h-5 [@media(min-width:375px)]:w-6 [@media(min-width:375px)]:h-6 sm:w-8 sm:h-8 md:w-6 md:h-6 text-white" />
@@ -58,7 +49,6 @@ const AuthHeader = ({
           </span>
         </div>
 
-        {/* Title section */}
         {title && (
           <div className="text-center md:text-left mb-3 sm:mb-4 md:mb-6">
             <h2 className="text-lg [@media(min-width:375px)]:text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
@@ -73,23 +63,6 @@ const AuthHeader = ({
         )}
       </div>
 
-      {/* Debug indicator */}
-      <div
-        style={{
-          position: "fixed",
-          top: "10px",
-          right: "10px",
-          background: accessibilityModalProps.isOpen ? "green" : "red",
-          color: "white",
-          padding: "5px",
-          zIndex: 100000,
-          fontSize: "12px",
-        }}
-      >
-        Modal: {accessibilityModalProps.isOpen ? "OPEN" : "CLOSED"}
-      </div>
-
-      {/* MODAL - Rendered with Portal to escape layout constraints */}
       {createPortal(
         <AccessibilityModal {...accessibilityModalProps} />,
         document.body
