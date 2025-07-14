@@ -198,50 +198,67 @@ const SignUpPage = () => {
   };
 
   const handleGoogleSignUp = async () => {
-    if (!agreedToTerms) {
-      toast.error("Please agree to the Terms of Service and Privacy Policy");
-      return;
-    }
+  if (!agreedToTerms) {
+    toast.error("Please agree to the Terms of Service and Privacy Policy");
+    return;
+  }
 
-    try {
-      setLoading(true);
-      await signInWithGoogle();
+  try {
+    setLoading(true);
+    await signInWithGoogle();
 
-      if (
-        redirectAfter === "billing" &&
-        selectedPlan &&
-        selectedPlan !== "free"
-      ) {
-        toast.success(
-          "Account created successfully! Redirecting to checkout..."
-        );
-        setTimeout(() => {
-          navigate(
-            `/billing?plan=${selectedPlan}&billing=${billingCycle || "monthly"}`
-          );
-        }, 1000);
-      } else {
-        toast.success("Account created successfully! Welcome to Groupify!");
+    // Check registration type and show appropriate message
+    const registrationType = localStorage.getItem('groupify_google_registration_type');
+    
+    // Clean up flag
+    localStorage.removeItem('groupify_google_registration_type');
+    
+    switch (registrationType) {
+      case 'new':
+        if (redirectAfter === "billing" && selectedPlan && selectedPlan !== "free") {
+          toast.success("🎉 Account created successfully! Redirecting to checkout...");
+          setTimeout(() => {
+            navigate(`/billing?plan=${selectedPlan}&billing=${billingCycle || "monthly"}`);
+          }, 1000);
+        } else {
+          toast.success("🎉 Account created successfully! Welcome to Groupify!");
+          navigate("/dashboard");
+        }
+        break;
+      case 'linked':
+        toast.success("✅ Google account linked successfully! Welcome back!");
         navigate("/dashboard");
-      }
-    } catch (error) {
-      console.error("Google sign up error:", error);
-
-      const errorMessages = {
-        "auth/popup-closed-by-user": "Sign up was cancelled",
-        "auth/popup-blocked":
-          "Popup was blocked. Please allow popups and try again",
-        "auth/account-exists-with-different-credential":
-          "An account already exists with this email using a different sign-in method",
-      };
-
-      const errorMessage =
-        errorMessages[error.code] || "Failed to create account with Google";
-      toast.error(errorMessage);
-    } finally {
-      setLoading(false);
+        break;
+      case 'returning':
+        toast.success("👋 Welcome back! You already have an account.");
+        navigate("/dashboard");
+        break;
+      default:
+        toast.success("Welcome to Groupify!");
+        navigate("/dashboard");
     }
-  };
+  } catch (error) {
+    console.error("Google sign up error:", error);
+
+    const errorMessages = {
+      "auth/popup-closed-by-user": "Sign up was cancelled",
+      "auth/popup-blocked": "Popup was blocked. Please allow popups and try again",
+      "auth/account-exists-with-different-credential": "Account linked successfully! Welcome to Groupify!",
+    };
+
+    const errorMessage = errorMessages[error.code] || "Failed to create account with Google";
+    
+    // If it's an account linking situation, show success instead of error
+    if (error.code === "auth/account-exists-with-different-credential") {
+      toast.success(errorMessage);
+      navigate("/dashboard");
+    } else {
+      toast.error(errorMessage);
+    }
+  } finally {
+    setLoading(false);
+  }
+};
 
   const passwordStrength = getPasswordStrength(formData.password);
 

@@ -138,27 +138,46 @@ const SignInPage = () => {
   };
 
   const handleGoogleSignIn = async () => {
-    try {
-      setLoading(true);
-      await signInWithGoogle();
-      toast.success("Welcome to Groupify!");
-      navigate("/dashboard", { replace: true });
-    } catch (error) {
-      console.error("Google sign in error:", error);
-
-      const errorMessages = {
-        "auth/popup-closed-by-user": "Sign in was cancelled",
-        "auth/popup-blocked":
-          "Popup was blocked. Please allow popups and try again",
-      };
-
-      const errorMessage =
-        errorMessages[error.code] || "Failed to sign in with Google";
-      toast.error(errorMessage);
-    } finally {
-      setLoading(false);
+  try {
+    setLoading(true);
+    await signInWithGoogle();
+    
+    // Check registration type and show appropriate message
+    const registrationType = localStorage.getItem('groupify_google_registration_type');
+    
+    // Clean up flag
+    localStorage.removeItem('groupify_google_registration_type');
+    
+    switch (registrationType) {
+      case 'new':
+        toast.success("🎉 Welcome to Groupify! Your account has been created successfully!");
+        break;
+      case 'linked':
+        toast.success("✅ Google account linked successfully! Welcome back!");
+        break;
+      case 'returning':
+        toast.success("👋 Welcome back!");
+        break;
+      default:
+        toast.success("Welcome to Groupify!");
     }
-  };
+    
+    navigate("/dashboard", { replace: true });
+  } catch (error) {
+    console.error("Google sign in error:", error);
+
+    const errorMessages = {
+      "auth/popup-closed-by-user": "Sign in was cancelled",
+      "auth/popup-blocked": "Popup was blocked. Please allow popups and try again",
+      "auth/account-exists-with-different-credential": "An account already exists with this email. The accounts have been linked successfully!",
+    };
+
+    const errorMessage = errorMessages[error.code] || "Failed to sign in with Google";
+    toast.error(errorMessage);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleNavigateToForgotPassword = () => {
     const overlay = document.createElement("div");

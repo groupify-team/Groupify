@@ -86,7 +86,7 @@ class SubscriptionService {
       free: {
         events: 5,
         photosPerEvent: 30,
-        membersPerEvent: 8, // FIXED: Changed from 5 to 8 to match usePlanLimits.jsx
+        membersPerEvent: 8,
         storage: "2GB",
         storageBytes: 2 * 1024 * 1024 * 1024,
         aiRecognition: "basic",
@@ -263,41 +263,7 @@ class SubscriptionService {
     return this.calculateUsage({ plan: "free" });
   }
 
-  // ADDED: Method to sync usage with actual data
-  syncUsageWithActualData(actualCounts) {
-    console.log("🔄 SubscriptionService: Syncing usage with actual data:", actualCounts);
-    
-    const currentUsage = this.getStoredUsage();
-    const syncedUsage = {
-      events: actualCounts.events || currentUsage.events,
-      photos: actualCounts.photos || currentUsage.photos,
-      storage: actualCounts.storage || currentUsage.storage,
-    };
-
-    if (JSON.stringify(currentUsage) !== JSON.stringify(syncedUsage)) {
-      console.log("🔄 SubscriptionService: Usage out of sync, correcting:", {
-        before: currentUsage,
-        after: syncedUsage
-      });
-      
-      try {
-        localStorage.setItem("groupify_usage", JSON.stringify(syncedUsage));
-        this.notifyListeners("usageUpdated", syncedUsage);
-        console.log("✅ SubscriptionService: Usage synced successfully");
-        return syncedUsage;
-      } catch (error) {
-        console.error("❌ SubscriptionService: Failed to sync usage:", error);
-        return currentUsage;
-      }
-    } else {
-      console.log("✅ SubscriptionService: Usage already in sync");
-      return currentUsage;
-    }
-  }
-
-  // ADDED: Method to reset usage (for debugging)
   resetUsage() {
-    console.log("🔄 SubscriptionService: Resetting usage to zero");
     const resetUsage = {
       events: 0,
       photos: 0,
@@ -307,10 +273,9 @@ class SubscriptionService {
     try {
       localStorage.setItem("groupify_usage", JSON.stringify(resetUsage));
       this.notifyListeners("usageUpdated", resetUsage);
-      console.log("✅ SubscriptionService: Usage reset successfully");
       return resetUsage;
     } catch (error) {
-      console.error("❌ SubscriptionService: Failed to reset usage:", error);
+      console.error("Failed to reset usage:", error);
       return this.getStoredUsage();
     }
   }
@@ -386,6 +351,7 @@ class SubscriptionService {
 
     return expiryDate;
   }
+
   calculateNextBillingDate(planData) {
     const trialEndDate = this.calculateTrialEndDate(planData);
     const isTrial = this.isInTrialPeriod(planData);
@@ -468,6 +434,7 @@ class SubscriptionService {
       return current;
     }
   }
+
   cancelSubscription(cancelAtPeriodEnd = true) {
     const current = this.getCurrentSubscription();
 
@@ -503,6 +470,7 @@ class SubscriptionService {
       return current;
     }
   }
+
   reactivateSubscription() {
     const current = this.getCurrentSubscription();
 
@@ -528,10 +496,12 @@ class SubscriptionService {
       return current;
     }
   }
+
   subscribe(listener) {
     this.listeners.add(listener);
     return () => this.listeners.delete(listener);
   }
+
   notifyListeners(event, data) {
     this.listeners.forEach((listener) => {
       try {
@@ -541,9 +511,11 @@ class SubscriptionService {
       }
     });
   }
+
   clearCache() {
     this.cache.clear();
   }
+
   getCached(key, fetchFn) {
     const cached = this.cache.get(key);
 
