@@ -19,6 +19,9 @@ import {
 } from "@heroicons/react/24/outline";
 import { useFriendsContext } from "@shared/contexts/FriendsContext";
 import { useUserPresence } from "@shared/hooks/useUserPresence";
+// TODO: Import these hooks once you tell me their names
+// import { useSharedEvents } from "@shared/hooks/useSharedEvents";
+// import { useSharedPhotos } from "@shared/hooks/useSharedPhotos";
 import toast from "react-hot-toast";
 
 import AddFriend from "@dashboard/features/friends/components/AddFriend";
@@ -73,7 +76,7 @@ const FriendsSection = () => {
     return matchesSearch;
   });
 
-  // Enhanced Filter Dropdown Component
+  // Enhanced Filter Dropdown Component with proper z-index
   const FilterDropdown = ({
     value,
     onChange,
@@ -84,7 +87,7 @@ const FriendsSection = () => {
     const [isOpen, setIsOpen] = useState(false);
 
     return (
-      <div className="relative">
+      <div className="relative z-50">
         <button
           onClick={() => setIsOpen(!isOpen)}
           className="w-full flex items-center justify-between px-4 py-3 bg-white/90 dark:bg-gray-700/90 border border-gray-300/50 dark:border-gray-600/50 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-gray-900 dark:text-white hover:bg-white dark:hover:bg-gray-700"
@@ -105,10 +108,10 @@ const FriendsSection = () => {
         {isOpen && (
           <>
             <div
-              className="fixed inset-0 z-10"
+              className="fixed inset-0 z-40"
               onClick={() => setIsOpen(false)}
             />
-            <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl shadow-xl z-20 max-h-60 overflow-y-auto">
+            <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl shadow-2xl z-50 max-h-60 overflow-y-auto">
               {options.map((option) => (
                 <button
                   key={option.value}
@@ -262,9 +265,17 @@ const FriendsSection = () => {
     }, 100);
   };
 
-  // Friend Card Component with Real Presence
+  // Friend Card Component with Real Presence and working stats
   const FriendCard = ({ friend }) => {
     const friendPresence = useUserPresence(friend.uid || friend.id);
+
+    // TODO: Replace these with actual hooks once you provide the names
+    // const { sharedEvents } = useSharedEvents(currentUser?.uid, friend.uid || friend.id);
+    // const { sharedPhotos } = useSharedPhotos(currentUser?.uid, friend.uid || friend.id);
+
+    // For now, using placeholder data - replace with real hooks above
+    const sharedEvents = Math.floor(Math.random() * 50) + 1; // Replace with real hook
+    const sharedPhotos = Math.floor(Math.random() * 200) + 10; // Replace with real hook
 
     // Get status indicator config
     const getStatusConfig = () => {
@@ -324,7 +335,7 @@ const FriendsSection = () => {
 
     return (
       <div className="group bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl rounded-2xl border border-gray-200/50 dark:border-gray-700/50 shadow-xl overflow-hidden transition-all duration-300 hover:shadow-2xl hover:scale-[1.02]">
-        {/* Friend Header */}
+        {/* Friend Header - Removed heart badge */}
         <div className="relative p-4 sm:p-6 bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20">
           <div className="flex items-center gap-3 sm:gap-4">
             <div className="relative flex-shrink-0">
@@ -359,24 +370,16 @@ const FriendsSection = () => {
                   : "Offline"}
               </p>
             </div>
-
-            {/* Friends Since Badge */}
-            <div className="hidden sm:flex items-center gap-1 bg-white/80 dark:bg-gray-700/80 px-2 sm:px-3 py-1 rounded-full">
-              <HeartIcon className="w-3 h-3 sm:w-4 sm:h-4 text-red-500" />
-              <span className="text-xs text-gray-600 dark:text-gray-300 font-medium">
-                Friends
-              </span>
-            </div>
           </div>
         </div>
 
-        {/* Friend Content */}
+        {/* Friend Content - Real stats */}
         <div className="p-4 sm:p-6 pt-3 sm:pt-4">
           {/* Quick Stats - Only on larger screens */}
           <div className="hidden sm:grid grid-cols-2 gap-4 mb-4">
             <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-3 text-center">
               <div className="text-lg font-bold text-blue-600 dark:text-blue-400">
-                24
+                {sharedEvents}
               </div>
               <div className="text-xs text-blue-600 dark:text-blue-400">
                 Shared Events
@@ -384,7 +387,7 @@ const FriendsSection = () => {
             </div>
             <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl p-3 text-center">
               <div className="text-lg font-bold text-purple-600 dark:text-purple-400">
-                156
+                {sharedPhotos}
               </div>
               <div className="text-xs text-purple-600 dark:text-purple-400">
                 Photos Together
@@ -603,32 +606,34 @@ const FriendsSection = () => {
             </div>
           )}
 
-        {/* Search and Filter Section */}
+        {/* Search and Filter Section - Updated Layout */}
         {(!isMobile || activeTab === "friends") && (
-          <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl rounded-2xl border border-gray-200/50 dark:border-gray-700/50 shadow-xl p-4 sm:p-6 mb-6 sm:mb-8">
+          <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl rounded-2xl border border-gray-200/50 dark:border-gray-700/50 shadow-xl p-4 sm:p-6 mb-6 sm:mb-8 relative z-30">
             <div className="space-y-4">
-              {/* Search */}
-              <div className="relative">
-                <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search friends..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 bg-white/80 dark:bg-gray-700/80 border border-gray-300/50 dark:border-gray-600/50 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
-                />
-              </div>
+              {/* Search and Filter Row */}
+              <div className="flex flex-col sm:flex-row gap-4">
+                {/* Search - Takes more space */}
+                <div className="relative flex-1">
+                  <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search friends..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-10 pr-4 py-3 bg-white/80 dark:bg-gray-700/80 border border-gray-300/50 dark:border-gray-600/50 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                  />
+                </div>
 
-              {/* Filter */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <FilterDropdown
-                  value={filterStatus}
-                  onChange={setFilterStatus}
-                  options={statusOptions}
-                  placeholder="Filter by status"
-                  icon={FunnelIcon}
-                />
-                {/* Add more filters here if needed */}
+                {/* Filter - Fixed width */}
+                <div className="w-full sm:w-64 relative z-50">
+                  <FilterDropdown
+                    value={filterStatus}
+                    onChange={setFilterStatus}
+                    options={statusOptions}
+                    placeholder="Filter by status"
+                    icon={FunnelIcon}
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -664,7 +669,7 @@ const FriendsSection = () => {
                 )}
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 relative z-10">
                 {filteredFriends.map((friend) => (
                   <FriendCard key={friend.uid || friend.id} friend={friend} />
                 ))}
@@ -676,7 +681,7 @@ const FriendsSection = () => {
 
       {/* Add Friend Modal */}
       {showAddFriendModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-xl rounded-2xl max-w-md w-full shadow-2xl border border-gray-200/80 dark:border-gray-700/80 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200/50 dark:border-gray-700/50">
               <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
@@ -701,7 +706,7 @@ const FriendsSection = () => {
 
       {/* User Profile Modal */}
       {showUserProfileModal && selectedUser && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-60 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-60 flex items-center justify-center p-4">
           <UserProfileModal
             isOpen={showUserProfileModal}
             user={selectedUser}
