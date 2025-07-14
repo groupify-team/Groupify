@@ -72,32 +72,76 @@ const EditProfileModal = ({ isOpen, onClose }) => {
   }, [isOpen]);
 
   useEffect(() => {
-    const startCamera = async () => {
-      if (showCamera && videoRef.current) {
-        try {
-          const stream = await navigator.mediaDevices.getUserMedia({
-            video: true,
+  const startCamera = async () => {
+    if (showCamera && videoRef.current) {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { 
+            facingMode: 'user',
+            width: { ideal: 640 },
+            height: { ideal: 480 }
+          }
+        });
+        
+        // Ensure video element is ready
+        const video = videoRef.current;
+        video.srcObject = stream;
+        
+        // Wait for video to be ready before playing
+        video.onloadedmetadata = () => {
+          video.play().catch(err => {
+            console.error("❌ Failed to play video:", err);
+            setError("Could not start video playback");
           });
-          videoRef.current.srcObject = stream;
-          await videoRef.current.play();
-          setVideoStream(stream);
-        } catch (err) {
-          console.error("❌ Failed to start camera:", err);
-          setError("Could not access camera");
-        }
+        };
+        
+        setVideoStream(stream);
+        console.log("✅ Camera started successfully");
+      } catch (err) {
+        console.error("❌ Failed to start camera:", err);
+        setError("Could not access camera. Please check permissions.");
       }
-    };
-
-    startCamera();
-  }, [showCamera]);
-
-  const handleImageSelect = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setRawImage(URL.createObjectURL(file));
-      setCropping(true);
     }
   };
+
+  if (showCamera) {
+    startCamera();
+  }
+
+  // Cleanup when camera is closed
+  return () => {
+    if (videoStream && !showCamera) {
+      videoStream.getTracks().forEach(track => track.stop());
+    }
+  };
+}, [showCamera]);
+
+useEffect(() => {
+  // Cleanup blob URLs to prevent memory leaks
+  return () => {
+    if (rawImage && rawImage.startsWith('blob:')) {
+      URL.revokeObjectURL(rawImage);
+    }
+    if (previewUrl && previewUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(previewUrl);
+    }
+  };
+}, [rawImage, previewUrl]);
+
+useEffect(() => {
+  console.log("🔍 State - cropping:", cropping, "rawImage:", rawImage ? "present" : "null");
+}, [cropping, rawImage]);
+
+  const handleImageSelect = (e) => {
+  const file = e.target.files[0];
+  if (file) {
+    const imageUrl = URL.createObjectURL(file);
+    console.log("📁 File selected:", file.name, "URL:", imageUrl);
+    console.log("🔄 Setting cropping to true");
+    setRawImage(imageUrl);
+    setCropping(true);
+  }
+};
 
   const handleCropComplete = (blob, fileUrl) => {
     setProfileImage(blob);
@@ -106,6 +150,8 @@ const EditProfileModal = ({ isOpen, onClose }) => {
   };
 
   const handleImageUpload = async () => {
+    if (!profileImage) return null;
+
     const storageRef = ref(storage, `profileImages/${auth.currentUser.uid}`);
     await uploadBytes(storageRef, profileImage);
     const url = await getDownloadURL(storageRef);
@@ -117,9 +163,16 @@ const EditProfileModal = ({ isOpen, onClose }) => {
   };
 
   const capturePhoto = () => {
-    const video = videoRef.current;
-    if (!video) return;
+  const video = videoRef.current;
+  console.log("🎬 capturePhoto called, video element:", video);
+  
+  if (!video || !video.videoWidth || !video.videoHeight) {
+    console.log("❌ Video not ready:", { video, videoWidth: video?.videoWidth, videoHeight: video?.videoHeight });
+    setError("Camera not ready. Please wait a moment and try again.");
+    return;
+  }
 
+  try {
     const canvas = document.createElement("canvas");
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
@@ -127,21 +180,45 @@ const EditProfileModal = ({ isOpen, onClose }) => {
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
     canvas.toBlob((blob) => {
-      if (!blob) return;
-      const file = new File([blob], "captured.jpg", { type: "image/jpeg" });
-      setRawImage(URL.createObjectURL(file));
+      if (!blob) {
+        console.log("❌ No blob created");
+        setError("Failed to capture photo. Please try again.");
+        return;
+      }
+      
+      // Cleanup previous blob URL
+      if (rawImage && rawImage.startsWith('blob:')) {
+        URL.revokeObjectURL(rawImage);
+      }
+      
+      const imageUrl = URL.createObjectURL(blob);
+      console.log("📸 Setting rawImage:", imageUrl);
+      console.log("🔄 Setting cropping to true");
+      
+      setRawImage(imageUrl);
       setCropping(true);
       stopCamera();
-    }, "image/jpeg");
-  };
+      console.log("✅ Photo captured successfully");
+    }, "image/jpeg", 0.9);
+  } catch (err) {
+    console.error("❌ Error capturing photo:", err);
+    setError("Failed to capture photo. Please try again.");
+  }
+};
 
   const stopCamera = () => {
-    if (videoStream) {
-      videoStream.getTracks().forEach((track) => track.stop());
-      setVideoStream(null);
-    }
-    setShowCamera(false);
-  };
+  if (videoStream) {
+    videoStream.getTracks().forEach((track) => {
+      track.stop();
+      console.log("🛑 Camera track stopped");
+    });
+    setVideoStream(null);
+  }
+  if (videoRef.current) {
+    videoRef.current.srcObject = null;
+  }
+  setShowCamera(false);
+};
 
   const cancelCamera = () => {
     stopCamera();
@@ -150,65 +227,67 @@ const EditProfileModal = ({ isOpen, onClose }) => {
 
   // Save all profile data - keeping your exact logic
   const handleSave = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
+  e.preventDefault();
+  setLoading(true);
+  setError("");
 
-    try {
-      const user = auth.currentUser;
-      const userRef = doc(db, "users", user.uid);
-      const updates = { displayName, birthdate, gender };
+  try {
+    const user = auth.currentUser;
+    const userRef = doc(db, "users", user.uid);
+    const updates = { displayName, birthdate, gender };
 
-      if (email !== user.email) {
-        try {
-          await updateEmail(user, email);
-          updates.email = email;
-        } catch (error) {
-          if (error.code === "auth/requires-recent-login") {
-            setError("Please re-login to update your email.");
-            setLoading(false);
-            return;
-          } else {
-            throw error;
-          }
+    if (email !== user.email) {
+      try {
+        await updateEmail(user, email);
+        updates.email = email;
+      } catch (error) {
+        if (error.code === "auth/requires-recent-login") {
+          setError("Please re-login to update your email.");
+          setLoading(false);
+          return;
+        } else {
+          throw error;
         }
       }
+    }
 
-      if (password) {
-        try {
-          await updatePassword(user, password);
-        } catch (error) {
-          if (error.code === "auth/requires-recent-login") {
-            setError("Please re-login to update your password.");
-            setLoading(false);
-            return;
-          } else {
-            throw error;
-          }
+    if (password) {
+      try {
+        await updatePassword(user, password);
+      } catch (error) {
+        if (error.code === "auth/requires-recent-login") {
+          setError("Please re-login to update your password.");
+          setLoading(false);
+          return;
+        } else {
+          throw error;
         }
       }
+    }
 
+    if (profileImage) { 
       const imageUrl = await handleImageUpload();
       if (imageUrl) {
         updates.photoURL = imageUrl;
         await updateUserProfile({ photoURL: imageUrl });
-        setCurrentUser((prev) => ({ ...prev, photoURL: imageUrl }));
+        // Removed the problematic setCurrentUser line
       }
-
-      await updateDoc(userRef, updates);
-      setSuccessMessage("Profile updated successfully! ✨");
-      setShowSuccess(true);
-      setTimeout(() => {
-        setShowSuccess(false);
-        onClose();
-      }, 2000); // Show success message for 2 seconds before closing
-    } catch (err) {
-      console.error("❌ Error saving profile:", err);
-      setError(err.message);
-    } finally {
-      setLoading(false);
     }
-  };
+
+    await updateDoc(userRef, updates);
+    setSuccessMessage("Profile updated successfully! ✨");
+    setShowSuccess(true);
+    setTimeout(() => {
+      setShowSuccess(false);
+      onClose();
+    }, 2000);
+  } catch (err) {
+    console.error("❌ Error saving profile:", err);
+    setError(err.message);
+  } finally {
+    setLoading(false);
+  }
+};
 
   // Don't render modal if it's closed
   if (!isOpen) return null;
@@ -217,7 +296,7 @@ const EditProfileModal = ({ isOpen, onClose }) => {
     <>
       {/* Camera Modal - Enhanced with theme support */}
       {showCamera && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[9999]">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[10000]">
           <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg rounded-2xl p-6 shadow-2xl flex flex-col items-center space-y-4 w-[400px] border border-white/20 dark:border-gray-700/50">
             <div className="flex items-center justify-between w-full mb-2">
               <h3 className="text-lg font-semibold text-gray-800 dark:text-white">
@@ -258,15 +337,17 @@ const EditProfileModal = ({ isOpen, onClose }) => {
 
       {/* Image Cropper - keeping your exact component */}
       {cropping && (
+      <div className="fixed inset-0" style={{ zIndex: 10001 }}>
         <ProfileImageCropper
           imageSrc={rawImage}
           onCropComplete={handleCropComplete}
           onCancel={() => setCropping(false)}
         />
-      )}
+      </div>
+    )}
 
       {/* Main Modal - Redesigned with Dashboard styling */}
-      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-40 p-4">
         <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg shadow-2xl rounded-2xl w-full max-w-2xl relative transform transition-all duration-300 scale-100 max-h-[90vh] overflow-hidden border border-white/20 dark:border-gray-700/50">
           {/* Header - Enhanced with glassmorphism */}
           <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 px-4 [@media(min-width:375px)]:px-6 py-2 [@media(min-width:375px)]:py-4 rounded-t-2xl relative overflow-hidden">
