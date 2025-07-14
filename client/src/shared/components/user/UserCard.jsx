@@ -1,8 +1,6 @@
 import React from "react";
+import { useUserPresence } from "@shared/hooks/useUserPresence";
 
-/**
- * Premium UserCard with multiple design variants
- */
 const UserCard = ({
   user,
   onClick,
@@ -31,6 +29,7 @@ const UserCard = ({
       </div>
     );
   }
+  const userPresence = useUserPresence(user?.uid);
 
   const getSizeClasses = () => {
     switch (size) {
@@ -66,7 +65,14 @@ const UserCard = ({
   };
 
   const renderStatusIndicator = () => {
-    if (!showStatus || !status) return null;
+    if (!showStatus) return null;
+
+    // Use real presence data if available, fallback to prop
+    const currentStatus = userPresence.loading
+      ? status || "offline"
+      : userPresence.isOnline
+      ? userPresence.status
+      : "offline";
 
     const statusConfig = {
       online: {
@@ -82,7 +88,7 @@ const UserCard = ({
       away: {
         color: "bg-amber-500",
         ring: "ring-amber-200 dark:ring-amber-800",
-        pulse: "",
+        pulse: "animate-pulse",
       },
       busy: {
         color: "bg-red-500",
@@ -91,13 +97,46 @@ const UserCard = ({
       },
     };
 
-    const config = statusConfig[status] || statusConfig.offline;
+    const config = statusConfig[currentStatus] || statusConfig.offline;
 
     return (
       <div
         className={`absolute -bottom-1 -right-1 w-5 h-5 ${config.color} border-3 border-white dark:border-slate-800 rounded-full ${config.ring} ring-2 ${config.pulse} shadow-lg`}
+        title={
+          userPresence.loading
+            ? "Loading status..."
+            : userPresence.isOnline
+            ? `${
+                userPresence.status.charAt(0).toUpperCase() +
+                userPresence.status.slice(1)
+              }`
+            : userPresence.lastSeen
+            ? `Last seen ${formatLastSeen(userPresence.lastSeen)}`
+            : "Offline"
+        }
       ></div>
     );
+  };
+
+  // Add this helper function after renderStatusIndicator
+  const formatLastSeen = (lastSeen) => {
+    if (!lastSeen) return "";
+
+    const now = new Date();
+    const lastSeenDate = lastSeen.toDate
+      ? lastSeen.toDate()
+      : new Date(lastSeen);
+    const diffMs = now - lastSeenDate;
+    const diffMinutes = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMinutes / 60);
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffMinutes < 1) return "just now";
+    if (diffMinutes < 60) return `${diffMinutes}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+
+    return lastSeenDate.toLocaleDateString();
   };
 
   const renderRoleBadge = () => {

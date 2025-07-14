@@ -1,10 +1,13 @@
 import React from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@auth/hooks/useAuth";
+import { usePresence } from "@shared/hooks/usePresence";
 
 const ProtectedRoute = ({ children }) => {
   const { currentUser, loading } = useAuth();
   const location = useLocation();
+
+  usePresence();
 
   if (loading) {
     return (
