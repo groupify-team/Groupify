@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useReducer, useEffect } from "react";
 import { useAuth } from "@auth/hooks/useAuth";
 import { UserService } from "@shared/services/user/UserService";
+import usageSyncService from "@shared/services/UsageSyncService";
 import {
   doc,
   onSnapshot,
@@ -175,6 +176,7 @@ const EventContext = createContext();
 export const EventProvider = ({ children }) => {
   const { currentUser } = useAuth();
   const [state, dispatch] = useReducer(eventReducer, initialState);
+
   const acceptEventInvitation = async (invitationId, eventId) => {
     try {
       await updateDoc(doc(db, "events", eventId), {
@@ -185,14 +187,15 @@ export const EventProvider = ({ children }) => {
         status: "accepted",
         acceptedAt: new Date().toISOString(),
       });
+
+      // Trigger usage sync after accepting invitation
+      if (currentUser?.uid) {
+        usageSyncService.syncUsageWithFirebase(currentUser.uid).catch(console.warn);
+      }
+
       return true;
     } catch (error) {
-      console.error("❌ ERROR: Failed to accept invitation:", error);
-      console.error("❌ ERROR details:", {
-        message: error.message,
-        code: error.code,
-        stack: error.stack,
-      });
+      console.error("Failed to accept invitation:", error);
       throw error;
     }
   };
@@ -261,12 +264,14 @@ export const EventProvider = ({ children }) => {
     try {
       const event = state.events.find((e) => e.id === eventId);
       if (!event) throw new Error("Event not found");
+      
       const updatedMembers = (event.members || []).filter(
         (uid) => uid !== userId
       );
       const updatedAdmins = (event.admins || []).filter(
         (uid) => uid !== userId
       );
+      
       await updateEvent(eventId, {
         members: updatedMembers,
         admins: updatedAdmins,
@@ -277,9 +282,14 @@ export const EventProvider = ({ children }) => {
         payload: { eventId, memberId: userId },
       });
 
+      // Trigger usage sync after removing member
+      if (currentUser?.uid) {
+        usageSyncService.syncUsageWithFirebase(currentUser.uid).catch(console.warn);
+      }
+
       return true;
     } catch (error) {
-      console.error("❌ EventContext: Error removing event member:", error);
+      console.error("Error removing event member:", error);
       throw error;
     }
   };
@@ -331,6 +341,10 @@ export const EventProvider = ({ children }) => {
     const setupEventListeners = async () => {
       try {
         dispatch({ type: EVENT_ACTIONS.SET_LOADING, payload: true });
+
+        // Initialize usage sync when setting up listeners
+        usageSyncService.initializeSync(currentUser.uid).catch(console.warn);
+
         const userEvents = await eventsService.getEvents(currentUser.uid);
         dispatch({ type: EVENT_ACTIONS.SET_EVENTS, payload: userEvents });
         userEvents.forEach((event) => {
@@ -413,7 +427,7 @@ export const EventProvider = ({ children }) => {
 
         dispatch({ type: EVENT_ACTIONS.SET_LOADING, payload: false });
       } catch (error) {
-        console.error("❌ EventContext: Error setting up listeners:", error);
+        console.error("Error setting up listeners:", error);
         dispatch({ type: EVENT_ACTIONS.SET_ERROR, payload: error.message });
         dispatch({ type: EVENT_ACTIONS.SET_LOADING, payload: false });
       }

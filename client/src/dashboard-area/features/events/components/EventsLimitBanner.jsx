@@ -19,7 +19,7 @@ const EventsLimitBanner = ({ currentEventCount, onUpgrade }) => {
   const isNearLimit = !isUnlimited && currentEventCount >= eventLimit * 0.8; // 80% of limit
 
   // Only show banner when limit is reached (not when approaching)
-  if (isUnlimited || !isVisible || !isAtLimit) {
+  if (isUnlimited || !isVisible || currentEventCount < eventLimit) {
     return null;
   }
 

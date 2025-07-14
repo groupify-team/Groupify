@@ -270,6 +270,15 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
   if (!isOpen) return null;
 
   // ===== PLAN STATUS HELPERS =====
+const canCreateNewEvent = () => {
+  return (
+    planLoading ||
+    !planFeatures ||
+    planFeatures?.events === "unlimited" ||
+    currentEventCount < (planFeatures?.events || 5)
+  );
+};
+
   const isAtEventLimit = () => {
     return (
       !planLoading &&
@@ -559,7 +568,7 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
               <button
                 type="button"
                 onClick={handleSubmit}
-                disabled={loading || !name.trim()}
+                disabled={loading || !name.trim() || !canCreateNewEvent()}
                 className={`flex-1 py-2.5 px-4 rounded-xl font-medium transition-all transform shadow-lg flex items-center justify-center gap-2 ${
                   loading || !name.trim()
                     ? "bg-gray-400 text-gray-600 cursor-not-allowed"
