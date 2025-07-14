@@ -1,4 +1,4 @@
-// components/EventCard.jsx
+// components/EventCard.jsx - Responsive compact design with better typography and more details
 import React, { memo } from "react";
 import {
   MapPinIcon,
@@ -6,6 +6,8 @@ import {
   CalendarIcon,
   EyeIcon,
   ChevronRightIcon,
+  SparklesIcon,
+  PhotoIcon,
 } from "@heroicons/react/24/outline";
 import { formatEventDate, getEventstatus } from "@events/utils/eventHelpers";
 
@@ -14,122 +16,153 @@ const EventCard = memo(({ event, onViewEvent }) => {
 
   return (
     <div className="group relative" data-event-id={event.id}>
-      {/* Glass morphism card */}
-      <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-xl sm:rounded-2xl shadow-lg border border-white/20 dark:border-gray-700/50 overflow-hidden transition-all duration-300 hover:shadow-xl sm:hover:scale-[1.02] hover:bg-white/70 dark:hover:bg-gray-800/70 h-full flex flex-col">
-        {/* Cover Image Section */}
-        <div className="relative h-20 sm:h-28 md:h-32 lg:h-36 overflow-hidden">
-          {event.coverPhoto ? (
-            <img
-              src={event.coverPhoto}
-              alt={event.name}
-              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-            />
-          ) : (
-            <div className="w-full h-full bg-gradient-to-br from-indigo-400 via-purple-400 to-pink-400 flex items-center justify-center relative overflow-hidden">
-              {/* Background pattern */}
-              <div className="absolute inset-0 opacity-20">
-                <div className="absolute top-4 left-4 w-8 h-8 rounded-full bg-white/30"></div>
-                <div className="absolute top-12 right-8 w-6 h-6 rounded-full bg-white/20"></div>
-                <div className="absolute bottom-8 left-8 w-4 h-4 rounded-full bg-white/40"></div>
-                <div className="absolute bottom-4 right-4 w-10 h-10 rounded-full bg-white/25"></div>
-              </div>
-
-              {/* Icon */}
-              <div className="relative z-10 flex flex-col items-center text-white">
-                <MapPinIcon className="w-12 h-12 sm:w-14 sm:h-14 mb-2 drop-shadow-lg" />
-                <span className="text-sm font-medium opacity-90">No Photo</span>
-              </div>
-            </div>
-          )}
-
-          {/* Status Badge - FIXED: Removed question marks */}
-          <div className="absolute top-4 right-4">
-            <span
-              className={`inline-flex items-center px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-semibold backdrop-blur-sm border ${
-                eventstatus.color === "green"
-                  ? "bg-green-100/80 dark:bg-green-900/50 text-green-800 dark:text-green-300 border-green-200/50 dark:border-green-700/50"
-                  : eventstatus.color === "blue"
-                  ? "bg-blue-100/80 dark:bg-blue-900/50 text-blue-800 dark:text-blue-300 border-blue-200/50 dark:border-blue-700/50"
-                  : eventstatus.color === "purple"
-                  ? "bg-purple-100/80 dark:bg-purple-900/50 text-purple-800 dark:text-purple-300 border-purple-200/50 dark:border-purple-700/50"
-                  : "bg-gray-100/80 dark:bg-gray-700/50 text-gray-800 dark:text-gray-300 border-gray-200/50 dark:border-gray-600/50"
-              }`}
-            >
-              {eventstatus.status === "completed" && "Completed"}
-              {eventstatus.status === "upcoming" && "Upcoming"}
-              {eventstatus.status === "ongoing" && "Ongoing"}
-              {eventstatus.status === "draft" && "Draft"}
-            </span>
-          </div>
-
-          {/* Gradient overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-        </div>
-
-        {/* Content Section - Fixed with proper spacing */}
-        <div className="p-2 sm:p-3 md:p-4 flex-1 flex flex-col">
-          {/* event Title - FIXED: Removed line-clamp-1 and added proper line height */}
-          <div className="mb-1 sm:mb-3">
-            <h3 className="text-sm sm:text-lg md:text-xl font-bold text-gray-900 dark:text-white mb-1 sm:mb-2 leading-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors min-h-[1.2rem] sm:min-h-[2rem] md:min-h-[2.5rem] flex items-center">
-              {event.name}
-            </h3>
-
-            {/* Location */}
-            {event.location && (
-              <div className="flex items-center text-gray-500 dark:text-gray-400 text-xs sm:text-sm">
-                <MapPinIcon className="w-4 h-4 mr-2 flex-shrink-0" />
-                <span className="truncate">{event.location}</span>
+      {/* Compact Responsive Glass morphism card */}
+      <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl rounded-xl border border-gray-200/50 dark:border-gray-700/50 shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl hover:scale-[1.01] hover:bg-white/80 dark:hover:bg-gray-800/80 relative z-10">
+        <div className="flex flex-col sm:flex-row h-auto sm:h-28 lg:h-32">
+          {/* Event Image/Cover - Responsive sizing */}
+          <div className="relative w-full sm:w-32 lg:w-40 h-32 sm:h-full flex-shrink-0 overflow-hidden">
+            {event.coverPhoto ? (
+              <img
+                src={event.coverPhoto}
+                alt={event.name}
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+              />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-indigo-400 via-purple-400 to-pink-400 flex items-center justify-center relative overflow-hidden">
+                {/* Responsive icon sizing */}
+                <div className="relative z-10 flex flex-col items-center text-white">
+                  <SparklesIcon className="w-8 h-8 sm:w-6 sm:h-6 lg:w-8 lg:h-8 drop-shadow-lg" />
+                </div>
               </div>
             )}
-          </div>
 
-          {/* Dates */}
-          <div className="flex items-center text-gray-600 dark:text-gray-300 text-xs sm:text-sm mb-1 sm:mb-3">
-            <CalendarIcon className="w-4 h-4 mr-2 text-indigo-500 flex-shrink-0" />
-            <span className="flex-1">
-              {event.startDate && event.endDate ? (
-                <span>
-                  {formatEventDate(event.startDate)} -{" "}
-                  {formatEventDate(event.endDate)}
+            {/* Responsive Status Badge */}
+            <div className="absolute top-2 left-2">
+              <span
+                className={`inline-flex items-center px-2 py-0.5 lg:px-3 lg:py-1 rounded-full text-xs font-semibold backdrop-blur-sm border ${
+                  eventstatus.color === "green"
+                    ? "bg-emerald-100/90 text-emerald-800 border-emerald-200"
+                    : eventstatus.color === "blue"
+                    ? "bg-blue-100/90 text-blue-800 border-blue-200"
+                    : eventstatus.color === "purple"
+                    ? "bg-purple-100/90 text-purple-800 border-purple-200"
+                    : "bg-gray-100/90 text-gray-800 border-gray-200"
+                }`}
+              >
+                {/* Responsive badge text */}
+                <span className="sm:hidden">
+                  {eventstatus.status === "completed" && "✓"}
+                  {eventstatus.status === "upcoming" && "⏰"}
+                  {eventstatus.status === "ongoing" && "🔴"}
+                  {eventstatus.status === "draft" && "📝"}
                 </span>
-              ) : event.startDate ? (
-                <span>{formatEventDate(event.startDate)}</span>
-              ) : (
-                <span className="italic text-gray-400 dark:text-gray-500">
-                  Dates not set
+                <span className="hidden sm:inline">
+                  {eventstatus.status === "completed" && "Done"}
+                  {eventstatus.status === "upcoming" && "Soon"}
+                  {eventstatus.status === "ongoing" && "Live"}
+                  {eventstatus.status === "draft" && "Draft"}
                 </span>
-              )}
-            </span>
-          </div>
-
-          {/* Description - Fixed height for consistency */}
-          <div className="mb-1 sm:mb-3 min-h-[1rem] sm:min-h-[2rem] flex items-start flex-1">
-            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 line-clamp-2 leading-relaxed">
-              {event.description || "No description provided"}
-            </p>
-          </div>
-
-          {/* Footer */}
-          <div className="flex items-center justify-between pt-1.5 sm:pt-3 border-t border-gray-200/50 dark:border-gray-600/50 mt-auto">
-            {/* Members count */}
-            <div className="flex items-center text-gray-500 dark:text-gray-400 text-xs sm:text-sm">
-              <UserGroupIcon className="w-4 h-4 mr-2 flex-shrink-0" />
-              <span>
-                {event.members?.length || 1}{" "}
-                {event.members?.length === 1 ? "member" : "members"}
               </span>
             </div>
+          </div>
 
-            {/* View event Button */}
-            <button
-              onClick={() => onViewEvent && onViewEvent(event.id)}
-              className="group/btn inline-flex items-center gap-1 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-1.5 sm:px-3 py-0.5 sm:py-1.5 rounded-md sm:rounded-xl text-xs font-medium transition-all duration-300 transform sm:hover:scale-105 shadow-md hover:shadow-lg flex-shrink-0 active:scale-95"
-            >
-              <EyeIcon className="w-3 h-3 sm:w-4 sm:h-4 transition-transform group-hover/btn:scale-110" />
-              <span className="hidden sm:inline">View event</span>
-              <span className="sm:hidden">View</span>
-              <ChevronRightIcon className="w-2.5 h-2.5 sm:w-3 sm:h-3 transition-transform group-hover/btn:translate-x-0.5" />
-            </button>
+          {/* Event Content - Responsive layout with more details */}
+          <div className="flex-1 p-3 sm:p-4 lg:p-5 flex flex-col sm:flex-row sm:items-center justify-between min-w-0">
+            {/* Left side - Event info with better typography */}
+            <div className="flex-1 min-w-0 mb-3 sm:mb-0 sm:mr-4">
+              {/* Event Title - Responsive sizing */}
+              <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 dark:text-white mb-2 sm:mb-3 line-clamp-1 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors leading-tight">
+                {event.name}
+              </h3>
+
+              {/* Description on mobile, location on desktop */}
+              <div className="mb-2 sm:hidden">
+                <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2 leading-relaxed">
+                  {event.description || "No description provided"}
+                </p>
+              </div>
+
+              {/* Responsive details layout */}
+              <div className="space-y-1 sm:space-y-0 sm:flex sm:items-center sm:gap-4 lg:gap-6">
+                {/* Location - Always visible */}
+                {event.location && (
+                  <div className="flex items-center gap-1.5 text-sm sm:text-xs lg:text-sm text-gray-600 dark:text-gray-300">
+                    <MapPinIcon className="w-4 h-4 sm:w-3 sm:h-3 lg:w-4 lg:h-4 text-indigo-500 flex-shrink-0" />
+                    <span className="truncate font-medium sm:max-w-20 lg:max-w-32">
+                      {event.location}
+                    </span>
+                  </div>
+                )}
+
+                {/* Date - Responsive formatting */}
+                <div className="flex items-center gap-1.5 text-sm sm:text-xs lg:text-sm text-gray-600 dark:text-gray-300">
+                  <CalendarIcon className="w-4 h-4 sm:w-3 sm:h-3 lg:w-4 lg:h-4 text-indigo-500 flex-shrink-0" />
+                  <span className="truncate">
+                    {event.startDate ? (
+                      <>
+                        <span className="sm:hidden">
+                          {formatEventDate(event.startDate)}
+                        </span>
+                        <span className="hidden sm:inline lg:hidden">
+                          {formatEventDate(event.startDate).split(",")[0]}
+                        </span>
+                        <span className="hidden lg:inline">
+                          {formatEventDate(event.startDate)}
+                        </span>
+                      </>
+                    ) : (
+                      <span className="italic text-gray-400">No date</span>
+                    )}
+                  </span>
+                </div>
+
+                {/* Members - Always visible */}
+                <div className="flex items-center gap-1.5 text-sm sm:text-xs lg:text-sm text-gray-600 dark:text-gray-300">
+                  <UserGroupIcon className="w-4 h-4 sm:w-3 sm:h-3 lg:w-4 lg:h-4 text-indigo-500 flex-shrink-0" />
+                  <span>
+                    <span className="font-medium">
+                      {event.members?.length || 1}
+                    </span>
+                    <span className="hidden sm:inline lg:hidden"> mbr</span>
+                    <span className="sm:hidden lg:inline">
+                      {" "}
+                      {(event.members?.length || 1) === 1
+                        ? "member"
+                        : "members"}
+                    </span>
+                  </span>
+                </div>
+
+                {/* Photos - Show on larger screens */}
+                <div className="hidden lg:flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-300">
+                  <PhotoIcon className="w-4 h-4 text-purple-500 flex-shrink-0" />
+                  <span>
+                    <span className="font-medium">{event.photoCount || 0}</span>{" "}
+                    photos
+                  </span>
+                </div>
+              </div>
+
+              {/* Additional details on larger screens */}
+              <div className="hidden sm:block mt-2 lg:mt-3">
+                <p className="text-xs lg:text-sm text-gray-600 dark:text-gray-300 line-clamp-1 lg:line-clamp-2 leading-relaxed">
+                  {event.description || "No description provided"}
+                </p>
+              </div>
+            </div>
+
+            {/* Right side - Action button with responsive sizing */}
+            <div className="flex-shrink-0 flex justify-end sm:justify-center">
+              <button
+                onClick={() => onViewEvent && onViewEvent(event.id)}
+                className="inline-flex items-center gap-1.5 sm:gap-1 lg:gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-4 py-2 sm:px-3 sm:py-1.5 lg:px-4 lg:py-2 rounded-lg font-medium transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg text-sm sm:text-xs lg:text-sm"
+              >
+                <EyeIcon className="w-4 h-4 sm:w-3 sm:h-3 lg:w-4 lg:h-4" />
+                <span className="sm:hidden lg:inline">View Event</span>
+                <span className="hidden sm:inline lg:hidden">View</span>
+                <ChevronRightIcon className="w-3 h-3 sm:w-2.5 sm:h-2.5 lg:w-3 lg:h-3 transition-transform group-hover:translate-x-0.5" />
+              </button>
+            </div>
           </div>
         </div>
       </div>

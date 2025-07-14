@@ -82,6 +82,13 @@ const UserProfileModal = ({
     };
   }, [isOpen, user?.uid, showStats]);
 
+  // ADD THIS NEW useEffect RIGHT HERE:
+  useEffect(() => {
+    if (isOpen) {
+      console.log("📱 UserProfileModal opened on mobile!", { user, isOpen });
+    }
+  }, [isOpen, user]);
+
   if (!isOpen || !user) {
     return null;
   }
@@ -293,7 +300,7 @@ const UserProfileModal = ({
 
   return (
     <div
-      className="modal-backdrop-standard event-modal-backdrop-enter"
+      className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 lg:p-8"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <div className="min-h-full flex items-center justify-center p-2 sm:p-4 lg:p-8">
@@ -393,7 +400,10 @@ const UserProfileModal = ({
 
             {/* Close Button */}
             <button
-              onClick={onClose}
+              onClick={() => {
+                console.log("📱 Close button clicked!");
+                onClose();
+              }}
               className="text-gray-400 hover:text-gray-600 dark:hover:text-white transition-colors p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-slate-700"
             >
               <XMarkIcon className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -586,7 +596,7 @@ const UserProfileModal = ({
       {/* Confirmation Dialog */}
       {confirmAction && (
         <div
-          className="modal-backdrop-standard event-modal-backdrop-enter"
+          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-center justify-center p-4"
           onClick={(e) =>
             e.target === e.currentTarget && setConfirmAction(null)
           }
