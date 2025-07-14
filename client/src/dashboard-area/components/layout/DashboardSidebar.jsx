@@ -10,6 +10,7 @@ import {
 import { useDashboardLayout } from "@dashboard/hooks/useDashboardLayout";
 import { useDashboardData } from "@dashboard/hooks/useDashboardData";
 import { useDashboardNavigation } from "@dashboard/hooks/useDashboardNavigation";
+import { useUserPresence } from "@shared/hooks/useUserPresence";
 import { useNavigate } from "react-router-dom";
 
 import { NAVIGATION_ITEMS } from "@dashboard/utils/dashboardConstants.js";
@@ -36,7 +37,64 @@ const DashboardSidebar = ({ sidebarOpen, onSidebarClose, onLogoutClick }) => {
     navigate: { toEvent: _navigateToEvent },
   } = useDashboardNavigation();
 
+  // Get current user's real-time presence
+  const currentUserPresence = useUserPresence(userData?.uid);
+
   const currentUser = userData; // Assuming userData contains current user info
+
+  // Get current user's status config for presence indicator
+  const getCurrentUserStatusConfig = () => {
+    if (currentUserPresence.loading) {
+      return {
+        color: "bg-gray-400",
+        ring: "ring-gray-200 dark:ring-gray-700",
+        pulse: "animate-pulse",
+        title: "Loading status...",
+      };
+    }
+
+    if (currentUserPresence.isOnline) {
+      switch (currentUserPresence.status) {
+        case "online":
+          return {
+            color: "bg-emerald-500",
+            ring: "ring-emerald-200 dark:ring-emerald-800",
+            pulse: "animate-pulse",
+            title: "Online",
+          };
+        case "away":
+          return {
+            color: "bg-amber-500",
+            ring: "ring-amber-200 dark:ring-amber-800",
+            pulse: "",
+            title: "Away",
+          };
+        case "busy":
+          return {
+            color: "bg-red-500",
+            ring: "ring-red-200 dark:ring-red-800",
+            pulse: "",
+            title: "Busy",
+          };
+        default:
+          return {
+            color: "bg-emerald-500",
+            ring: "ring-emerald-200 dark:ring-emerald-800",
+            pulse: "animate-pulse",
+            title: "Online",
+          };
+      }
+    }
+
+    return {
+      color: "bg-gray-400",
+      ring: "ring-gray-200 dark:ring-gray-700",
+      pulse: "",
+      title: "Offline",
+    };
+  };
+
+  const currentUserStatusConfig = getCurrentUserStatusConfig();
 
   return (
     <div
@@ -80,24 +138,41 @@ const DashboardSidebar = ({ sidebarOpen, onSidebarClose, onLogoutClick }) => {
         </div>
       </div>
 
-      {/* User Info Section */}
+      {/* User Info Section with Real-Time Presence */}
       <div className="p-6 border-b border-gray-200/50 dark:border-gray-700/50">
         <div className="flex items-center gap-3">
-          <img
-            src={
-              userData?.photoURL ||
-              currentUser?.photoURL ||
-              "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg"
-            }
-            alt="Profile"
-            className="w-12 h-12 rounded-full object-cover border-2 border-gray-200 dark:border-gray-600"
-          />
+          {/* Enhanced Avatar with Real-Time Presence Indicator */}
+          <div className="relative">
+            <img
+              src={
+                userData?.photoURL ||
+                currentUser?.photoURL ||
+                "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg"
+              }
+              alt="Profile"
+              className="w-12 h-12 rounded-full object-cover border-2 border-gray-200 dark:border-gray-600"
+            />
+
+            {/* Real-Time Presence Indicator */}
+            <div
+              className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 ${currentUserStatusConfig.color} border-2 border-white dark:border-gray-800 rounded-full ${currentUserStatusConfig.ring} ring-2 ${currentUserStatusConfig.pulse} shadow-lg`}
+              title={currentUserStatusConfig.title}
+            ></div>
+          </div>
+
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-gray-800 dark:text-white truncate">
               {userData?.displayName || currentUser?.displayName || "User"}
             </p>
             <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
               {userData?.email || currentUser?.email}
+            </p>
+
+            {/* Real-Time Status Text */}
+            <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">
+              {currentUserPresence.loading
+                ? "Loading..."
+                : currentUserPresence.status || "offline"}
             </p>
           </div>
         </div>
@@ -233,7 +308,7 @@ const DashboardSidebar = ({ sidebarOpen, onSidebarClose, onLogoutClick }) => {
                               <div className="truncate">{event.name}</div>
                               {event.location && (
                                 <div className="text-xs text-gray-500 dark:text-gray-500 truncate">
-                                  ?? {event.location}
+                                  📍 {event.location}
                                 </div>
                               )}
                             </button>
