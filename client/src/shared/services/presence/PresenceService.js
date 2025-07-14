@@ -1,3 +1,4 @@
+// client/src/shared/services/presence/PresenceService.js
 import {
   doc,
   setDoc,
@@ -8,30 +9,46 @@ import {
   query,
   where,
   getDocs,
+  updateDoc,
+  deleteDoc,
 } from "firebase/firestore";
 import { db } from "@shared/services/firebase/config";
 
 /**
  * Service for managing user presence (online/offline status)
+ * Handles real-time presence updates across the application
  */
 export class PresenceService {
-  static listeners = new Map(); // Track active listeners
+  // TIMING CONFIGURATION
+  static HEARTBEAT_INTERVAL = 4 * 60 * 1000; // 4 minutes (how often to send "I'm alive")
+  static STALE_THRESHOLD = 6 * 60 * 1000; // 6 minutes (when to consider offline)
+  static AWAY_DELAY = 0; // 0 seconds (instant away when tab loses focus)
+
+  static listeners = new Map(); // Track active listeners for cleanup
+  static heartbeatIntervals = new Map(); // Track heartbeat timers
 
   /**
-   * Set user online status
+   * Set user online status with automatic cleanup
    */
   static async setUserOnline(userId, status = "online") {
     try {
       console.log(`🟢 Setting user ${userId} as ${status}`);
 
       const presenceRef = doc(db, "userPresence", userId);
-      await setDoc(presenceRef, {
-        userId,
-        isOnline: true,
-        status,
-        lastSeen: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      });
+      await setDoc(
+        presenceRef,
+        {
+          userId,
+          isOnline: true,
+          status,
+          lastSeen: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        },
+        { merge: true }
+      );
+
+      // Set up heartbeat to keep presence alive
+      this.startHeartbeat(userId, status);
 
       console.log(`✅ User ${userId} set to ${status}`);
       return true;
@@ -48,14 +65,21 @@ export class PresenceService {
     try {
       console.log(`🔴 Setting user ${userId} offline`);
 
+      // Clear any existing heartbeat
+      this.stopHeartbeat(userId);
+
       const presenceRef = doc(db, "userPresence", userId);
-      await setDoc(presenceRef, {
-        userId,
-        isOnline: false,
-        status: "offline",
-        lastSeen: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      });
+      await setDoc(
+        presenceRef,
+        {
+          userId,
+          isOnline: false,
+          status: "offline",
+          lastSeen: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        },
+        { merge: true }
+      );
 
       console.log(`✅ User ${userId} set offline`);
       return true;
@@ -66,7 +90,54 @@ export class PresenceService {
   }
 
   /**
-   * Get user's current presence
+   * Start heartbeat to keep user presence alive (UPDATED with configurable interval)
+   */
+  static startHeartbeat(userId, status = "online") {
+    // Clear existing heartbeat first
+    this.stopHeartbeat(userId);
+
+    // Set up new heartbeat with configurable interval
+    const interval = setInterval(async () => {
+      try {
+        if (document.visibilityState === "visible") {
+          const presenceRef = doc(db, "userPresence", userId);
+          await updateDoc(presenceRef, {
+            lastSeen: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+            isOnline: true,
+            status,
+          });
+          console.log(`💓 Heartbeat sent for user ${userId}`);
+        }
+      } catch (error) {
+        console.error(`❌ Heartbeat failed for user ${userId}:`, error);
+        // Stop heartbeat on persistent errors
+        this.stopHeartbeat(userId);
+      }
+    }, this.HEARTBEAT_INTERVAL); // Use configurable interval
+
+    this.heartbeatIntervals.set(userId, interval);
+    console.log(
+      `💓 Started heartbeat for user ${userId} (every ${
+        this.HEARTBEAT_INTERVAL / 1000 / 60
+      } minutes)`
+    );
+  }
+
+  /**
+   * Stop heartbeat for user
+   */
+  static stopHeartbeat(userId) {
+    const interval = this.heartbeatIntervals.get(userId);
+    if (interval) {
+      clearInterval(interval);
+      this.heartbeatIntervals.delete(userId);
+      console.log(`💓 Stopped heartbeat for user ${userId}`);
+    }
+  }
+
+  /**
+   * Get user's current presence with configurable staleness check
    */
   static async getUserPresence(userId) {
     try {
@@ -76,10 +147,10 @@ export class PresenceService {
       if (presenceSnap.exists()) {
         const data = presenceSnap.data();
 
-        // Check if presence is stale (older than 5 minutes)
+        // Check if presence is stale using configurable threshold
         const now = new Date();
         const lastSeen = data.lastSeen?.toDate();
-        const isStale = lastSeen && now - lastSeen > 5 * 60 * 1000;
+        const isStale = lastSeen && now - lastSeen > this.STALE_THRESHOLD;
 
         return {
           userId,
@@ -87,6 +158,11 @@ export class PresenceService {
           status: isStale ? "offline" : data.status,
           lastSeen: data.lastSeen,
           updatedAt: data.updatedAt,
+          isStale,
+          timeSinceLastSeen: lastSeen ? now - lastSeen : null,
+          timeUntilOffline: lastSeen
+            ? Math.max(0, this.STALE_THRESHOLD - (now - lastSeen))
+            : 0,
         };
       }
 
@@ -97,6 +173,9 @@ export class PresenceService {
         status: "offline",
         lastSeen: null,
         updatedAt: null,
+        isStale: false,
+        timeSinceLastSeen: null,
+        timeUntilOffline: 0,
       };
     } catch (error) {
       console.error(`❌ Error getting user presence for ${userId}:`, error);
@@ -106,12 +185,15 @@ export class PresenceService {
         status: "offline",
         lastSeen: null,
         updatedAt: null,
+        isStale: false,
+        timeSinceLastSeen: null,
+        timeUntilOffline: 0,
       };
     }
   }
 
   /**
-   * Subscribe to user presence changes
+   * Subscribe to user presence changes with real-time updates
    */
   static subscribeToUserPresence(userId, callback) {
     console.log(`👁️ Subscribing to presence for user: ${userId}`);
@@ -120,14 +202,14 @@ export class PresenceService {
 
     const unsubscribe = onSnapshot(
       presenceRef,
-      (doc) => {
-        if (doc.exists()) {
-          const data = doc.data();
+      (docSnap) => {
+        if (docSnap.exists()) {
+          const data = docSnap.data();
 
-          // Check staleness
+          // Check staleness with configurable threshold
           const now = new Date();
           const lastSeen = data.lastSeen?.toDate();
-          const isStale = lastSeen && now - lastSeen > 5 * 60 * 1000;
+          const isStale = lastSeen && now - lastSeen > this.STALE_THRESHOLD;
 
           const presence = {
             userId,
@@ -135,6 +217,8 @@ export class PresenceService {
             status: isStale ? "offline" : data.status,
             lastSeen: data.lastSeen,
             updatedAt: data.updatedAt,
+            isStale,
+            timeSinceLastSeen: lastSeen ? now - lastSeen : null,
           };
 
           callback(presence);
@@ -146,6 +230,8 @@ export class PresenceService {
             status: "offline",
             lastSeen: null,
             updatedAt: null,
+            isStale: false,
+            timeSinceLastSeen: null,
           });
         }
       },
@@ -161,6 +247,8 @@ export class PresenceService {
           status: "offline",
           lastSeen: null,
           updatedAt: null,
+          isStale: false,
+          timeSinceLastSeen: null,
         });
       }
     );
@@ -184,22 +272,44 @@ export class PresenceService {
   }
 
   /**
-   * Clean up all listeners
+   * Update user status (online, away, busy)
    */
-  static cleanup() {
-    console.log(`🧹 Cleaning up ${this.listeners.size} presence listeners`);
-    for (const [userId, unsubscribe] of this.listeners) {
-      unsubscribe();
+  static async updateUserStatus(userId, status) {
+    try {
+      console.log(`🔄 Updating user ${userId} status to: ${status}`);
+
+      const presenceRef = doc(db, "userPresence", userId);
+      await updateDoc(presenceRef, {
+        status,
+        isOnline: status !== "offline",
+        lastSeen: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+
+      // Update heartbeat if online
+      if (status !== "offline") {
+        this.startHeartbeat(userId, status);
+      } else {
+        this.stopHeartbeat(userId);
+      }
+
+      return true;
+    } catch (error) {
+      console.error(`❌ Error updating user status:`, error);
+      throw error;
     }
-    this.listeners.clear();
   }
 
   /**
-   * Get multiple users' presence (batch)
+   * Get multiple users' presence (batch operation)
    */
   static async getMultipleUserPresence(userIds) {
     try {
       console.log(`👥 Getting presence for ${userIds.length} users`);
+
+      if (!userIds || userIds.length === 0) {
+        return {};
+      }
 
       const presencePromises = userIds.map((userId) =>
         this.getUserPresence(userId)
@@ -226,6 +336,8 @@ export class PresenceService {
           status: "offline",
           lastSeen: null,
           updatedAt: null,
+          isStale: false,
+          timeSinceLastSeen: null,
         };
       });
 
@@ -234,27 +346,69 @@ export class PresenceService {
   }
 
   /**
-   * Update user status (online, away, busy)
+   * Clean up all listeners and heartbeats
    */
-  static async updateUserStatus(userId, status) {
-    try {
-      console.log(`🔄 Updating user ${userId} status to: ${status}`);
+  static cleanup() {
+    console.log(
+      `🧹 Cleaning up ${this.listeners.size} presence listeners and ${this.heartbeatIntervals.size} heartbeats`
+    );
 
-      const presenceRef = doc(db, "userPresence", userId);
-      const currentPresence = await this.getUserPresence(userId);
-
-      await setDoc(presenceRef, {
-        ...currentPresence,
-        status,
-        isOnline: status !== "offline",
-        lastSeen: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      });
-
-      return true;
-    } catch (error) {
-      console.error(`❌ Error updating user status:`, error);
-      throw error;
+    // Clean up listeners
+    for (const [userId, unsubscribe] of this.listeners) {
+      unsubscribe();
     }
+    this.listeners.clear();
+
+    // Clean up heartbeats
+    for (const [userId, interval] of this.heartbeatIntervals) {
+      clearInterval(interval);
+    }
+    this.heartbeatIntervals.clear();
+  }
+
+  /**
+   * Clean up stale presence records (optional utility)
+   */
+  static async cleanupStalePresence() {
+    try {
+      console.log(`🧹 Cleaning up stale presence records`);
+
+      const presenceQuery = query(collection(db, "userPresence"));
+      const querySnapshot = await getDocs(presenceQuery);
+
+      const now = new Date();
+      const staleThreshold = 24 * 60 * 60 * 1000; // 24 hours
+      let cleanedCount = 0;
+
+      for (const docSnap of querySnapshot.docs) {
+        const data = docSnap.data();
+        const lastSeen = data.lastSeen?.toDate();
+
+        if (lastSeen && now - lastSeen > staleThreshold) {
+          await deleteDoc(docSnap.ref);
+          cleanedCount++;
+        }
+      }
+
+      console.log(`✅ Cleaned up ${cleanedCount} stale presence records`);
+      return cleanedCount;
+    } catch (error) {
+      console.error(`❌ Error cleaning up stale presence:`, error);
+      return 0;
+    }
+  }
+
+  /**
+   * Get timing configuration info (for debugging)
+   */
+  static getTimingInfo() {
+    return {
+      heartbeatInterval: `${this.HEARTBEAT_INTERVAL / 1000 / 60} minutes`,
+      staleThreshold: `${this.STALE_THRESHOLD / 1000 / 60} minutes`,
+      awayDelay: `${this.AWAY_DELAY / 1000} seconds`,
+      heartbeatIntervalMs: this.HEARTBEAT_INTERVAL,
+      staleThresholdMs: this.STALE_THRESHOLD,
+      awayDelayMs: this.AWAY_DELAY,
+    };
   }
 }

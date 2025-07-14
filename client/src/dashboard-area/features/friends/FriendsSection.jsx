@@ -11,6 +11,7 @@ import {
   ChevronUpIcon,
 } from "@heroicons/react/24/outline";
 import { useFriendsContext } from "@shared/contexts/FriendsContext";
+import { useUserPresence } from "@shared/hooks/useUserPresence";
 import toast from "react-hot-toast";
 
 import AddFriend from "@dashboard/features/friends/components/AddFriend";
@@ -39,23 +40,24 @@ const FriendsSection = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [showUserProfileModal, setShowUserProfileModal] = useState(false);
 
-  // Handler functions
+  // Handler functions (same as before)
   const handleAcceptRequest = async (request) => {
     try {
       console.log("🔍 Full request object:", request);
       console.log("🔍 Request keys:", Object.keys(request));
-      
+
       // TEMPORARY FIX: Find the correct document ID
-      // Since the ID might be wrong, let's search for the actual document
-      const actualDocId = await findCorrectDocumentId(request.from, currentUser.uid);
-      
+      const actualDocId = await findCorrectDocumentId(
+        request.from,
+        currentUser.uid
+      );
+
       if (!actualDocId) {
         throw new Error("Could not find the friend request document");
       }
-      
+
       console.log("🔍 Using document ID:", actualDocId);
-      
-      // Use the correct document ID
+
       await acceptFriendRequest(actualDocId, request.from);
       toast.success("Friend request accepted!");
     } catch (error) {
@@ -67,17 +69,18 @@ const FriendsSection = () => {
   const handleRejectRequest = async (request) => {
     try {
       console.log("🔍 Full request object:", request);
-      
-      // TEMPORARY FIX: Find the correct document ID
-      const actualDocId = await findCorrectDocumentId(request.from, currentUser.uid);
-      
+
+      const actualDocId = await findCorrectDocumentId(
+        request.from,
+        currentUser.uid
+      );
+
       if (!actualDocId) {
         throw new Error("Could not find the friend request document");
       }
-      
+
       console.log("🔍 Using document ID:", actualDocId);
-      
-      // Use the correct document ID
+
       await rejectFriendRequest(actualDocId, request.from);
       toast.success("Friend request declined");
     } catch (error) {
@@ -89,24 +92,26 @@ const FriendsSection = () => {
   // Helper function to find the correct document ID
   const findCorrectDocumentId = async (fromUserId, toUserId) => {
     try {
-      const { collection, query, where, getDocs } = await import("firebase/firestore");
+      const { collection, query, where, getDocs } = await import(
+        "firebase/firestore"
+      );
       const { db } = await import("@shared/services/firebase/config");
-      
+
       const q = query(
         collection(db, "friendRequests"),
         where("from", "==", fromUserId),
         where("to", "==", toUserId),
         where("status", "==", "pending")
       );
-      
+
       const querySnapshot = await getDocs(q);
-      
+
       if (!querySnapshot.empty) {
         const doc = querySnapshot.docs[0];
         console.log("🔍 Found correct document ID:", doc.id);
         return doc.id;
       }
-      
+
       return null;
     } catch (error) {
       console.error("Error finding document ID:", error);
@@ -152,7 +157,6 @@ const FriendsSection = () => {
   const handleViewProfile = (friend) => {
     console.log("🔍 handleViewProfile called with:", friend);
 
-    // Get the current relationship status from global context
     const relationshipData = getUserRelationshipData(friend.uid || friend.id);
 
     const enhancedFriend = {
@@ -169,10 +173,8 @@ const FriendsSection = () => {
   const handleUserSelect = (userOrUid) => {
     console.log("🔍 handleUserSelect called with:", userOrUid);
 
-    // CLOSE THE ADD FRIEND MODAL FIRST to avoid z-index conflicts
     setShowAddFriendModal(false);
 
-    // Small delay to ensure modal closes completely before opening profile
     setTimeout(() => {
       if (typeof userOrUid === "object" && userOrUid.uid) {
         handleViewProfile(userOrUid);
@@ -183,6 +185,131 @@ const FriendsSection = () => {
         }
       }
     }, 100);
+  };
+
+  // NEW: Component for Friend Card with Real Presence
+  const FriendCard = ({ friend }) => {
+    const friendPresence = useUserPresence(friend.uid || friend.id);
+
+    // Get status indicator config
+    const getStatusConfig = () => {
+      if (friendPresence.loading) {
+        return {
+          color: "bg-gray-400",
+          ring: "ring-gray-200 dark:ring-gray-700",
+          pulse: "animate-pulse",
+          title: "Loading status...",
+        };
+      }
+
+      if (friendPresence.isOnline) {
+        switch (friendPresence.status) {
+          case "online":
+            return {
+              color: "bg-emerald-500",
+              ring: "ring-emerald-200 dark:ring-emerald-800",
+              pulse: "animate-pulse",
+              title: "Online now",
+            };
+          case "away":
+            return {
+              color: "bg-amber-500",
+              ring: "ring-amber-200 dark:ring-amber-800",
+              pulse: "",
+              title: "Away",
+            };
+          case "busy":
+            return {
+              color: "bg-red-500",
+              ring: "ring-red-200 dark:ring-red-800",
+              pulse: "",
+              title: "Busy",
+            };
+          default:
+            return {
+              color: "bg-emerald-500",
+              ring: "ring-emerald-200 dark:ring-emerald-800",
+              pulse: "animate-pulse",
+              title: "Online",
+            };
+        }
+      }
+
+      return {
+        color: "bg-gray-400",
+        ring: "ring-gray-200 dark:ring-gray-700",
+        pulse: "",
+        title: friendPresence.lastSeen
+          ? `Last seen ${formatLastSeen(friendPresence.lastSeen)}`
+          : "Offline",
+      };
+    };
+
+    const statusConfig = getStatusConfig();
+
+    return (
+      <div
+        key={friend.uid || friend.id}
+        className="bg-white/80 hover:bg-white/90 dark:bg-slate-700/80 dark:hover:bg-slate-700/90 backdrop-blur-sm border border-gray-200/60 dark:border-slate-600/60 rounded-xl p-4 transition-all duration-200 cursor-pointer group"
+        onClick={() => handleViewProfile(friend)}
+      >
+        <div className="flex items-center gap-3">
+          <div className="relative flex-shrink-0">
+            <img
+              src={
+                friend.photoURL ||
+                "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg"
+              }
+              alt={`${friend.displayName}'s avatar`}
+              className="w-10 h-10 rounded-full object-cover border-2 border-gray-400 dark:border-slate-500"
+            />
+            {/* UPDATED: Real-time Status Indicator */}
+            <div
+              className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 ${statusConfig.color} border-2 border-white dark:border-slate-700 rounded-full ${statusConfig.ring} ring-2 ${statusConfig.pulse} shadow-lg`}
+              title={statusConfig.title}
+            ></div>
+          </div>
+          <div className="flex-1 min-w-0">
+            <h4 className="font-medium text-gray-900 dark:text-white text-base truncate">
+              {friend.displayName || "Unknown User"}
+            </h4>
+            <p className="text-gray-600 dark:text-slate-400 text-sm truncate">
+              {friend.email}
+            </p>
+            {/* NEW: Status Text */}
+            <p className="text-xs text-gray-500 dark:text-slate-500 truncate">
+              {friendPresence.loading
+                ? "Loading..."
+                : friendPresence.isOnline
+                ? friendPresence.status.charAt(0).toUpperCase() +
+                  friendPresence.status.slice(1)
+                : "Offline"}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Helper function to format last seen
+  const formatLastSeen = (lastSeen) => {
+    if (!lastSeen) return "";
+
+    const now = new Date();
+    const lastSeenDate = lastSeen.toDate
+      ? lastSeen.toDate()
+      : new Date(lastSeen);
+    const diffMs = now - lastSeenDate;
+    const diffMinutes = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMinutes / 60);
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffMinutes < 1) return "just now";
+    if (diffMinutes < 60) return `${diffMinutes}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+
+    return lastSeenDate.toLocaleDateString();
   };
 
   if (loading) {
@@ -333,34 +460,9 @@ const FriendsSection = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* UPDATED: Use FriendCard component with real presence */}
             {friends.map((friend) => (
-              <div
-                key={friend.uid || friend.id}
-                className="bg-white/80 hover:bg-white/90 dark:bg-slate-700/80 dark:hover:bg-slate-700/90 backdrop-blur-sm border border-gray-200/60 dark:border-slate-600/60 rounded-xl p-4 transition-all duration-200 cursor-pointer group"
-                onClick={() => handleViewProfile(friend)}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="relative flex-shrink-0">
-                    <img
-                      src={
-                        friend.photoURL ||
-                        "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg"
-                      }
-                      alt={`${friend.displayName}'s avatar`}
-                      className="w-10 h-10 rounded-full object-cover border-2 border-gray-400 dark:border-slate-500"
-                    />
-                    <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white dark:border-slate-700 rounded-full"></div>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h4 className="font-medium text-gray-900 dark:text-white text-base truncate">
-                      {friend.displayName || "Unknown User"}
-                    </h4>
-                    <p className="text-gray-600 dark:text-slate-400 text-sm truncate">
-                      {friend.email}
-                    </p>
-                  </div>
-                </div>
-              </div>
+              <FriendCard key={friend.uid || friend.id} friend={friend} />
             ))}
           </div>
         )}
@@ -391,7 +493,7 @@ const FriendsSection = () => {
         </div>
       )}
 
-      {/* User Profile Modal - Z-INDEX: 60 (Higher than AddFriend modal) */}
+      {/* User Profile Modal - Z-INDEX: 60 */}
       {showUserProfileModal &&
         selectedUser &&
         createPortal(
@@ -400,7 +502,7 @@ const FriendsSection = () => {
               isOpen={showUserProfileModal}
               user={selectedUser}
               currentUserId={currentUser?.uid}
-              friends={friendIds} // Use global friend IDs
+              friends={friendIds}
               pendingRequests={pendingRequests}
               onAddFriend={handleAddFriendDirect}
               onRemoveFriend={handleRemoveFriendLocal}

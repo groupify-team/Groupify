@@ -6,7 +6,7 @@ service cloud.firestore {
       allow read, write: if request.auth != null;
     }
     
-    // events collection  
+    // Events collection  
     match /events/{eventId} {
       allow read, write: if request.auth != null;
     }
@@ -24,6 +24,19 @@ service cloud.firestore {
     // Event invites
     match /eventInvites/{inviteId} {
       allow read, write: if request.auth != null;
+    }
+    
+    // User Presence collection (NEW)
+    match /userPresence/{userId} {
+      // Users can read their own presence and presence of their friends
+      allow read: if request.auth != null && (
+        request.auth.uid == userId ||
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        userId in get(/databases/$(database)/documents/users/$(request.auth.uid)).data.friends
+      );
+      
+      // Users can only write to their own presence
+      allow write: if request.auth != null && request.auth.uid == userId;
     }
     
     // Allow everything else for authenticated users (temporary)
