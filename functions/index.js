@@ -649,7 +649,14 @@ exports.enableGoogleAuth = onRequest(
         return;
       }
 
-      const { uid, email, displayName, photoURL } = req.body.data || req.body;
+      const { 
+        uid, 
+        email, 
+        displayName, 
+        photoURL, 
+        isNewUser,
+        existingEmailUserId 
+      } = req.body.data || req.body;
 
       if (!uid || !email) {
         res.status(400).json({
@@ -660,20 +667,118 @@ exports.enableGoogleAuth = onRequest(
       }
 
       try {
+        // Always update Firebase Auth user (safe for existing users)
         await admin.auth().updateUser(uid, {
           emailVerified: true,
           displayName: displayName,
           photoURL: photoURL,
         });
+
+        let registrationType = 'login'; // default to login for safety
+        
+        // Check if user document exists in Firestore
+        const userDocRef = admin.firestore().collection("users").doc(uid);
+        const userDoc = await userDocRef.get();
+        
+        // Handle truly new user (no Firestore document)
+        if (!userDoc.exists() && !existingEmailUserId) {
+          registrationType = 'registration';
+          
+          // Create new user document
+          await userDocRef.set({
+            uid: uid,
+            email: email,
+            displayName: displayName,
+            gender: "other",
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            emailVerified: true,
+            friends: [],
+            profilePicture: photoURL,
+            bio: "",
+            location: "",
+            joinedAt: admin.firestore.FieldValue.serverTimestamp(),
+            authMethod: "google", // Only set for truly new users
+            subscription: {
+              plan: "free",
+              status: "active",
+              createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            },
+            usage: {
+              events: 0,
+              photos: 0,
+              storage: 0,
+              albums: 0,
+            },
+          });
+        }
+        // Handle account linking (email user signing in with Google for first time)
+        else if (!userDoc.exists() && existingEmailUserId) {
+          registrationType = 'linking';
+          
+          try {
+            const existingUserDoc = await admin.firestore()
+              .collection("users")
+              .doc(existingEmailUserId)
+              .get();
+            
+            if (existingUserDoc.exists()) {
+              const existingData = existingUserDoc.data();
+              
+              // Create new document with Google UID, preserve existing data
+              await userDocRef.set({
+                ...existingData,
+                uid: uid, // Update to new Google UID
+                emailVerified: true,
+                profilePicture: photoURL || existingData.profilePicture,
+                authMethod: "email_google_linked", // Only set during linking
+                linkedAt: admin.firestore.FieldValue.serverTimestamp(),
+                updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+              });
+
+              // Delete the old email-only document
+              await admin.firestore().collection("users").doc(existingEmailUserId).delete();
+            }
+          } catch (linkingError) {
+            console.error("Error during account linking:", linkingError);
+            registrationType = 'registration'; // Fallback
+          }
+        }
+        // Handle existing user (document exists) - SAFE for current users
+        else if (userDoc.exists()) {
+          registrationType = 'login';
+          const userData = userDoc.data();
+          
+          // Only update specific fields, don't touch authMethod if it doesn't exist
+          const updateData = {
+            lastLoginAt: admin.firestore.FieldValue.serverTimestamp(),
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          };
+          
+          // Only update profilePicture if user doesn't have one
+          if (!userData.profilePicture && photoURL) {
+            updateData.profilePicture = photoURL;
+          }
+          
+          // IMPORTANT: Don't set authMethod for existing users to avoid breaking them
+          // Existing users without authMethod will continue to work normally
+          
+          await userDocRef.update(updateData);
+        }
+
         res.status(200).json({
           success: true,
-          message: "Google authentication enabled",
+          message: "Google authentication processed successfully",
+          registrationType: registrationType,
+          isNewUser: registrationType === 'registration',
+          isLinked: registrationType === 'linking',
+          isReturning: registrationType === 'login',
         });
+
       } catch (error) {
-        console.error("Error enabling Google auth:", error);
+        console.error("Error in enableGoogleAuth:", error);
         res.status(500).json({
           success: false,
-          message: `Failed to enable Google auth: ${error.message}`,
+          message: `Failed to process Google auth: ${error.message}`,
         });
       }
     });

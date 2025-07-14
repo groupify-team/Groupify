@@ -19,7 +19,6 @@ class UsageSyncService {
 
     // Prevent excessive syncing
     if (this.lastSyncTime && (Date.now() - this.lastSyncTime) < this.syncCooldown) {
-      console.log("🔄 UsageSyncService: Sync cooldown active, skipping");
       return { synced: false, reason: "cooldown" };
     }
 
@@ -32,25 +31,20 @@ class UsageSyncService {
 
   async _performSync(userId) {
     try {
-      console.log("🔄 UsageSyncService: Starting sync for user:", userId);
       
       // Get actual counts from Firebase
       const actualCounts = await this._getActualUsageFromFirebase(userId);
-      console.log("📊 UsageSyncService: Actual Firebase counts:", actualCounts);
       
       // Get current localStorage usage
       const currentUsage = subscriptionService.getStoredUsage();
-      console.log("📊 UsageSyncService: Current localStorage usage:", currentUsage);
       
       // Compare and sync if different
       if (this._hasDiscrepancy(currentUsage, actualCounts)) {
-        console.log("⚠️ UsageSyncService: Discrepancy found, syncing...");
         const correctedUsage = subscriptionService.syncUsageWithActualData(actualCounts);
         this._notifyListeners('usageSynced', { corrected: correctedUsage, actual: actualCounts });
         return { synced: true, corrected: correctedUsage };
       }
       
-      console.log("✅ UsageSyncService: Usage already in sync");
       return { synced: false, counts: actualCounts };
       
     } catch (error) {
@@ -133,7 +127,6 @@ class UsageSyncService {
     try {
       await this.syncUsageWithFirebase(userId);
       this.isInitialized = true;
-      console.log("✅ UsageSyncService: Initialized successfully");
     } catch (error) {
       console.error("❌ UsageSyncService: Initialization failed:", error);
     }
