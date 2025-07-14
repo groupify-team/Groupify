@@ -54,35 +54,18 @@ export const useEventMembers = (currentUserId, event, setEvent) => {
   }
 
   const handleMemberClick = async (member) => {
-    console.log("🔍 handleMemberClick called with member:", member);
-    console.log("🔍 Current user ID:", currentUserId);
-
     if (!member || !currentUserId) {
       console.error("❌ Missing member or currentUserId");
       return;
     }
 
     try {
-      // Use global context to get relationship status
       const relationshipData = getUserRelationshipData(member.uid);
-
-      console.log("🔍 Member relationship status:", {
-        memberUid: member.uid,
-        isFriend: relationshipData.isFriend,
-        isPending: relationshipData.isPending,
-        status: relationshipData.status,
-        globalFriendIds: friendIds,
-        globalPendingIds: pendingRequestIds,
-        globalSentIds: sentRequestIds,
-      });
-
       const enhancedMember = {
         ...member,
         __isFriend: relationshipData.isFriend,
         __isPending: relationshipData.isPending,
       };
-
-      console.log("🚀 Setting selected user:", enhancedMember);
       setSelectedUser(enhancedMember);
     } catch (error) {
       console.error("Error checking member status:", error);
@@ -99,15 +82,11 @@ export const useEventMembers = (currentUserId, event, setEvent) => {
       await sendFriendRequest(targetUid);
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 3000);
-
-      // Update the selected user to show pending status
       setSelectedUser((prevUser) => ({
         ...prevUser,
         __isPending: true,
         __isFriend: false,
       }));
-
-      // Don't close the modal immediately, let user see the change
       setTimeout(() => {
         setSelectedUser(null);
       }, 1500);
@@ -201,7 +180,6 @@ export const useEventMembers = (currentUserId, event, setEvent) => {
       return;
     }
 
-    // Check if this is the last admin
     const isLastAdmin =
       currentEvent?.admins?.length === 1 && currentEvent.admins[0] === uid;
 
@@ -263,36 +241,25 @@ export const useEventMembers = (currentUserId, event, setEvent) => {
   };
 
   return {
-    // Global friends state (unchanged for compatibility)
     friends: friends.map((f) => f.uid),
     selectedUser,
     showSuccess,
     cancelSuccess,
     pendingFriendRequests: sentRequestIds,
-
-    // Real-time event members from context
     eventMembers: currentEventMembers,
     currentEvent,
-
-    // State setters
     setSelectedUser,
     setShowSuccess,
     setCancelSuccess,
-
-    // Event member actions (now using EventContext)
     handleMemberClick,
     handlePromoteToAdmin,
     handleDemoteFromAdmin,
     handleRemoveFromEvent,
     handleLeaveEvent,
-
-    // Friend actions (unchanged)
     handleAddFriend,
     handleRemoveFriend,
     handleCancelFriendRequest,
     handleInviteToEvent,
-
-    // Convenience helpers
     isAdmin: currentUserId ? isEventAdmin(event?.id, currentUserId) : false,
     isCreator: currentUserId ? isEventCreator(event?.id, currentUserId) : false,
   };

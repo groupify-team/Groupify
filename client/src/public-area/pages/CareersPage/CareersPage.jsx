@@ -209,13 +209,11 @@ const OpenPositionsSection = ({
             <button
               onClick={(e) => {
                 e.preventDefault();
-                console.log("About to navigate to contact");
                 window.scrollTo({
                   top: 0,
                   behavior: "smooth",
                 });
                 setTimeout(() => {
-                  console.log("Calling navigate now");
                   navigate("/contact");
                 }, 300);
               }}
@@ -324,13 +322,11 @@ const CallToActionSection = ({
           <button
             onClick={(e) => {
               e.preventDefault();
-              console.log("About to navigate to contact");
               window.scrollTo({
                 top: 0,
                 behavior: "smooth",
               });
               setTimeout(() => {
-                console.log("Calling navigate now");
                 navigate("/contact");
               }, 300);
             }}

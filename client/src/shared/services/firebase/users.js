@@ -13,18 +13,16 @@ import {
 } from "firebase/firestore";
 import { db } from "./config";
 
-// Create or update user profile in Firestore
 export const createUserProfile = async (uid, userData) => {
   try {
     const userRef = doc(db, "users", uid);
     const userSnapshot = await getDoc(userRef);
 
     if (!userSnapshot.exists()) {
-      // Create new user profile with empty friends array
       const createdAt = new Date().toISOString();
       await setDoc(userRef, {
         uid,
-        gender: userData.gender || "male", // default fallback
+        gender: userData.gender || "male",
         ...userData,
         createdAt,
         events: [],
@@ -40,7 +38,6 @@ export const createUserProfile = async (uid, userData) => {
   }
 };
 
-// Get user profile
 export const getUserProfile = async (uid) => {
   try {
     const userRef = doc(db, "users", uid);
@@ -49,8 +46,8 @@ export const getUserProfile = async (uid) => {
     if (userSnapshot.exists()) {
       const userData = userSnapshot.data();
       return {
-        uid: uid, // Ensure uid is always included
-        id: uid, // Add id field for compatibility
+        uid: uid,
+        id: uid,
         ...userData,
       };
     }
@@ -61,7 +58,6 @@ export const getUserProfile = async (uid) => {
   }
 };
 
-// Update user profile
 export const updateUserProfile = async (uid, updates) => {
   try {
     const userRef = doc(db, "users", uid);
@@ -75,7 +71,6 @@ export const updateUserProfile = async (uid, updates) => {
   }
 };
 
-// Find users by email
 export const findUsersByEmail = async (email) => {
   try {
     const usersRef = collection(db, "users");
@@ -94,7 +89,6 @@ export const findUsersByEmail = async (email) => {
   }
 };
 
-// Sending a friend request
 export const sendFriendRequest = async (fromUid, toUid) => {
   try {
     const requestRef = doc(db, "friendRequests", `${fromUid}_${toUid}`);
@@ -110,7 +104,6 @@ export const sendFriendRequest = async (fromUid, toUid) => {
   }
 };
 
-// Receive all requests waiting for the user
 export const getPendingFriendRequests = async (uid) => {
   try {
     const q = query(
@@ -155,25 +148,18 @@ export const didISendRequest = async (fromUid, toUid) => {
   return snapshot.exists();
 };
 
-// Membership request approval
 export const acceptFriendRequest = async (uid, senderUid) => {
   try {
     const requestId = `${senderUid}_${uid}`;
     const requestRef = doc(db, "friendRequests", requestId);
-
-    // Delete the friend request first
     await deleteDoc(requestRef);
+    const userRef = doc(db, "users", uid);
+    const senderRef = doc(db, "users", senderUid);
 
-    // Add each user to the other's friends list (MUTUAL FRIENDSHIP)
-    const userRef = doc(db, "users", uid); // Person accepting the request
-    const senderRef = doc(db, "users", senderUid); // Person who sent the request
-
-    // Add sender to receiver's friends list
     await updateDoc(userRef, {
       friends: arrayUnion(senderUid),
     });
 
-    // Add receiver to sender's friends list (THIS WAS MISSING!)
     await updateDoc(senderRef, {
       friends: arrayUnion(uid),
     });
@@ -183,7 +169,6 @@ export const acceptFriendRequest = async (uid, senderUid) => {
   }
 };
 
-// Declining membership request
 export const rejectFriendRequest = async (uid, senderUid) => {
   try {
     const requestId = `${senderUid}_${uid}`;
@@ -193,46 +178,36 @@ export const rejectFriendRequest = async (uid, senderUid) => {
     console.error("Error rejecting friend request:", error);
     throw error;
   }
-}; // Clean up invalid friends (including non-mutual friendships)
+};
 export const cleanupInvalidFriends = async (uid) => {
   try {
     const userRef = doc(db, "users", uid);
     const userDoc = await getDoc(userRef);
-
     if (!userDoc.exists()) {
       console.warn("⚠️ User document not found:", uid);
       return;
     }
-
     const userData = userDoc.data();
     const friendIds = userData.friends || [];
-
     if (friendIds.length === 0) {
       return;
     }
-
     const validFriendIds = [];
 
     for (const friendId of friendIds) {
-      // Skip empty, null, or invalid friend IDs
       if (!friendId || typeof friendId !== "string" || friendId.trim() === "") {
         continue;
       }
-
       try {
         const friendRef = doc(db, "users", friendId);
         const friendDoc = await getDoc(friendRef);
-
         if (friendDoc.exists()) {
           const friendData = friendDoc.data();
           const friendsFriends = friendData.friends || [];
-
           if (friendsFriends.includes(uid)) {
             validFriendIds.push(friendId);
           }
-          // Non-mutual friendship, don't include in valid IDs
         }
-        // Friend document doesn't exist, don't include in valid IDs
       } catch (error) {
         console.error(`Error checking friend ${friendId}:`, error);
       }
@@ -250,18 +225,12 @@ export const cleanupInvalidFriends = async (uid) => {
   }
 };
 
-// Retrieve all friends with mutual friendship validation
 export const getFriends = async (uid) => {
-  console.log(`getFriends called for user: ${uid}`);
-
   try {
     if (!uid) {
       console.error("getFriends called with no uid");
       return [];
     }
-
-    // Skip cleanup for now as it may cause performance issues
-    // await cleanupInvalidFriends(uid);
 
     const userRef = doc(db, "users", uid);
     const userSnap = await getDoc(userRef);
@@ -274,19 +243,15 @@ export const getFriends = async (uid) => {
     const userData = userSnap.data();
     const friendIds = userData.friends || [];
 
-    console.log(`Found ${friendIds.length} friend IDs for user ${uid}`);
-
     if (friendIds.length === 0) {
       return [];
     }
 
-    const invalidFriendIds = []; // Track friends to remove
-
-    // Use Promise.all for better performance when fetching friend profiles
+    const invalidFriendIds = [];
     const friendPromises = friendIds.map(async (fid) => {
       if (!fid || typeof fid !== "string" || fid.trim() === "") {
         invalidFriendIds.push(fid);
-        return null; // Skip invalid IDs
+        return null;
       }
 
       try {
@@ -297,11 +262,10 @@ export const getFriends = async (uid) => {
           const fData = fSnap.data();
           const friendsFriends = fData.friends || [];
 
-          // ✅ CHECK MUTUAL FRIENDSHIP: Verify that the friend also has current user in their friends list
           if (friendsFriends.includes(uid)) {
             return {
               uid: fid,
-              id: fid, // Add id field for compatibility
+              id: fid,
               displayName: fData.displayName || fData.email || fid,
               email: fData.email || "",
               photoURL: fData.photoURL || "",
@@ -324,19 +288,10 @@ export const getFriends = async (uid) => {
       }
     });
 
-    // Wait for all friend profile fetches to complete
     const friendResults = await Promise.all(friendPromises);
     const validFriends = friendResults.filter((friend) => friend !== null);
 
-    console.log(
-      `Found ${validFriends.length} valid friends out of ${friendIds.length} total`
-    );
-
-    // Clean up invalid/non-mutual friendships only if we found problems
     if (invalidFriendIds.length > 0) {
-      console.log(
-        `Cleaning up ${invalidFriendIds.length} invalid friend references`
-      );
       try {
         const validFriendIds = friendIds.filter(
           (id) => !invalidFriendIds.includes(id)
@@ -348,14 +303,12 @@ export const getFriends = async (uid) => {
         });
       } catch (updateError) {
         console.error("Error updating invalid friends:", updateError);
-        // Continue anyway - we still want to return the valid friends
       }
     }
 
     return validFriends;
   } catch (error) {
     console.error("❌ Error getting friends:", error);
-    // Return empty array instead of throwing - more resilient for UI
     return [];
   }
 };
@@ -365,7 +318,6 @@ export const removeFriend = async (uid, friendUid) => {
     const userRef = doc(db, "users", uid);
     const friendRef = doc(db, "users", friendUid);
 
-    // Remove friend from both users' friends arrays
     await updateDoc(userRef, {
       friends: arrayRemove(friendUid),
       updatedAt: new Date().toISOString(),
@@ -381,7 +333,6 @@ export const removeFriend = async (uid, friendUid) => {
   }
 };
 
-// Add user to event members
 export const addUserToEvent = async (uid, eventId) => {
   try {
     const userRef = doc(db, "users", uid);
@@ -395,7 +346,6 @@ export const addUserToEvent = async (uid, eventId) => {
   }
 };
 
-// Remove user from event members
 export const removeUserFromEvent = async (uid, eventId) => {
   try {
     const userRef = doc(db, "users", uid);
@@ -409,7 +359,6 @@ export const removeUserFromEvent = async (uid, eventId) => {
   }
 };
 
-// Clean up user events array (remove non-existent events)
 export const cleanupUserevents = async (uid) => {
   try {
     const userRef = doc(db, "users", uid);
@@ -427,7 +376,6 @@ export const cleanupUserevents = async (uid) => {
       return;
     }
 
-    // Check which events actually exist
     const valideventIds = [];
 
     for (const eventId of usereventIds) {
@@ -439,7 +387,6 @@ export const cleanupUserevents = async (uid) => {
       }
     }
 
-    // Update user's events array with only valid events
     if (valideventIds.length !== usereventIds.length) {
       await updateDoc(userRef, {
         events: valideventIds,
@@ -454,17 +401,14 @@ export const cleanupUserevents = async (uid) => {
   }
 };
 
-// Get user's actual events (with validation)
 export const getUserEventsWithValidation = async (uid) => {
   try {
-    // First clean up any stale event references
     const valideventIds = await cleanupUserevents(uid);
 
     if (!valideventIds || valideventIds.length === 0) {
       return [];
     }
 
-    // Fetch the actual event documents
     const events = [];
 
     for (const eventId of valideventIds) {
@@ -491,7 +435,6 @@ export const getUserEventsWithValidation = async (uid) => {
   } catch (error) {
     console.error("❌ Error getting user events with validation:", error);
 
-    // Fallback: try to get events without validation
     try {
       const userRef = doc(db, "users", uid);
       const userDoc = await getDoc(userRef);
@@ -527,10 +470,8 @@ export const getUserEventsWithValidation = async (uid) => {
   }
 };
 
-// Remove event from ALL users who have it
 export const removeEventFromAllUsers = async (eventId) => {
   try {
-    // Query all users who have this event in their events array
     const usersRef = collection(db, "users");
     const q = query(usersRef, where("events", "array-contains", eventId));
     const querySnapshot = await getDocs(q);
@@ -539,7 +480,6 @@ export const removeEventFromAllUsers = async (eventId) => {
       return;
     }
 
-    // Remove the event from each user's events array
     const updatePromises = [];
 
     querySnapshot.forEach((userDoc) => {
@@ -559,7 +499,6 @@ export const removeEventFromAllUsers = async (eventId) => {
   }
 };
 
-// Update photoCount for user
 export const updateUserPhotoCount = async (uid, increment = 1) => {
   try {
     const userRef = doc(db, "users", uid);

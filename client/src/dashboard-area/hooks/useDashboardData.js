@@ -95,16 +95,12 @@ export const useDashboardData = () => {
 
     setIsLoadingProfile(true);
     try {
-      // Check if profile exists in memory first
       if (hasFaceProfile(currentUser.uid)) {
         setHasProfile(true);
         setProfilePhotos(getProfilePhotos(currentUser.uid));
         return;
       }
-
-      // Try to load from Firebase Storage if not in memory
       const storedProfile = await getFaceProfileFromStorage(currentUser.uid);
-
       if (
         storedProfile &&
         storedProfile.images &&
@@ -133,7 +129,6 @@ export const useDashboardData = () => {
     }
   }, [currentUser?.uid]);
 
-  // Message display functions
   const showErrorMessage = useCallback((message, duration = 4000) => {
     setShowError(message);
     setTimeout(() => setShowError(null), duration);
@@ -148,62 +143,44 @@ export const useDashboardData = () => {
    * Load all dashboard data (with global deduplication and sharing)
    */
   const loadDashboardData = useCallback(async () => {
-    // AUTH LOADING CHECK
     if (authLoading) {
       return;
     }
-
     if (!currentUser?.uid) {
       setLoading(false);
       return;
     }
-
-    // If we have global data for this user, use it immediately
     if (globalData && globalUserId === currentUser.uid) {
       updateFromGlobalData(globalData);
-      loadFaceProfile(); // Already async, no need to await here
+      loadFaceProfile();
       return globalData;
     }
-
-    // If already loading for this user, wait for it
     if (globalLoadPromise && globalUserId === currentUser.uid) {
       try {
         const result = await globalLoadPromise;
         updateFromGlobalData(result);
-        loadFaceProfile(); // Already async, no need to await here
+        loadFaceProfile();
         return result;
       } catch (error) {
         console.error("? Global load operation failed:", error);
       }
     }
-
-    // Prevent multiple simultaneous loads from same hook instance
     if (loadingRef.current) {
       return;
     }
-
     try {
       loadingRef.current = true;
       setLoading(true);
-
-      const startTime = performance.now();
-
-      // Set global tracking
       globalUserId = currentUser.uid;
-
       const loadOperation = async () => {
-        // Load data in parallel
         const [userProfile, userevents, pendingInvites] = await Promise.all([
           getUserProfile(currentUser.uid),
           getUserEvents(currentUser.uid),
           getPendingInvites(currentUser.uid),
         ]);
-
-        // Load friends
         const friendIds = userProfile?.friends || [];
         let friendsData = [];
         let friendRequests = [];
-
         if (friendIds.length > 0) {
           try {
             [friendsData, friendRequests] = await Promise.all([
@@ -214,10 +191,6 @@ export const useDashboardData = () => {
             console.error("? Error loading friends:", error);
           }
         }
-
-        const totalTime = performance.now() - startTime;
-        console.log(`Dashboard data loaded in ${totalTime.toFixed(2)}ms`);
-
         const result = {
           userProfile,
           userevents,
@@ -226,30 +199,21 @@ export const useDashboardData = () => {
           friendRequests,
         };
 
-        // Store globally and notify all subscribers
         globalData = result;
         notifySubscribers(result);
-
         return result;
       };
 
-      // Set global promise
       globalLoadPromise = loadOperation();
       const result = await globalLoadPromise;
-
-      // Update local state
       updateFromGlobalData(result);
-      loadFaceProfile(); // Already async, no need to await here
-
+      loadFaceProfile();
       initialLoadDone.current = true;
-
       return result;
     } catch (error) {
       console.error("? Error loading dashboard data:", error);
       setError(ERROR_MESSAGES.dashboard.loadingDashboard);
       showErrorMessage(ERROR_MESSAGES.dashboard.loadingDashboard);
-
-      // Clear global tracking on error
       globalLoadPromise = null;
       globalUserId = null;
       globalData = null;
@@ -265,7 +229,6 @@ export const useDashboardData = () => {
     showErrorMessage,
   ]);
 
-  // ? NEW: Function to immediately remove event from state
   const removeEventFromState = useCallback((eventId) => {
     setevents((currentevents) => {
       const updatedevents = currentevents.filter(
@@ -273,25 +236,19 @@ export const useDashboardData = () => {
       );
       return updatedevents;
     });
-
-    // Also update global data if it exists
     if (globalData && globalData.userevents) {
       globalData.userevents = globalData.userevents.filter(
         (event) => event.id !== eventId
       );
-      // Notify other subscribers
       notifySubscribers(globalData);
     }
   }, []);
 
-  // Refresh functions
   const refreshevents = useCallback(async () => {
     if (!currentUser?.uid) return;
     try {
       const updatedevents = await getUserEvents(currentUser.uid);
       setevents(updatedevents);
-
-      // Update global data
       if (globalData) {
         globalData.userevents = updatedevents;
       }
@@ -321,7 +278,6 @@ export const useDashboardData = () => {
       const requests = await getPendingFriendRequests(currentUser.uid);
       setPendingRequests(requests || []);
 
-      // Update global data
       if (globalData) {
         globalData.friendRequests = requests || [];
       }
@@ -330,7 +286,6 @@ export const useDashboardData = () => {
     }
   }, [currentUser?.uid]);
 
-  // State updater functions
   const updateFaceProfile = useCallback((hasProfileData, photos = []) => {
     setHasProfile(hasProfileData);
     setProfilePhotos(photos);
@@ -381,7 +336,6 @@ export const useDashboardData = () => {
   const manualRefresh = useCallback(() => {
     initialLoadDone.current = false;
     loadingRef.current = false;
-    // Clear global state to force fresh load
     globalLoadPromise = null;
     globalUserId = null;
     globalData = null;
@@ -390,23 +344,12 @@ export const useDashboardData = () => {
 
   useEffect(() => {
     const state = location.state;
-
-    console.log("🔍 Navigation state effect triggered:", {
-      state,
-      pathname: location.pathname,
-      leftEventId: state?.leftEventId,
-      currentEventsCount: events.length,
-    });
-
     if (state && state.leftEventId) {
-      console.log("✅ Removing event from state:", state.leftEventId);
       removeEventFromState(state.leftEventId);
-
       navigate(location.pathname, {
         replace: true,
         state: { ...state, leftEventId: null },
       });
-
       showSuccessMessage("You have left the event successfully!");
     }
 
@@ -432,9 +375,7 @@ export const useDashboardData = () => {
     showSuccessMessage,
   ]);
 
-  // Effect to handle global data sharing
   useEffect(() => {
-    // AUTH LOADING CHECK
     if (authLoading) {
       return;
     }
@@ -444,26 +385,20 @@ export const useDashboardData = () => {
       return;
     }
 
-    // Create subscriber callback
     subscriberCallbackRef.current = updateFromGlobalData;
     globalSubscribers.add(subscriberCallbackRef.current);
 
-    // Load data if needed
     if (!initialLoadDone.current || globalUserId !== currentUser.uid) {
       loadDashboardData();
     } else if (globalData && globalUserId === currentUser.uid) {
       updateFromGlobalData(globalData);
-      loadFaceProfile(); // Already async, no need to await here
+      loadFaceProfile();
     }
 
-    // Cleanup
     return () => {
-      // Remove from global subscribers
       if (subscriberCallbackRef.current) {
         globalSubscribers.delete(subscriberCallbackRef.current);
       }
-
-      // Cleanup local listeners
       unsubscribersRef.current.forEach((unsubscribe) => {
         if (typeof unsubscribe === "function") {
           try {
@@ -484,7 +419,6 @@ export const useDashboardData = () => {
   ]);
 
   return {
-    // Data states
     userData,
     events,
     friends,
@@ -492,23 +426,15 @@ export const useDashboardData = () => {
     eventInvites,
     hasProfile,
     profilePhotos,
-
-    // Loading states
     loading,
     error,
     isLoadingProfile,
-
-    // Message states
     showSuccess,
     showError,
-
-    // Data actions
     refreshevents,
     refreshFriends,
     refreshPendingRequests,
     loadFaceProfile,
-
-    // State updaters
     addEvent,
     removeEvent,
     updateEvent,
@@ -519,13 +445,9 @@ export const useDashboardData = () => {
     addEventInvite,
     removeEventInvite,
     updateFaceProfile,
-    removeEventFromState, // ? NEW: Added to exports
-
-    // Message actions
+    removeEventFromState,
     showSuccessMessage,
     showErrorMessage,
-
-    // Manual refresh
     loadDashboardData: manualRefresh,
   };
 };

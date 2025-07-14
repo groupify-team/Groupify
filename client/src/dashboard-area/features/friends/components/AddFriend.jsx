@@ -52,7 +52,6 @@ const AddFriend = ({
         return;
       }
 
-      // Email validation
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(input.trim())) {
         setStatus({
@@ -62,13 +61,7 @@ const AddFriend = ({
         setLoading(false);
         return;
       }
-
-      console.log("Searching for user with email:", input.trim());
-      console.log("Current user:", currentUser?.uid);
-
       const users = await UserService.findUsersByEmail(input.trim());
-      console.log("Search results:", users);
-
       const targetUser = users.find(
         (u) => u.email?.toLowerCase() === input.trim().toLowerCase()
       );
@@ -82,20 +75,8 @@ const AddFriend = ({
         setLoading(false);
         return;
       }
-
-      // ENHANCED SELF-CHECK VALIDATION
       const targetUserId = targetUser.uid || targetUser.id;
       const currentUserId = currentUser?.uid;
-
-      console.log("🔍 Self-check validation:", {
-        targetUserId,
-        currentUserId,
-        targetEmail: targetUser.email,
-        currentEmail: currentUser?.email,
-        isSameId: targetUserId === currentUserId,
-        isSameEmail: targetUser.email === currentUser?.email,
-      });
-
       if (
         targetUserId === currentUserId ||
         targetUser.email === currentUser?.email ||
@@ -108,7 +89,6 @@ const AddFriend = ({
         setLoading(false);
         return;
       }
-      // Show found user
       setFoundUser(targetUser);
       setStatus({
         type: "success",
@@ -127,10 +107,8 @@ const AddFriend = ({
 
   const handleAddFriendDirect = async () => {
     if (foundUser && onAddFriendDirect) {
-      // ADDITIONAL SELF-CHECK
       const targetUserId = foundUser.uid || foundUser.id;
       const currentUserId = currentUser?.uid;
-
       if (targetUserId === currentUserId) {
         setStatus({
           type: "error",
@@ -140,7 +118,6 @@ const AddFriend = ({
       }
       try {
         setLoading(true);
-        console.log("Adding friend:", foundUser.uid || foundUser.id);
         await onAddFriendDirect(foundUser.uid || foundUser.id);
         setInput("");
         setFoundUser(null);
@@ -206,9 +183,6 @@ const AddFriend = ({
 
   const handleViewProfile = () => {
     if (foundUser && onUserSelect) {
-      // IMPORTANT: Pass the foundUser to the parent component
-      // The parent will be responsible for opening the UserProfileModal
-      // with proper z-index handling
       onUserSelect(foundUser);
     }
   };
@@ -219,15 +193,11 @@ const AddFriend = ({
     }
   };
 
-  // Get relationship status for found user
   const relationshipData = foundUser
     ? getUserRelationshipData(foundUser.uid || foundUser.id)
     : null;
-
-  // Determine button configuration based on relationship
   const getActionButtonConfig = () => {
     if (!foundUser || !relationshipData) return null;
-
     if (relationshipData.isFriend) {
       return {
         text: "Friends",

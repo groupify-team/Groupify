@@ -23,62 +23,39 @@ const NotificationsDropdown = () => {
   const { currentUser } = useAuth();
   const [processingNotification, setProcessingNotification] = useState(null);
 
-  // Real-time data from contexts
   const {
     eventInvitations,
     acceptEventInvitation,
     rejectEventInvitation,
-    events, // NEW: Get events to check current count
+    events,
   } = useEventContext();
 
   const { pendingRequests, acceptFriendRequest, rejectFriendRequest } =
     useFriendsContext();
 
-  // NEW: Add plan limits hook for enforcement
   const { canPerformAction, showUpgradePrompt, getUsageInfo } = usePlanLimits();
 
   const { refreshevents, showSuccessMessage, showErrorMessage } =
     useDashboardData();
 
-  // NEW: Track if user can accept more event invitations
   const [canAcceptMoreEvents, setCanAcceptMoreEvents] = useState(true);
   const [currentEventCount, setCurrentEventCount] = useState(0);
 
-  // NEW: Check event acceptance ability when events or plan changes
   useEffect(() => {
     const checkEventAcceptanceAbility = () => {
       if (currentUser?.uid) {
-        // Use the same logic as EventsSection - get usage info first
         const usageInfo = getUsageInfo();
         if (usageInfo?.events) {
           const { used: eventCount, limit } = usageInfo.events;
           setCurrentEventCount(eventCount);
-
           const canAccept = limit === "unlimited" || eventCount < limit;
           setCanAcceptMoreEvents(canAccept);
-
-          console.log("🔍 NotificationsDropdown: Event acceptance check:", {
-            eventCount,
-            limit,
-            canAccept,
-            usageInfo: usageInfo.events,
-          });
         }
       }
     };
 
     checkEventAcceptanceAbility();
   }, [currentUser?.uid, getUsageInfo]);
-
-  console.log("🎬 NotificationsDropdown: Real-time data:", {
-    eventInvitations: eventInvitations.length,
-    pendingRequests: pendingRequests.length,
-    canAcceptMoreEvents,
-    currentEventCount,
-    usageInfo: getUsageInfo()?.events, // NEW: Log usage info for debugging
-  });
-
-  // Transform data into unified notification format
   const allNotifications = [
     ...pendingRequests.map((req) => ({
       id: `friend-request-${req.id}`,
@@ -95,7 +72,7 @@ const NotificationsDropdown = () => {
           label: "Accept",
           type: "accept",
           action: () => handleAcceptFriendRequest(req),
-          disabled: false, // Friend requests don't have plan limits
+          disabled: false,
         },
         {
           label: "Decline",
@@ -120,7 +97,7 @@ const NotificationsDropdown = () => {
           label: "Accept",
           type: "accept",
           action: () => handleAcceptEventInvitation(invite),
-          disabled: !canAcceptMoreEvents, // NEW: Disable based on plan limits
+          disabled: !canAcceptMoreEvents,
         },
         {
           label: "Decline",
@@ -132,7 +109,6 @@ const NotificationsDropdown = () => {
     })),
   ];
 
-  // Sort notifications by time (newest first)
   const sortedNotifications = allNotifications.sort((a, b) => {
     const timeA = a.time?.toDate?.() || a.time || new Date(0);
     const timeB = b.time?.toDate?.() || b.time || new Date(0);
@@ -142,11 +118,6 @@ const NotificationsDropdown = () => {
   const handleAcceptFriendRequest = async (request) => {
     try {
       setProcessingNotification(`friend-request-${request.id}`);
-      console.log(
-        "✅ NotificationsDropdown: Accepting friend request from:",
-        request.from || request.uid
-      );
-
       await acceptFriendRequest(request.id, request.from || request.uid);
       toast.success("Friend request accepted! 🎉");
     } catch (error) {
@@ -163,11 +134,6 @@ const NotificationsDropdown = () => {
   const handleRejectFriendRequest = async (request) => {
     try {
       setProcessingNotification(`friend-request-${request.id}`);
-      console.log(
-        "❌ NotificationsDropdown: Rejecting friend request from:",
-        request.from || request.uid
-      );
-
       await rejectFriendRequest(request.id, request.from || request.uid);
       toast.success("Friend request declined");
     } catch (error) {
@@ -181,30 +147,19 @@ const NotificationsDropdown = () => {
     }
   };
 
-  // NEW: Enhanced event invitation handler with plan limit checking
   const handleAcceptEventInvitation = useCallback(
     async (invitation) => {
       if (processingNotification === `event-invite-${invitation.id}`) return;
 
       try {
         setProcessingNotification(`event-invite-${invitation.id}`);
-        console.log(
-          "✅ NotificationsDropdown: Accepting event invitation:",
-          invitation.id
-        );
-
-        // NEW: Check plan limits before accepting
         const usageInfo = getUsageInfo();
         const currentUsedEvents = usageInfo?.events?.used || 0;
-
         const limitCheck = canPerformAction("create_event", {
           currentEventCount: currentUsedEvents,
         });
 
         if (!limitCheck.allowed) {
-          console.log(
-            "🚫 NotificationsDropdown: Plan limit reached, showing upgrade prompt"
-          );
           showUpgradePrompt(limitCheck.reason, {
             title: "Upgrade to Accept Invitation",
             persistent: true,
@@ -212,21 +167,14 @@ const NotificationsDropdown = () => {
           return;
         }
 
-        // Accept the invitation
         await acceptEventInvitation(invitation.id, invitation.eventId);
-
-        // Update local state using usage info (more reliable than manual counting)
         const updatedUsageInfo = getUsageInfo();
         const newEventCount =
           updatedUsageInfo?.events?.used || currentEventCount + 1;
         setCurrentEventCount(newEventCount);
-
-        // Check if user can still accept more events
         const { limit } = updatedUsageInfo?.events || {};
         const stillCanAccept = limit === "unlimited" || newEventCount < limit;
         setCanAcceptMoreEvents(stillCanAccept);
-
-        // Show success message with usage info
         const finalUsageInfo = getUsageInfo();
         toast.success(
           `Joined "${invitation.eventTitle}"! (${newEventCount}/${
@@ -235,17 +183,12 @@ const NotificationsDropdown = () => {
               : finalUsageInfo?.events?.limit
           } events) 🎉`
         );
-
-        console.log(
-          "✅ NotificationsDropdown: Event invitation accepted successfully"
-        );
       } catch (error) {
         console.error(
-          "❌ NotificationsDropdown: Error accepting event invitation:",
+          "NotificationsDropdown: Error accepting event invitation:",
           error
         );
 
-        // Check if error is related to plan limits
         if (
           error.message?.includes("limit") ||
           error.message?.includes("upgrade")
@@ -275,16 +218,11 @@ const NotificationsDropdown = () => {
   const handleRejectEventInvitation = async (invitation) => {
     try {
       setProcessingNotification(`event-invite-${invitation.id}`);
-      console.log(
-        "❌ NotificationsDropdown: Rejecting event invitation:",
-        invitation.id
-      );
-
       await rejectEventInvitation(invitation.id);
       toast.success("Event invitation declined");
     } catch (error) {
       console.error(
-        "❌ NotificationsDropdown: Error rejecting event invitation:",
+        "NotificationsDropdown: Error rejecting event invitation:",
         error
       );
       toast.error("Failed to decline event invitation");
@@ -315,7 +253,6 @@ const NotificationsDropdown = () => {
     }
   };
 
-  // NEW: Check if there are event invitations that can't be accepted due to limits
   const hasBlockedEventInvites =
     eventInvitations.length > 0 && !canAcceptMoreEvents;
 
@@ -324,7 +261,7 @@ const NotificationsDropdown = () => {
       className="absolute right-0 top-full mt-2 w-80 sm:w-96 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 z-50 max-h-96 overflow-hidden max-w-[calc(100vw-1rem)]"
       style={{
         transformOrigin: "top right",
-        right: "-8px", // Align to right edge
+        right: "-8px",
       }}
     >
       {" "}

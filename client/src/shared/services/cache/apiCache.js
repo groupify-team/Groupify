@@ -13,43 +13,36 @@ class ApiCache {
       default: 2 * 60 * 1000, // 2 minutes
     };
 
-    // Make cache globally accessible for logout cleanup
     if (typeof window !== "undefined") {
       window.apiCache = this;
     }
   }
 
-  // Generate cache key
   generateKey(type, id, params = {}) {
     const paramString =
       Object.keys(params).length > 0 ? JSON.stringify(params) : "";
     return `${type}:${id}${paramString}`;
   }
 
-  // Check if cache entry is still valid
   isValid(entry) {
     return entry && Date.now() - entry.timestamp < entry.ttl;
   }
 
-  // Get from cache
   get(type, id, params = {}) {
     const key = this.generateKey(type, id, params);
     const entry = this.cache.get(key);
 
     if (this.isValid(entry)) {
-      console.log(`🚀 Cache HIT for ${key}`);
       return entry.data;
     }
 
     if (entry) {
-      console.log(`🕐 Cache EXPIRED for ${key}`);
       this.cache.delete(key);
     }
 
     return null;
   }
 
-  // Set cache entry
   set(type, id, data, params = {}) {
     const key = this.generateKey(type, id, params);
     const ttl = this.ttl[type] || this.ttl.default;
@@ -59,20 +52,15 @@ class ApiCache {
       timestamp: Date.now(),
       ttl,
     });
-
-    console.log(`💾 Cache SET for ${key} (TTL: ${ttl}ms)`);
   }
 
-  // Invalidate specific cache entries
   invalidate(type, id, params = {}) {
     const key = this.generateKey(type, id, params);
     if (this.cache.has(key)) {
       this.cache.delete(key);
-      console.log(`🗑️ Cache INVALIDATED for ${key}`);
     }
   }
 
-  // Invalidate all entries of a type
   invalidateType(type) {
     const keysToDelete = [];
     for (const [key] of this.cache) {
@@ -80,24 +68,16 @@ class ApiCache {
         keysToDelete.push(key);
       }
     }
-
     keysToDelete.forEach((key) => this.cache.delete(key));
-    console.log(
-      `🗑️ Cache INVALIDATED all ${type} entries (${keysToDelete.length} items)`
-    );
   }
 
-  // Clear all cache
   clear() {
     this.cache.clear();
-    console.log("🧹 Cache CLEARED");
   }
 
-  // Clear user-specific cache entries
   clearUserData(userId) {
     const keysToDelete = [];
     for (const [key] of this.cache) {
-      // Clear user-specific entries - be more comprehensive
       if (
         key.includes(`users:${userId}`) ||
         key.includes(`${userId}:`) ||
@@ -109,14 +89,9 @@ class ApiCache {
         keysToDelete.push(key);
       }
     }
-
     keysToDelete.forEach((key) => this.cache.delete(key));
-    console.log(
-      `🧹 Cache CLEARED for user ${userId} (${keysToDelete.length} items)`
-    );
   }
 
-  // Get cache stats
   getStats() {
     return {
       size: this.cache.size,
@@ -133,11 +108,7 @@ class ApiCache {
     return stats;
   }
 }
-
-// Create singleton instance
 const apiCache = new ApiCache();
-
-// Export helper functions
 export const getCachedData = (type, id, params) =>
   apiCache.get(type, id, params);
 export const setCachedData = (type, id, data, params) =>

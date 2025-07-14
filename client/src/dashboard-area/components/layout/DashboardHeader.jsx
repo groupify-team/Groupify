@@ -33,13 +33,11 @@ const AccessibilityIcon = ({ className }) => (
   </svg>
 );
 
-// Enhanced Status Dropdown Component
 const StatusDropdown = ({ currentUser, isOpen, onClose }) => {
   const currentUserPresence = useUserPresence(currentUser?.uid);
 
   const handleStatusChange = async (newStatus) => {
     try {
-      // Import the PresenceService dynamically to avoid circular deps
       const { PresenceService } = await import(
         "@shared/services/presence/PresenceService"
       );
@@ -49,8 +47,6 @@ const StatusDropdown = ({ currentUser, isOpen, onClose }) => {
       } else {
         await PresenceService.updateUserStatus(currentUser.uid, newStatus);
       }
-
-      console.log(`✅ Status changed to: ${newStatus}`);
       onClose();
     } catch (error) {
       console.error("❌ Error changing status:", error);
@@ -91,7 +87,7 @@ const StatusDropdown = ({ currentUser, isOpen, onClose }) => {
       className="absolute right-0 top-12 w-64 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 z-50 overflow-hidden transform transition-all duration-300 ease-out animate-slide-in-scale"
       style={{
         transformOrigin: "top right",
-        right: "-8px", // Align to right edge
+        right: "-8px",
       }}
     >
       {/* Header */}
@@ -149,40 +145,21 @@ const DashboardHeader = ({
   isMobile,
 }) => {
   const { userData } = useDashboardData();
-
-  // FIXED: Use real-time data from contexts instead of useDashboardData
   const { eventInvitations } = useEventContext();
   const { pendingRequests } = useFriendsContext();
-
-  // Local state for notifications and user menu
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [mobileUserMenuOpen, setMobileUserMenuOpen] = useState(false);
   const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
-
-  // Get current user's real-time presence
   const currentUserPresence = useUserPresence(userData?.uid);
-
-  // Use props directly
   const currentSidebarOpen = sidebarOpen;
   const currentIsMobile = isMobile;
   const toggleSidebar = onSidebarToggle;
-
-  // Refs for outside click detection
   const notificationRef = useRef(null);
   const mobileUserMenuRef = useRef(null);
   const statusDropdownRef = useRef(null);
-
-  // FIXED: Calculate total notifications from real-time contexts
   const totalNotifications =
     (pendingRequests?.length || 0) + (eventInvitations?.length || 0);
 
-  console.log("🔔 DashboardHeader: Real-time notification data:", {
-    pendingRequests: pendingRequests?.length || 0,
-    eventInvitations: eventInvitations?.length || 0,
-    totalNotifications,
-  });
-
-  // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -214,7 +191,6 @@ const DashboardHeader = ({
     return `Welcome back, ${displayName}!`;
   };
 
-  // Get current user's status config for presence indicator
   const getCurrentUserStatusConfig = () => {
     if (currentUserPresence.loading) {
       return {
@@ -265,18 +241,10 @@ const DashboardHeader = ({
       title: "Offline",
     };
   };
-
   const currentUserStatusConfig = getCurrentUserStatusConfig();
-
-  // FIXED: Handle notification click properly
   const handleNotificationClick = () => {
-    console.log("🔔 DashboardHeader: Notification bell clicked");
     setNotificationsOpen((prev) => {
       const newState = !prev;
-      console.log(
-        "🔔 DashboardHeader: Notifications dropdown",
-        newState ? "opened" : "closed"
-      );
       return newState;
     });
   };
@@ -296,7 +264,6 @@ const DashboardHeader = ({
     );
   };
 
-  // Helper function to get the correct profile image URL
   const getProfileImageUrl = (user) => {
     return (
       user?.profilePicture ||
@@ -523,10 +490,6 @@ const DashboardHeader = ({
                                   option.status
                                 );
                               }
-
-                              console.log(
-                                `✅ Status changed to: ${option.status}`
-                              );
                               setMobileUserMenuOpen(false);
                             } catch (error) {
                               console.error("❌ Error changing status:", error);

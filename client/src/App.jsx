@@ -36,13 +36,9 @@ function App() {
     </Router>
   ));
 
-  // Add this in App.jsx, BEFORE the return statement
   if (import.meta.env.DEV) {
-    console.log("🚀 App loaded - Debug mode active");
-    // Make PresenceService available globally for testing
     import("@shared/services/presence/PresenceService").then((module) => {
       window.PresenceService = module.PresenceService;
-      console.log("🔧 PresenceService available at window.PresenceService");
     });
   }
 

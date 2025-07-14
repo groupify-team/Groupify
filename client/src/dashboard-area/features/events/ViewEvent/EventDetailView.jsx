@@ -187,17 +187,12 @@ const MobileTabSwitcher = memo(({ activeTab, setActiveTab }) => (
 
 MobileTabSwitcher.displayName = "MobileTabSwitcher";
 const EventDetailView = ({ eventId: propEventId }) => {
-  // ===== ROUTE & AUTH SETUP =====
   const { eventId: paramEventId } = useParams();
   const eventId = propEventId || paramEventId;
   const navigate = useNavigate();
   const { currentUser } = useAuth();
   const [isPending, startTransition] = useTransition();
-
-  // ===== NAVIGATION SETUP =====
   const { smoothNavigate } = useEnhancedNavigation();
-
-  // ===== EVENT CONTEXT SETUP =====
   const {
     getEventById,
     getEventMembers,
@@ -308,7 +303,6 @@ const EventDetailView = ({ eventId: propEventId }) => {
     navigateToPrevious,
   } = usePhotoModal();
 
-  // ===== COMPUTED STATE =====
   const loading = eventLoading || photosLoading;
   const error = eventError || photosError;
 
@@ -320,18 +314,12 @@ const EventDetailView = ({ eventId: propEventId }) => {
     return getRemainingPhotoSlots(photos?.length || 0);
   }, [photos?.length]);
 
-  // ===== EFFECTS =====
   useEffect(() => {
     if (event && JSON.stringify(event) !== JSON.stringify(localEvent)) {
-      console.log(
-        "🔄 EventDetailView: Updating local event from context",
-        event
-      );
       setLocalEvent(event);
     }
   }, [event, localEvent]);
 
-  // Performance logging
   useRenderTracker("EventDetailView", {
     eventId,
     currentUserId: currentUser?.uid,
@@ -353,25 +341,17 @@ const EventDetailView = ({ eventId: propEventId }) => {
     if (!currentUser?.uid || !eventId) return;
 
     try {
-      // Close modal and start leaving process
       setShowLeaveConfirmation(false);
-
-      // Wait for modal to close smoothly
       setTimeout(async () => {
         setIsLeavingEvent(true);
 
         try {
-          console.log("🚪 Leaving event:", eventId);
           await leaveEvent(eventId);
-
-          // Use smooth navigation to dashboard
           smoothNavigate("/dashboard/events", {
             delay: 100,
             showLoader: true,
             replace: true,
           });
-
-          // Show success message after navigation starts
           setTimeout(() => {
             modalToast.success("You've successfully left the event", {
               duration: 3000,
@@ -458,27 +438,21 @@ const EventDetailView = ({ eventId: propEventId }) => {
   );
 
   // ===== RENDER CONDITIONS =====
-  // If we're leaving the event, show custom overlay
   if (isLeavingEvent) {
     return <LeavingEventOverlay />;
   }
-
-  // Don't show loading or errors if we're in the process of leaving
   if (loading && !isLeavingEvent) {
     return <EventLoadingSpinner />;
   }
-
   if (error && !isLeavingEvent) {
     return <ErrorDisplay error={error} />;
   }
-
   if (!event && !isLeavingEvent) {
     return (
       <ErrorDisplay error="Event not found or you don't have access to this event." />
     );
   }
 
-  // Don't render anything if we don't have an event and we're not loading
   if (!event) {
     return null;
   }
