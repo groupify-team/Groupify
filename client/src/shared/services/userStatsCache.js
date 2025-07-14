@@ -1,5 +1,3 @@
-// Create this file: client/src/shared/services/userStatsCache.js
-
 import {
   doc,
   getDoc,
@@ -9,6 +7,8 @@ import {
   getDocs,
 } from "firebase/firestore";
 import { db } from "@shared/services/firebase/config";
+
+import { PresenceService } from "@shared/services/presence/PresenceService";
 
 class UserStatsCache {
   constructor() {
@@ -78,9 +78,13 @@ class UserStatsCache {
       const eventsSnap = await getDocs(eventsQuery);
       const eventsCount = eventsSnap.size;
 
+      // Fetch presence data
+      const presence = await PresenceService.getUserPresence(userId);
+
       return {
         friendsCount,
         eventsCount,
+        presence, // Add presence to the stats
         loading: false,
         error: false,
       };
@@ -89,6 +93,13 @@ class UserStatsCache {
       return {
         friendsCount: 0,
         eventsCount: 0,
+        presence: {
+          userId,
+          isOnline: false,
+          status: "offline",
+          lastSeen: null,
+          updatedAt: null,
+        },
         loading: false,
         error: true,
       };

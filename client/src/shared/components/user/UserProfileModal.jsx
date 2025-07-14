@@ -15,6 +15,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { userStatsCache } from "@shared/services/userStatsCache";
 import { toast } from "@shared/utils/toast";
+import { useUserPresence } from "@shared/hooks/useUserPresence";
 
 const UserProfileModal = ({
   isOpen,
@@ -44,6 +45,7 @@ const UserProfileModal = ({
   const [loading, setLoading] = useState(false);
   const [confirmAction, setConfirmAction] = useState(null);
   const [showActionMenu, setShowActionMenu] = useState(false);
+  const userPresence = useUserPresence(user?.uid);
 
   useEffect(() => {
     if (!isOpen || !user?.uid || !showStats) {
@@ -125,6 +127,27 @@ const UserProfileModal = ({
     } finally {
       setLoading(false);
     }
+  };
+
+  // Add this helper function inside the component
+  const formatLastSeen = (lastSeen) => {
+    if (!lastSeen) return "";
+
+    const now = new Date();
+    const lastSeenDate = lastSeen.toDate
+      ? lastSeen.toDate()
+      : new Date(lastSeen);
+    const diffMs = now - lastSeenDate;
+    const diffMinutes = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMinutes / 60);
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffMinutes < 1) return "just now";
+    if (diffMinutes < 60) return `${diffMinutes}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+
+    return lastSeenDate.toLocaleDateString();
   };
 
   const handleConfirmedAction = async () => {
@@ -393,9 +416,25 @@ const UserProfileModal = ({
                   />
                 </div>
 
-                {/* Online Status with Better Design */}
-                <div className="absolute -bottom-1 -right-1 sm:-bottom-1 sm:-right-1 w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 bg-emerald-500 border-2 sm:border-4 border-white dark:border-slate-800 rounded-full shadow-xl flex items-center justify-center">
-                  <div className="w-2 h-2 sm:w-3 sm:h-3 lg:w-4 lg:h-4 bg-white rounded-full animate-pulse"></div>
+                {/* Online Status with Better Design - Real Presence */}
+                <div
+                  className={`absolute bottom-0 right-0 sm:bottom-1 sm:right-0 w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 border-2 sm:border-4 border-white dark:border-slate-800 rounded-full shadow-xl flex items-center justify-center ${
+                    userPresence.isOnline
+                      ? userPresence.status === "busy"
+                        ? "bg-red-500"
+                        : userPresence.status === "away"
+                        ? "bg-amber-500"
+                        : "bg-emerald-500"
+                      : "bg-gray-400"
+                  }`}
+                >
+                  <div
+                    className={`w-2 h-2 sm:w-3 sm:h-3 lg:w-4 lg:h-4 bg-white rounded-full ${
+                      userPresence.isOnline && userPresence.status === "online"
+                        ? "animate-pulse"
+                        : ""
+                    }`}
+                  ></div>
                 </div>
               </div>
             </div>
@@ -490,9 +529,31 @@ const UserProfileModal = ({
                   <div className="bg-gradient-to-r from-slate-50 via-white to-slate-50 dark:from-slate-800/50 dark:via-slate-700/30 dark:to-slate-800/50 rounded-xl p-3 border border-slate-200/50 dark:border-slate-600/30">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                        <div
+                          className={`w-2 h-2 rounded-full ${
+                            userPresence.isOnline
+                              ? userPresence.status === "busy"
+                                ? "bg-red-500"
+                                : userPresence.status === "away"
+                                ? "bg-amber-500 animate-pulse"
+                                : "bg-emerald-500 animate-pulse"
+                              : "bg-gray-400"
+                          }`}
+                        ></div>
                         <span className="text-gray-900 dark:text-white font-medium text-sm">
-                          Online now
+                          {userPresence.loading
+                            ? "Loading..."
+                            : userPresence.isOnline
+                            ? userPresence.status === "busy"
+                              ? "Busy"
+                              : userPresence.status === "away"
+                              ? "Away"
+                              : "Online now"
+                            : userPresence.lastSeen
+                            ? `Last seen ${formatLastSeen(
+                                userPresence.lastSeen
+                              )}`
+                            : "Offline"}
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
