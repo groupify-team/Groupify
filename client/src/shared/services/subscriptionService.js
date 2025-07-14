@@ -1,4 +1,5 @@
 import { toast } from "@shared/utils/toast";
+
 class SubscriptionService {
   constructor() {
     this.listeners = new Set();
@@ -85,7 +86,7 @@ class SubscriptionService {
       free: {
         events: 5,
         photosPerEvent: 30,
-        membersPerEvent: 5,
+        membersPerEvent: 8, // FIXED: Changed from 5 to 8 to match usePlanLimits.jsx
         storage: "2GB",
         storageBytes: 2 * 1024 * 1024 * 1024,
         aiRecognition: "basic",
@@ -116,7 +117,6 @@ class SubscriptionService {
         membersPerEvent: "unlimited",
         storage: "500GB",
         storageBytes: 500 * 1024 * 1024 * 1024,
-
         aiRecognition: "premium",
         support: "priority",
         videos: true,
@@ -210,17 +210,21 @@ class SubscriptionService {
     try {
       const stored = localStorage.getItem("groupify_usage");
       if (stored) {
-        return JSON.parse(stored);
+        const usage = JSON.parse(stored);
+        console.log("📊 SubscriptionService: Retrieved stored usage:", usage);
+        return usage;
       }
     } catch (error) {
       console.warn("Failed to get stored usage:", error);
     }
 
-    return {
+    const defaultUsage = {
       events: 0,
       photos: 0,
       storage: 0,
     };
+    console.log("📊 SubscriptionService: Using default usage:", defaultUsage);
+    return defaultUsage;
   }
 
   getDefaultUsage() {
@@ -231,13 +235,72 @@ class SubscriptionService {
     const currentUsage = this.getStoredUsage();
     const newUsage = { ...currentUsage, ...updates };
 
+    console.log("📊 SubscriptionService: Updating usage:", {
+      current: currentUsage,
+      updates: updates,
+      new: newUsage
+    });
+
     try {
       localStorage.setItem("groupify_usage", JSON.stringify(newUsage));
       this.notifyListeners("usageUpdated", newUsage);
+      console.log("✅ SubscriptionService: Usage updated successfully");
       return newUsage;
     } catch (error) {
-      console.error("Failed to update usage:", error);
+      console.error("❌ SubscriptionService: Failed to update usage:", error);
       return currentUsage;
+    }
+  }
+
+  // ADDED: Method to sync usage with actual data
+  syncUsageWithActualData(actualCounts) {
+    console.log("🔄 SubscriptionService: Syncing usage with actual data:", actualCounts);
+    
+    const currentUsage = this.getStoredUsage();
+    const syncedUsage = {
+      events: actualCounts.events || currentUsage.events,
+      photos: actualCounts.photos || currentUsage.photos,
+      storage: actualCounts.storage || currentUsage.storage,
+    };
+
+    if (JSON.stringify(currentUsage) !== JSON.stringify(syncedUsage)) {
+      console.log("🔄 SubscriptionService: Usage out of sync, correcting:", {
+        before: currentUsage,
+        after: syncedUsage
+      });
+      
+      try {
+        localStorage.setItem("groupify_usage", JSON.stringify(syncedUsage));
+        this.notifyListeners("usageUpdated", syncedUsage);
+        console.log("✅ SubscriptionService: Usage synced successfully");
+        return syncedUsage;
+      } catch (error) {
+        console.error("❌ SubscriptionService: Failed to sync usage:", error);
+        return currentUsage;
+      }
+    } else {
+      console.log("✅ SubscriptionService: Usage already in sync");
+      return currentUsage;
+    }
+  }
+
+  // ADDED: Method to reset usage (for debugging)
+  resetUsage() {
+    console.log("🔄 SubscriptionService: Resetting usage to zero");
+    const resetUsage = {
+      events: 0,
+      photos: 0,
+      storage: 0,
+    };
+
+    try {
+      localStorage.setItem("groupify_usage", JSON.stringify(resetUsage));
+      this.notifyListeners("usageUpdated", resetUsage);
+      console.log("✅ SubscriptionService: Usage reset successfully");
+      return resetUsage;
+    } catch (error) {
+      console.error("❌ SubscriptionService: Failed to reset usage:", error);
+      return this.getStoredUsage();
     }
   }
 
@@ -579,5 +642,16 @@ class SubscriptionService {
 }
 
 const subscriptionService = new SubscriptionService();
+
+// ADDED: Global debug functions for development
+if (typeof window !== 'undefined') {
+  window.groupifyDebug = {
+    subscriptionService,
+    resetUsage: () => subscriptionService.resetUsage(),
+    syncUsage: (counts) => subscriptionService.syncUsageWithActualData(counts),
+    checkUsage: () => console.log("Current usage:", subscriptionService.getStoredUsage()),
+    checkSubscription: () => console.log("Current subscription:", subscriptionService.getCurrentSubscription())
+  };
+}
 
 export default subscriptionService;
