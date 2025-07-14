@@ -143,9 +143,14 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
     // Validate form
     if (!validateForm()) return;
 
+    // Prevent double submission
+    if (loading) return;
+
     try {
       setLoading(true);
       setError(null);
+
+      console.log("🔄 Creating event:", name);
 
       // Create the event
       const newEvent = await eventsService.createEvent({
@@ -159,6 +164,8 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
         admins: [currentUser.uid],
         photoCount: 0,
       });
+
+      console.log("✅ Event created successfully:", newEvent.id);
 
       // Update event count
       setCurrentEventCount((prev) => prev + 1);
@@ -183,15 +190,16 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
       // Reset form
       resetForm();
 
-      // Notify parent component
-      if (onEventCreated) {
-        onEventCreated(newEvent);
-      }
+      // FIXED: Don't call onEventCreated here - let EventContext handle the live update
+      // The EventContext will automatically detect the new event and add it to the state
+      // This prevents duplicate events from being created
 
       // Show success modal
       setShowSuccessModal(true);
+
+      console.log("🎉 Event creation flow completed");
     } catch (error) {
-      console.error("Error creating event:", error);
+      console.error("❌ Error creating event:", error);
       handleCreateEventError(error);
     } finally {
       setLoading(false);
@@ -270,14 +278,14 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
   if (!isOpen) return null;
 
   // ===== PLAN STATUS HELPERS =====
-const canCreateNewEvent = () => {
-  return (
-    planLoading ||
-    !planFeatures ||
-    planFeatures?.events === "unlimited" ||
-    currentEventCount < (planFeatures?.events || 5)
-  );
-};
+  const canCreateNewEvent = () => {
+    return (
+      planLoading ||
+      !planFeatures ||
+      planFeatures?.events === "unlimited" ||
+      currentEventCount < (planFeatures?.events || 5)
+    );
+  };
 
   const isAtEventLimit = () => {
     return (

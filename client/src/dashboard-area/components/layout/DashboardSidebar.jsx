@@ -13,6 +13,8 @@ import { useDashboardLayout } from "@dashboard/hooks/useDashboardLayout";
 import { useDashboardData } from "@dashboard/hooks/useDashboardData";
 import { useDashboardNavigation } from "@dashboard/hooks/useDashboardNavigation";
 import { useUserPresence } from "@shared/hooks/useUserPresence";
+import { useFriendsContext } from "@shared/contexts/FriendsContext"; // Live friend requests
+import { useEventContext } from "@shared/contexts/EventContext"; // ADDED: Live events data
 import { useNavigate } from "react-router-dom";
 
 import {
@@ -120,8 +122,11 @@ const DashboardSidebar = ({ sidebarOpen, onSidebarClose, onLogoutClick }) => {
     utils: { isViewingEvent },
   } = useDashboardLayout();
 
-  const { userData, events, pendingRequests, eventInvites } =
-    useDashboardData();
+  // CHANGED: Get live data from contexts instead of useDashboardData
+  const { userData, eventInvites } = useDashboardData(); // Keep only userData and eventInvites from here
+  const { pendingRequests } = useFriendsContext(); // Live friend requests
+  const { events } = useEventContext(); // ADDED: Live events data
+  
   const {
     navigate: { toEvent: _navigateToEvent },
   } = useDashboardNavigation();
@@ -279,14 +284,14 @@ const DashboardSidebar = ({ sidebarOpen, onSidebarClose, onLogoutClick }) => {
               activeSection === item.id && currentView === "home";
             const badge = getNavigationItemBadge(
               item.id,
-              pendingRequests,
-              eventInvites,
-              events
+              pendingRequests, // Live friend requests
+              eventInvites, // Keep event invites from useDashboardData for now
+              events // CHANGED: Now using live events from EventContext
             );
             const hasNotification = hasNotifications(
               item.id,
-              pendingRequests,
-              eventInvites
+              pendingRequests, // Live friend requests
+              eventInvites // Keep event invites from useDashboardData for now
             );
 
             return (
@@ -354,7 +359,7 @@ const DashboardSidebar = ({ sidebarOpen, onSidebarClose, onLogoutClick }) => {
                   )}
                 </div>
 
-                {/* Events Dropdown */}
+                {/* Events Dropdown - Now using live events data */}
                 {item.id === "events" && (
                   <div
                     className={`overflow-hidden transition-all duration-700 ease-in-out ${
