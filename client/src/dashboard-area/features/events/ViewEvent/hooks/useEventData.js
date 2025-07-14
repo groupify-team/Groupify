@@ -20,21 +20,17 @@ export const useEventData = (eventId, currentUserId) => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
   const fetchInProgress = useRef(false);
   const fetchEventAndPhotos = useCallback(async () => {
     const currentKey = `${eventId}-${currentUserId}`;
     if (fetchInProgress.current) {
-      console.log("⏭️ Skipping duplicate fetch for", currentKey);
       return;
     }
-
     fetchInProgress.current = true;
     try {
       setLoading(true);
       setError(null);
       const startTime = performance.now();
-
       const [eventData, photosData] = await Promise.all([
         measureAsyncPerformance("event fetch", () => getEvent(eventId)),
         measureAsyncPerformance("Photos fetch", () => getEventPhotos(eventId)),
@@ -51,8 +47,6 @@ export const useEventData = (eventId, currentUserId) => {
 
       setEvent(updatedeventData);
       setIsAdmin(updatedeventData?.admins?.includes(currentUserId));
-
-      // Check if current user has access
       if (!updatedeventData.members.includes(currentUserId)) {
         setError("You do not have access to this event");
         setLoading(false);
@@ -69,11 +63,6 @@ export const useEventData = (eventId, currentUserId) => {
           setEventMembers(memberData);
         });
       }
-
-      const endTime = performance.now();
-      console.log(
-        `✅ event data loaded in ${(endTime - startTime).toFixed(2)}ms`
-      );
     } catch (error) {
       console.error("❌ Error fetching event data:", error);
       setError("Failed to load event data. Please try again.");
@@ -94,7 +83,6 @@ export const useEventData = (eventId, currentUserId) => {
   }, [eventId, currentUserId, fetchEventAndPhotos]);
 
   return {
-    // Data
     event,
     photos,
     eventMembers: useMemo(

@@ -187,14 +187,10 @@ export const useDashboardNavigation = () => {
     [navigate]
   );
 
-  /**
-   * Navigate to pricing page with context
-   */
   const navigateToPricing = useCallback(
     (plan = null, options = {}) => {
       const { from = "dashboard" } = options;
 
-      // Set navigation context using the navigation service
       navigationService.setContext({
         origin: from,
         returnPath: location.pathname + location.search,
@@ -202,7 +198,6 @@ export const useDashboardNavigation = () => {
         metadata: { action: "pricing", originalPlan: plan },
       });
 
-      // Navigate to pricing
       navigationService.navigateToPricing(navigate, {
         plan,
         from,
@@ -211,14 +206,10 @@ export const useDashboardNavigation = () => {
     [navigate, location]
   );
 
-  /**
-   * Navigate to billing page with context
-   */
   const navigateToBilling = useCallback(
     (plan = null, billing = "monthly", options = {}) => {
       const { from = "dashboard" } = options;
 
-      // Set navigation context using the navigation service
       navigationService.setContext({
         origin: from,
         returnPath: location.pathname + location.search,
@@ -226,7 +217,6 @@ export const useDashboardNavigation = () => {
         metadata: { action: "billing", originalPlan: plan, billing },
       });
 
-      // Navigate to billing
       navigationService.navigateToBilling(navigate, {
         plan,
         billing,
@@ -236,9 +226,6 @@ export const useDashboardNavigation = () => {
     [navigate, location]
   );
 
-  /**
-   * Handle browser back/forward buttons
-   */
   useEffect(() => {
     const handlePopState = (event) => {
       if (event.state?.dashboardNavigation) {
@@ -262,9 +249,6 @@ export const useDashboardNavigation = () => {
     return () => window.removeEventListener("popstate", handlePopState);
   }, [navigateToSection, navigateToEvent]);
 
-  /**
-   * Update URL without navigation
-   */
   const updateUrl = useCallback((params) => {
     const url = new URL(window.location);
 
@@ -289,9 +273,6 @@ export const useDashboardNavigation = () => {
     );
   }, []);
 
-  /**
-   * Get URL parameters
-   */
   const getUrlParams = useCallback(() => {
     const urlParams = new URLSearchParams(location.search);
     const params = {};
@@ -303,18 +284,12 @@ export const useDashboardNavigation = () => {
     return params;
   }, [location.search]);
 
-  /**
-   * Clear navigation history
-   */
   const clearHistory = useCallback(() => {
     setNavigationHistory([]);
     setCurrentHistoryIndex(-1);
     setBreadcrumbs([]);
   }, []);
 
-  /**
-   * Get current navigation state
-   */
   const getCurrentNavigation = useCallback(() => {
     if (
       currentHistoryIndex >= 0 &&
@@ -396,13 +371,6 @@ export const useDashboardNavigation = () => {
   ]);
 
   const preloadRoute = useCallback(async (routeType, routeId) => {}, []);
-
-  const handleNavigationReturn = useCallback((result) => {
-    if (result?.success) {
-      console.log("Navigation return successful:", result);
-    }
-  }, []);
-
   const getNavigationContext = useCallback(() => {
     return navigationService.getContext();
   }, []);
@@ -478,7 +446,6 @@ export const useDashboardNavigation = () => {
     service: {
       getContext: getNavigationContext,
       clearContext: clearNavigationContext,
-      handleReturn: handleNavigationReturn,
     },
   };
 };

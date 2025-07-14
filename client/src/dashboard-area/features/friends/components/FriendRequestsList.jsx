@@ -1,4 +1,3 @@
-// FriendRequestsList.jsx - Fixed version with debug logging
 import React from "react";
 import {
   UsersIcon,
@@ -6,6 +5,7 @@ import {
   ChevronDownIcon,
 } from "@heroicons/react/24/outline";
 import { UserCard } from "@shared/components/user";
+
 const FriendRequestsList = ({
   pendingRequests,
   showFriendRequests,
@@ -44,15 +44,13 @@ const FriendRequestsList = ({
       {showFriendRequests && (
         <div className="border-t border-gray-200/60 dark:border-slate-600/60 p-4 space-y-3">
           {pendingRequests.map((request) => {
-            console.log("🔍 Request object:", request); // Debug log
-
             return (
               <div
                 key={request.id}
                 className="bg-gray-100/80 dark:bg-slate-600/80 border border-gray-300/60 dark:border-slate-500/60 rounded-lg p-3"
               >
                 <UserCard
-                  user={request} // Use request directly since UserService includes user data in the request
+                  user={request}
                   context="request"
                   size="small"
                   className="!bg-transparent !border-none !p-0"
@@ -60,10 +58,6 @@ const FriendRequestsList = ({
                     <div className="flex gap-2">
                       <button
                         onClick={() => {
-                          console.log(
-                            "🔍 Accepting request with ID:",
-                            request.id
-                          );
                           handleAcceptRequest(request.id);
                         }}
                         className="bg-green-600 hover:bg-green-700 text-white py-1 px-3 rounded-md text-xs font-medium transition-colors"
@@ -72,10 +66,6 @@ const FriendRequestsList = ({
                       </button>
                       <button
                         onClick={() => {
-                          console.log(
-                            "🔍 Rejecting request with ID:",
-                            request.id
-                          );
                           handleRejectRequest(request.id);
                         }}
                         className="bg-gray-600 hover:bg-gray-700 dark:bg-slate-600 dark:hover:bg-slate-700 text-white py-1 px-3 rounded-md text-xs font-medium transition-colors"

@@ -82,18 +82,10 @@ const UserProfileModal = ({
     };
   }, [isOpen, user?.uid, showStats]);
 
-  // ADD THIS NEW useEffect RIGHT HERE:
-  useEffect(() => {
-    if (isOpen) {
-      console.log("📱 UserProfileModal opened on mobile!", { user, isOpen });
-    }
-  }, [isOpen, user]);
-
   if (!isOpen || !user) {
     return null;
   }
 
-  // Context-aware role checking
   const isUserCreator = context === "event" && event?.createdBy === user.uid;
   const isUserAdmin = context === "event" && event?.admins?.includes(user.uid);
   const isCurrentUserCreator =
@@ -104,7 +96,6 @@ const UserProfileModal = ({
   const isEventMember =
     context === "event" && event?.members?.includes(user.uid);
 
-  // Friend status checking
   const isFriend =
     user.__isFriend !== undefined
       ? user.__isFriend
@@ -122,7 +113,6 @@ const UserProfileModal = ({
           )
       : false;
 
-  // Helper functions
   const handleAction = async (action) => {
     setLoading(true);
     try {
@@ -136,10 +126,8 @@ const UserProfileModal = ({
     }
   };
 
-  // Add this helper function inside the component
   const formatLastSeen = (lastSeen) => {
     if (!lastSeen) return "";
-
     const now = new Date();
     const lastSeenDate = lastSeen.toDate
       ? lastSeen.toDate()
@@ -148,7 +136,6 @@ const UserProfileModal = ({
     const diffMinutes = Math.floor(diffMs / 60000);
     const diffHours = Math.floor(diffMinutes / 60);
     const diffDays = Math.floor(diffHours / 24);
-
     if (diffMinutes < 1) return "just now";
     if (diffMinutes < 60) return `${diffMinutes}m ago`;
     if (diffHours < 24) return `${diffHours}h ago`;
@@ -184,7 +171,6 @@ const UserProfileModal = ({
     setShowActionMenu(false);
   };
 
-  // Render role badge - positioned outside profile image
   const renderRoleBadge = () => {
     if (context !== "event") return null;
 
@@ -233,7 +219,6 @@ const UserProfileModal = ({
     );
   };
 
-  // Render friend actions
   const renderFriendActions = () => {
     if (isOwnProfile) return null;
 
@@ -278,7 +263,6 @@ const UserProfileModal = ({
     );
   };
 
-  // Render event-specific actions
   const renderEventActions = () => {
     if (context !== "event" || isOwnProfile) return null;
 
@@ -401,7 +385,6 @@ const UserProfileModal = ({
             {/* Close Button */}
             <button
               onClick={() => {
-                console.log("📱 Close button clicked!");
                 onClose();
               }}
               className="text-gray-400 hover:text-gray-600 dark:hover:text-white transition-colors p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-slate-700"

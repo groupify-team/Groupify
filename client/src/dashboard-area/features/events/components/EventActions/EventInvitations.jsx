@@ -1,4 +1,3 @@
-// client/src/dashboard-area/features/events/components/EventActions/EventInvitations.jsx
 import React, { useState, useEffect } from "react";
 import {
   BellIcon,
@@ -16,40 +15,24 @@ const EventInvitations = ({ userId }) => {
   const [currentEventCount, setCurrentEventCount] = useState(0);
   const [processingInvitation, setProcessingInvitation] = useState(null);
   const { getUsageInfo, showUpgradePrompt } = usePlanLimits();
-
-  // Use EventContext for real-time invitations
-  const { 
-    eventInvitations, 
-    acceptEventInvitation, 
-    rejectEventInvitation, 
-    loading 
+  const {
+    eventInvitations,
+    acceptEventInvitation,
+    rejectEventInvitation,
+    loading,
   } = useEventContext();
 
-  console.log("🎬 EventInvitations: Real-time invitations:", eventInvitations);
-
-  // Check user's current event status
   useEffect(() => {
     const checkEventStatus = async () => {
       if (userId) {
         try {
           const eventCount = await eventsService.getUserEventCount(userId);
-          console.log("🔍 EVENT COUNT DEBUG:", eventCount);
           setCurrentEventCount(eventCount);
-
           const usageInfo = getUsageInfo();
-          console.log("🔍 USAGE INFO DEBUG:", usageInfo);
-          
+
           if (usageInfo?.events) {
             const { limit } = usageInfo.events;
-            // FIXED: Allow accepting if current count is less than limit
-            // User can accept if eventCount + 1 <= limit (which is the same as eventCount < limit)
             const canAccept = limit === "unlimited" || eventCount < limit;
-            console.log("🔍 CAN ACCEPT DEBUG:", {
-              limit,
-              eventCount,
-              canAccept,
-              calculation: `${eventCount} < ${limit} = ${canAccept}`
-            });
             setCanAcceptMore(canAccept);
           }
         } catch (error) {
@@ -57,7 +40,6 @@ const EventInvitations = ({ userId }) => {
         }
       }
     };
-
     checkEventStatus();
   }, [userId, getUsageInfo]);
 
@@ -78,19 +60,12 @@ const EventInvitations = ({ userId }) => {
 
     try {
       setProcessingInvitation(invitation.id);
-      console.log("✅ EventInvitations: Accepting invitation:", invitation.id, "for event:", invitation.eventId);
-      
       await acceptEventInvitation(invitation.id, invitation.eventId);
-      
-      // Update local state
       const newEventCount = currentEventCount + 1;
       setCurrentEventCount(newEventCount);
-      
-      // Recheck if user can accept more invitations
       const usageInfo = getUsageInfo();
       if (usageInfo?.events) {
         const { limit } = usageInfo.events;
-        // FIXED: Check if new count is still under limit
         setCanAcceptMore(limit === "unlimited" || newEventCount < limit);
       }
 
@@ -108,8 +83,6 @@ const EventInvitations = ({ userId }) => {
   const handleDeclineInvitation = async (invitation) => {
     try {
       setProcessingInvitation(invitation.id);
-      console.log("❌ EventInvitations: Declining invitation:", invitation.id);
-      
       await rejectEventInvitation(invitation.id);
       toast.success("Invitation declined");
       return true;
@@ -152,7 +125,8 @@ const EventInvitations = ({ userId }) => {
             <div className="text-sm">
               <p className="font-medium text-amber-800">Event limit reached</p>
               <p className="text-amber-700">
-                You've reached your plan's event limit ({currentEventCount}/5 events). Upgrade to accept more invitations.
+                You've reached your plan's event limit ({currentEventCount}/5
+                events). Upgrade to accept more invitations.
               </p>
             </div>
           </div>
@@ -161,17 +135,8 @@ const EventInvitations = ({ userId }) => {
 
       <div className="space-y-3">
         {eventInvitations.map((invitation) => {
-          // FIXED: Debug logging for each invitation button
-          const buttonDisabled = !canAcceptMore || processingInvitation === invitation.id;
-          console.log("🔍 BUTTON DEBUG:", {
-            invitationId: invitation.id,
-            canAcceptMore,
-            currentEventCount,
-            processingInvitation,
-            buttonDisabled,
-            calculation: `!${canAcceptMore} || ${processingInvitation} === ${invitation.id}`
-          });
-
+          const buttonDisabled =
+            !canAcceptMore || processingInvitation === invitation.id;
           return (
             <div
               key={invitation.id}
@@ -180,7 +145,10 @@ const EventInvitations = ({ userId }) => {
               <div className="flex-1 flex items-center gap-3">
                 {/* Sender Avatar */}
                 <img
-                  src={invitation.senderPhotoURL || "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg"}
+                  src={
+                    invitation.senderPhotoURL ||
+                    "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg"
+                  }
                   alt={invitation.senderName}
                   className="w-8 h-8 rounded-full object-cover border border-gray-300 dark:border-gray-600"
                 />

@@ -10,7 +10,6 @@ const PublicFooter = ({
   const navigate = useNavigate();
   const handleSimpleScroll = (to) => {
     if (window.navigationInProgress || window.footerNavigationInProgress) {
-      console.log("Navigation already in progress, skipping");
       return;
     }
     window.footerNavigationInProgress = true;
@@ -87,7 +86,6 @@ const PublicFooter = ({
       </div>
     `;
 
-    // Add shimmer animation styles
     const style = document.createElement("style");
     style.textContent = `
       @keyframes loading-shimmer {
@@ -100,8 +98,6 @@ const PublicFooter = ({
     `;
     document.head.appendChild(style);
     document.body.appendChild(overlay);
-
-    // Animate overlay entrance
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         overlay.style.opacity = "1";
@@ -136,7 +132,6 @@ const PublicFooter = ({
     e.preventDefault();
     e.stopPropagation();
     const isAuthPage = to === "/signin" || to === "/signup";
-    console.log("Is auth page?", isAuthPage);
     if (isAuthPage) {
       handleAuthWithAnimation(to);
     } else {

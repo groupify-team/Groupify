@@ -19,18 +19,11 @@ const PublicLayout = ({
     handleFooterNavigation,
     footerProps: defaultFooterProps,
   } = usePublicNavigation();
-
-  console.log("Layout functions:", {
-    hasHandleFooterNavigation: !!handleFooterNavigation,
-    hasHandleSmoothNavigation: !!handleSmoothNavigation,
-  });
-
   const renderHeader = () => {
     const headerPropsWithNavigation = {
       ...headerProps,
       handleSmoothNavigation,
     };
-
     switch (headerType) {
       case "home":
         return <HomeHeader {...headerPropsWithNavigation} />;

@@ -3,22 +3,18 @@ import { Link } from "react-router-dom";
 import { useAuth } from "@auth/hooks/useAuth";
 import AccessibilityButton from "@shared/components/accessibility/AccessibilityButton";
 
-import { CameraIcon, CogIcon } from "@heroicons/react/24/outline";
+import { CameraIcon } from "@heroicons/react/24/outline";
 
 const HomeHeader = ({
   onSettingsClick,
-  handleSmoothNavigation, // This should be the logo animation function
+  handleSmoothNavigation,
   className = "",
 }) => {
   const { currentUser } = useAuth();
-
   const handleLinkClick = (path) => {
     if (handleSmoothNavigation) {
-      // Use logo animation for auth links
-      console.log("🎭 HomeHeader using logo animation for:", path);
       handleSmoothNavigation(path);
     } else {
-      // Fallback
       window.location.href = path;
     }
   };

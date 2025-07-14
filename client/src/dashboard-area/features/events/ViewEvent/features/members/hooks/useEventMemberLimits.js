@@ -78,33 +78,21 @@ export const useEventMemberLimits = (eventId, currentMemberCount = 0) => {
     [canPerformAction, currentMemberCount, planLimits, showUpgradePrompt]
   );
 
-  // Check if can invite more members
   const canInviteMembers = useCallback(
     (count = 1) => {
       const result =
         planLimits.membersPerEvent === "unlimited" ||
         currentMemberCount + count <= planLimits.membersPerEvent;
-
-      console.log("🔍 canInviteMembers check:", {
-        count,
-        currentMemberCount,
-        membersPerEvent: planLimits.membersPerEvent,
-        calculation: `${currentMemberCount} + ${count} <= ${planLimits.membersPerEvent}`,
-        result,
-      });
-
       return result;
     },
     [currentMemberCount, planLimits.membersPerEvent]
   );
 
-  // Get remaining member slots
   const getRemainingMemberSlots = useCallback(() => {
     if (planLimits.membersPerEvent === "unlimited") return "unlimited";
     return Math.max(0, planLimits.membersPerEvent - currentMemberCount);
   }, [currentMemberCount, planLimits.membersPerEvent]);
 
-  // Get member limit status
   const getMemberLimitStatus = useCallback(() => {
     if (planLimits.membersPerEvent === "unlimited") return "unlimited";
 
@@ -116,7 +104,6 @@ export const useEventMemberLimits = (eventId, currentMemberCount = 0) => {
     return "normal";
   }, [currentMemberCount, planLimits.membersPerEvent, getRemainingMemberSlots]);
 
-  // Invite a single member with validation
   const inviteMember = useCallback(
     async (userId, userEmail, options = {}) => {
       const { skipValidation = false, showToasts = true } = options;
@@ -129,7 +116,6 @@ export const useEventMemberLimits = (eventId, currentMemberCount = 0) => {
       setIsInviting(true);
 
       try {
-        // Validate invitation if not skipped
         if (!skipValidation) {
           const validation = await validateMemberInvitation(1, { showToasts });
           if (!validation.allowed) {
@@ -141,7 +127,6 @@ export const useEventMemberLimits = (eventId, currentMemberCount = 0) => {
           }
         }
 
-        // Send invitation through trips service
         const result = await eventsService.sendEventInvite(
           eventId,
           userId,
@@ -159,7 +144,6 @@ export const useEventMemberLimits = (eventId, currentMemberCount = 0) => {
 
         if (showToasts) {
           if (errorMessage.includes("limit")) {
-            // This is a plan limit error from the service
             showUpgradePrompt(errorMessage, { persistent: true });
           } else {
             toast.error(errorMessage);
@@ -180,7 +164,6 @@ export const useEventMemberLimits = (eventId, currentMemberCount = 0) => {
     [eventId, validateMemberInvitation, showUpgradePrompt]
   );
 
-  // Batch invite multiple members
   const inviteMultipleMembers = useCallback(
     async (userList, options = {}) => {
       const { showToasts = true, continueOnError = false } = options;
@@ -190,7 +173,6 @@ export const useEventMemberLimits = (eventId, currentMemberCount = 0) => {
         return { success: false, results: [] };
       }
 
-      // Validate batch invitation
       const validation = await validateMemberInvitation(userList.length, {
         showToasts,
       });

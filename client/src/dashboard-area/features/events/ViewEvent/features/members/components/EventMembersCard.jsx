@@ -223,14 +223,6 @@ const EventMembersCard = ({
     return event?.id ? getEventMembers(event.id) : [];
   }, [event?.id, getEventMembers]);
 
-  // Debug logging
-  console.log("EventMembersCard props:", {
-    eventMembersCount: eventMembers?.length,
-    eventMembers,
-    eventData: currentEvent,
-    currentUserId,
-  });
-
   // Sort members: current user first, then creator, then admins, then by join date
   const sortedMembers = useMemo(() => {
     return [...eventMembers].sort((a, b) => {

@@ -411,7 +411,6 @@ const ContactUs = () => {
       return;
     }
 
-    // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
       toast.error("Please enter a valid email address");
@@ -420,16 +419,9 @@ const ContactUs = () => {
 
     try {
       setLoading(true);
-
-      console.log("Attempting to send contact email with data:", formData);
-
-      // Send email via Firebase Function
       const sendContactEmail = httpsCallable(functions, "sendContactEmail");
       const result = await sendContactEmail(formData);
 
-      console.log("Email sent successfully:", result);
-
-      // Check if the function executed successfully
       if (result && (result.data || result.data === null)) {
         setSubmitted(true);
         toast.success("Message sent successfully!");
@@ -439,22 +431,19 @@ const ContactUs = () => {
     } catch (error) {
       console.error("Contact form error details:", error);
 
-      // Check if it's likely a successful submission despite the error
       if (
         error.code === "functions/internal" ||
         error.message?.includes("data field") ||
         error.message?.includes("server error") ||
         error.message?.includes("internal")
       ) {
-        // Treat these as successful submissions since they often indicate
-        // the function executed but didn't return the expected response format
         console.warn(
           "Function may have succeeded despite the error. Email likely sent."
         );
 
         setSubmitted(true);
         toast.success("Message sent successfully!");
-        return; // Exit here to avoid showing error toast
+        return;
       }
 
       // Handle other specific error types

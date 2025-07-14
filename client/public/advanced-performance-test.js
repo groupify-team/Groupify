@@ -3,9 +3,7 @@
  * Test the ultra-optimized EventDetailView performance
  */
 
-// Performance Test Configuration
 const PERFORMANCE_TESTS = {
-  // Test scenarios
   scenarios: {
     small: { photos: 10, members: 3 },
     medium: { photos: 50, members: 8 },
@@ -13,23 +11,18 @@ const PERFORMANCE_TESTS = {
     xlarge: { photos: 200, members: 25 },
   },
 
-  // Performance thresholds (in ms)
   thresholds: {
-    initial_load: 2000, // 2 seconds max
-    photos_render: 500, // 500ms max
-    member_load: 300, // 300ms max
-    modal_open: 100, // 100ms max
-    navigation: 50, // 50ms max
+    initial_load: 2000,
+    photos_render: 500,
+    member_load: 300,
+    modal_open: 100,
+    navigation: 50,
   },
 };
 
-// Performance measurement utilities
 const PerformanceTestSuite = {
-  // Measure initial page load
   measureInitialLoad: async () => {
     const start = performance.now();
-
-    // Wait for the main content to load
     await new Promise((resolve) => {
       const observer = new MutationObserver(() => {
         const EventHeader = document.querySelector(
@@ -38,53 +31,38 @@ const PerformanceTestSuite = {
         const photoGallery = document.querySelector(
           '[data-testid="photo-gallery"]'
         );
-
         if (EventHeader && photoGallery) {
           observer.disconnect();
           resolve();
         }
       });
-
       observer.observe(document.body, { childList: true, subtree: true });
     });
 
     const end = performance.now();
     const loadTime = end - start;
-
     return loadTime;
   },
 
-  // Measure photo rendering performance
   measurePhotoRendering: async () => {
     const start = performance.now();
-
-    // Simulate photo scroll/render
     const photoContainer = document.querySelector(
       '[data-testid="photo-container"]'
     );
     if (photoContainer) {
       photoContainer.scrollTop = photoContainer.scrollHeight;
-
-      // Wait for images to load
       await new Promise((resolve) => setTimeout(resolve, 100));
     }
-
     const end = performance.now();
     const renderTime = end - start;
-
     return renderTime;
   },
 
-  // Measure modal opening performance
   measureModalPerformance: async () => {
     const start = performance.now();
-
-    // Try to open photo modal
     const firstPhoto = document.querySelector('[data-testid="photo-item"]');
     if (firstPhoto) {
       firstPhoto.click();
-
-      // Wait for modal to appear
       await new Promise((resolve) => {
         const observer = new MutationObserver(() => {
           const modal = document.querySelector('[data-testid="photo-modal"]');
@@ -93,62 +71,39 @@ const PerformanceTestSuite = {
             resolve();
           }
         });
-
         observer.observe(document.body, { childList: true, subtree: true });
       });
     }
-
     const end = performance.now();
     const modalTime = end - start;
-
     return modalTime;
   },
 
-  // Measure navigation performance
   measureNavigation: async () => {
     const start = performance.now();
-
-    // Test tab switching
     const membersTab = document.querySelector('[data-testid="members-tab"]');
     if (membersTab) {
       membersTab.click();
-
-      // Wait for tab content to render
       await new Promise((resolve) => setTimeout(resolve, 50));
     }
-
     const end = performance.now();
     const navTime = end - start;
-
     return navTime;
   },
 
-  // Measure cache performance
   measureCachePerformance: async () => {
     const start = performance.now();
-
-    // Force a cache hit by making the same request
     if (window.apiCache) {
       const stats = window.apiCache.getStats();
-      console.log("📊 Cache Stats:", stats);
     }
-
     const end = performance.now();
     const cacheTime = end - start;
-
     return cacheTime;
   },
 
-  // Memory usage monitoring
   measureMemoryUsage: () => {
     if (performance.memory) {
       const memory = performance.memory;
-      console.log("🧠 Memory Usage:", {
-        used: `${(memory.usedJSHeapSize / 1024 / 1024).toFixed(2)} MB`,
-        total: `${(memory.totalJSHeapSize / 1024 / 1024).toFixed(2)} MB`,
-        limit: `${(memory.jsHeapSizeLimit / 1024 / 1024).toFixed(2)} MB`,
-      });
-
       return memory;
     }
     return null;
