@@ -77,9 +77,26 @@ function eventReducer(state, action) {
       };
 
     case EVENT_ACTIONS.ADD_EVENT:
+      // FIXED: Prevent duplicate events by checking if event already exists
+      const newEvent = action.payload;
+      const eventExists = state.events.some(event => event.id === newEvent.id);
+      
+      if (eventExists) {
+        console.log("🔄 Event already exists, updating instead:", newEvent.id);
+        return {
+          ...state,
+          events: state.events.map((event) =>
+            event.id === newEvent.id
+              ? { ...event, ...newEvent }
+              : event
+          ),
+        };
+      }
+
+      console.log("➕ Adding new event:", newEvent.id);
       return {
         ...state,
-        events: [...state.events, action.payload],
+        events: [...state.events, newEvent],
       };
 
     case EVENT_ACTIONS.REMOVE_EVENT:
@@ -345,8 +362,12 @@ export const EventProvider = ({ children }) => {
         // Initialize usage sync when setting up listeners
         usageSyncService.initializeSync(currentUser.uid).catch(console.warn);
 
+        // FIXED: Get initial events and set them properly
         const userEvents = await eventsService.getEvents(currentUser.uid);
+        console.log("📋 Initial events loaded:", userEvents.length);
         dispatch({ type: EVENT_ACTIONS.SET_EVENTS, payload: userEvents });
+        
+        // Set up listeners for each existing event
         userEvents.forEach((event) => {
           setupSingleEventListener(event.id);
         });
@@ -397,6 +418,7 @@ export const EventProvider = ({ children }) => {
           }
         );
 
+        // FIXED: Better handling of user events query to prevent duplicates
         const userEventsQuery = query(
           collection(db, "events"),
           where("members", "array-contains", currentUser.uid)
@@ -407,10 +429,15 @@ export const EventProvider = ({ children }) => {
             const eventData = { id: change.doc.id, ...change.doc.data() };
 
             if (change.type === "added") {
+              // FIXED: Only add if we don't already have a listener and it's not in our state
               if (!eventListeners.has(change.doc.id)) {
+                console.log("🔄 New event detected:", change.doc.id);
                 dispatch({ type: EVENT_ACTIONS.ADD_EVENT, payload: eventData });
                 setupSingleEventListener(change.doc.id);
               }
+            } else if (change.type === "modified") {
+              // Handle modifications
+              dispatch({ type: EVENT_ACTIONS.UPDATE_EVENT, payload: eventData });
             } else if (change.type === "removed") {
               const unsubscribe = eventListeners.get(change.doc.id);
               if (unsubscribe) {
@@ -435,19 +462,24 @@ export const EventProvider = ({ children }) => {
 
     const setupSingleEventListener = (eventId) => {
       if (eventListeners.has(eventId)) {
+        console.log("⚠️ Listener already exists for event:", eventId);
         return;
       }
 
+      console.log("👂 Setting up listener for event:", eventId);
       const eventDocRef = doc(db, "events", eventId);
       const unsubscribe = onSnapshot(
         eventDocRef,
         async (docSnap) => {
           if (!docSnap.exists()) {
+            console.log("🗑️ Event deleted:", eventId);
             dispatch({ type: EVENT_ACTIONS.REMOVE_EVENT, payload: eventId });
             return;
           }
           const eventData = { id: docSnap.id, ...docSnap.data() };
           dispatch({ type: EVENT_ACTIONS.UPDATE_EVENT, payload: eventData });
+          
+          // Handle members
           const memberIds = eventData.members || [];
           if (memberIds.length > 0) {
             try {
@@ -486,6 +518,7 @@ export const EventProvider = ({ children }) => {
 
     setupEventListeners();
     return () => {
+      console.log("🧹 Cleaning up EventContext listeners");
       eventListeners.forEach((unsubscribe, eventId) => {
         unsubscribe();
       });

@@ -21,27 +21,25 @@ const PresenceManager = () => {
   return null;
 };
 
-function App() {
-  const AppContent = memo(() => (
-    <Router>
-      <AuthProvider>
-        <PresenceManager /> {/* ADD THIS LINE */}
-        <FriendsProvider>
-          <EventProvider>
-            <GlobalAccessibilityProvider>
-              <FlowController>
-                <Toaster />
-                <PageTransitionWrapper>
-                  <AppRoutes />
-                </PageTransitionWrapper>
-              </FlowController>
-            </GlobalAccessibilityProvider>
-          </EventProvider>
-        </FriendsProvider>
-      </AuthProvider>
-    </Router>
-  ));
+const InnerApp = memo(() => (
+  <AuthProvider>
+    <PresenceManager />
+    <FriendsProvider>
+      <EventProvider>
+        <GlobalAccessibilityProvider>
+          <FlowController>
+            <Toaster />
+            <PageTransitionWrapper>
+              <AppRoutes />
+            </PageTransitionWrapper>
+          </FlowController>
+        </GlobalAccessibilityProvider>
+      </EventProvider>
+    </FriendsProvider>
+  </AuthProvider>
+));
 
+function App() {
   if (import.meta.env.DEV) {
     import("@shared/services/presence/PresenceService").then((module) => {
       window.PresenceService = module.PresenceService;
@@ -50,7 +48,9 @@ function App() {
 
   return (
     <ThemeProvider>
-      <AppContent />
+      <Router>
+        <InnerApp />
+      </Router>
     </ThemeProvider>
   );
 }

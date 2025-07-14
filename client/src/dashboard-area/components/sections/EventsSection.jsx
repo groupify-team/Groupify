@@ -1,8 +1,8 @@
-// Improved Events Section with horizontal cards and better mobile responsiveness
+// Improved Events Section with LIVE DATA from EventContext
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@auth/hooks/useAuth";
-import { useDashboardData } from "@dashboard/hooks/useDashboardData";
-import { useEventContext } from "@shared/contexts/EventContext";
+// CHANGED: Remove useDashboardData and use EventContext instead
+import { useEventContext } from "@shared/contexts/EventContext"; // LIVE DATA!
 import { usePlanLimits } from "@shared/hooks/usePlanLimits";
 import { useNavigate } from "react-router-dom";
 import {
@@ -34,13 +34,13 @@ const EventsSection = () => {
   const navigate = useNavigate();
   const { getUsageInfo, canPerformAction, showUpgradePrompt } = usePlanLimits();
 
-  // Get real-time data from contexts
-  const { events, loading: eventsLoading } = useDashboardData();
+  // CHANGED: Get real-time data from EventContext instead of useDashboardData
   const {
+    events,
     eventInvitations,
     acceptEventInvitation,
     rejectEventInvitation,
-    loading: invitationsLoading,
+    loading: eventsLoading,
   } = useEventContext();
 
   // Local state
@@ -65,7 +65,7 @@ const EventsSection = () => {
 
   // Get current usage info
   const usageInfo = getUsageInfo();
-  const currentEventCount = usageInfo?.events?.used || 0;
+  const currentEventCount = usageInfo?.events?.used || events.length; // Fallback to actual count
   const eventLimit = usageInfo?.events?.limit;
   const isAtLimit =
     eventLimit !== "unlimited" && currentEventCount >= eventLimit;
@@ -338,10 +338,10 @@ const EventsSection = () => {
 
         {/* Limit Banner */}
         {isAtLimit && (
-        <EventsLimitBanner
-          currentEventCount={currentEventCount}
-        />
-      )}
+          <EventsLimitBanner
+            currentEventCount={currentEventCount}
+          />
+        )}
 
         {/* Event Invitations Section */}
         {(!isMobile || activeTab === "invitations") &&
@@ -567,7 +567,8 @@ const EventsSection = () => {
           onClose={() => setShowCreateModal(false)}
           onEventCreated={() => {
             setShowCreateModal(false);
-            // Refresh events will happen automatically via context
+            // FIXED: Events will update automatically via EventContext - no manual refresh needed!
+            // The EventContext real-time listener will detect the new event and add it automatically
           }}
         />
       )}

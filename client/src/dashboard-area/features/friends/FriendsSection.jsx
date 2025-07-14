@@ -54,6 +54,8 @@ const FriendsSection = () => {
   const [filterStatus, setFilterStatus] = useState("all");
   const [activeTab, setActiveTab] = useState("friends"); // for mobile tabs
   const [isMobile, setIsMobile] = useState(false);
+  const [processingRequest, setProcessingRequest] = useState(null);
+
 
   // Check if mobile
   useEffect(() => {
@@ -143,67 +145,32 @@ const FriendsSection = () => {
     { value: "recent", label: "Recently Active" },
   ];
 
-  // Helper function to find the correct document ID
-  const findCorrectDocumentId = async (fromUserId, toUserId) => {
-    try {
-      const { collection, query, where, getDocs } = await import(
-        "firebase/firestore"
-      );
-      const { db } = await import("@shared/services/firebase/config");
-
-      const q = query(
-        collection(db, "friendRequests"),
-        where("from", "==", fromUserId),
-        where("to", "==", toUserId),
-        where("status", "==", "pending")
-      );
-
-      const querySnapshot = await getDocs(q);
-      if (!querySnapshot.empty) {
-        const doc = querySnapshot.docs[0];
-        return doc.id;
-      }
-      return null;
-    } catch (error) {
-      console.error("Error finding document ID:", error);
-      return null;
-    }
-  };
-
   // Handler functions
-  const handleAcceptRequest = async (request) => {
-    try {
-      const actualDocId = await findCorrectDocumentId(
-        request.from,
-        currentUser.uid
-      );
-      if (!actualDocId) {
-        throw new Error("Could not find the friend request document");
-      }
-      await acceptFriendRequest(actualDocId, request.from);
-      toast.success("Friend request accepted! 🎉");
-    } catch (error) {
-      console.error("Error accepting friend request:", error);
-      toast.error("Failed to accept friend request");
-    }
-  };
+const handleAcceptRequest = async (request) => {
+  try {
+    setProcessingRequest(`accept-${request.id}`);
+    await acceptFriendRequest(request.id, request.from);
+    toast.success("Friend request accepted! 🎉");
+  } catch (error) {
+    console.error("Error accepting friend request:", error);
+    toast.error("Failed to accept friend request");
+  } finally {
+    setProcessingRequest(null);
+  }
+};
 
-  const handleRejectRequest = async (request) => {
-    try {
-      const actualDocId = await findCorrectDocumentId(
-        request.from,
-        currentUser.uid
-      );
-      if (!actualDocId) {
-        throw new Error("Could not find the friend request document");
-      }
-      await rejectFriendRequest(actualDocId, request.from);
-      toast.success("Friend request declined");
-    } catch (error) {
-      console.error("Error rejecting friend request:", error);
-      toast.error("Failed to decline friend request");
-    }
-  };
+const handleRejectRequest = async (request) => {
+  try {
+    setProcessingRequest(`reject-${request.id}`);
+    await rejectFriendRequest(request.id, request.from);
+    toast.success("Friend request declined");
+  } catch (error) {
+    console.error("Error rejecting friend request:", error);
+    toast.error("Failed to decline friend request");
+  } finally {
+    setProcessingRequest(null);
+  }
+};
 
   const handleRemoveFriendLocal = async (friendUid) => {
     try {
@@ -584,19 +551,37 @@ const FriendsSection = () => {
                       <div className="flex gap-2">
                         <button
                           onClick={() => handleAcceptRequest(request)}
-                          className="flex-1 flex items-center justify-center gap-1 sm:gap-2 bg-emerald-600 hover:bg-emerald-700 text-white py-2 px-2 sm:px-3 rounded-lg text-xs font-medium transition-all"
+                          disabled={processingRequest === `accept-${request.id}` || processingRequest === `reject-${request.id}`}
+                          className="flex-1 flex items-center justify-center gap-1 sm:gap-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white py-2 px-2 sm:px-3 rounded-lg text-xs font-medium transition-all"
                         >
-                          <CheckCircleIcon className="w-3 h-3 sm:w-4 sm:h-4" />
-                          <span className="hidden sm:inline">Accept</span>
-                          <span className="sm:hidden">✓</span>
+                          {processingRequest === `accept-${request.id}` ? (
+                            <div className="w-3 h-3 sm:w-4 sm:h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          ) : (
+                            <CheckCircleIcon className="w-3 h-3 sm:w-4 sm:h-4" />
+                          )}
+                          <span className="hidden sm:inline">
+                            {processingRequest === `accept-${request.id}` ? "Accepting..." : "Accept"}
+                          </span>
+                          <span className="sm:hidden">
+                            {processingRequest === `accept-${request.id}` ? "..." : "✓"}
+                          </span>
                         </button>
                         <button
                           onClick={() => handleRejectRequest(request)}
-                          className="flex-1 flex items-center justify-center gap-1 sm:gap-2 bg-red-600 hover:bg-red-700 text-white py-2 px-2 sm:px-3 rounded-lg text-xs font-medium transition-all"
+                          disabled={processingRequest === `accept-${request.id}` || processingRequest === `reject-${request.id}`}
+                          className="flex-1 flex items-center justify-center gap-1 sm:gap-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white py-2 px-2 sm:px-3 rounded-lg text-xs font-medium transition-all"
                         >
-                          <XMarkIcon className="w-3 h-3 sm:w-4 sm:h-4" />
-                          <span className="hidden sm:inline">Decline</span>
-                          <span className="sm:hidden">✗</span>
+                          {processingRequest === `reject-${request.id}` ? (
+                            <div className="w-3 h-3 sm:w-4 sm:h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          ) : (
+                            <XMarkIcon className="w-3 h-3 sm:w-4 sm:h-4" />
+                          )}
+                          <span className="hidden sm:inline">
+                            {processingRequest === `reject-${request.id}` ? "Declining..." : "Decline"}
+                          </span>
+                          <span className="sm:hidden">
+                            {processingRequest === `reject-${request.id}` ? "..." : "✗"}
+                          </span>
                         </button>
                       </div>
                     </div>
