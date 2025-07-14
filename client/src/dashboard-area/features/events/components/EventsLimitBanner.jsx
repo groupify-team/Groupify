@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { ExclamationTriangleIcon, XMarkIcon, StarIcon } from "@heroicons/react/24/outline";
 import { useNavigate } from "react-router-dom";
 import { usePlanLimits } from "@shared/hooks/usePlanLimits";
-import navigationService from "@shared/services/navigationService";
 
 const EventsLimitBanner = ({ currentEventCount, onUpgrade }) => {
   const navigate = useNavigate();
@@ -25,35 +24,39 @@ const EventsLimitBanner = ({ currentEventCount, onUpgrade }) => {
   }
 
   const handleUpgrade = () => {
+    console.log("🚀 EventsLimitBanner: Upgrade button clicked");
+    
     if (onUpgrade) {
+      console.log("🚀 EventsLimitBanner: Using onUpgrade callback");
       onUpgrade();
     } else {
-      // Set navigation context to return to the dashboard events page
-      navigationService.setContext({
-        origin: "events-limit-banner",
-        returnPath: window.location.pathname + window.location.search,
-        section: "events",
-        metadata: { 
-          action: "upgrade_for_events",
-          currentEventCount,
-          eventLimit,
-          triggerReason: "at_limit"
-        },
-      });
-
-      // Navigate to pricing page with events upgrade context
-      navigationService.navigateToPricing(navigate, {
-        plan: subscription?.plan === "free" ? "premium" : "pro",
-        from: "events-limit-banner",
-      });
+      console.log("🚀 EventsLimitBanner: Navigating to pricing page");
+      
+      // FIXED: Direct navigation instead of using navigationService
+      const targetPlan = subscription?.plan === "free" ? "premium" : "pro";
+      const pricingUrl = `/pricing?plan=${targetPlan}&from=events-limit-banner`;
+      
+      console.log("🚀 EventsLimitBanner: Navigating to:", pricingUrl);
+      
+      // Try multiple navigation methods
+      try {
+        // Method 1: React Router navigate
+        navigate(pricingUrl);
+        console.log("✅ EventsLimitBanner: React Router navigation attempted");
+      } catch (error) {
+        console.warn("❌ EventsLimitBanner: React Router failed:", error);
+        
+        // Method 2: Fallback to window.location
+        window.location.href = pricingUrl;
+        console.log("✅ EventsLimitBanner: Window.location navigation attempted");
+      }
     }
   };
 
   const getBannerContent = () => {
-    // CHANGED: Modified to use yellow colors instead of red
     return {
       title: "Event Limit Reached",
-      message: `You've reached your ${subscription?.plan} plan limit of ${eventLimit} events.`,
+      message: `You've reached your ${subscription?.plan || 'free'} plan limit of ${eventLimit} events.`,
       action: "Upgrade Now",
       bgColor: "bg-yellow-50 dark:bg-yellow-900/20",
       borderColor: "border-yellow-200 dark:border-yellow-800",
@@ -88,7 +91,7 @@ const EventsLimitBanner = ({ currentEventCount, onUpgrade }) => {
         <div className="flex items-center gap-3 ml-4">
           <button
             onClick={handleUpgrade}
-            className={`${bannerContent.buttonColor} text-white px-4 py-2 rounded-lg text-sm font-medium transition-all hover:shadow-md flex items-center gap-2 flex-shrink-0`}
+            className={`${bannerContent.buttonColor} text-white px-4 py-2 rounded-lg text-sm font-medium transition-all hover:shadow-md flex items-center gap-2 flex-shrink-0 cursor-pointer`}
           >
             <StarIcon className="w-4 h-4" />
             {bannerContent.action}

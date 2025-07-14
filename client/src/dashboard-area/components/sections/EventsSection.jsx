@@ -338,13 +338,10 @@ const EventsSection = () => {
 
         {/* Limit Banner */}
         {isAtLimit && (
-          <EventsLimitBanner
-            currentEventCount={currentEventCount}
-            onUpgrade={() =>
-              showUpgradePrompt("Upgrade to create more events!")
-            }
-          />
-        )}
+        <EventsLimitBanner
+          currentEventCount={currentEventCount}
+        />
+      )}
 
         {/* Event Invitations Section */}
         {(!isMobile || activeTab === "invitations") &&
