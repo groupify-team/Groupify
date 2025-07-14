@@ -5,6 +5,8 @@ import {
   CameraIcon,
   ChevronRightIcon,
   XMarkIcon,
+  UserIcon,
+  Cog6ToothIcon,
 } from "@heroicons/react/24/outline";
 
 import { useDashboardLayout } from "@dashboard/hooks/useDashboardLayout";
@@ -13,13 +15,100 @@ import { useDashboardNavigation } from "@dashboard/hooks/useDashboardNavigation"
 import { useUserPresence } from "@shared/hooks/useUserPresence";
 import { useNavigate } from "react-router-dom";
 
-import { NAVIGATION_ITEMS } from "@dashboard/utils/dashboardConstants.js";
 import {
   getNavigationItemBadge,
   hasNotifications,
 } from "@dashboard/utils/dashboardHelpers";
 
-// eslint-disable-next-line no-unused-vars
+// Updated navigation items with Profile section
+const NAVIGATION_ITEMS = [
+  {
+    id: "events",
+    name: "My events",
+    icon: ({ className }) => (
+      <svg
+        className={className}
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2"
+          d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+        />
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2"
+          d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+        />
+      </svg>
+    ),
+    hasDropdown: true,
+  },
+  {
+    id: "friends",
+    name: "Friends",
+    icon: ({ className }) => (
+      <svg
+        className={className}
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2"
+          d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
+        />
+      </svg>
+    ),
+  },
+  {
+    id: "profile",
+    name: "Profile",
+    icon: UserIcon,
+  },
+  {
+    id: "settings",
+    name: "Settings",
+    icon: Cog6ToothIcon,
+  },
+];
+
+// Animated Logo Component
+const AnimatedLogo = ({ onClick, className = "" }) => {
+  return (
+    <button
+      onClick={onClick}
+      className={`flex items-center gap-3 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded-xl p-2 transition-all duration-300 cursor-pointer group ${className}`}
+    >
+      <div className="relative w-10 h-10 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center group-hover:scale-105 transition-all duration-500">
+        {/* Main Camera Icon - gentle breathing animation */}
+        <CameraIcon
+          className="w-6 h-6 text-white relative z-10 group-hover:rotate-6 transition-transform duration-700 ease-out animate-pulse"
+          style={{ animationDuration: "3s" }}
+        />
+
+        {/* Subtle glow effect */}
+        <div className="absolute inset-0 w-10 h-10 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl blur-sm opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
+
+        {/* Very gentle shimmer - only on hover */}
+        <div className="absolute inset-0 w-10 h-10 bg-gradient-to-r from-transparent via-white/10 to-transparent rounded-xl -translate-x-full group-hover:translate-x-full transition-transform duration-2000 ease-in-out opacity-0 group-hover:opacity-100"></div>
+      </div>
+      <div>
+        <h1 className="text-xl font-bold text-gray-800 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors duration-300">
+          Groupify
+        </h1>
+        <p className="text-sm text-gray-500 dark:text-gray-400">Dashboard</p>
+      </div>
+    </button>
+  );
+};
+
 const DashboardSidebar = ({ sidebarOpen, onSidebarClose, onLogoutClick }) => {
   const navigate = useNavigate();
   const {
@@ -40,7 +129,7 @@ const DashboardSidebar = ({ sidebarOpen, onSidebarClose, onLogoutClick }) => {
   // Get current user's real-time presence
   const currentUserPresence = useUserPresence(userData?.uid);
 
-  const currentUser = userData; // Assuming userData contains current user info
+  const currentUser = userData;
 
   // Get current user's status config for presence indicator
   const getCurrentUserStatusConfig = () => {
@@ -103,28 +192,15 @@ const DashboardSidebar = ({ sidebarOpen, onSidebarClose, onLogoutClick }) => {
         sidebarOpen ? "" : "-translate-x-full"
       }`}
     >
-      {/* Logo Section */}
+      {/* Logo Section with Animation */}
       <div className="p-6 border-b border-gray-200/50 dark:border-gray-700/50">
         <div className="flex items-center justify-between">
-          <button
+          <AnimatedLogo
             onClick={() => {
               navigate("/dashboard", { replace: true });
               if (isMobile) closeSidebar();
             }}
-            className="flex items-center gap-3 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded-xl p-2 transition-all duration-300 cursor-pointer group"
-          >
-            <div className="w-10 h-10 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center group-hover:scale-105 transition-all duration-300">
-              <CameraIcon className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-gray-800 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                Groupify
-              </h1>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Dashboard
-              </p>
-            </div>
-          </button>
+          />
 
           {/* Close button for mobile */}
           {isMobile && (
@@ -219,7 +295,12 @@ const DashboardSidebar = ({ sidebarOpen, onSidebarClose, onLogoutClick }) => {
                   {/* Main navigation button */}
                   <button
                     onClick={() => {
-                      navigateToSection(item.id);
+                      // Handle Profile navigation (redirect to settings for now)
+                      if (item.id === "profile") {
+                        navigateToSection("settings");
+                      } else {
+                        navigateToSection(item.id);
+                      }
                       if (isMobile) closeSidebar();
                     }}
                     className={`flex-1 flex items-center px-4 py-3 rounded-xl font-medium transition-all duration-200 ${
@@ -273,7 +354,7 @@ const DashboardSidebar = ({ sidebarOpen, onSidebarClose, onLogoutClick }) => {
                   )}
                 </div>
 
-                {/* events Dropdown */}
+                {/* Events Dropdown */}
                 {item.id === "events" && (
                   <div
                     className={`overflow-hidden transition-all duration-700 ease-in-out ${

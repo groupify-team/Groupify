@@ -22,33 +22,23 @@ import toast from "react-hot-toast";
 const NotificationsDropdown = () => {
   const { currentUser } = useAuth();
   const [processingNotification, setProcessingNotification] = useState(null);
-  
+
   // Real-time data from contexts
-  const { 
-    eventInvitations, 
-    acceptEventInvitation, 
+  const {
+    eventInvitations,
+    acceptEventInvitation,
     rejectEventInvitation,
-    events // NEW: Get events to check current count
+    events, // NEW: Get events to check current count
   } = useEventContext();
-  
-  const { 
-    pendingRequests, 
-    acceptFriendRequest, 
-    rejectFriendRequest 
-  } = useFriendsContext();
+
+  const { pendingRequests, acceptFriendRequest, rejectFriendRequest } =
+    useFriendsContext();
 
   // NEW: Add plan limits hook for enforcement
-  const { 
-    canPerformAction, 
-    showUpgradePrompt, 
-    getUsageInfo 
-  } = usePlanLimits();
+  const { canPerformAction, showUpgradePrompt, getUsageInfo } = usePlanLimits();
 
-  const {
-    refreshevents,
-    showSuccessMessage,
-    showErrorMessage,
-  } = useDashboardData();
+  const { refreshevents, showSuccessMessage, showErrorMessage } =
+    useDashboardData();
 
   // NEW: Track if user can accept more event invitations
   const [canAcceptMoreEvents, setCanAcceptMoreEvents] = useState(true);
@@ -63,7 +53,7 @@ const NotificationsDropdown = () => {
         if (usageInfo?.events) {
           const { used: eventCount, limit } = usageInfo.events;
           setCurrentEventCount(eventCount);
-          
+
           const canAccept = limit === "unlimited" || eventCount < limit;
           setCanAcceptMoreEvents(canAccept);
 
@@ -95,7 +85,9 @@ const NotificationsDropdown = () => {
       type: "friend_request",
       title: "Friend Request",
       message: `${req.displayName || req.email} wants to be your friend`,
-      avatar: req.photoURL || "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg",
+      avatar:
+        req.photoURL ||
+        "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg",
       time: req.createdAt,
       data: req,
       actions: [
@@ -118,7 +110,9 @@ const NotificationsDropdown = () => {
       type: "event_invite",
       title: "Event Invitation",
       message: `${invite.senderName} invited you to "${invite.eventTitle}"`,
-      avatar: invite.senderPhotoURL || "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg",
+      avatar:
+        invite.senderPhotoURL ||
+        "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg",
       time: invite.createdAt,
       data: invite,
       actions: [
@@ -148,12 +142,18 @@ const NotificationsDropdown = () => {
   const handleAcceptFriendRequest = async (request) => {
     try {
       setProcessingNotification(`friend-request-${request.id}`);
-      console.log("✅ NotificationsDropdown: Accepting friend request from:", request.from || request.uid);
-      
+      console.log(
+        "✅ NotificationsDropdown: Accepting friend request from:",
+        request.from || request.uid
+      );
+
       await acceptFriendRequest(request.id, request.from || request.uid);
       toast.success("Friend request accepted! 🎉");
     } catch (error) {
-      console.error("❌ NotificationsDropdown: Error accepting friend request:", error);
+      console.error(
+        "❌ NotificationsDropdown: Error accepting friend request:",
+        error
+      );
       toast.error("Failed to accept friend request");
     } finally {
       setProcessingNotification(null);
@@ -163,12 +163,18 @@ const NotificationsDropdown = () => {
   const handleRejectFriendRequest = async (request) => {
     try {
       setProcessingNotification(`friend-request-${request.id}`);
-      console.log("❌ NotificationsDropdown: Rejecting friend request from:", request.from || request.uid);
-      
+      console.log(
+        "❌ NotificationsDropdown: Rejecting friend request from:",
+        request.from || request.uid
+      );
+
       await rejectFriendRequest(request.id, request.from || request.uid);
       toast.success("Friend request declined");
     } catch (error) {
-      console.error("❌ NotificationsDropdown: Error rejecting friend request:", error);
+      console.error(
+        "❌ NotificationsDropdown: Error rejecting friend request:",
+        error
+      );
       toast.error("Failed to decline friend request");
     } finally {
       setProcessingNotification(null);
@@ -176,89 +182,111 @@ const NotificationsDropdown = () => {
   };
 
   // NEW: Enhanced event invitation handler with plan limit checking
-  const handleAcceptEventInvitation = useCallback(async (invitation) => {
-    if (processingNotification === `event-invite-${invitation.id}`) return;
+  const handleAcceptEventInvitation = useCallback(
+    async (invitation) => {
+      if (processingNotification === `event-invite-${invitation.id}`) return;
 
-    try {
-      setProcessingNotification(`event-invite-${invitation.id}`);
-      console.log("✅ NotificationsDropdown: Accepting event invitation:", invitation.id);
+      try {
+        setProcessingNotification(`event-invite-${invitation.id}`);
+        console.log(
+          "✅ NotificationsDropdown: Accepting event invitation:",
+          invitation.id
+        );
 
-      // NEW: Check plan limits before accepting
-      const usageInfo = getUsageInfo();
-      const currentUsedEvents = usageInfo?.events?.used || 0;
-      
-      const limitCheck = canPerformAction("create_event", {
-        currentEventCount: currentUsedEvents,
-      });
+        // NEW: Check plan limits before accepting
+        const usageInfo = getUsageInfo();
+        const currentUsedEvents = usageInfo?.events?.used || 0;
 
-      if (!limitCheck.allowed) {
-        console.log("🚫 NotificationsDropdown: Plan limit reached, showing upgrade prompt");
-        showUpgradePrompt(limitCheck.reason, {
-          title: "Upgrade to Accept Invitation",
-          persistent: true,
+        const limitCheck = canPerformAction("create_event", {
+          currentEventCount: currentUsedEvents,
         });
-        return;
+
+        if (!limitCheck.allowed) {
+          console.log(
+            "🚫 NotificationsDropdown: Plan limit reached, showing upgrade prompt"
+          );
+          showUpgradePrompt(limitCheck.reason, {
+            title: "Upgrade to Accept Invitation",
+            persistent: true,
+          });
+          return;
+        }
+
+        // Accept the invitation
+        await acceptEventInvitation(invitation.id, invitation.eventId);
+
+        // Update local state using usage info (more reliable than manual counting)
+        const updatedUsageInfo = getUsageInfo();
+        const newEventCount =
+          updatedUsageInfo?.events?.used || currentEventCount + 1;
+        setCurrentEventCount(newEventCount);
+
+        // Check if user can still accept more events
+        const { limit } = updatedUsageInfo?.events || {};
+        const stillCanAccept = limit === "unlimited" || newEventCount < limit;
+        setCanAcceptMoreEvents(stillCanAccept);
+
+        // Show success message with usage info
+        const finalUsageInfo = getUsageInfo();
+        toast.success(
+          `Joined "${invitation.eventTitle}"! (${newEventCount}/${
+            finalUsageInfo?.events?.limit === "unlimited"
+              ? "∞"
+              : finalUsageInfo?.events?.limit
+          } events) 🎉`
+        );
+
+        console.log(
+          "✅ NotificationsDropdown: Event invitation accepted successfully"
+        );
+      } catch (error) {
+        console.error(
+          "❌ NotificationsDropdown: Error accepting event invitation:",
+          error
+        );
+
+        // Check if error is related to plan limits
+        if (
+          error.message?.includes("limit") ||
+          error.message?.includes("upgrade")
+        ) {
+          showUpgradePrompt(error.message, {
+            title: "Upgrade Required",
+            persistent: true,
+          });
+        } else {
+          toast.error("Failed to accept event invitation");
+        }
+      } finally {
+        setProcessingNotification(null);
       }
-
-      // Accept the invitation
-      await acceptEventInvitation(invitation.id, invitation.eventId);
-      
-      // Update local state using usage info (more reliable than manual counting)
-      const updatedUsageInfo = getUsageInfo();
-      const newEventCount = updatedUsageInfo?.events?.used || (currentEventCount + 1);
-      setCurrentEventCount(newEventCount);
-
-      // Check if user can still accept more events
-      const { limit } = updatedUsageInfo?.events || {};
-      const stillCanAccept = limit === "unlimited" || newEventCount < limit;
-      setCanAcceptMoreEvents(stillCanAccept);
-
-      // Show success message with usage info
-      const finalUsageInfo = getUsageInfo();
-      toast.success(
-        `Joined "${invitation.eventTitle}"! (${newEventCount}/${
-          finalUsageInfo?.events?.limit === "unlimited" ? "∞" : finalUsageInfo?.events?.limit
-        } events) 🎉`
-      );
-      
-      console.log("✅ NotificationsDropdown: Event invitation accepted successfully");
-    } catch (error) {
-      console.error("❌ NotificationsDropdown: Error accepting event invitation:", error);
-      
-      // Check if error is related to plan limits
-      if (
-        error.message?.includes("limit") ||
-        error.message?.includes("upgrade")
-      ) {
-        showUpgradePrompt(error.message, {
-          title: "Upgrade Required",
-          persistent: true,
-        });
-      } else {
-        toast.error("Failed to accept event invitation");
-      }
-    } finally {
-      setProcessingNotification(null);
-    }
-  }, [
-    processingNotification,
-    canPerformAction,
-    events?.length,
-    showUpgradePrompt,
-    acceptEventInvitation,
-    currentEventCount,
-    getUsageInfo,
-  ]);
+    },
+    [
+      processingNotification,
+      canPerformAction,
+      events?.length,
+      showUpgradePrompt,
+      acceptEventInvitation,
+      currentEventCount,
+      getUsageInfo,
+    ]
+  );
 
   const handleRejectEventInvitation = async (invitation) => {
     try {
       setProcessingNotification(`event-invite-${invitation.id}`);
-      console.log("❌ NotificationsDropdown: Rejecting event invitation:", invitation.id);
-      
+      console.log(
+        "❌ NotificationsDropdown: Rejecting event invitation:",
+        invitation.id
+      );
+
       await rejectEventInvitation(invitation.id);
       toast.success("Event invitation declined");
     } catch (error) {
-      console.error("❌ NotificationsDropdown: Error rejecting event invitation:", error);
+      console.error(
+        "❌ NotificationsDropdown: Error rejecting event invitation:",
+        error
+      );
       toast.error("Failed to decline event invitation");
     } finally {
       setProcessingNotification(null);
@@ -288,10 +316,18 @@ const NotificationsDropdown = () => {
   };
 
   // NEW: Check if there are event invitations that can't be accepted due to limits
-  const hasBlockedEventInvites = eventInvitations.length > 0 && !canAcceptMoreEvents;
+  const hasBlockedEventInvites =
+    eventInvitations.length > 0 && !canAcceptMoreEvents;
 
   return (
-    <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-2xl shadow-2xl border border-gray-200/50 dark:border-gray-700/50 z-50 max-h-96 overflow-hidden max-w-[calc(100vw-1rem)] mr-2 sm:mr-0">
+    <div
+      className="absolute right-0 top-full mt-2 w-80 sm:w-96 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 z-50 max-h-96 overflow-hidden max-w-[calc(100vw-1rem)]"
+      style={{
+        transformOrigin: "top right",
+        right: "-8px", // Align to right edge
+      }}
+    >
+      {" "}
       {/* Header */}
       <div className="p-4 border-b border-gray-100/50 dark:border-gray-700/50 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20">
         <div className="flex items-center justify-between">
@@ -306,7 +342,6 @@ const NotificationsDropdown = () => {
           )}
         </div>
       </div>
-
       {/* NEW: Plan limit warning banner */}
       {hasBlockedEventInvites && (
         <div className="p-3 bg-amber-50 dark:bg-amber-900/20 border-b border-amber-200/50 dark:border-amber-700/50">
@@ -317,13 +352,13 @@ const NotificationsDropdown = () => {
                 Event limit reached
               </p>
               <p className="text-amber-700 dark:text-amber-300">
-                Upgrade to accept event invitations ({currentEventCount}/{getUsageInfo()?.events?.limit || 5} events)
+                Upgrade to accept event invitations ({currentEventCount}/
+                {getUsageInfo()?.events?.limit || 5} events)
               </p>
             </div>
           </div>
         </div>
       )}
-
       {/* Notifications Content */}
       <div className="max-h-80 overflow-y-auto">
         {sortedNotifications.length === 0 ? (
@@ -384,13 +419,15 @@ const NotificationsDropdown = () => {
                     </p>
 
                     {/* NEW: Plan limit notice for disabled event invitations */}
-                    {notification.type === "event_invite" && !canAcceptMoreEvents && (
-                      <div className="mb-2 p-2 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
-                        <p className="text-xs text-amber-700 dark:text-amber-300">
-                          Event limit reached. Upgrade to accept this invitation.
-                        </p>
-                      </div>
-                    )}
+                    {notification.type === "event_invite" &&
+                      !canAcceptMoreEvents && (
+                        <div className="mb-2 p-2 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
+                          <p className="text-xs text-amber-700 dark:text-amber-300">
+                            Event limit reached. Upgrade to accept this
+                            invitation.
+                          </p>
+                        </div>
+                      )}
 
                     {/* Action Buttons */}
                     <div className="flex gap-2">
@@ -402,7 +439,7 @@ const NotificationsDropdown = () => {
                             action.action();
                           }}
                           disabled={
-                            processingNotification === notification.id || 
+                            processingNotification === notification.id ||
                             action.disabled // NEW: Respect the disabled state
                           }
                           className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${
@@ -413,8 +450,11 @@ const NotificationsDropdown = () => {
                               : "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50 hover:scale-105"
                           }`}
                           title={
-                            action.disabled && notification.type === "event_invite"
-                              ? `Event limit reached (${currentEventCount}/${getUsageInfo()?.events?.limit || 5}) - upgrade to accept`
+                            action.disabled &&
+                            notification.type === "event_invite"
+                              ? `Event limit reached (${currentEventCount}/${
+                                  getUsageInfo()?.events?.limit || 5
+                                }) - upgrade to accept`
                               : ""
                           }
                         >
@@ -436,7 +476,6 @@ const NotificationsDropdown = () => {
           </div>
         )}
       </div>
-
       {/* Footer */}
       {sortedNotifications.length > 0 && (
         <div className="p-3 border-t border-gray-100/50 dark:border-gray-700/50 bg-gray-50/50 dark:bg-gray-800/30">

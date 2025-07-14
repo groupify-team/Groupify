@@ -87,7 +87,13 @@ const StatusDropdown = ({ currentUser, isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="absolute right-0 top-12 w-64 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 z-50 overflow-hidden transform transition-all duration-300 ease-out animate-slide-in-scale">
+    <div
+      className="absolute right-0 top-12 w-64 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 z-50 overflow-hidden transform transition-all duration-300 ease-out animate-slide-in-scale"
+      style={{
+        transformOrigin: "top right",
+        right: "-8px", // Align to right edge
+      }}
+    >
       {/* Header */}
       <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-4 py-3">
         <h3 className="text-white font-semibold text-sm">Set your status</h3>
@@ -389,22 +395,34 @@ const DashboardHeader = ({
                   )}
                 </button>
 
-                {/* FIXED: Use the actual NotificationsDropdown component */}
-                {notificationsOpen && <NotificationsDropdown />}
+                {/* FIXED: Use the actual NotificationsDropdown component with proper positioning */}
+                {notificationsOpen && (
+                  <div style={{ transformOrigin: "top right", right: "-8px" }}>
+                    <NotificationsDropdown />
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* Enhanced User Avatar with Presence - SIMPLIFIED */}
+            {/* MERGED: Single User Profile for both Mobile and Desktop */}
             <div className="flex items-center gap-2">
-              {/* User Avatar with Status Dropdown */}
-              <div className="relative" ref={statusDropdownRef}>
-                {/* Clickable Profile Picture with Arrow */}
+              <div
+                className="relative"
+                ref={currentIsMobile ? mobileUserMenuRef : statusDropdownRef}
+              >
+                {/* Single Profile Button - handles both mobile menu and desktop status */}
                 <button
-                  onClick={() => setStatusDropdownOpen(!statusDropdownOpen)}
+                  onClick={() => {
+                    if (currentIsMobile) {
+                      setMobileUserMenuOpen(!mobileUserMenuOpen);
+                    } else {
+                      setStatusDropdownOpen(!statusDropdownOpen);
+                    }
+                  }}
                   className="flex items-center gap-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg p-1 transition-colors group"
-                  title="Change status"
+                  title={currentIsMobile ? "Open menu" : "Change status"}
                 >
-                  {/* Profile Picture with Smaller Presence Circle */}
+                  {/* Profile Picture with Presence Circle */}
                   <div className="relative">
                     <img
                       src={getProfileImageUrl(userData)}
@@ -415,116 +433,131 @@ const DashboardHeader = ({
                           "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg";
                       }}
                     />
-
-                    {/* SMALLER Current User Presence Indicator */}
                     <div
                       className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 ${currentUserStatusConfig.color} border border-white dark:border-gray-800 rounded-full ${currentUserStatusConfig.pulse} shadow-sm`}
                       title={currentUserStatusConfig.title}
                     ></div>
                   </div>
 
-                  {/* Arrow Next to Profile Picture */}
+                  {/* Arrow - show on ALL screen sizes */}
                   <ChevronDownIcon className="w-4 h-4 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-all duration-200" />
                 </button>
 
-                {/* Status Dropdown - Only shows when clicking profile */}
-                <StatusDropdown
-                  currentUser={userData}
-                  isOpen={statusDropdownOpen}
-                  onClose={() => setStatusDropdownOpen(false)}
-                />
-              </div>
+                {/* Status Dropdown - Desktop only */}
+                {!currentIsMobile && (
+                  <StatusDropdown
+                    currentUser={userData}
+                    isOpen={statusDropdownOpen}
+                    onClose={() => setStatusDropdownOpen(false)}
+                  />
+                )}
 
-              {/* Mobile User Menu - Keep existing for mobile */}
-              <div className="relative md:hidden" ref={mobileUserMenuRef}>
-                <img
-                  src={getProfileImageUrl(userData)}
-                  alt="Profile"
-                  onClick={() => {
-                    if (currentIsMobile) {
-                      setMobileUserMenuOpen((prev) => !prev);
-                    }
-                  }}
-                  className={`w-8 h-8 rounded-full object-cover border border-gray-200 dark:border-gray-600 transition-all duration-200 ${
-                    currentIsMobile
-                      ? "cursor-pointer hover:ring-2 hover:ring-indigo-500"
-                      : "cursor-default"
-                  }`}
-                  onError={(e) => {
-                    e.target.src =
-                      "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg";
-                  }}
-                />
-
-                {/* Mobile User Menu */}
+                {/* Mobile User Menu - UPDATED with proper positioning and arrow */}
                 {mobileUserMenuOpen && currentIsMobile && (
                   <div
-                    className="absolute right-0 top-10 w-64 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 z-50 overflow-hidden transform transition-all duration-300 ease-out"
+                    className="absolute right-0 top-12 w-64 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 z-50 overflow-hidden transform transition-all duration-300 ease-out"
                     style={{
-                      animation: "slideInFromTop 0.3s ease-out",
                       transformOrigin: "top right",
+                      right: "-8px", // Align to right edge
                     }}
                   >
                     {/* Header */}
                     <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-4 py-3">
-                      <div className="flex items-center gap-3">
-                        <div className="relative">
-                          <img
-                            src={getProfileImageUrl(userData)}
-                            alt="Profile"
-                            className="w-10 h-10 rounded-full object-cover border-2 border-white/30"
-                            onError={(e) => {
-                              e.target.src =
-                                "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg";
-                            }}
-                          />
-                          {/* Mobile Presence Indicator */}
-                          <div
-                            className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 ${currentUserStatusConfig.color} border-2 border-white rounded-full ${currentUserStatusConfig.pulse} shadow-lg`}
-                          ></div>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-white font-semibold text-sm truncate">
-                            {userData?.displayName || "User"}
-                          </p>
-                          <p className="text-white/70 text-xs truncate">
-                            {userData?.email}
-                          </p>
-                          <p className="text-white/60 text-xs capitalize">
-                            {currentUserPresence.loading
-                              ? "Loading..."
-                              : currentUserPresence.status || "offline"}
-                          </p>
-                        </div>
-                      </div>
+                      <h3 className="text-white font-semibold text-sm">
+                        Set your status
+                      </h3>
+                      <p className="text-white/70 text-xs">
+                        Current:{" "}
+                        {currentUserPresence.loading
+                          ? "Loading..."
+                          : currentUserPresence.status
+                              ?.charAt(0)
+                              .toUpperCase() +
+                              currentUserPresence.status?.slice(1) || "Offline"}
+                      </p>
                     </div>
 
-                    {/* Menu Items */}
-                    <div className="p-2">
-                      <button
-                        onClick={() => {
-                          setMobileUserMenuOpen(false);
-                        }}
-                        className="w-full flex items-center gap-3 px-3 py-2 text-left text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors text-sm"
-                      >
-                        <UserIcon className="w-4 h-4" />
-                        <span>View Profile</span>
-                      </button>
-
-                      {/* Settings in mobile menu */}
-                      {onSettingsClick && (
+                    {/* Status Options - Same as Desktop */}
+                    <div className="p-2 space-y-1">
+                      {[
+                        {
+                          status: "online",
+                          label: "Online",
+                          color: "bg-emerald-500",
+                          description: "Available for chat",
+                        },
+                        {
+                          status: "away",
+                          label: "Away",
+                          color: "bg-amber-500",
+                          description: "Not at my desk",
+                        },
+                        {
+                          status: "busy",
+                          label: "Busy",
+                          color: "bg-red-500",
+                          description: "Do not disturb",
+                        },
+                        {
+                          status: "offline",
+                          label: "Appear Offline",
+                          color: "bg-gray-400",
+                          description: "Hidden from others",
+                        },
+                      ].map((option) => (
                         <button
-                          onClick={() => {
-                            setMobileUserMenuOpen(false);
-                            onSettingsClick();
-                          }}
-                          className="w-full flex items-center gap-3 px-3 py-2 text-left text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors text-sm"
-                        >
-                          <AccessibilityIcon className="w-4 h-4" />
-                          <span>Accessibility</span>
-                        </button>
-                      )}
+                          key={option.status}
+                          onClick={async () => {
+                            try {
+                              const { PresenceService } = await import(
+                                "@shared/services/presence/PresenceService"
+                              );
 
+                              if (option.status === "offline") {
+                                await PresenceService.setUserOffline(
+                                  userData.uid
+                                );
+                              } else {
+                                await PresenceService.updateUserStatus(
+                                  userData.uid,
+                                  option.status
+                                );
+                              }
+
+                              console.log(
+                                `✅ Status changed to: ${option.status}`
+                              );
+                              setMobileUserMenuOpen(false);
+                            } catch (error) {
+                              console.error("❌ Error changing status:", error);
+                            }
+                          }}
+                          className={`w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors text-sm ${
+                            currentUserPresence.status === option.status
+                              ? "bg-gray-100 dark:bg-gray-700"
+                              : ""
+                          }`}
+                        >
+                          <div
+                            className={`w-3 h-3 ${option.color} rounded-full ${
+                              option.status === "online" ? "animate-pulse" : ""
+                            }`}
+                          ></div>
+                          <div className="flex-1">
+                            <p className="font-medium text-gray-900 dark:text-white">
+                              {option.label}
+                            </p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                              {option.description}
+                            </p>
+                          </div>
+                          {currentUserPresence.status === option.status && (
+                            <div className="w-2 h-2 bg-indigo-500 rounded-full"></div>
+                          )}
+                        </button>
+                      ))}
+
+                      {/* Divider */}
                       <div className="border-t border-gray-200 dark:border-gray-700 my-2"></div>
 
                       {/* Logout Button */}
@@ -534,10 +567,15 @@ const DashboardHeader = ({
                             setMobileUserMenuOpen(false);
                             onLogoutClick();
                           }}
-                          className="w-full flex items-center gap-3 px-3 py-2 text-left text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors text-sm"
+                          className="w-full flex items-center gap-3 px-3 py-2.5 text-left text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors text-sm"
                         >
-                          <ArrowRightOnRectangleIcon className="w-4 h-4" />
-                          <span>Logout</span>
+                          <ArrowRightOnRectangleIcon className="w-5 h-5" />
+                          <div className="flex-1">
+                            <p className="font-medium">Logout</p>
+                            <p className="text-xs text-red-500 dark:text-red-400">
+                              Sign out of your account
+                            </p>
+                          </div>
                         </button>
                       )}
                     </div>

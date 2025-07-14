@@ -16,7 +16,6 @@ import { usePlanLimits } from "../../../../shared/hooks/usePlanLimits";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "@shared/services/firebase/config";
 import subscriptionService from "@shared/services/subscriptionService";
-import UpgradePlanModal from "./UpgradePlanModal";
 
 const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
   // ===== HOOKS SETUP =====
@@ -623,15 +622,6 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
           </div>
         </div>
       )}
-
-      {/* ===== UPGRADE MODAL ===== */}
-      <UpgradePlanModal
-        isOpen={showUpgradeModal}
-        onClose={handleUpgradeModalClose}
-        currentPlan={isFreePlan ? "free" : isPremiumPlan ? "premium" : "pro"}
-        currentEventCount={currentEventCount}
-        eventLimit={planFeatures?.events || 5}
-      />
     </div>
   );
 };
