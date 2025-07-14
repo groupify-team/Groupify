@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@auth/hooks/useAuth";
 import { usePresence } from "@shared/hooks/usePresence";
@@ -6,8 +6,33 @@ import { usePresence } from "@shared/hooks/usePresence";
 const ProtectedRoute = ({ children }) => {
   const { currentUser, loading } = useAuth();
   const location = useLocation();
+  const presenceControls = usePresence();
 
-  usePresence();
+  // DEBUG: Log user state changes
+  useEffect(() => {
+    if (import.meta.env.DEV) {
+      console.log("🔒 [PROTECTED ROUTE] State change:", {
+        hasUser: !!currentUser,
+        userId: currentUser?.uid,
+        loading,
+        location: location.pathname,
+      });
+    }
+  }, [currentUser, loading, location.pathname]);
+
+  // DEBUG: Log presence controls availability
+  useEffect(() => {
+    if (import.meta.env.DEV && currentUser?.uid) {
+      console.log(
+        "🫀 [PROTECTED ROUTE] Presence initialized for:",
+        currentUser.uid
+      );
+      console.log(
+        "🫀 [PROTECTED ROUTE] Available controls:",
+        Object.keys(presenceControls)
+      );
+    }
+  }, [currentUser?.uid, presenceControls]);
 
   if (loading) {
     return (
@@ -23,6 +48,9 @@ const ProtectedRoute = ({ children }) => {
   }
 
   if (!currentUser) {
+    if (import.meta.env.DEV) {
+      console.log("🔒 [PROTECTED ROUTE] No user - redirecting to signin");
+    }
     return <Navigate to="/signin" state={{ from: location }} replace />;
   }
 
