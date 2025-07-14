@@ -17,7 +17,6 @@ const cors = require("cors")({
 });
 admin.initializeApp();
 
-// Send Contact Email Function (Gen 2 HTTP)
 exports.sendContactEmail = onRequest(
   {
     memory: "512MiB",
@@ -26,14 +25,10 @@ exports.sendContactEmail = onRequest(
   },
   async (req, res) => {
     return cors(req, res, async () => {
-      console.log("sendContactEmail called with data:", req.body.data);
-
       if (req.method !== "POST") {
         res.status(405).send("Method Not Allowed");
         return;
       }
-
-      // Validate input data
       if (!req.body || typeof req.body.data !== "object") {
         res.status(400).json({
           success: false,
@@ -44,7 +39,6 @@ exports.sendContactEmail = onRequest(
 
       const { name, email, subject, message, category } = req.body.data;
 
-      // Validate required fields
       if (!name || !email || !subject || !message) {
         res.status(400).json({
           success: false,
@@ -53,7 +47,6 @@ exports.sendContactEmail = onRequest(
         return;
       }
 
-      // Validate email format
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(email)) {
         res.status(400).json({
@@ -63,7 +56,6 @@ exports.sendContactEmail = onRequest(
         return;
       }
 
-      // Simple HTML template
       const htmlTemplate = `
       <!DOCTYPE html>
       <html>
@@ -131,7 +123,6 @@ exports.sendContactEmail = onRequest(
     `;
 
       try {
-        // Create transporter with better Gmail configuration
         const transporter = nodemailer.createTransport({
           service: "gmail",
           host: "smtp.gmail.com",
@@ -147,10 +138,7 @@ exports.sendContactEmail = onRequest(
           authMethod: "PLAIN",
         });
 
-        // Test the transporter first
-        console.log("Testing email transporter...");
         await transporter.verify();
-        console.log("Email transporter verified successfully");
 
         const mailOptions = {
           from: `"Groupify Contact Form" <${process.env.EMAIL_USER}>`,
@@ -160,9 +148,7 @@ exports.sendContactEmail = onRequest(
           replyTo: email,
         };
 
-        console.log("Sending email...");
         const result = await transporter.sendMail(mailOptions);
-        console.log("Email sent successfully:", result.messageId);
 
         res.status(200).json({
           success: true,
@@ -172,7 +158,6 @@ exports.sendContactEmail = onRequest(
       } catch (error) {
         console.error("Email sending error:", error);
 
-        // Provide specific error messages
         let errorMessage = `Failed to send email: ${error.message}`;
         if (error.code === "EAUTH" || error.responseCode === 535) {
           errorMessage =
@@ -191,7 +176,6 @@ exports.sendContactEmail = onRequest(
   }
 );
 
-// Send Verification Email Function (Gen 2 HTTP)
 exports.sendVerificationEmail = onRequest(
   {
     memory: "256MiB",
@@ -200,8 +184,6 @@ exports.sendVerificationEmail = onRequest(
   },
   async (req, res) => {
     return cors(req, res, async () => {
-      console.log("sendVerificationEmail function called");
-
       if (req.method !== "POST") {
         res.status(405).send("Method Not Allowed");
         return;
@@ -217,7 +199,6 @@ exports.sendVerificationEmail = onRequest(
         return;
       }
 
-      // Validate email format
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(email)) {
         res.status(400).json({
@@ -228,7 +209,6 @@ exports.sendVerificationEmail = onRequest(
       }
 
       try {
-        // Check if user exists
         let user;
         try {
           user = await admin.auth().getUserByEmail(email);
@@ -243,7 +223,6 @@ exports.sendVerificationEmail = onRequest(
           throw error;
         }
 
-        // Check if email is already verified
         if (user.emailVerified) {
           res.status(200).json({
             success: true,
@@ -252,12 +231,10 @@ exports.sendVerificationEmail = onRequest(
           return;
         }
 
-        // Generate new verification code
         const verificationCode = Math.floor(
           100000 + Math.random() * 900000
         ).toString();
 
-        // Store verification code in Firestore
         await admin
           .firestore()
           .collection("verificationCodes")
@@ -267,12 +244,11 @@ exports.sendVerificationEmail = onRequest(
             email: email,
             name: name,
             createdAt: admin.firestore.FieldValue.serverTimestamp(),
-            expiresAt: new Date(Date.now() + 10 * 60 * 1000), // 10 minutes
+            expiresAt: new Date(Date.now() + 10 * 60 * 1000),
             used: false,
             verified: false,
           });
 
-        // Create email transporter
         const transporter = nodemailer.createTransport({
           service: "gmail",
           host: "smtp.gmail.com",
@@ -288,7 +264,6 @@ exports.sendVerificationEmail = onRequest(
           authMethod: "PLAIN",
         });
 
-        // Email template
         const htmlTemplate = `
         <!DOCTYPE html>
         <html>
@@ -331,16 +306,13 @@ exports.sendVerificationEmail = onRequest(
         </html>
       `;
 
-        // Send email
         const mailOptions = {
           from: `"Groupify Team" <${process.env.EMAIL_USER}>`,
           to: email,
           subject: "🎉 Welcome to Groupify! Verify your email",
           html: htmlTemplate,
         };
-
         await transporter.sendMail(mailOptions);
-        console.log(`Verification email sent to: ${email}`);
 
         res.status(200).json({
           success: true,
@@ -357,9 +329,6 @@ exports.sendVerificationEmail = onRequest(
   }
 );
 
-// Add these missing functions to your index.js file:
-
-// Send Password Reset Email Function (Gen 2 HTTP)
 exports.sendPasswordResetEmail = onRequest(
   {
     memory: "256MiB",
@@ -368,8 +337,6 @@ exports.sendPasswordResetEmail = onRequest(
   },
   async (req, res) => {
     return cors(req, res, async () => {
-      console.log("sendPasswordResetEmail function called");
-
       if (req.method !== "POST") {
         res.status(405).send("Method Not Allowed");
         return;
@@ -411,12 +378,10 @@ exports.sendPasswordResetEmail = onRequest(
           throw error;
         }
 
-        // Generate reset token (similar to verification code)
         const resetToken =
           Math.random().toString(36).substring(2, 15) +
           Math.random().toString(36).substring(2, 15);
 
-        // Store reset token in Firestore
         await admin
           .firestore()
           .collection("passwordResets")
@@ -429,7 +394,6 @@ exports.sendPasswordResetEmail = onRequest(
             used: false,
           });
 
-        // Create email transporter (same as verification email)
         const transporter = nodemailer.createTransport({
           service: "gmail",
           host: "smtp.gmail.com",
@@ -445,7 +409,6 @@ exports.sendPasswordResetEmail = onRequest(
           authMethod: "PLAIN",
         });
 
-        // Email template (similar to verification email style)
         const htmlTemplate = `
         <!DOCTYPE html>
         <html>
@@ -486,7 +449,6 @@ exports.sendPasswordResetEmail = onRequest(
         </html>
       `;
 
-        // Send email
         const mailOptions = {
           from: `"Groupify Security" <${process.env.EMAIL_USER}>`,
           to: email,
@@ -495,7 +457,6 @@ exports.sendPasswordResetEmail = onRequest(
         };
 
         await transporter.sendMail(mailOptions);
-        console.log(`Password reset email sent to: ${email}`);
 
         res.status(200).json({
           success: true,
@@ -512,7 +473,6 @@ exports.sendPasswordResetEmail = onRequest(
   }
 );
 
-// Verify Reset Token Function (Gen 2 HTTP)
 exports.verifyResetToken = onRequest(
   {
     memory: "256MiB",
@@ -520,8 +480,6 @@ exports.verifyResetToken = onRequest(
   },
   async (req, res) => {
     return cors(req, res, async () => {
-      console.log("verifyResetToken function called");
-
       if (req.method !== "POST") {
         res.status(405).send("Method Not Allowed");
         return;
@@ -593,7 +551,6 @@ exports.verifyResetToken = onRequest(
   }
 );
 
-// Reset Password Function (Gen 2 HTTP)
 exports.resetPassword = onRequest(
   {
     memory: "256MiB",
@@ -601,8 +558,6 @@ exports.resetPassword = onRequest(
   },
   async (req, res) => {
     return cors(req, res, async () => {
-      console.log("resetPassword function called");
-
       if (req.method !== "POST") {
         res.status(405).send("Method Not Allowed");
         return;
@@ -618,7 +573,6 @@ exports.resetPassword = onRequest(
         return;
       }
 
-      // Validate password strength
       if (newPassword.length < 6) {
         res.status(400).json({
           success: false,
@@ -628,7 +582,6 @@ exports.resetPassword = onRequest(
       }
 
       try {
-        // Verify token first
         const doc = await admin
           .firestore()
           .collection("passwordResets")
@@ -660,13 +613,11 @@ exports.resetPassword = onRequest(
           return;
         }
 
-        // Update user password
         const user = await admin.auth().getUserByEmail(email);
         await admin.auth().updateUser(user.uid, {
           password: newPassword,
         });
 
-        // Mark token as used
         await admin.firestore().collection("passwordResets").doc(email).update({
           used: true,
         });
@@ -686,7 +637,6 @@ exports.resetPassword = onRequest(
   }
 );
 
-// Enable Google Auth Function (Gen 2 HTTP)
 exports.enableGoogleAuth = onRequest(
   {
     memory: "256MiB",
@@ -694,8 +644,6 @@ exports.enableGoogleAuth = onRequest(
   },
   async (req, res) => {
     return cors(req, res, async () => {
-      console.log("enableGoogleAuth function called");
-
       if (req.method !== "POST") {
         res.status(405).send("Method Not Allowed");
         return;
@@ -712,15 +660,11 @@ exports.enableGoogleAuth = onRequest(
       }
 
       try {
-        // Update user in Firebase Auth to mark email as verified
         await admin.auth().updateUser(uid, {
           emailVerified: true,
           displayName: displayName,
           photoURL: photoURL,
         });
-
-        console.log(`Google auth enabled for user: ${email}`);
-
         res.status(200).json({
           success: true,
           message: "Google authentication enabled",
@@ -736,7 +680,6 @@ exports.enableGoogleAuth = onRequest(
   }
 );
 
-// Send Job Application Email Function (Gen 2 HTTP)
 exports.sendJobApplicationEmail = onRequest(
   {
     memory: "512MiB",
@@ -745,8 +688,6 @@ exports.sendJobApplicationEmail = onRequest(
   },
   async (req, res) => {
     return cors(req, res, async () => {
-      console.log("sendJobApplicationEmail called with data:", req.body.data);
-
       if (req.method !== "POST") {
         res.status(405).send("Method Not Allowed");
         return;
@@ -852,7 +793,6 @@ exports.sendJobApplicationEmail = onRequest(
     `;
 
       try {
-        // Create transporter with better Gmail configuration
         const transporter = nodemailer.createTransport({
           service: "gmail",
           host: "smtp.gmail.com",
@@ -887,11 +827,6 @@ exports.sendJobApplicationEmail = onRequest(
         }
 
         const result = await transporter.sendMail(mailOptions);
-        console.log(
-          "Job application email sent successfully:",
-          result.messageId
-        );
-
         res.status(200).json({
           success: true,
           message: "Application submitted successfully",
@@ -908,7 +843,6 @@ exports.sendJobApplicationEmail = onRequest(
   }
 );
 
-// Check Email Verification Function (Gen 2 HTTP)
 exports.checkEmailVerification = onRequest(
   {
     memory: "128MiB",
@@ -916,15 +850,11 @@ exports.checkEmailVerification = onRequest(
   },
   async (req, res) => {
     return cors(req, res, async () => {
-      console.log("checkEmailVerification function called");
-
       if (req.method !== "POST") {
         res.status(405).send("Method Not Allowed");
         return;
       }
-
       const { email } = req.body.data || req.body;
-
       if (!email) {
         res.status(400).json({
           success: false,
@@ -932,7 +862,6 @@ exports.checkEmailVerification = onRequest(
         });
         return;
       }
-
       try {
         const user = await admin.auth().getUserByEmail(email);
 
@@ -962,15 +891,11 @@ exports.checkUserExists = onRequest(
   },
   async (req, res) => {
     return cors(req, res, async () => {
-      console.log("checkUserExists function called");
-
       if (req.method !== "POST") {
         res.status(405).send("Method Not Allowed");
         return;
       }
-
       const { email } = req.body.data || req.body;
-
       if (!email) {
         res.status(400).json({
           success: false,
@@ -978,7 +903,6 @@ exports.checkUserExists = onRequest(
         });
         return;
       }
-
       try {
         await admin.auth().getUserByEmail(email);
 
@@ -1007,7 +931,6 @@ exports.checkUserExists = onRequest(
   }
 );
 
-// Verify Email Code Function (Gen 2 HTTP)
 exports.verifyEmailCode = onRequest(
   {
     memory: "256MiB",
@@ -1015,15 +938,11 @@ exports.verifyEmailCode = onRequest(
   },
   async (req, res) => {
     return cors(req, res, async () => {
-      console.log("verifyEmailCode function called");
-
       if (req.method !== "POST") {
         res.status(405).send("Method Not Allowed");
         return;
       }
-
       const { email, verificationCode } = req.body.data || req.body;
-
       if (!email || !verificationCode) {
         res.status(400).json({
           success: false,
@@ -1033,7 +952,6 @@ exports.verifyEmailCode = onRequest(
       }
 
       try {
-        // Get verification code from Firestore
         const doc = await admin
           .firestore()
           .collection("verificationCodes")
@@ -1078,21 +996,16 @@ exports.verifyEmailCode = onRequest(
           return;
         }
 
-        // Mark user as verified in Firebase Auth
         const user = await admin.auth().getUserByEmail(email);
         await admin.auth().updateUser(user.uid, {
           emailVerified: true,
         });
 
-        // Mark verification code as used
         await admin
           .firestore()
           .collection("verificationCodes")
           .doc(email)
           .update({ used: true });
-
-        console.log(`Email verified successfully for: ${email}`);
-
         res.status(200).json({
           success: true,
           message: "Email verified successfully",
@@ -1108,7 +1021,6 @@ exports.verifyEmailCode = onRequest(
   }
 );
 
-// Enhanced plan limits validation
 const PLAN_LIMITS = {
   free: {
     events: 5,
@@ -1319,7 +1231,6 @@ exports.validatePhotoUpload = onRequest(
   }
 );
 
-// Enhanced member invitation validation function
 exports.validateMemberInvitation = onRequest(
   {
     memory: "256MiB",
@@ -1343,11 +1254,8 @@ exports.validateMemberInvitation = onRequest(
       }
 
       try {
-        // Get user's plan
         const userPlan = await getUserPlan(userId);
         const planLimits = PLAN_LIMITS[userPlan] || PLAN_LIMITS.free;
-
-        // Get event data to check current member count
         const eventDoc = await admin
           .firestore()
           .collection("events")
@@ -1366,7 +1274,6 @@ exports.validateMemberInvitation = onRequest(
         const currentMembers = eventData.members || [];
         const currentMemberCount = currentMembers.length;
 
-        // Check member limit
         if (planLimits.membersPerEvent !== "unlimited") {
           if (currentMemberCount + inviteeCount > planLimits.membersPerEvent) {
             res.status(403).json({
@@ -1381,7 +1288,6 @@ exports.validateMemberInvitation = onRequest(
           }
         }
 
-        // Validation passed
         res.status(200).json({
           success: true,
           message: "Member invitation validation passed",
@@ -1468,7 +1374,6 @@ exports.validateEventCreation = onRequest(
   }
 );
 
-// Enhanced event invitation acceptance with plan validation
 exports.acceptEventInvitation = onRequest(
   {
     memory: "256MiB",
@@ -1492,7 +1397,6 @@ exports.acceptEventInvitation = onRequest(
       }
 
       try {
-        // Get the invitation details
         const invitationDoc = await admin
           .firestore()
           .collection("eventInvites")
@@ -1506,10 +1410,7 @@ exports.acceptEventInvitation = onRequest(
           });
           return;
         }
-
         const invitation = invitationDoc.data();
-
-        // Check if invitation is still pending
         if (invitation.status !== "pending") {
           res.status(400).json({
             success: false,
@@ -1518,12 +1419,10 @@ exports.acceptEventInvitation = onRequest(
           return;
         }
 
-        // Get user's plan and current usage
         const userPlan = await getUserPlan(userId);
         const planLimits = PLAN_LIMITS[userPlan] || PLAN_LIMITS.free;
         const userUsage = await getUserUsage(userId);
 
-        // Check if user has reached their event limit
         if (
           planLimits.events !== "unlimited" &&
           userUsage.events >= planLimits.events
@@ -1539,7 +1438,6 @@ exports.acceptEventInvitation = onRequest(
           return;
         }
 
-        // Get the event to check member limits
         const eventDoc = await admin
           .firestore()
           .collection("events")
@@ -1557,7 +1455,6 @@ exports.acceptEventInvitation = onRequest(
         const event = eventDoc.data();
         const currentMembers = event.members || [];
 
-        // Check if user is already a member
         if (currentMembers.includes(userId)) {
           res.status(400).json({
             success: false,
@@ -1566,12 +1463,10 @@ exports.acceptEventInvitation = onRequest(
           return;
         }
 
-        // Get event creator's plan to check member limits
         const eventCreatorPlan = await getUserPlan(event.createdBy);
         const eventPlanLimits =
           PLAN_LIMITS[eventCreatorPlan] || PLAN_LIMITS.free;
 
-        // Check if adding this member would exceed the event's member limit
         if (
           eventPlanLimits.membersPerEvent !== "unlimited" &&
           currentMembers.length >= eventPlanLimits.membersPerEvent
@@ -1587,9 +1482,7 @@ exports.acceptEventInvitation = onRequest(
           return;
         }
 
-        // Use a transaction to ensure data consistency
         await admin.firestore().runTransaction(async (transaction) => {
-          // Add user to event members
           transaction.update(
             admin.firestore().collection("events").doc(invitation.eventId),
             {
@@ -1598,8 +1491,6 @@ exports.acceptEventInvitation = onRequest(
               updatedAt: admin.firestore.FieldValue.serverTimestamp(),
             }
           );
-
-          // Update invitation status
           transaction.update(
             admin.firestore().collection("eventInvitations").doc(invitationId),
             {
@@ -1608,8 +1499,6 @@ exports.acceptEventInvitation = onRequest(
               updatedAt: admin.firestore.FieldValue.serverTimestamp(),
             }
           );
-
-          // Update user's event count in their profile
           transaction.update(
             admin.firestore().collection("users").doc(userId),
             {
@@ -1635,8 +1524,6 @@ exports.acceptEventInvitation = onRequest(
     });
   }
 );
-
-// Enhanced photo upload with server-side validation
 exports.uploadPhotoWithValidation = onRequest(
   {
     memory: "1GiB",
@@ -1661,11 +1548,8 @@ exports.uploadPhotoWithValidation = onRequest(
       }
 
       try {
-        // Get user's plan
         const userPlan = await getUserPlan(userId);
         const planLimits = PLAN_LIMITS[userPlan] || PLAN_LIMITS.free;
-
-        // Get event data
         const eventDoc = await admin
           .firestore()
           .collection("events")
@@ -1679,10 +1563,7 @@ exports.uploadPhotoWithValidation = onRequest(
           });
           return;
         }
-
         const eventData = eventDoc.data();
-
-        // Check if user is a member of the event
         if (!eventData.members || !eventData.members.includes(userId)) {
           res.status(403).json({
             success: false,
@@ -1690,10 +1571,7 @@ exports.uploadPhotoWithValidation = onRequest(
           });
           return;
         }
-
         const currentEventPhotos = eventData.photoCount || 0;
-
-        // Validate against per-event photo limit
         if (planLimits.photosPerEvent !== "unlimited") {
           if (currentEventPhotos >= planLimits.photosPerEvent) {
             res.status(403).json({
@@ -1704,8 +1582,6 @@ exports.uploadPhotoWithValidation = onRequest(
             return;
           }
         }
-
-        // Validate against storage limit
         if (planLimits.storageBytes !== Number.MAX_SAFE_INTEGER) {
           const userUsage = await getUserUsage(userId);
           const newStorageUsed = userUsage.storage + (fileSize || 0);
@@ -1720,7 +1596,6 @@ exports.uploadPhotoWithValidation = onRequest(
           }
         }
 
-        // Create photo document
         const photoRef = admin
           .firestore()
           .collection("events")
@@ -1728,21 +1603,14 @@ exports.uploadPhotoWithValidation = onRequest(
           .collection("photos")
           .doc();
         const photoId = photoRef.id;
-
-        // In a real implementation, you would upload the photo to Firebase Storage here
-        // For now, we'll just store metadata
         await admin.firestore().runTransaction(async (transaction) => {
-          // Add photo document
           transaction.set(photoRef, {
             id: photoId,
             fileName: fileName,
             uploadedBy: userId,
             uploadedAt: admin.firestore.FieldValue.serverTimestamp(),
             size: fileSize || 0,
-            // In real implementation, add: storageUrl, thumbnailUrl, etc.
           });
-
-          // Update event photo count
           transaction.update(
             admin.firestore().collection("events").doc(eventId),
             {
@@ -1769,8 +1637,6 @@ exports.uploadPhotoWithValidation = onRequest(
     });
   }
 );
-
-// Get user's plan limits and usage
 exports.getUserPlanInfo = onRequest(
   {
     memory: "256MiB",
@@ -1797,8 +1663,6 @@ exports.getUserPlanInfo = onRequest(
         const userPlan = await getUserPlan(userId);
         const planLimits = PLAN_LIMITS[userPlan] || PLAN_LIMITS.free;
         const userUsage = await getUserUsage(userId);
-
-        // Calculate percentages and remaining amounts
         const calculateUsageInfo = (used, limit) => {
           if (limit === "unlimited" || limit === Number.MAX_SAFE_INTEGER) {
             return {
@@ -1840,8 +1704,6 @@ exports.getUserPlanInfo = onRequest(
           },
           recommendations: [],
         };
-
-        // Add upgrade recommendations
         if (result.usage.events.percentage > 80) {
           result.recommendations.push({
             type: "events",
@@ -1873,7 +1735,6 @@ exports.getUserPlanInfo = onRequest(
   }
 );
 
-// Utility function to format bytes
 function formatBytes(bytes, decimals = 2) {
   if (bytes === 0) return "0 Bytes";
 
@@ -1886,7 +1747,6 @@ function formatBytes(bytes, decimals = 2) {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i];
 }
 
-// Enhanced event invitation with member limit validation
 exports.sendEventInvitationWithValidation = onRequest(
   {
     memory: "256MiB",
@@ -1912,7 +1772,6 @@ exports.sendEventInvitationWithValidation = onRequest(
       }
 
       try {
-        // Get event data
         const eventDoc = await admin
           .firestore()
           .collection("events")
@@ -1929,7 +1788,6 @@ exports.sendEventInvitationWithValidation = onRequest(
 
         const eventData = eventDoc.data();
 
-        // Check if inviter is a member or admin
         if (!eventData.members || !eventData.members.includes(inviterUserId)) {
           res.status(403).json({
             success: false,
@@ -1938,14 +1796,12 @@ exports.sendEventInvitationWithValidation = onRequest(
           return;
         }
 
-        // Get event creator's plan to check member limits
         const creatorPlan = await getUserPlan(eventData.createdBy);
         const planLimits = PLAN_LIMITS[creatorPlan] || PLAN_LIMITS.free;
         const currentMemberCount = eventData.members
           ? eventData.members.length
           : 0;
 
-        // Check member limit
         if (planLimits.membersPerEvent !== "unlimited") {
           if (currentMemberCount >= planLimits.membersPerEvent) {
             res.status(403).json({
@@ -1960,7 +1816,6 @@ exports.sendEventInvitationWithValidation = onRequest(
           }
         }
 
-        // Create invitation
         const invitationRef = admin
           .firestore()
           .collection("eventInvitations")
@@ -1998,7 +1853,6 @@ exports.sendEventInvitationWithValidation = onRequest(
   }
 );
 
-// Set global options for all functions
 setGlobalOptions({
   region: "us-central1",
   memory: "512MiB",
