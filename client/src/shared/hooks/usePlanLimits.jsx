@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useAuth } from "@auth/hooks/useAuth";
-import { useNavigate } from "react-router-dom";
 import navigationService from "@shared/services/navigationService";
 import subscriptionService from "@shared/services/subscriptionService";
+import usageSyncService from "@shared/services/UsageSyncService";
 import { toast } from "@shared/utils/toast";
 
 export const usePlanLimits = () => {
@@ -11,6 +11,12 @@ export const usePlanLimits = () => {
   const [usage, setUsage] = useState(null);
   const [loading, setLoading] = useState(true);
   const [recommendations, setRecommendations] = useState([]);
+  const [syncStatus, setSyncStatus] = useState({
+    synced: false,
+    lastSync: null,
+    error: null,
+    corrected: false,
+  });
 
   // Core plan limits that match your pricing page EXACTLY
   const CORE_LIMITS = useMemo(
@@ -23,7 +29,7 @@ export const usePlanLimits = () => {
       },
       premium: {
         events: 50,
-        photosPerEvent: 200, // Updated to match pricing page
+        photosPerEvent: 200,
         membersPerEvent: 20,
         storageGB: 50,
       },
@@ -46,6 +52,19 @@ export const usePlanLimits = () => {
   const loadSubscriptionData = useCallback(async () => {
     try {
       setLoading(true);
+
+      // Initialize usage sync if not already done
+      if (currentUser?.uid) {
+        try {
+          await usageSyncService.syncUsageWithFirebase(currentUser.uid);
+        } catch (syncError) {
+          console.warn(
+            "Usage sync failed, continuing with stored data:",
+            syncError
+          );
+        }
+      }
+
       const currentSubscription = subscriptionService.getCurrentSubscription();
       setSubscription(currentSubscription);
       setUsage(currentSubscription.usage);
@@ -56,7 +75,7 @@ export const usePlanLimits = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [currentUser?.uid]);
 
   useEffect(() => {
     if (currentUser) {
@@ -434,6 +453,7 @@ export const usePlanLimits = () => {
     usage,
     loading,
     recommendations,
+    syncStatus,
     // Actions
     canPerformAction,
     enforceLimit,
@@ -455,6 +475,33 @@ export const usePlanLimits = () => {
     needsUpgrade: recommendations.length > 0,
     // Limit constants for easy access
     CORE_LIMITS,
+    // Force sync method for debugging
+    forceSync: useCallback(
+      async () => {
+        if (!currentUser?.uid) return;
+        try {
+          const result = await usageSyncService.forceSyncUsageWithFirebase(
+            currentUser.uid
+          );
+          setSyncStatus({
+            synced: true,
+            lastSync: new Date().toISOString(),
+            corrected: result.corrected,
+          });
+          await loadSubscriptionData();
+          return result;
+        } catch (error) {
+          console.error("Force sync failed:", error);
+          setSyncStatus({
+            synced: false,
+            lastSync: null,
+            error: error.message,
+          });
+          throw error;
+        }
+      },
+      [currentUser?.uid, loadSubscriptionData]
+    ),
   };
 };
 

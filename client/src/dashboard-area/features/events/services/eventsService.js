@@ -18,6 +18,7 @@ import { db } from "@shared/services/firebase/config";
 import { getEventPhotos } from "@shared/services/firebase/storage";
 import { getUserProfile } from "@firebase-services/users";
 import subscriptionService from "@shared/services/subscriptionService";
+import usageSyncService from "@shared/services/UsageSyncService";
 
 export const eventsService = {
   async getEvents(userId) {
@@ -98,9 +99,10 @@ export const eventsService = {
         },
       });
 
-      subscriptionService.updateUsage({
-        events: currentEventCount + 1,
-      });
+      // Trigger usage sync after creating event
+      setTimeout(() => {
+        usageSyncService.syncUsageWithFirebase(eventData.createdBy).catch(console.warn);
+      }, 2000);
 
       return newEvent;
     } catch (error) {
@@ -125,12 +127,11 @@ export const eventsService = {
     try {
       const event = await getEvent(eventId);
       await deleteEvent(eventId);
-      const subscription = subscriptionService.getCurrentSubscription();
-      const usage = subscription.usage;
-      subscriptionService.updateUsage({
-        events: Math.max(0, (usage.events?.used || 0) - 1),
-        photos: Math.max(0, (usage.photos.used || 0) - (event.photoCount || 0)),
-      });
+      
+      // Trigger usage sync after deleting event
+      setTimeout(() => {
+        usageSyncService.syncUsageWithFirebase(event.createdBy).catch(console.warn);
+      }, 2000);
 
       return true;
     } catch (error) {
@@ -400,6 +401,11 @@ export const eventsService = {
         lastPhotoUpload:
           increment > 0 ? new Date().toISOString() : event.lastPhotoUpload,
       });
+
+      // Trigger usage sync after photo count change
+      setTimeout(() => {
+        usageSyncService.syncUsageWithFirebase(event.createdBy).catch(console.warn);
+      }, 3000);
 
       return newPhotoCount;
     } catch (error) {

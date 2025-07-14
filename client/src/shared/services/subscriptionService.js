@@ -210,46 +210,57 @@ class SubscriptionService {
     try {
       const stored = localStorage.getItem("groupify_usage");
       if (stored) {
-        const usage = JSON.parse(stored);
-        console.log("📊 SubscriptionService: Retrieved stored usage:", usage);
-        return usage;
+        return JSON.parse(stored);
       }
     } catch (error) {
       console.warn("Failed to get stored usage:", error);
     }
 
-    const defaultUsage = {
+    return {
       events: 0,
       photos: 0,
       storage: 0,
     };
-    console.log("📊 SubscriptionService: Using default usage:", defaultUsage);
-    return defaultUsage;
-  }
-
-  getDefaultUsage() {
-    return this.calculateUsage({ plan: "free" });
   }
 
   updateUsage(updates) {
     const currentUsage = this.getStoredUsage();
     const newUsage = { ...currentUsage, ...updates };
 
-    console.log("📊 SubscriptionService: Updating usage:", {
-      current: currentUsage,
-      updates: updates,
-      new: newUsage
-    });
-
     try {
       localStorage.setItem("groupify_usage", JSON.stringify(newUsage));
       this.notifyListeners("usageUpdated", newUsage);
-      console.log("✅ SubscriptionService: Usage updated successfully");
       return newUsage;
     } catch (error) {
-      console.error("❌ SubscriptionService: Failed to update usage:", error);
+      console.error("Failed to update usage:", error);
       return currentUsage;
     }
+  }
+
+  syncUsageWithActualData(actualCounts) {
+    const currentUsage = this.getStoredUsage();
+    const syncedUsage = {
+      events: actualCounts.events || currentUsage.events,
+      photos: actualCounts.photos || currentUsage.photos,
+      storage: actualCounts.storage || currentUsage.storage,
+    };
+
+    if (JSON.stringify(currentUsage) !== JSON.stringify(syncedUsage)) {
+      try {
+        localStorage.setItem("groupify_usage", JSON.stringify(syncedUsage));
+        this.notifyListeners("usageUpdated", syncedUsage);
+        return syncedUsage;
+      } catch (error) {
+        console.error("Failed to sync usage:", error);
+        return currentUsage;
+      }
+    }
+
+    return currentUsage;
+  }
+
+  getDefaultUsage() {
+    return this.calculateUsage({ plan: "free" });
   }
 
   // ADDED: Method to sync usage with actual data
@@ -642,16 +653,5 @@ class SubscriptionService {
 }
 
 const subscriptionService = new SubscriptionService();
-
-// ADDED: Global debug functions for development
-if (typeof window !== 'undefined') {
-  window.groupifyDebug = {
-    subscriptionService,
-    resetUsage: () => subscriptionService.resetUsage(),
-    syncUsage: (counts) => subscriptionService.syncUsageWithActualData(counts),
-    checkUsage: () => console.log("Current usage:", subscriptionService.getStoredUsage()),
-    checkSubscription: () => console.log("Current subscription:", subscriptionService.getCurrentSubscription())
-  };
-}
 
 export default subscriptionService;
