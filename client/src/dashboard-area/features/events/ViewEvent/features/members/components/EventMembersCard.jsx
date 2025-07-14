@@ -19,6 +19,27 @@ import {
 const MemberCardWithPresence = ({ member, currentUserId, onClick, role }) => {
   const memberPresence = useUserPresence(member.uid);
 
+  // Helper function to format last seen
+  const formatLastSeen = (lastSeen) => {
+    if (!lastSeen) return "";
+
+    const now = new Date();
+    const lastSeenDate = lastSeen.toDate
+      ? lastSeen.toDate()
+      : new Date(lastSeen);
+    const diffMs = now - lastSeenDate;
+    const diffMinutes = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMinutes / 60);
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffMinutes < 1) return "just now";
+    if (diffMinutes < 60) return `${diffMinutes}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+
+    return lastSeenDate.toLocaleDateString();
+  };
+
   // Get status indicator config
   const getStatusConfig = () => {
     if (memberPresence.loading) {
@@ -105,27 +126,6 @@ const MemberCardWithPresence = ({ member, currentUserId, onClick, role }) => {
     }
 
     return null;
-  };
-
-  // Helper function to format last seen
-  const formatLastSeen = (lastSeen) => {
-    if (!lastSeen) return "";
-
-    const now = new Date();
-    const lastSeenDate = lastSeen.toDate
-      ? lastSeen.toDate()
-      : new Date(lastSeen);
-    const diffMs = now - lastSeenDate;
-    const diffMinutes = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMinutes / 60);
-    const diffDays = Math.floor(diffHours / 24);
-
-    if (diffMinutes < 1) return "just now";
-    if (diffMinutes < 60) return `${diffMinutes}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
-    if (diffDays < 7) return `${diffDays}d ago`;
-
-    return lastSeenDate.toLocaleDateString();
   };
 
   return (

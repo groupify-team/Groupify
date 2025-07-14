@@ -262,6 +262,7 @@ const DashboardLayout = ({ children }) => {
           style={{
             marginLeft: !isMobile && sidebarOpen ? "256px" : "0px",
             paddingTop: "56px", // Height of the header
+            height: "100vh", // Full viewport height
           }}
         >
           {/* Header */}
@@ -274,7 +275,12 @@ const DashboardLayout = ({ children }) => {
           />
 
           {/* Main Content with Skeleton */}
-          <main className="flex-1 overflow-y-auto">
+          <main
+            className="flex-1 overflow-y-auto"
+            style={{
+              height: isMobile ? "calc(100vh - 112px)" : "calc(100vh - 56px)", // Account for header and mobile bottom nav
+            }}
+          >
             <div className="w-full px-2 sm:px-4 lg:px-8 max-w-full py-2 sm:py-4">
               <DashboardSkeleton />
             </div>
@@ -332,6 +338,7 @@ const DashboardLayout = ({ children }) => {
         style={{
           marginLeft: !isMobile && sidebarOpen ? "256px" : "0px",
           paddingTop: "56px", // Height of the header
+          height: "100vh", // Full viewport height
         }}
       >
         {/* Header */}
@@ -343,9 +350,15 @@ const DashboardLayout = ({ children }) => {
           isMobile={isMobile}
         />
 
-        {/* Main Content */}
-        <main className="flex-1 overflow-y-auto">
-          <div className="w-full px-2 sm:px-4 lg:px-8 max-w-full py-2 sm:py-4">
+        {/* Main Content with proper scrolling */}
+        <main
+          className="flex-1 overflow-y-auto"
+          style={{
+            height: isMobile ? "calc(100vh - 120px)" : "calc(100vh - 56px)", // Slightly more space for mobile
+            marginBottom: isMobile ? "56px" : "0px", // Add margin to account for bottom nav
+          }}
+        >
+          <div className="w-full px-2 sm:px-4 lg:px-8 max-w-full py-2 sm:py-4 pb-2">
             {children}
           </div>
         </main>
