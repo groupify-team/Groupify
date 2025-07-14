@@ -358,7 +358,7 @@ const DashboardHeader = ({
           )}
 
           {/* Right Section */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
             {/* Accessibility & Notifications */}
             <div className="flex items-center gap-2">
               {/* Accessibility Button */}
@@ -394,63 +394,67 @@ const DashboardHeader = ({
               </div>
             </div>
 
-            {/* Enhanced User Avatar with Presence and Status Dropdown */}
+            {/* Enhanced User Avatar with Presence - SIMPLIFIED */}
             <div className="flex items-center gap-2">
-              {/* Status Dropdown for Desktop */}
-              {!currentIsMobile && (
-                <div className="relative" ref={statusDropdownRef}>
-                  <button
-                    onClick={() => setStatusDropdownOpen(!statusDropdownOpen)}
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors group"
-                    title="Change status"
-                  >
+              {/* User Avatar with Status Dropdown */}
+              <div className="relative" ref={statusDropdownRef}>
+                {/* Clickable Profile Picture with Arrow */}
+                <button
+                  onClick={() => setStatusDropdownOpen(!statusDropdownOpen)}
+                  className="flex items-center gap-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg p-1 transition-colors group"
+                  title="Change status"
+                >
+                  {/* Profile Picture with Smaller Presence Circle */}
+                  <div className="relative">
+                    <img
+                      src={getProfileImageUrl(userData)}
+                      alt="Profile"
+                      className="w-8 h-8 rounded-full object-cover border border-gray-200 dark:border-gray-600 transition-all duration-200"
+                      onError={(e) => {
+                        e.target.src =
+                          "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg";
+                      }}
+                    />
+
+                    {/* SMALLER Current User Presence Indicator */}
                     <div
-                      className={`w-3 h-3 ${currentUserStatusConfig.color} rounded-full ${currentUserStatusConfig.pulse} ${currentUserStatusConfig.ring} ring-2 shadow-sm`}
+                      className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 ${currentUserStatusConfig.color} border border-white dark:border-gray-800 rounded-full ${currentUserStatusConfig.pulse} shadow-sm`}
+                      title={currentUserStatusConfig.title}
                     ></div>
-                    <span className="text-sm text-gray-600 dark:text-gray-400 group-hover:text-gray-800 dark:group-hover:text-gray-200 capitalize">
-                      {currentUserPresence.loading
-                        ? "..."
-                        : currentUserPresence.status || "offline"}
-                    </span>
-                    <ChevronDownIcon className="w-4 h-4 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-transform duration-200" />
-                  </button>
+                  </div>
 
-                  <StatusDropdown
-                    currentUser={userData}
-                    isOpen={statusDropdownOpen}
-                    onClose={() => setStatusDropdownOpen(false)}
-                  />
-                </div>
-              )}
+                  {/* Arrow Next to Profile Picture */}
+                  <ChevronDownIcon className="w-4 h-4 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-all duration-200" />
+                </button>
 
-              {/* User Avatar with Mobile Menu */}
-              <div className="relative" ref={mobileUserMenuRef}>
-                <div className="relative">
-                  <img
-                    src={getProfileImageUrl(userData)}
-                    alt="Profile"
-                    onClick={() => {
-                      if (currentIsMobile) {
-                        setMobileUserMenuOpen((prev) => !prev);
-                      }
-                    }}
-                    className={`w-8 h-8 rounded-full object-cover border border-gray-200 dark:border-gray-600 transition-all duration-200 ${
-                      currentIsMobile
-                        ? "cursor-pointer hover:ring-2 hover:ring-indigo-500"
-                        : "cursor-default"
-                    }`}
-                    onError={(e) => {
-                      e.target.src =
-                        "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg";
-                    }}
-                  />
+                {/* Status Dropdown - Only shows when clicking profile */}
+                <StatusDropdown
+                  currentUser={userData}
+                  isOpen={statusDropdownOpen}
+                  onClose={() => setStatusDropdownOpen(false)}
+                />
+              </div>
 
-                  {/* Current User Presence Indicator */}
-                  <div
-                    className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 ${currentUserStatusConfig.color} border-2 border-white dark:border-gray-800 rounded-full ${currentUserStatusConfig.ring} ring-2 ${currentUserStatusConfig.pulse} shadow-lg`}
-                    title={currentUserStatusConfig.title}
-                  ></div>
-                </div>
+              {/* Mobile User Menu - Keep existing for mobile */}
+              <div className="relative md:hidden" ref={mobileUserMenuRef}>
+                <img
+                  src={getProfileImageUrl(userData)}
+                  alt="Profile"
+                  onClick={() => {
+                    if (currentIsMobile) {
+                      setMobileUserMenuOpen((prev) => !prev);
+                    }
+                  }}
+                  className={`w-8 h-8 rounded-full object-cover border border-gray-200 dark:border-gray-600 transition-all duration-200 ${
+                    currentIsMobile
+                      ? "cursor-pointer hover:ring-2 hover:ring-indigo-500"
+                      : "cursor-default"
+                  }`}
+                  onError={(e) => {
+                    e.target.src =
+                      "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg";
+                  }}
+                />
 
                 {/* Mobile User Menu */}
                 {mobileUserMenuOpen && currentIsMobile && (

@@ -5,6 +5,7 @@ import {
   CameraIcon,
   UserCircleIcon,
 } from "@heroicons/react/24/outline";
+import { useUserPresence } from "@shared/hooks/useUserPresence";
 
 import NotificationSection from "./NotificationSection";
 import PrivacySection from "./PrivacySection";
@@ -17,6 +18,65 @@ const AccountSection = ({
   toggleSetting,
   settingsLoading,
 }) => {
+  // Get current user's real-time presence
+  const currentUserPresence = useUserPresence(
+    userData?.uid || currentUser?.uid
+  );
+
+  // Get current user's status config for presence indicator
+  const getCurrentUserStatusConfig = () => {
+    if (currentUserPresence.loading) {
+      return {
+        color: "bg-gray-400",
+        innerDot: "bg-white",
+        pulse: "animate-pulse",
+        title: "Loading status...",
+      };
+    }
+
+    if (currentUserPresence.isOnline) {
+      switch (currentUserPresence.status) {
+        case "online":
+          return {
+            color: "bg-emerald-500",
+            innerDot: "bg-white",
+            pulse: "animate-pulse",
+            title: "Online",
+          };
+        case "away":
+          return {
+            color: "bg-amber-500",
+            innerDot: "bg-white",
+            pulse: "",
+            title: "Away",
+          };
+        case "busy":
+          return {
+            color: "bg-red-500",
+            innerDot: "bg-white",
+            pulse: "",
+            title: "Busy",
+          };
+        default:
+          return {
+            color: "bg-emerald-500",
+            innerDot: "bg-white",
+            pulse: "animate-pulse",
+            title: "Online",
+          };
+      }
+    }
+
+    return {
+      color: "bg-gray-400",
+      innerDot: "bg-white",
+      pulse: "",
+      title: "Offline",
+    };
+  };
+
+  const statusConfig = getCurrentUserStatusConfig();
+
   return (
     <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6 border border-white/20 dark:border-gray-700/50">
       <div className="flex items-center justify-center gap-2 mb-4 sm:mb-6">
@@ -49,9 +109,14 @@ const AccountSection = ({
                 </div>
               </div>
 
-              {/* Online status indicator */}
-              <div className="absolute -bottom-2 -right-2 w-7 h-7 sm:w-8 sm:h-8 lg:w-9 lg:h-9 bg-green-500 border-3 sm:border-4 border-white dark:border-gray-800 rounded-full shadow-lg flex items-center justify-center">
-                <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-white rounded-full animate-pulse"></div>
+              {/* UPDATED: Real-Time Presence Status Indicator */}
+              <div
+                className={`absolute -bottom-2 -right-2 w-7 h-7 sm:w-8 sm:h-8 lg:w-9 lg:h-9 ${statusConfig.color} border-3 sm:border-4 border-white dark:border-gray-800 rounded-full shadow-lg flex items-center justify-center`}
+                title={statusConfig.title}
+              >
+                <div
+                  className={`w-2.5 h-2.5 sm:w-3 sm:h-3 ${statusConfig.innerDot} rounded-full ${statusConfig.pulse}`}
+                ></div>
               </div>
             </div>
           </div>
@@ -65,6 +130,18 @@ const AccountSection = ({
               <p className="text-gray-600 dark:text-gray-300 text-sm sm:text-base lg:text-lg mt-1 break-all sm:break-normal">
                 {userData?.email || currentUser?.email}
               </p>
+
+              {/* Real-Time Status Text */}
+              <div className="flex items-center justify-center sm:justify-start gap-2 mt-2">
+                <div
+                  className={`w-2 h-2 ${statusConfig.color} rounded-full ${statusConfig.pulse}`}
+                ></div>
+                <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 capitalize">
+                  {currentUserPresence.loading
+                    ? "Loading status..."
+                    : `Currently ${currentUserPresence.status || "offline"}`}
+                </span>
+              </div>
             </div>
 
             {/* Edit Profile Button */}
@@ -102,7 +179,3 @@ const AccountSection = ({
 };
 
 export default AccountSection;
-
-
-
-
