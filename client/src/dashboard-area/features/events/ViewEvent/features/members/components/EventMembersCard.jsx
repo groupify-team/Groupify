@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useEventContext } from "@shared/contexts/EventContext";
+import { useUserPresence } from "@shared/hooks/useUserPresence";
 
 import {
   UserGroupIcon,
@@ -13,6 +14,188 @@ import {
   ExclamationTriangleIcon,
   SparklesIcon,
 } from "@heroicons/react/24/outline";
+
+// Enhanced Member Card with Real-Time Presence
+const MemberCardWithPresence = ({ member, currentUserId, onClick, role }) => {
+  const memberPresence = useUserPresence(member.uid);
+
+  // Get status indicator config
+  const getStatusConfig = () => {
+    if (memberPresence.loading) {
+      return {
+        color: "bg-gray-400",
+        ring: "ring-gray-200 dark:ring-gray-700",
+        pulse: "animate-pulse",
+        title: "Loading status...",
+      };
+    }
+
+    if (memberPresence.isOnline) {
+      switch (memberPresence.status) {
+        case "online":
+          return {
+            color: "bg-emerald-500",
+            ring: "ring-emerald-200 dark:ring-emerald-800",
+            pulse: "animate-pulse",
+            title: "Online now",
+          };
+        case "away":
+          return {
+            color: "bg-amber-500",
+            ring: "ring-amber-200 dark:ring-amber-800",
+            pulse: "",
+            title: "Away",
+          };
+        case "busy":
+          return {
+            color: "bg-red-500",
+            ring: "ring-red-200 dark:ring-red-800",
+            pulse: "",
+            title: "Busy",
+          };
+        default:
+          return {
+            color: "bg-emerald-500",
+            ring: "ring-emerald-200 dark:ring-emerald-800",
+            pulse: "animate-pulse",
+            title: "Online",
+          };
+      }
+    }
+
+    return {
+      color: "bg-gray-400",
+      ring: "ring-gray-200 dark:ring-gray-700",
+      pulse: "",
+      title: memberPresence.lastSeen
+        ? `Last seen ${formatLastSeen(memberPresence.lastSeen)}`
+        : "Offline",
+    };
+  };
+
+  const statusConfig = getStatusConfig();
+
+  const getInitials = (name) => {
+    if (!name) return "?";
+    return name
+      .split(" ")
+      .map((word) => word[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  const renderRoleBadge = () => {
+    if (role === "creator") {
+      return (
+        <div className="flex items-center gap-1 bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white px-2 py-1 rounded-full text-xs font-medium shadow-lg">
+          <StarIcon className="w-3 h-3" />
+          Creator
+        </div>
+      );
+    }
+
+    if (role === "admin") {
+      return (
+        <div className="flex items-center gap-1 bg-gradient-to-r from-blue-500 via-cyan-500 to-teal-500 text-white px-2 py-1 rounded-full text-xs font-medium shadow-lg">
+          <ShieldCheckIcon className="w-3 h-3" />
+          Admin
+        </div>
+      );
+    }
+
+    return null;
+  };
+
+  // Helper function to format last seen
+  const formatLastSeen = (lastSeen) => {
+    if (!lastSeen) return "";
+
+    const now = new Date();
+    const lastSeenDate = lastSeen.toDate
+      ? lastSeen.toDate()
+      : new Date(lastSeen);
+    const diffMs = now - lastSeenDate;
+    const diffMinutes = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMinutes / 60);
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffMinutes < 1) return "just now";
+    if (diffMinutes < 60) return `${diffMinutes}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+
+    return lastSeenDate.toLocaleDateString();
+  };
+
+  return (
+    <div
+      className="group/member p-3 rounded-lg bg-gradient-to-r from-gray-50/50 to-orange-50/50 dark:from-gray-800/50 dark:to-orange-900/20 hover:from-orange-50 hover:to-orange-100 dark:hover:from-orange-900/30 dark:hover:to-orange-900/40 transition-all duration-300 cursor-pointer border border-gray-200/30 dark:border-gray-700/30 backdrop-blur-sm hover:shadow-md relative"
+      onClick={() => onClick(member, currentUserId)}
+    >
+      <div className="flex items-center gap-3">
+        {/* Avatar with Real-Time Presence */}
+        <div className="relative flex-shrink-0">
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-400 to-gray-600 flex items-center justify-center">
+            {member.photoURL ? (
+              <img
+                src={member.photoURL}
+                alt={member.displayName || member.email}
+                className="w-full h-full rounded-full object-cover"
+              />
+            ) : (
+              <span className="text-white text-sm font-semibold">
+                {getInitials(member.displayName || member.email)}
+              </span>
+            )}
+          </div>
+
+          {/* Real-Time Status Indicator - ONLY presence circle */}
+          <div
+            className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 ${statusConfig.color} border-2 border-white dark:border-gray-800 rounded-full ${statusConfig.ring} ring-2 ${statusConfig.pulse} shadow-lg`}
+            title={statusConfig.title}
+          ></div>
+        </div>
+
+        {/* User Info */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1">
+            <p className="font-medium text-gray-900 dark:text-white truncate text-sm">
+              {member.displayName || "Unknown User"}
+              {member.uid === currentUserId && (
+                <span className="text-gray-500 dark:text-gray-400 ml-1">
+                  (You)
+                </span>
+              )}
+            </p>
+          </div>
+          <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+            {member.email}
+          </p>
+
+          {/* Real-Time Presence Status Text */}
+          <p className="text-xs text-gray-500 dark:text-gray-400 truncate mt-1">
+            {memberPresence.loading
+              ? "Loading..."
+              : memberPresence.isOnline
+              ? `${
+                  memberPresence.status.charAt(0).toUpperCase() +
+                  memberPresence.status.slice(1)
+                }`
+              : memberPresence.lastSeen
+              ? `Last seen ${formatLastSeen(memberPresence.lastSeen)}`
+              : "Offline"}
+          </p>
+        </div>
+
+        {/* Role Badge */}
+        <div className="flex-shrink-0 flex items-center gap-2">
+          {renderRoleBadge()}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const EventMembersCard = ({
   event,
@@ -30,7 +213,7 @@ const EventMembersCard = ({
 
   // Get real-time event members from context
   const { getEventMembers, getEventById } = useEventContext();
-  
+
   // Get real-time data
   const currentEvent = useMemo(() => {
     return event?.id ? getEventById(event.id) : event;
@@ -84,16 +267,6 @@ const EventMembersCard = ({
     if (member.uid === currentEvent?.createdBy) return "creator";
     if (currentEvent?.admins?.includes(member.uid)) return "admin";
     return "member";
-  };
-
-  const getInitials = (name) => {
-    if (!name) return "?";
-    return name
-      .split(" ")
-      .map((word) => word[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
   };
 
   // Check if current user can manage another user
@@ -156,30 +329,6 @@ const EventMembersCard = ({
     }
   };
 
-  const renderRoleBadge = (member) => {
-    const role = getMemberRole(member);
-
-    if (role === "creator") {
-      return (
-        <div className="flex items-center gap-1 bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white px-2 py-1 rounded-full text-xs font-medium shadow-lg">
-          <StarIcon className="w-3 h-3" />
-          Creator
-        </div>
-      );
-    }
-
-    if (role === "admin") {
-      return (
-        <div className="flex items-center gap-1 bg-gradient-to-r from-blue-500 via-cyan-500 to-teal-500 text-white px-2 py-1 rounded-full text-xs font-medium shadow-lg">
-          <ShieldCheckIcon className="w-3 h-3" />
-          Admin
-        </div>
-      );
-    }
-
-    return null;
-  };
-
   return (
     <div className="relative group">
       <div className="absolute -inset-1 bg-gradient-to-r from-orange-500 to-red-500 rounded-2xl blur opacity-20 group-hover:opacity-30 transition duration-300"></div>
@@ -213,61 +362,13 @@ const EventMembersCard = ({
         ) : (
           <div className="space-y-2 sm:space-y-3 max-h-60 sm:max-h-80 overflow-y-auto scrollbar-thin scrollbar-thumb-orange-300 dark:scrollbar-thumb-orange-700 scrollbar-track-transparent">
             {sortedMembers.map((member, index) => (
-              <div
+              <MemberCardWithPresence
                 key={member.uid || `member-${index}`}
-                className="group/member p-3 rounded-lg bg-gradient-to-r from-gray-50/50 to-orange-50/50 dark:from-gray-800/50 dark:to-orange-900/20 hover:from-orange-50 hover:to-orange-100 dark:hover:from-orange-900/30 dark:hover:to-orange-900/40 transition-all duration-300 cursor-pointer border border-gray-200/30 dark:border-gray-700/30 backdrop-blur-sm hover:shadow-md relative"
-                onClick={() => {
-                  console.log("🔍 EventMembersCard: Member clicked:", member);
-                  onMemberClick(member, currentUserId);
-                }}
-              >
-                <div className="flex items-center gap-3">
-                  {/* Avatar */}
-                  <div className="relative flex-shrink-0">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-400 to-gray-600 flex items-center justify-center">
-                      {member.photoURL ? (
-                        <img
-                          src={member.photoURL}
-                          alt={member.displayName || member.email}
-                          className="w-full h-full rounded-full object-cover"
-                        />
-                      ) : (
-                        <span className="text-white text-sm font-semibold">
-                          {getInitials(member.displayName || member.email)}
-                        </span>
-                      )}
-                    </div>
-                    {/* Current User Indicator */}
-                    {member.uid === currentUserId && (
-                      <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white dark:border-gray-800 rounded-full flex items-center justify-center">
-                        <span className="text-white text-xs">✓</span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* User Info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <p className="font-medium text-gray-900 dark:text-white truncate text-sm">
-                        {member.displayName || "Unknown User"}
-                        {member.uid === currentUserId && (
-                          <span className="text-gray-500 dark:text-gray-400 ml-1">
-                            (You)
-                          </span>
-                        )}
-                      </p>
-                    </div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                      {member.email}
-                    </p>
-                  </div>
-
-                  {/* Role Badge */}
-                  <div className="flex-shrink-0 flex items-center gap-2">
-                    {renderRoleBadge(member)}
-                  </div>
-                </div>
-              </div>
+                member={member}
+                currentUserId={currentUserId}
+                onClick={onMemberClick}
+                role={getMemberRole(member)}
+              />
             ))}
           </div>
         )}

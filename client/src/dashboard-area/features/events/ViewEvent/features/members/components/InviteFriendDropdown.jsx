@@ -10,6 +10,191 @@ import {
 } from "@heroicons/react/24/outline";
 import { useInviteFriends } from "../hooks/useInviteFriends";
 import { useEventMemberLimits } from "../hooks/useEventMemberLimits";
+import { useUserPresence } from "@shared/hooks/useUserPresence";
+
+// Enhanced Friend Card with Real-Time Presence
+const FriendCardWithPresence = ({
+  friend,
+  isInviting,
+  canInviteThisFriend,
+  onInvite,
+  onViewProfile,
+}) => {
+  const friendPresence = useUserPresence(friend.uid);
+
+  // Helper function to format last seen (MOVED BEFORE getStatusConfig)
+  const formatLastSeen = (lastSeen) => {
+    if (!lastSeen) return "";
+
+    const now = new Date();
+    const lastSeenDate = lastSeen.toDate
+      ? lastSeen.toDate()
+      : new Date(lastSeen);
+    const diffMs = now - lastSeenDate;
+    const diffMinutes = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMinutes / 60);
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffMinutes < 1) return "just now";
+    if (diffMinutes < 60) return `${diffMinutes}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+
+    return lastSeenDate.toLocaleDateString();
+  };
+
+  // Get status indicator config
+  const getStatusConfig = () => {
+    if (friendPresence.loading) {
+      return {
+        color: "bg-gray-400",
+        ring: "ring-gray-200 dark:ring-gray-700",
+        pulse: "animate-pulse",
+        title: "Loading status...",
+      };
+    }
+
+    if (friendPresence.isOnline) {
+      switch (friendPresence.status) {
+        case "online":
+          return {
+            color: "bg-emerald-500",
+            ring: "ring-emerald-200 dark:ring-emerald-800",
+            pulse: "animate-pulse",
+            title: "Online now",
+          };
+        case "away":
+          return {
+            color: "bg-amber-500",
+            ring: "ring-amber-200 dark:ring-amber-800",
+            pulse: "",
+            title: "Away",
+          };
+        case "busy":
+          return {
+            color: "bg-red-500",
+            ring: "ring-red-200 dark:ring-red-800",
+            pulse: "",
+            title: "Busy",
+          };
+        default:
+          return {
+            color: "bg-emerald-500",
+            ring: "ring-emerald-200 dark:ring-emerald-800",
+            pulse: "animate-pulse",
+            title: "Online",
+          };
+      }
+    }
+
+    return {
+      color: "bg-gray-400",
+      ring: "ring-gray-200 dark:ring-gray-700",
+      pulse: "",
+      title: friendPresence.lastSeen
+        ? `Last seen ${formatLastSeen(friendPresence.lastSeen)}`
+        : "Offline",
+    };
+  };
+
+  const statusConfig = getStatusConfig();
+
+  const getInitials = (name) => {
+    if (!name) return "?";
+    return name
+      .split(" ")
+      .map((word) => word[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  return (
+    <div
+      className={`flex items-center gap-3 p-3 transition-all duration-200 group ${
+        isInviting
+          ? "opacity-50 cursor-not-allowed"
+          : canInviteThisFriend
+          ? "hover:bg-emerald-50/50 dark:hover:bg-emerald-900/20"
+          : "opacity-60"
+      }`}
+    >
+      {/* Avatar with Real-Time Presence */}
+      <div className="relative">
+        {friend.photoURL ? (
+          <img
+            src={friend.photoURL}
+            alt={friend.displayName}
+            className="w-8 h-8 rounded-full object-cover border border-emerald-200 dark:border-emerald-700 group-hover:border-emerald-400 dark:group-hover:border-emerald-500 transition-colors"
+          />
+        ) : (
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white font-medium text-xs border border-emerald-200 dark:border-emerald-700 group-hover:border-emerald-400 dark:group-hover:border-emerald-500 transition-colors">
+            {getInitials(friend.displayName)}
+          </div>
+        )}
+
+        {/* Real-Time Status Indicator */}
+        <div
+          className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 ${statusConfig.color} border-2 border-white dark:border-gray-800 rounded-full ${statusConfig.ring} ring-1 ${statusConfig.pulse} shadow-sm`}
+          title={statusConfig.title}
+        ></div>
+      </div>
+
+      {/* Friend Info - Clickable to show profile */}
+      <div
+        className="flex-1 min-w-0 cursor-pointer"
+        onClick={() => {
+          if (!isInviting && onViewProfile) {
+            onViewProfile(friend);
+          }
+        }}
+      >
+        <p className="font-medium text-gray-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors truncate text-sm">
+          {friend.displayName}
+        </p>
+        <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+          {friend.email}
+        </p>
+
+        {/* Real-Time Presence Status Text */}
+        <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+          {friendPresence.loading
+            ? "Loading..."
+            : friendPresence.isOnline
+            ? `${
+                friendPresence.status.charAt(0).toUpperCase() +
+                friendPresence.status.slice(1)
+              }`
+            : friendPresence.lastSeen
+            ? `Last seen ${formatLastSeen(friendPresence.lastSeen)}`
+            : "Offline"}
+        </p>
+      </div>
+
+      {/* Action Button */}
+      {canInviteThisFriend ? (
+        <button
+          onClick={() => !isInviting && onInvite(friend)}
+          disabled={isInviting}
+          className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-300 transform hover:scale-105 opacity-0 group-hover:opacity-100 translate-x-1 group-hover:translate-x-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+        >
+          {isInviting ? (
+            <div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin" />
+          ) : (
+            <UserPlusIcon className="w-3 h-3" />
+          )}
+        </button>
+      ) : (
+        <button
+          onClick={() => setShowUpgradePrompt(true)}
+          className="bg-yellow-100 dark:bg-yellow-900/30 hover:bg-yellow-200 dark:hover:bg-yellow-900/50 text-yellow-700 dark:text-yellow-400 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-300 opacity-0 group-hover:opacity-100 translate-x-1 group-hover:translate-x-0"
+        >
+          <ShieldExclamationIcon className="w-3 h-3" />
+        </button>
+      )}
+    </div>
+  );
+};
 
 // 🧩 Enhanced component for inviting friends to a event with plan validation
 const InviteFriendDropdown = ({
@@ -76,17 +261,6 @@ const InviteFriendDropdown = ({
     membersPerEvent: planLimits?.membersPerEvent,
     calculation: `${currentMemberCount} + 1 <= ${planLimits?.membersPerEvent}`,
   });
-
-  // Get initials for avatar fallback
-  const getInitials = (name) => {
-    if (!name) return "?";
-    return name
-      .split(" ")
-      .map((word) => word[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
-  };
 
   // Enhanced invite friend handler with plan validation
   const handleEnhancedInviteFriend = async (friend) => {
@@ -228,72 +402,14 @@ const InviteFriendDropdown = ({
                       remainingSlots === "unlimited" || remainingSlots > 0;
 
                     return (
-                      <div
+                      <FriendCardWithPresence
                         key={friend.uid}
-                        className={`flex items-center gap-3 p-3 transition-all duration-200 group ${
-                          isInviting
-                            ? "opacity-50 cursor-not-allowed"
-                            : canInviteThisFriend
-                            ? "hover:bg-emerald-50/50 dark:hover:bg-emerald-900/20"
-                            : "opacity-60"
-                        }`}
-                      >
-                        {/* Avatar */}
-                        <div className="relative">
-                          {friend.photoURL ? (
-                            <img
-                              src={friend.photoURL}
-                              alt={friend.displayName}
-                              className="w-8 h-8 rounded-full object-cover border border-emerald-200 dark:border-emerald-700 group-hover:border-emerald-400 dark:group-hover:border-emerald-500 transition-colors"
-                            />
-                          ) : (
-                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white font-medium text-xs border border-emerald-200 dark:border-emerald-700 group-hover:border-emerald-400 dark:group-hover:border-emerald-500 transition-colors">
-                              {getInitials(friend.displayName)}
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Friend Info - Clickable to show profile */}
-                        <div
-                          className="flex-1 min-w-0 cursor-pointer"
-                          onClick={() => {
-                            if (!isInviting && onFriendClick) {
-                              onFriendClick(friend);
-                            }
-                          }}
-                        >
-                          <p className="font-medium text-gray-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors truncate text-sm">
-                            {friend.displayName}
-                          </p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                            {friend.email}
-                          </p>
-                        </div>
-
-                        {/* Action Button */}
-                        {canInviteThisFriend ? (
-                          <button
-                            onClick={() =>
-                              !isInviting && handleEnhancedInviteFriend(friend)
-                            }
-                            disabled={isInviting}
-                            className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-300 transform hover:scale-105 opacity-0 group-hover:opacity-100 translate-x-1 group-hover:translate-x-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-                          >
-                            {isInviting ? (
-                              <div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin" />
-                            ) : (
-                              <UserPlusIcon className="w-3 h-3" />
-                            )}
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() => setShowUpgradePrompt(true)}
-                            className="bg-yellow-100 dark:bg-yellow-900/30 hover:bg-yellow-200 dark:hover:bg-yellow-900/50 text-yellow-700 dark:text-yellow-400 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-300 opacity-0 group-hover:opacity-100 translate-x-1 group-hover:translate-x-0"
-                          >
-                            <ShieldExclamationIcon className="w-3 h-3" />
-                          </button>
-                        )}
-                      </div>
+                        friend={friend}
+                        isInviting={isInviting}
+                        canInviteThisFriend={canInviteThisFriend}
+                        onInvite={handleEnhancedInviteFriend}
+                        onViewProfile={onFriendClick}
+                      />
                     );
                   })}
                 </div>
