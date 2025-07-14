@@ -1,20 +1,11 @@
 // Dashboard Constants and Configuration
 import {
   ArrowRightOnRectangleIcon,
-  CheckCircleIcon,
-  ChevronDownIcon,
-  ChevronRightIcon,
   Cog6ToothIcon,
-  ExclamationTriangleIcon,
   MapIcon,
-  PlusIcon,
-  UserGroupIcon,
   UserPlusIcon,
-  XCircleIcon,
-  XMarkIcon,
   UserIcon,
   CogIcon,
-  TrashIcon,
   SparklesIcon,
 } from "@heroicons/react/24/outline";
 
@@ -97,8 +88,9 @@ export const USER_MENU_ITEMS = [
 
 // Bottom Navigation Items (Mobile)
 export const BOTTOM_NAV_ITEMS = [
-  { id: "events", name: "events", icon: MapIcon },
+  { id: "events", name: "Events", icon: MapIcon },
   { id: "friends", name: "Friends", icon: UserPlusIcon },
+  { id: "profile", name: "Profile", icon: UserIcon },
   { id: "settings", name: "Settings", icon: Cog6ToothIcon },
 ];
 
