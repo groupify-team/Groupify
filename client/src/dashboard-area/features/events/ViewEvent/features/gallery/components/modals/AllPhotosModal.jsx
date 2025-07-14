@@ -75,15 +75,7 @@ const AllPhotosModal = ({
   };
 
   const handleDeletePhotos = async () => {
-    console.log("🚀 handleDeletePhotos called", {
-      selectedCount: localSelectedPhotos.length,
-      photos: localSelectedPhotos,
-      isAdmin,
-      eventId,
-    });
-
     if (!localSelectedPhotos.length) return;
-
     setLoading(true);
     const deletingToast = toast.loading(
       `Deleting ${localSelectedPhotos.length} photo${
@@ -96,20 +88,17 @@ const AllPhotosModal = ({
         localSelectedPhotos.includes(p.id)
       );
 
-      // Delete from Firebase
       for (const photo of photosToDelete) {
         await deleteObject(ref(storage, `photos/${eventId}/${photo.fileName}`));
         await deleteDoc(doc(db, "eventPhotos", photo.id));
         await deleteDoc(doc(db, "photos", photo.id));
       }
 
-      // Update local state with smooth transition
       const remainingPhotos = localPhotos.filter(
         (p) => !localSelectedPhotos.includes(p.id)
       );
       setLocalPhotos(remainingPhotos);
 
-      // Notify parent component
       if (onPhotoDeleted) {
         onPhotoDeleted(remainingPhotos);
       }
@@ -121,7 +110,6 @@ const AllPhotosModal = ({
         } deleted successfully`
       );
 
-      // Reset states
       setLocalSelectedPhotos([]);
       setLocalSelectMode(false);
       setShowConfirmModal(null);
@@ -153,7 +141,6 @@ const AllPhotosModal = ({
 
     try {
       if (exportType === "individual") {
-        // Download each photo individually
         for (let i = 0; i < photosToExport.length; i++) {
           const photo = photosToExport[i];
           const link = document.createElement("a");
@@ -165,7 +152,6 @@ const AllPhotosModal = ({
           link.click();
           document.body.removeChild(link);
 
-          // Small delay between downloads
           if (i < photosToExport.length - 1) {
             await new Promise((resolve) => setTimeout(resolve, 200));
           }
@@ -176,10 +162,7 @@ const AllPhotosModal = ({
           `Downloaded ${photosToExport.length} photos individually`
         );
       } else if (exportType === "zip") {
-        // Create ZIP file
         const zip = new JSZip();
-
-        // Download all photos and add to ZIP
         for (let i = 0; i < photosToExport.length; i++) {
           const photo = photosToExport[i];
           toast.loading(
@@ -198,7 +181,6 @@ const AllPhotosModal = ({
           }
         }
 
-        // Generate ZIP and download
         toast.loading("Creating ZIP file...", { id: exportToast });
         const zipBlob = await zip.generateAsync({ type: "blob" });
         const zipFilename = `event-photos-${
@@ -323,10 +305,6 @@ const AllPhotosModal = ({
             {type === "delete" && (
               <button
                 onClick={() => {
-                  console.log("✅ Confirm delete clicked", {
-                    localSelectedPhotos: localSelectedPhotos.length,
-                    loading,
-                  });
                   onConfirm();
                 }}
                 disabled={loading}
@@ -505,14 +483,6 @@ const AllPhotosModal = ({
                     {localSelectedPhotos.length > 0 && (
                       <button
                         onClick={() => {
-                          console.log(
-                            "🗑️ Delete button clicked - deleting immediately",
-                            {
-                              isAdmin,
-                              localSelectedPhotos: localSelectedPhotos.length,
-                              loading,
-                            }
-                          );
                           handleDeletePhotos();
                         }}
                         disabled={loading}
@@ -527,7 +497,6 @@ const AllPhotosModal = ({
 
                 <button
                   onClick={() => {
-                    console.log("📥 Export button clicked - exporting as ZIP");
                     handleExportPhotos("zip");
                   }}
                   disabled={

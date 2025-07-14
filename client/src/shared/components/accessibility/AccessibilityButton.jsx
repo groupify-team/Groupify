@@ -57,10 +57,6 @@ const AccessibilityButton = ({
   return (
     <button
       onClick={() => {
-        console.log(
-          "Accessibility button clicked, onSettingsClick:",
-          onSettingsClick
-        );
         if (onSettingsClick) onSettingsClick();
       }}
       className={buttonClasses}

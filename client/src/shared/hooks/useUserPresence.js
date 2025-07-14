@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
 import { PresenceService } from "@shared/services/presence/PresenceService";
-
 /**
  * Hook for subscribing to other users' presence status
  */
@@ -20,13 +19,9 @@ export const useUserPresence = (userId) => {
       return;
     }
 
-    console.log(`👁️ Setting up presence subscription for: ${userId}`);
-
-    // Subscribe to real-time presence updates
     const unsubscribe = PresenceService.subscribeToUserPresence(
       userId,
       (presenceData) => {
-        console.log(`📡 Presence update for ${userId}:`, presenceData);
         setPresence({
           ...presenceData,
           loading: false,
@@ -34,9 +29,7 @@ export const useUserPresence = (userId) => {
       }
     );
 
-    // Cleanup subscription
     return () => {
-      console.log(`🧹 Cleaning up presence subscription for: ${userId}`);
       PresenceService.unsubscribeFromUserPresence(userId);
     };
   }, [userId]);
@@ -44,14 +37,10 @@ export const useUserPresence = (userId) => {
   return presence;
 };
 
-/**
- * Hook for getting presence of multiple users
- */
 export const useMultipleUserPresence = (userIds = []) => {
   const [presenceMap, setPresenceMap] = useState({});
   const [loading, setLoading] = useState(true);
 
-  // Memoize the fetch function
   const fetchPresence = useCallback(async () => {
     if (!userIds.length) {
       setPresenceMap({});
@@ -60,15 +49,11 @@ export const useMultipleUserPresence = (userIds = []) => {
     }
 
     try {
-      console.log(`👥 Fetching presence for ${userIds.length} users`);
       setLoading(true);
-
       const presence = await PresenceService.getMultipleUserPresence(userIds);
       setPresenceMap(presence);
     } catch (error) {
       console.error("Error fetching multiple user presence:", error);
-
-      // Set all users as offline on error
       const offlineMap = {};
       userIds.forEach((id) => {
         offlineMap[id] = {
@@ -84,12 +69,9 @@ export const useMultipleUserPresence = (userIds = []) => {
       setLoading(false);
     }
   }, [userIds]);
-
   useEffect(() => {
     fetchPresence();
   }, [fetchPresence]);
-
-  // Refresh function for manual updates
   const refresh = useCallback(() => {
     fetchPresence();
   }, [fetchPresence]);

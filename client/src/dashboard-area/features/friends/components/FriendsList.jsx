@@ -4,12 +4,6 @@ import { UserCard } from "@shared/components/user";
 import { EyeIcon, UsersIcon, HeartIcon } from "@heroicons/react/24/outline";
 
 const FriendsList = ({ friends = [], handleViewProfile }) => {
-  console.log("FriendsList props:", {
-    friendsCount: friends?.length,
-    friends,
-  });
-
-  // Empty state
   if (!friends || friends.length === 0) {
     return (
       <div className="bg-white/90 dark:bg-slate-800/90 backdrop-blur-lg rounded-2xl border border-gray-200/60 dark:border-slate-600/60 p-8 text-center shadow-xl">
@@ -67,9 +61,6 @@ const FriendsList = ({ friends = [], handleViewProfile }) => {
       {/* Friends Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {friends.map((friend) => {
-          console.log("Rendering friend:", friend);
-
-          // Ensure friend has proper ID
           const friendId = friend.uid || friend.id;
           if (!friendId) {
             console.warn("Friend without proper ID:", friend);
@@ -84,7 +75,6 @@ const FriendsList = ({ friends = [], handleViewProfile }) => {
                 <div
                   className="relative bg-white/90 dark:bg-slate-800/90 backdrop-blur-lg rounded-xl border border-gray-200/60 dark:border-slate-600/60 p-6 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group-hover:scale-[1.02]"
                   onClick={() => {
-                    console.log("Friend card clicked:", friend);
                     handleViewProfile(friend);
                   }}
                 >

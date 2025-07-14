@@ -217,16 +217,6 @@ const InviteFriendDropdown = ({
     handleInviteFriend,
   } = useInviteFriends(currentUser, eventId, excludedUserIds);
 
-  // Debug logging for invite friends dropdown
-  console.log("InviteFriendDropdown state:", {
-    friendsCount: friends?.length,
-    searchTerm,
-    filteredFriendsCount: filteredFriends?.length,
-    isLoading,
-    excludedUserIds,
-    friends,
-  });
-
   const {
     planLimits,
     canInviteMore,
@@ -236,7 +226,6 @@ const InviteFriendDropdown = ({
     isPremiumPlan,
   } = useEventMemberLimits(eventId, currentMemberCount);
 
-  // Get values for backward compatibility
   const canAddMoreMembers = canInviteMore;
   const limitStatus =
     memberLimitStatus === "full"
@@ -245,41 +234,14 @@ const InviteFriendDropdown = ({
       ? "ok"
       : "warning";
   const remainingSlots = memberRemainingSlots;
-
-  // Debug logging to understand member limits
-  console.log("🔍 Member Limit Debug:", {
-    eventId,
-    currentMemberCount,
-    planLimits,
-    canInviteMore,
-    canAddMoreMembers,
-    memberLimitStatus,
-    limitStatus,
-    remainingSlots,
-    isFreePlan,
-    isPremiumPlan,
-    membersPerEvent: planLimits?.membersPerEvent,
-    calculation: `${currentMemberCount} + 1 <= ${planLimits?.membersPerEvent}`,
-  });
-
-  // Enhanced invite friend handler with plan validation
   const handleEnhancedInviteFriend = async (friend) => {
-    console.log("🎯 handleEnhancedInviteFriend called with:", friend);
-    console.log("🎯 canAddMoreMembers:", canAddMoreMembers);
-
-    // Check if we can invite (simple check based on member limit)
     if (!canAddMoreMembers) {
-      console.log("❌ Cannot add more members, showing upgrade prompt");
       setShowUpgradePrompt(true);
       return;
     }
-
-    console.log("✅ Can add more members, proceeding with invitation...");
-    // Proceed with invitation using the hook's handler
     await handleInviteFriend(friend);
   };
 
-  // 🧾 Render search input and filtered friend list
   return (
     <div className="w-full space-y-3">
       {/* Member Limit Status */}
@@ -531,8 +493,6 @@ const InviteFriendDropdown = ({
                 <button
                   onClick={() => {
                     setShowUpgradePrompt(false);
-                    // Navigate to upgrade page
-                    console.log("Navigate to upgrade page");
                   }}
                   className="flex-1 bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white py-3 px-4 rounded-xl font-medium transition-all shadow-lg"
                 >

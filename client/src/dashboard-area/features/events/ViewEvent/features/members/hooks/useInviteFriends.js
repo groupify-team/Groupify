@@ -21,25 +21,16 @@ export const useInviteFriends = (
   const [isLoading, setIsLoading] = useState(false);
   const [isInviting, setIsInviting] = useState(false);
 
-  // 🔧 Load and filter friends (excluding event members)
   useEffect(() => {
     const fetchFriends = async () => {
       if (currentUser?.uid) {
         setIsLoading(true);
         try {
-          console.log(
-            "useInviteFriends: Fetching friends for user:",
-            currentUser.uid
-          );
           const results = await getFriends(currentUser.uid);
-          console.log("useInviteFriends: Friends fetched:", results);
-
           const filtered = results.filter(
             (friend) => !excludedUserIds.includes(friend.uid)
           );
-          console.log(
-            `useInviteFriends: Filtered ${results.length} friends down to ${filtered.length} (excluding event members)`
-          );
+
           setFriends(filtered);
         } catch (error) {
           console.error("useInviteFriends: Error fetching friends:", error);
@@ -52,7 +43,6 @@ export const useInviteFriends = (
     fetchFriends();
   }, [currentUser, excludedUserIds]);
 
-  // 🔍 Filter by search term
   useEffect(() => {
     const term = searchTerm.toLowerCase();
     setFilteredFriends(
@@ -64,15 +54,11 @@ export const useInviteFriends = (
     );
   }, [searchTerm, friends]);
 
-  // Clear search
   const clearSearch = () => {
     setSearchTerm("");
   };
 
-  // Handle friend invitation with all the logic
   const handleInviteFriend = async (friend) => {
-    console.log("🚀 Starting invitation process for friend:", friend);
-
     if (!eventId || !currentUser?.uid) {
       console.error("❌ Missing event or user information:", {
         eventId,
@@ -84,13 +70,6 @@ export const useInviteFriends = (
 
     try {
       setIsInviting(true);
-      console.log("📤 Sending invitation:", {
-        eventId,
-        inviterUid: currentUser.uid,
-        inviteeUid: friend.uid,
-      });
-
-      // Check if invitation already exists using the correct field names
       const q = query(
         collection(db, "eventInvites"),
         where("eventId", "==", eventId),
@@ -99,10 +78,8 @@ export const useInviteFriends = (
       );
 
       const existing = await getDocs(q);
-      console.log("🔍 Checking for existing invites:", existing.size, "found");
 
       if (!existing.empty) {
-        console.log("⚠️ Friend already has pending invite");
         toast(`${friend.displayName} already has a pending invite.`, {
           style: {
             borderRadius: "10px",
@@ -116,14 +93,10 @@ export const useInviteFriends = (
         return;
       }
 
-      // Send the invitation with better error handling
       try {
-        console.log("📨 Calling sendEventInvite function...");
         await sendEventInvite(eventId, currentUser.uid, friend.uid);
-        console.log("✅ Invitation sent successfully!");
       } catch (inviteError) {
         console.error("Detailed invite error:", inviteError);
-
         if (inviteError.code === "permission-denied") {
           toast.error(
             "You don't have permission to send invites to this event.",
@@ -142,21 +115,13 @@ export const useInviteFriends = (
         }
         return;
       }
-
-      // Remove friend from available list (they're now invited)
-      console.log("🗑️ Removing friend from available list");
       setFriends((prev) => prev.filter((f) => f.uid !== friend.uid));
-
-      // Clear search if this was the only result
       if (
         filteredFriends.length === 1 &&
         filteredFriends[0].uid === friend.uid
       ) {
-        console.log("🔍 Clearing search term");
         clearSearch();
       }
-
-      console.log("🎉 Showing success toast");
       toast.success(`🎉 Invitation sent to ${friend.displayName}!`, {
         duration: 4000,
         style: {
@@ -169,7 +134,6 @@ export const useInviteFriends = (
     } catch (error) {
       console.error("Error sending event invite:", error);
 
-      // Better error handling with more specific messages
       if (error.code === "permission-denied") {
         toast.error(
           "Permission denied. You may not have permission to send invites.",
@@ -192,14 +156,11 @@ export const useInviteFriends = (
   };
 
   return {
-    // State
     friends,
     searchTerm,
     filteredFriends,
     isLoading,
     isInviting,
-
-    // Actions
     setSearchTerm,
     clearSearch,
     handleInviteFriend,

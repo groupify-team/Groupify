@@ -15,35 +15,22 @@ import {
 } from "firebase/firestore";
 import { ref, deleteObject, listAll } from "firebase/storage";
 import { db, storage } from "./config";
-
-// Import user management functions
 import {
   addUserToEvent,
   removeUserFromEvent,
   removeEventFromAllUsers,
-  getUserEventsWithValidation,
 } from "./users";
 
-// Constants
 const MAX_EVENTS_PER_USER = 5;
-const MAX_PHOTOS_PER_EVENT = 30; // Free plan default - actual limits come from subscription
+const MAX_PHOTOS_PER_EVENT = 30;
 
-// Function to check user's event count
 export const getUserEventCount = async (userId) => {
   try {
-    // Count ALL events where user is a member (not just created by user)
     const q = query(
-      collection(db, "events"), 
+      collection(db, "events"),
       where("members", "array-contains", userId)
     );
     const querySnapshot = await getDocs(q);
-    
-    console.log("📊 getUserEventCount:", {
-      userId,
-      totalEvents: querySnapshot.size,
-      queryType: "members array-contains"
-    });
-    
     return querySnapshot.size;
   } catch (error) {
     console.error("Error getting user event count:", error);
@@ -51,18 +38,9 @@ export const getUserEventCount = async (userId) => {
   }
 };
 
-// Function to check if user can Create More Events
 export const canUserCreateEvent = async (userId) => {
   try {
     const eventCount = await getUserEventCount(userId);
-    
-    console.log("🔍 canUserCreateEvent:", {
-      userId,
-      currentCount: eventCount,
-      limit: MAX_EVENTS_PER_USER,
-      canCreate: eventCount < MAX_EVENTS_PER_USER
-    });
-    
     return eventCount < MAX_EVENTS_PER_USER;
   } catch (error) {
     console.error("Error checking event creation permission:", error);
@@ -70,7 +48,6 @@ export const canUserCreateEvent = async (userId) => {
   }
 };
 
-// Function to get event photo count
 export const getEventPhotoCount = async (eventId) => {
   try {
     const q = query(
@@ -85,7 +62,6 @@ export const getEventPhotoCount = async (eventId) => {
   }
 };
 
-// Function to check if event can accept more photos
 export const canEventAcceptMorePhotos = async (
   eventId,
   additionalPhotos = 1
@@ -99,10 +75,8 @@ export const canEventAcceptMorePhotos = async (
   }
 };
 
-// Create a new event
 export const createEvent = async (eventData) => {
   try {
-    // Create the event document
     const eventRef = doc(collection(db, "events"));
     const eventId = eventRef.id;
 
@@ -117,10 +91,7 @@ export const createEvent = async (eventData) => {
     };
 
     await setDoc(eventRef, newEvent);
-
-    // Add event to user's events array
     await addUserToEvent(eventData.createdBy, eventId);
-
     return newEvent;
   } catch (error) {
     console.error("❌ Error creating event:", error);
@@ -128,7 +99,6 @@ export const createEvent = async (eventData) => {
   }
 };
 
-// Get a event by ID
 export const getEvent = async (eventId) => {
   try {
     const eventDoc = await getDoc(doc(db, "events", eventId));
@@ -147,7 +117,6 @@ export const getEvent = async (eventId) => {
   }
 };
 
-// Update a event
 export const updateEvent = async (eventId, updates) => {
   try {
     await updateDoc(doc(db, "events", eventId), {
@@ -165,13 +134,9 @@ export const updateEvent = async (eventId, updates) => {
   }
 };
 
-// Enhanced delete event function with Storage cleanup
 export const deleteEvent = async (eventId) => {
   try {
-    // 1. Remove event from all users' events arrays FIRST
     await removeEventFromAllUsers(eventId);
-
-    // 2. Delete event photos from Firestore
     const eventPhotosQuery = query(
       collection(db, "eventPhotos"),
       where("eventId", "==", eventId)
@@ -181,10 +146,7 @@ export const deleteEvent = async (eventId) => {
     const deletePhotoPromises = eventPhotosSnapshot.docs.map((photoDoc) =>
       deleteDoc(photoDoc.ref)
     );
-
     await Promise.all(deletePhotoPromises);
-
-    // 3. Delete photos from Firebase Storage (if any exist)
     try {
       const eventPhotosRef = ref(storage, `event_photos/${eventId}/`);
       const photosList = await listAll(eventPhotosRef);
@@ -193,7 +155,6 @@ export const deleteEvent = async (eventId) => {
         const deleteStoragePromises = photosList.items.map((photoRef) =>
           deleteObject(photoRef)
         );
-
         await Promise.all(deleteStoragePromises);
       }
     } catch (storageError) {
@@ -201,23 +162,16 @@ export const deleteEvent = async (eventId) => {
         "⚠️ Error deleting event photos from Storage:",
         storageError
       );
-      // Don't fail the entire deletion if storage cleanup fails
     }
-
-    // 4. Delete event invitations
     const invitesQuery = query(
       collection(db, "eventInvites"),
       where("eventId", "==", eventId)
     );
     const invitesSnapshot = await getDocs(invitesQuery);
-
     const deleteInvitePromises = invitesSnapshot.docs.map((inviteDoc) =>
       deleteDoc(inviteDoc.ref)
     );
-
     await Promise.all(deleteInvitePromises);
-
-    // 5. Delete the main event document
     const eventRef = doc(db, "events", eventId);
     await deleteDoc(eventRef);
   } catch (error) {
@@ -226,40 +180,22 @@ export const deleteEvent = async (eventId) => {
   }
 };
 
-// Get all events for a user
 export const getUserEvents = async (uid) => {
   try {
-    console.log("🔍 getUserEvents called for:", uid);
-    
-    // BYPASS the validation function and use direct query like CreateEventModal
     const q = query(
       collection(db, "events"),
       where("members", "array-contains", uid)
     );
-    
     const querySnapshot = await getDocs(q);
-    const events = querySnapshot.docs.map(doc => ({
+    const events = querySnapshot.docs.map((doc) => ({
       id: doc.id,
-      ...doc.data()
+      ...doc.data(),
     }));
 
-    // Sort events by creation date (newest first)
     events.sort((a, b) => {
       const dateA = new Date(a.createdAt || 0);
       const dateB = new Date(b.createdAt || 0);
       return dateB - dateA;
-    });
-
-    console.log("📊 getUserEvents results:", {
-      userId: uid,
-      totalEvents: events.length,
-      queryType: "members array-contains (direct)",
-      events: events.map(e => ({
-        id: e.id,
-        name: e.name,
-        createdBy: e.createdBy,
-        isCreator: e.createdBy === uid
-      }))
     });
 
     return events;
@@ -269,7 +205,6 @@ export const getUserEvents = async (uid) => {
   }
 };
 
-// Add a member to a event
 export const addEventMember = async (eventId, userId) => {
   try {
     const eventDoc = await getDoc(doc(db, "events", eventId));
@@ -373,9 +308,7 @@ export const getPendingInvites = async (uid) => {
 
 export const acceptEventInvite = async (invitationId, userId) => {
   try {
-    // Get the invitation document
     const inviteDoc = await getDoc(doc(db, "eventInvites", invitationId));
-
     if (!inviteDoc.exists()) {
       throw new Error("Invitation not found");
     }
@@ -383,20 +316,16 @@ export const acceptEventInvite = async (invitationId, userId) => {
     const inviteData = inviteDoc.data();
     const eventId = inviteData.eventId;
 
-    // Update the invitation status
     await updateDoc(doc(db, "eventInvites", invitationId), {
       status: "accepted",
       acceptedAt: serverTimestamp(),
     });
 
-    // Add user to event members
     await updateDoc(doc(db, "events", eventId), {
       members: arrayUnion(userId),
     });
 
-    // Add event to user's events
     await addUserToEvent(userId, eventId);
-
     return { success: true };
   } catch (error) {
     console.error("Error accepting event invitation:", error);
@@ -411,7 +340,6 @@ export const declineEventInvite = async (inviteId) => {
   });
 };
 
-// Remove a member from an event
 export const removeMemberFromEvent = async (eventId, userId) => {
   try {
     const eventRef = doc(db, "events", eventId);
@@ -420,7 +348,6 @@ export const removeMemberFromEvent = async (eventId, userId) => {
       updatedAt: new Date().toISOString(),
     });
 
-    // Also remove the event from the user's events list
     await removeUserFromEvent(userId, eventId);
 
     return true;
@@ -430,7 +357,6 @@ export const removeMemberFromEvent = async (eventId, userId) => {
   }
 };
 
-// Get events by multiple IDs
 export const getEventsByIds = async (eventIds) => {
   try {
     if (!eventIds || eventIds.length === 0) {
@@ -440,12 +366,11 @@ export const getEventsByIds = async (eventIds) => {
     const eventPromises = eventIds.map((eventId) => getEvent(eventId));
     const events = await Promise.all(eventPromises);
 
-    return events.filter(Boolean); // Filter out any null/undefined results
+    return events.filter(Boolean);
   } catch (error) {
     console.error("Error getting events by IDs:", error);
     throw error;
   }
 };
 
-// Export constants for use in components
 export { MAX_EVENTS_PER_USER, MAX_PHOTOS_PER_EVENT };

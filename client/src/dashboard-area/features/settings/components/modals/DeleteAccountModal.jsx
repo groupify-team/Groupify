@@ -1,4 +1,3 @@
-// src/dashboard-area/features/settings/components/modals/DeleteAccountModal.jsx
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@auth/hooks/useAuth";
 import { useEnhancedNavigation } from "@shared/hooks/useEnhancedNavigation";
@@ -9,7 +8,6 @@ import {
   TrashIcon,
 } from "@heroicons/react/24/outline";
 
-// Deleting Account Overlay Component
 const DeletingAccountOverlay = React.memo(() => (
   <div className="fixed inset-0 bg-white/95 dark:bg-gray-900/95 z-50 flex items-center justify-center backdrop-blur-sm">
     <div className="flex flex-col items-center space-y-6">
@@ -54,13 +52,12 @@ DeletingAccountOverlay.displayName = "DeletingAccountOverlay";
 const DeleteAccountModal = ({ isOpen, onClose }) => {
   const { currentUser, logout } = useAuth();
   const { smoothNavigate } = useEnhancedNavigation();
-  const [step, setStep] = useState(1); // 1: Warning, 2: Final Confirmation
+  const [step, setStep] = useState(1);
   const [confirmText, setConfirmText] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
   const [deletionSummary, setDeletionSummary] = useState(null);
   const [error, setError] = useState("");
 
-  // Reset state when modal opens/closes
   useEffect(() => {
     if (isOpen) {
       setStep(1);
@@ -91,33 +88,18 @@ const DeleteAccountModal = ({ isOpen, onClose }) => {
     }
 
     try {
-      // Start deletion process
       setIsDeleting(true);
       setError("");
-
-      // Small delay to let the modal update
       setTimeout(async () => {
         try {
-          console.log("🗑️ Starting account deletion process...");
-
-          // Delete account
           await DeleteAccountService.deleteAccount(currentUser, "");
-
-          // Log out user
           await logout();
-
-          // Use smooth navigation to home page with logo animation
           smoothNavigate("/", {
             delay: 200,
             showLoader: true,
             replace: true,
           });
-
-          // Optional: Show a goodbye message after navigation
-          setTimeout(() => {
-            // You could show a toast or message here if needed
-            console.log("👋 Account deleted successfully. Goodbye!");
-          }, 500);
+          setTimeout(() => {}, 500);
         } catch (deleteError) {
           console.error("Account deletion failed:", deleteError);
           setError(
@@ -133,7 +115,6 @@ const DeleteAccountModal = ({ isOpen, onClose }) => {
     }
   };
 
-  // If we're deleting, show the custom overlay
   if (isDeleting) {
     return <DeletingAccountOverlay />;
   }

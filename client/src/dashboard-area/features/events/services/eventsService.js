@@ -12,12 +12,7 @@ import {
   MAX_PHOTOS_PER_EVENT,
 } from "@shared/services/firebase/events";
 
-import { 
-  collection, 
-  query, 
-  where, 
-  getDocs 
-} from "firebase/firestore";
+import { collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "@shared/services/firebase/config";
 
 import { getEventPhotos } from "@shared/services/firebase/storage";
@@ -25,28 +20,17 @@ import { getUserProfile } from "@firebase-services/users";
 import subscriptionService from "@shared/services/subscriptionService";
 
 export const eventsService = {
-  // Event CRUD operations with enhanced plan validation
   async getEvents(userId) {
     try {
-      // FIXED: Get ALL events where user is a member (not just created by user)
       const eventsQuery = query(
         collection(db, "events"),
         where("members", "array-contains", userId)
       );
       const querySnapshot = await getDocs(eventsQuery);
-      
-      const events = querySnapshot.docs.map(doc => ({
+      const events = querySnapshot.docs.map((doc) => ({
         id: doc.id,
-        ...doc.data()
+        ...doc.data(),
       }));
-
-      console.log("📊 Events fetched for user:", {
-        userId,
-        totalEvents: events.length,
-        createdByUser: events.filter(e => e.createdBy === userId).length,
-        memberOfOnly: events.filter(e => e.createdBy !== userId).length
-      });
-
       return events;
     } catch (error) {
       console.error("Error fetching events:", error);
@@ -55,57 +39,57 @@ export const eventsService = {
   },
 
   async getUserCreatedEvents(userId) {
-  try {
-    const eventsQuery = query(
-      collection(db, "events"),
-      where("createdBy", "==", userId)
-    );
-    const querySnapshot = await getDocs(eventsQuery);
-    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-  } catch (error) {
-    console.error("Error fetching user created events:", error);
-    throw error;
-  }
-},
+    try {
+      const eventsQuery = query(
+        collection(db, "events"),
+        where("createdBy", "==", userId)
+      );
+      const querySnapshot = await getDocs(eventsQuery);
+      return querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    } catch (error) {
+      console.error("Error fetching user created events:", error);
+      throw error;
+    }
+  },
 
-async getUserMemberEvents(userId) {
-  try {
-    const eventsQuery = query(
-      collection(db, "events"),
-      where("members", "array-contains", userId)
-    );
-    const querySnapshot = await getDocs(eventsQuery);
-    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-  } catch (error) {
-    console.error("Error fetching user member events:", error);
-    throw error;
-  }
-},
+  async getUserMemberEvents(userId) {
+    try {
+      const eventsQuery = query(
+        collection(db, "events"),
+        where("members", "array-contains", userId)
+      );
+      const querySnapshot = await getDocs(eventsQuery);
+      return querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    } catch (error) {
+      console.error("Error fetching user member events:", error);
+      throw error;
+    }
+  },
 
   async createEvent(eventData) {
     try {
-      // Enhanced plan validation before creation
       const subscription = subscriptionService.getCurrentSubscription();
       const currentEventCount = await this.getUserEventCount(
         eventData.createdBy
       );
-
-      // Check plan limits using exact pricing page values
       const planFeatures = subscription.features;
       const eventLimit = planFeatures.events;
 
       if (eventLimit !== "unlimited" && currentEventCount >= eventLimit) {
-        const planName = subscription.plan.charAt(0).toUpperCase() + subscription.plan.slice(1);
-      throw new Error(
-        `Event limit reached! Your ${planName} plan allows ${eventLimit} events. You currently participate in ${currentEventCount} events. Upgrade to ${subscription.plan === 'free' ? 'Premium' : 'Pro'} for ${subscription.plan === 'free' ? '50 events' : 'unlimited events'}.`
-      );
-    }
+        const planName =
+          subscription.plan.charAt(0).toUpperCase() +
+          subscription.plan.slice(1);
+        throw new Error(
+          `Event limit reached! Your ${planName} plan allows ${eventLimit} events. You currently participate in ${currentEventCount} events. Upgrade to ${
+            subscription.plan === "free" ? "Premium" : "Pro"
+          } for ${
+            subscription.plan === "free" ? "50 events" : "unlimited events"
+          }.`
+        );
+      }
 
-
-      // Create the event
       const newEvent = await createEvent({
         ...eventData,
-        // Add plan-specific metadata
         planAtCreation: subscription.plan,
         createdAt: new Date().toISOString(),
         planLimits: {
@@ -114,7 +98,6 @@ async getUserMemberEvents(userId) {
         },
       });
 
-      // Update usage statistics
       subscriptionService.updateUsage({
         events: currentEventCount + 1,
       });
@@ -140,15 +123,10 @@ async getUserMemberEvents(userId) {
 
   async deleteEvent(eventId) {
     try {
-      // Get event data before deletion for usage tracking
       const event = await getEvent(eventId);
-
       await deleteEvent(eventId);
-
-      // Update usage statistics
       const subscription = subscriptionService.getCurrentSubscription();
       const usage = subscription.usage;
-
       subscriptionService.updateUsage({
         events: Math.max(0, (usage.events?.used || 0) - 1),
         photos: Math.max(0, (usage.photos.used || 0) - (event.photoCount || 0)),
@@ -161,7 +139,6 @@ async getUserMemberEvents(userId) {
     }
   },
 
-  // event photos with plan validation
   async getEventPhotos(eventId) {
     try {
       return await getEventPhotos(eventId);
@@ -177,8 +154,6 @@ async getUserMemberEvents(userId) {
       const event = await getEvent(eventId);
       const currentEventPhotoCount = event.photoCount || 0;
       const usage = subscription.usage;
-
-      // Check per-event photo limit using exact pricing page values
       const photosPerEventLimit = subscription.features.photosPerEvent;
       if (photosPerEventLimit !== "unlimited") {
         if (currentEventPhotoCount + newPhotoCount > photosPerEventLimit) {
@@ -192,7 +167,6 @@ async getUserMemberEvents(userId) {
         }
       }
 
-      // Check storage limit using exact pricing page values
       const storageLimit = subscription.features.storageBytes;
       if (storageLimit !== Number.MAX_SAFE_INTEGER) {
         if (usage.storage.used + totalFileSize > storageLimit) {
@@ -219,7 +193,6 @@ async getUserMemberEvents(userId) {
     }
   },
 
-  // event members with plan validation
   async addEventMember(eventId, userId) {
     try {
       const subscription = subscriptionService.getCurrentSubscription();
@@ -227,7 +200,6 @@ async getUserMemberEvents(userId) {
       const currentMemberCount = event.members?.length || 0;
       const memberLimit = subscription.features.membersPerEvent;
 
-      // Check member limit using exact pricing page values
       if (memberLimit !== "unlimited" && currentMemberCount >= memberLimit) {
         throw new Error(
           `Member limit reached! Your ${subscription.plan} plan allows ${memberLimit} members per event.`
@@ -263,7 +235,6 @@ async getUserMemberEvents(userId) {
         })
       );
 
-      // Filter out null profiles and ensure proper structure
       return memberProfiles.filter((profile) => profile !== null);
     } catch (error) {
       console.error("Error fetching event members:", error);
@@ -271,7 +242,6 @@ async getUserMemberEvents(userId) {
     }
   },
 
-  // event invitations with plan validation
   async sendEventInvite(eventId, inviterUid, inviteeUid) {
     try {
       const subscription = subscriptionService.getCurrentSubscription();
@@ -279,7 +249,6 @@ async getUserMemberEvents(userId) {
       const currentMemberCount = event.members?.length || 0;
       const memberLimit = subscription.features.membersPerEvent;
 
-      // Check if adding this member would exceed the limit
       if (memberLimit !== "unlimited" && currentMemberCount >= memberLimit) {
         throw new Error(
           `Cannot send invite. Member limit reached! Your ${subscription.plan} plan allows ${memberLimit} members per event.`
@@ -293,7 +262,6 @@ async getUserMemberEvents(userId) {
     }
   },
 
-  // Enhanced event validation with plan integration
   async canUserCreateEvent(userId) {
     try {
       const subscription = subscriptionService.getCurrentSubscription();
@@ -320,7 +288,6 @@ async getUserMemberEvents(userId) {
     }
   },
 
-  // Plan-specific limit helpers - UPDATED to match exact pricing page
   getEventLimitForPlan(plan) {
     const limits = {
       free: 5,
@@ -334,7 +301,7 @@ async getUserMemberEvents(userId) {
   getPhotoLimitForPlan(plan) {
     const limits = {
       free: 30,
-      premium: 200, // Updated to match your pricing page
+      premium: 200,
       pro: "unlimited",
       enterprise: "unlimited",
     };
@@ -361,7 +328,6 @@ async getUserMemberEvents(userId) {
     return limits[plan] || limits["free"];
   },
 
-  // Plan validation utilities
   async validateEventAction(action, eventId, additionalData = {}) {
     try {
       const subscription = subscriptionService.getCurrentSubscription();
@@ -424,7 +390,6 @@ async getUserMemberEvents(userId) {
     }
   },
 
-  // Enhanced usage tracking
   async updateEventPhotoCount(eventId, increment = 1) {
     try {
       const event = await getEvent(eventId);
@@ -445,13 +410,11 @@ async getUserMemberEvents(userId) {
 
   async syncUsageWithSubscriptionService(userId) {
     try {
-      // Get actual usage from events and photos
       const events = await this.getEvents(userId);
       const totalevents = events.length;
       let totalPhotos = 0;
       let totalStorage = 0;
 
-      // Calculate totals from all events
       for (const event of events) {
         const photos = await getEventPhotos(event.id);
         totalPhotos += photos.length;
@@ -461,7 +424,6 @@ async getUserMemberEvents(userId) {
         );
       }
 
-      // Update subscription service with real usage
       subscriptionService.updateUsage({
         events: totalevents,
         photos: totalPhotos,
@@ -479,13 +441,11 @@ async getUserMemberEvents(userId) {
     }
   },
 
-  // Get plan upgrade recommendations based on usage
   getUpgradeRecommendations(subscription) {
     const recommendations = [];
     const usage = subscription.usage;
     const plan = subscription.plan;
 
-    // event limit recommendations
     const eventLimit = subscription.features.events;
     if (eventLimit !== "unlimited") {
       const eventUsagePercent = ((usage.events?.used || 0) / eventLimit) * 100;
@@ -502,10 +462,8 @@ async getUserMemberEvents(userId) {
       }
     }
 
-    // Photo limit recommendations
     const photoLimit = subscription.features.photosPerEvent;
     if (photoLimit !== "unlimited") {
-      // This is per-event, so we'd need to check individual events
       recommendations.push({
         type: "photos",
         urgency: "medium",
@@ -515,7 +473,6 @@ async getUserMemberEvents(userId) {
       });
     }
 
-    // Storage recommendations
     if (usage.storage.percentage > 80) {
       recommendations.push({
         type: "storage",
@@ -531,11 +488,8 @@ async getUserMemberEvents(userId) {
     return recommendations;
   },
 
-  // Legacy constants for backward compatibility
   MAX_EVENTS_PER_USER,
   MAX_PHOTOS_PER_EVENT,
-
-  // Enhanced constants based on plans - UPDATED to match pricing page
   PLAN_LIMITS: {
     free: {
       events: 5,

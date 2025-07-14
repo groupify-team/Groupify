@@ -1,25 +1,31 @@
 import React, { memo } from "react";
 import { BrowserRouter as Router } from "react-router-dom";
 
-// Core providers
 import { AuthProvider } from "@/auth-area";
 import { ThemeProvider } from "@shared/contexts/ThemeContext";
 import { FriendsProvider } from "@shared/contexts/FriendsContext";
 import { EventProvider } from "@shared/contexts/EventContext";
 import GlobalAccessibilityProvider from "@/shared/components/accessibility/GlobalAccessibilityProvider";
 
-// App components
+import { usePresence } from "@shared/hooks/usePresence";
+import { useAuth } from "@auth/hooks/useAuth";
 import FlowController from "@/shared/components/routing/FlowController";
 import AppRoutes from "@/shared/components/routing/AppRoutes";
 import PageTransitionWrapper from "@/shared/components/ui/PageTransitionWrapper";
 
-// Toast notifications
 import { Toaster } from "react-hot-toast";
+
+const PresenceManager = () => {
+  const { currentUser } = useAuth();
+  usePresence();
+  return null;
+};
 
 function App() {
   const AppContent = memo(() => (
     <Router>
       <AuthProvider>
+        <PresenceManager /> {/* ADD THIS LINE */}
         <FriendsProvider>
           <EventProvider>
             <GlobalAccessibilityProvider>
@@ -36,13 +42,9 @@ function App() {
     </Router>
   ));
 
-  // Add this in App.jsx, BEFORE the return statement
   if (import.meta.env.DEV) {
-    console.log("🚀 App loaded - Debug mode active");
-    // Make PresenceService available globally for testing
     import("@shared/services/presence/PresenceService").then((module) => {
       window.PresenceService = module.PresenceService;
-      console.log("🔧 PresenceService available at window.PresenceService");
     });
   }
 
