@@ -77,23 +77,19 @@ function eventReducer(state, action) {
       };
 
     case EVENT_ACTIONS.ADD_EVENT:
-      // FIXED: Prevent duplicate events by checking if event already exists
       const newEvent = action.payload;
-      const eventExists = state.events.some(event => event.id === newEvent.id);
-      
+      const eventExists = state.events.some(
+        (event) => event.id === newEvent.id
+      );
+
       if (eventExists) {
-        console.log("🔄 Event already exists, updating instead:", newEvent.id);
         return {
           ...state,
           events: state.events.map((event) =>
-            event.id === newEvent.id
-              ? { ...event, ...newEvent }
-              : event
+            event.id === newEvent.id ? { ...event, ...newEvent } : event
           ),
         };
       }
-
-      console.log("➕ Adding new event:", newEvent.id);
       return {
         ...state,
         events: [...state.events, newEvent],
@@ -127,7 +123,6 @@ function eventReducer(state, action) {
       const { eventId: addEventId, member: newMember } = action.payload;
       const currentMembers = state.eventMembers[addEventId] || [];
 
-      // Don't add if already exists
       if (currentMembers.some((m) => m.uid === newMember.uid)) {
         return state;
       }
@@ -205,9 +200,10 @@ export const EventProvider = ({ children }) => {
         acceptedAt: new Date().toISOString(),
       });
 
-      // Trigger usage sync after accepting invitation
       if (currentUser?.uid) {
-        usageSyncService.syncUsageWithFirebase(currentUser.uid).catch(console.warn);
+        usageSyncService
+          .syncUsageWithFirebase(currentUser.uid)
+          .catch(console.warn);
       }
 
       return true;
@@ -281,14 +277,14 @@ export const EventProvider = ({ children }) => {
     try {
       const event = state.events.find((e) => e.id === eventId);
       if (!event) throw new Error("Event not found");
-      
+
       const updatedMembers = (event.members || []).filter(
         (uid) => uid !== userId
       );
       const updatedAdmins = (event.admins || []).filter(
         (uid) => uid !== userId
       );
-      
+
       await updateEvent(eventId, {
         members: updatedMembers,
         admins: updatedAdmins,
@@ -301,7 +297,9 @@ export const EventProvider = ({ children }) => {
 
       // Trigger usage sync after removing member
       if (currentUser?.uid) {
-        usageSyncService.syncUsageWithFirebase(currentUser.uid).catch(console.warn);
+        usageSyncService
+          .syncUsageWithFirebase(currentUser.uid)
+          .catch(console.warn);
       }
 
       return true;
@@ -358,42 +356,30 @@ export const EventProvider = ({ children }) => {
     const setupEventListeners = async () => {
       try {
         dispatch({ type: EVENT_ACTIONS.SET_LOADING, payload: true });
-
-        // Initialize usage sync when setting up listeners
         usageSyncService.initializeSync(currentUser.uid).catch(console.warn);
-
-        // FIXED: Get initial events and set them properly
         const userEvents = await eventsService.getEvents(currentUser.uid);
-        console.log("📋 Initial events loaded:", userEvents.length);
         dispatch({ type: EVENT_ACTIONS.SET_EVENTS, payload: userEvents });
-        
-        // Set up listeners for each existing event
         userEvents.forEach((event) => {
           setupSingleEventListener(event.id);
         });
-
         const invitationsQuery = query(
           collection(db, "eventInvites"),
           where("inviteeUid", "==", currentUser.uid),
           where("status", "==", "pending")
         );
-
         unsubscribeEventInvitations = onSnapshot(
           invitationsQuery,
           async (snapshot) => {
             const invitations = [];
-
             for (const docSnap of snapshot.docs) {
               const data = docSnap.data();
               try {
                 const eventDoc = await getDoc(doc(db, "events", data.eventId));
                 if (eventDoc.exists()) {
                   const eventData = eventDoc.data();
-
                   const senderProfile = await UserService.getUserProfile(
                     data.inviterUid
                   );
-
                   invitations.push({
                     id: docSnap.id,
                     ...data,
@@ -417,8 +403,6 @@ export const EventProvider = ({ children }) => {
             });
           }
         );
-
-        // FIXED: Better handling of user events query to prevent duplicates
         const userEventsQuery = query(
           collection(db, "events"),
           where("members", "array-contains", currentUser.uid)
@@ -429,15 +413,15 @@ export const EventProvider = ({ children }) => {
             const eventData = { id: change.doc.id, ...change.doc.data() };
 
             if (change.type === "added") {
-              // FIXED: Only add if we don't already have a listener and it's not in our state
               if (!eventListeners.has(change.doc.id)) {
-                console.log("🔄 New event detected:", change.doc.id);
                 dispatch({ type: EVENT_ACTIONS.ADD_EVENT, payload: eventData });
                 setupSingleEventListener(change.doc.id);
               }
             } else if (change.type === "modified") {
-              // Handle modifications
-              dispatch({ type: EVENT_ACTIONS.UPDATE_EVENT, payload: eventData });
+              dispatch({
+                type: EVENT_ACTIONS.UPDATE_EVENT,
+                payload: eventData,
+              });
             } else if (change.type === "removed") {
               const unsubscribe = eventListeners.get(change.doc.id);
               if (unsubscribe) {
@@ -462,24 +446,20 @@ export const EventProvider = ({ children }) => {
 
     const setupSingleEventListener = (eventId) => {
       if (eventListeners.has(eventId)) {
-        console.log("⚠️ Listener already exists for event:", eventId);
         return;
       }
 
-      console.log("👂 Setting up listener for event:", eventId);
       const eventDocRef = doc(db, "events", eventId);
       const unsubscribe = onSnapshot(
         eventDocRef,
         async (docSnap) => {
           if (!docSnap.exists()) {
-            console.log("🗑️ Event deleted:", eventId);
             dispatch({ type: EVENT_ACTIONS.REMOVE_EVENT, payload: eventId });
             return;
           }
           const eventData = { id: docSnap.id, ...docSnap.data() };
           dispatch({ type: EVENT_ACTIONS.UPDATE_EVENT, payload: eventData });
-          
-          // Handle members
+
           const memberIds = eventData.members || [];
           if (memberIds.length > 0) {
             try {
@@ -518,7 +498,6 @@ export const EventProvider = ({ children }) => {
 
     setupEventListeners();
     return () => {
-      console.log("🧹 Cleaning up EventContext listeners");
       eventListeners.forEach((unsubscribe, eventId) => {
         unsubscribe();
       });

@@ -136,23 +136,14 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
     return true;
   };
 
-  // ===== FORM SUBMISSION =====
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
-
-    // Validate form
     if (!validateForm()) return;
-
-    // Prevent double submission
     if (loading) return;
 
     try {
       setLoading(true);
       setError(null);
-
-      console.log("🔄 Creating event:", name);
-
-      // Create the event
       const newEvent = await eventsService.createEvent({
         name,
         description,
@@ -165,19 +156,12 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
         photoCount: 0,
       });
 
-      console.log("✅ Event created successfully:", newEvent.id);
-
-      // Update event count
       setCurrentEventCount((prev) => prev + 1);
       setCreatedEventName(name);
-
-      // Calculate remaining events
       const remaining =
         planFeatures?.events === "unlimited"
           ? "unlimited"
           : planFeatures?.events - (currentEventCount + 1);
-
-      // Show success toast
       toast.success(
         `Event "${name}" created successfully! ${
           remaining !== "unlimited"
@@ -186,18 +170,8 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
         }`,
         { duration: 4000 }
       );
-
-      // Reset form
       resetForm();
-
-      // FIXED: Don't call onEventCreated here - let EventContext handle the live update
-      // The EventContext will automatically detect the new event and add it to the state
-      // This prevents duplicate events from being created
-
-      // Show success modal
       setShowSuccessModal(true);
-
-      console.log("🎉 Event creation flow completed");
     } catch (error) {
       console.error("❌ Error creating event:", error);
       handleCreateEventError(error);
@@ -206,7 +180,6 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
     }
   };
 
-  // ===== ERROR HANDLING =====
   const handleCreateEventError = (error) => {
     const isLimitError =
       error.message.includes("Event limit reached") ||
@@ -217,8 +190,6 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
 
     if (isLimitError) {
       setError(error.message);
-
-      // Show error toast with upgrade action
       toast.error(error.message, {
         duration: 6000,
         action: {
@@ -229,8 +200,6 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
           },
         },
       });
-
-      // Show upgrade modal
       setShowUpgradeModal(true);
     } else {
       const fallbackError = "Failed to create event. Please try again.";
@@ -239,9 +208,6 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
     }
   };
 
-  // ===== EFFECTS =====
-
-  // Handle escape key
   useEffect(() => {
     const handleEscape = (e) => {
       if (e.key === "Escape" && !loading) {
@@ -255,14 +221,12 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
     }
   }, [isOpen, loading, handleClose]);
 
-  // Load event count when modal opens
   useEffect(() => {
     if (isOpen && currentUser) {
       loadEventCount();
     }
   }, [isOpen, currentUser, loadEventCount]);
 
-  // Prevent body scroll when modal is open
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
@@ -274,10 +238,8 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
     };
   }, [isOpen]);
 
-  // ===== RENDER CONDITIONS =====
   if (!isOpen) return null;
 
-  // ===== PLAN STATUS HELPERS =====
   const canCreateNewEvent = () => {
     return (
       planLoading ||
@@ -310,7 +272,6 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
     return `${Math.min((currentEventCount / planFeatures.events) * 100, 100)}%`;
   };
 
-  // ===== SUCCESS MODAL HANDLERS =====
   const handleSuccessModalClose = () => {
     setShowSuccessModal(false);
     onClose();
@@ -320,22 +281,18 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
     setShowUpgradeModal(false);
   };
 
-  // ===== MAIN RENDER =====
   return (
     <div
       className="modal-backdrop-standard animate-fade-in"
       onClick={handleClose}
     >
       <div className="relative w-full max-w-md mx-auto">
-        {/* Background Glow Effect */}
         <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-2xl blur opacity-20"></div>
 
-        {/* Modal Container */}
         <div
           className="create-event-modal-content bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20 dark:border-gray-700/50 overflow-hidden animate-slide-in-scale"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* ===== HEADER ===== */}
           <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -358,7 +315,6 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
             </div>
           </div>
 
-          {/* ===== PLAN STATUS BAR ===== */}
           {!planLoading && usageInfo && (
             <div className="px-6 py-3 bg-gray-50/50 dark:bg-gray-700/30 border-b border-gray-200/50 dark:border-gray-600/50">
               <div className="flex items-center justify-between text-xs">
@@ -403,7 +359,6 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
                 </div>
               </div>
 
-              {/* Progress Bar */}
               {planFeatures?.events !== "unlimited" && (
                 <div className="mt-2">
                   <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-1.5">
@@ -417,7 +372,6 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
             </div>
           )}
 
-          {/* ===== EVENT LIMIT WARNING BANNER ===== */}
           {isAtEventLimit() && (
             <div className="mx-6 mt-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl p-4">
               <div className="flex items-center gap-3">
@@ -450,9 +404,7 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
             </div>
           )}
 
-          {/* ===== FORM CONTENT ===== */}
           <div className="p-6 space-y-4">
-            {/* Error Message */}
             {error && (
               <div className="bg-red-50/80 dark:bg-red-900/30 border border-red-200/50 dark:border-red-800/50 text-red-700 dark:text-red-400 px-4 py-3 rounded-xl flex items-center gap-2">
                 <ExclamationTriangleIcon className="w-4 h-4 flex-shrink-0" />
@@ -460,7 +412,6 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
               </div>
             )}
 
-            {/* Event Name */}
             <div className="space-y-1">
               <label className="block text-sm font-medium text-gray-800 dark:text-gray-200">
                 Event name <span className="text-red-500">*</span>
@@ -476,7 +427,6 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
               />
             </div>
 
-            {/* Description */}
             <div className="space-y-1">
               <label className="block text-sm font-medium text-gray-800 dark:text-gray-200">
                 Description
@@ -491,7 +441,6 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
               />
             </div>
 
-            {/* Location with Autocomplete */}
             <div className="space-y-1">
               <label className="block text-sm font-medium text-gray-800 dark:text-gray-200">
                 Location
@@ -509,7 +458,6 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
                   disabled={loading}
                 />
 
-                {/* Location Suggestions Dropdown */}
                 {showSuggestions && locationSuggestions.length > 0 && (
                   <div className="absolute z-20 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto">
                     {locationSuggestions
@@ -532,7 +480,6 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
               </div>
             </div>
 
-            {/* Date Fields */}
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <label className="block text-sm font-medium text-gray-800 dark:text-gray-200">
@@ -562,7 +509,6 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
               </div>
             </div>
 
-            {/* Action Buttons */}
             <div className="flex gap-3 pt-4">
               <button
                 type="button"
@@ -600,7 +546,6 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
         </div>
       </div>
 
-      {/* ===== SUCCESS MODAL ===== */}
       {showSuccessModal && (
         <div
           className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[1100]"

@@ -186,18 +186,19 @@ export const FriendsProvider = ({ children }) => {
 
             for (const docSnap of snapshot.docs) {
               const data = docSnap.data();
-              const documentId = docSnap.id; // This is the actual Firestore document ID
+              const documentId = docSnap.id;
 
               try {
-                const senderProfile = await UserService.getUserProfile(data.from);
+                const senderProfile = await UserService.getUserProfile(
+                  data.from
+                );
                 if (senderProfile) {
                   requests.push({
-                    id: documentId, // ← Use the document ID, not user ID
-                    from: data.from, // ← Sender user ID
-                    to: data.to, // ← Recipient user ID
+                    id: documentId,
+                    from: data.from,
+                    to: data.to,
                     status: data.status,
                     createdAt: data.createdAt,
-                    // Include sender profile data for display
                     uid: senderProfile.uid || senderProfile.id || data.from,
                     displayName: senderProfile.displayName,
                     email: senderProfile.email,
@@ -206,7 +207,6 @@ export const FriendsProvider = ({ children }) => {
                 }
               } catch (error) {
                 console.warn(`Failed to fetch sender ${data.from}:`, error);
-                // Still add the request even if we can't get sender profile
                 requests.push({
                   id: documentId,
                   from: data.from,
@@ -221,7 +221,6 @@ export const FriendsProvider = ({ children }) => {
               }
             }
 
-            console.log("📋 Setting pending requests:", requests); // Debug log
             dispatch({
               type: FRIENDS_ACTIONS.SET_PENDING_REQUESTS,
               payload: requests,
@@ -318,76 +317,72 @@ export const FriendsProvider = ({ children }) => {
   };
 
   const acceptFriendRequest = async (requestId, fromUserId) => {
-  try {
-    // Validate inputs
-    if (!requestId || typeof requestId !== "string") {
-      console.error("❌ Invalid requestId in context:", requestId);
-      throw new Error("Invalid request ID");
-    }
-    
-    if (!currentUser?.uid) {
-      throw new Error("No current user");
-    }
-
-    console.log("🔄 FriendsContext: Accepting friend request", { requestId, fromUserId });
-    
-    // First attempt with the provided requestId
-    await UserService.acceptFriendRequest(requestId, currentUser.uid);
-    console.log("✅ FriendsContext: Friend request accepted successfully");
-    return true;
-    
-  } catch (error) {
-    console.error("❌ FriendsContext: Error accepting friend request:", error);
-    
-    // If the specific document wasn't found, try to find it by user IDs
-    if (error.message.includes("Friend request not found") && fromUserId) {
-      try {
-        console.log("🔄 FriendsContext: Attempting to find correct document ID...");
-        const correctDocId = await findCorrectDocumentId(fromUserId, currentUser.uid);
-        if (correctDocId) {
-          console.log("✅ FriendsContext: Found correct document ID:", correctDocId);
-          await UserService.acceptFriendRequest(correctDocId, currentUser.uid);
-          console.log("✅ FriendsContext: Friend request accepted on retry");
-          return true;
-        } else {
-          console.error("❌ FriendsContext: Could not find correct document ID");
-          throw new Error("Could not find the friend request document");
-        }
-      } catch (retryError) {
-        console.error("❌ FriendsContext: Retry also failed:", retryError);
-        throw retryError;
+    try {
+      // Validate inputs
+      if (!requestId || typeof requestId !== "string") {
+        console.error("❌ Invalid requestId in context:", requestId);
+        throw new Error("Invalid request ID");
       }
+
+      if (!currentUser?.uid) {
+        throw new Error("No current user");
+      }
+
+      await UserService.acceptFriendRequest(requestId, currentUser.uid);
+      return true;
+    } catch (error) {
+      if (error.message.includes("Friend request not found") && fromUserId) {
+        try {
+          const correctDocId = await findCorrectDocumentId(
+            fromUserId,
+            currentUser.uid
+          );
+          if (correctDocId) {
+            await UserService.acceptFriendRequest(
+              correctDocId,
+              currentUser.uid
+            );
+            return true;
+          } else {
+            console.error(
+              "❌ FriendsContext: Could not find correct document ID"
+            );
+            throw new Error("Could not find the friend request document");
+          }
+        } catch (retryError) {
+          console.error("❌ FriendsContext: Retry also failed:", retryError);
+          throw retryError;
+        }
+      }
+      throw error;
     }
-    
-    throw error;
-  }
-};
+  };
 
-// Helper function to find correct document ID
-const findCorrectDocumentId = async (fromUserId, toUserId) => {
-  try {
-    const { collection, query, where, getDocs } = await import("firebase/firestore");
-    const { db } = await import("@shared/services/firebase/config");
+  const findCorrectDocumentId = async (fromUserId, toUserId) => {
+    try {
+      const { collection, query, where, getDocs } = await import(
+        "firebase/firestore"
+      );
+      const { db } = await import("@shared/services/firebase/config");
 
-    const q = query(
-      collection(db, "friendRequests"),
-      where("from", "==", fromUserId),
-      where("to", "==", toUserId),
-      where("status", "==", "pending")
-    );
+      const q = query(
+        collection(db, "friendRequests"),
+        where("from", "==", fromUserId),
+        where("to", "==", toUserId),
+        where("status", "==", "pending")
+      );
 
-    const querySnapshot = await getDocs(q);
-    if (!querySnapshot.empty) {
-      const correctId = querySnapshot.docs[0].id;
-      console.log("🔍 Found correct document ID:", correctId);
-      return correctId;
+      const querySnapshot = await getDocs(q);
+      if (!querySnapshot.empty) {
+        const correctId = querySnapshot.docs[0].id;
+        return correctId;
+      }
+      return null;
+    } catch (error) {
+      console.error("❌ Error finding document ID:", error);
+      return null;
     }
-    return null;
-  } catch (error) {
-    console.error("❌ Error finding document ID:", error);
-    return null;
-  }
-};
+  };
 
   const rejectFriendRequest = async (requestId, fromUserId) => {
     try {

@@ -51,10 +51,6 @@ export const BundleAnalyzer = {
       "📊 Overall Performance": "+60% faster load times",
     };
 
-    Object.entries(improvements).forEach(([key, value]) => {
-      console.log(`${key}: ${value}`);
-    });
-
     return improvements;
   },
 };
