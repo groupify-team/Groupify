@@ -18,13 +18,11 @@ import {
 } from "@heroicons/react/24/outline";
 
 const EditProfileModal = ({ isOpen, onClose }) => {
-  // Form states - keeping your exact original structure
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [birthdate, setBirthdate] = useState("");
   const [gender, setGender] = useState(null);
-  // Image upload & crop states - keeping your exact original structure
   const [profileImage, setProfileImage] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [rawImage, setRawImage] = useState(null);
@@ -72,76 +70,64 @@ const EditProfileModal = ({ isOpen, onClose }) => {
   }, [isOpen]);
 
   useEffect(() => {
-  const startCamera = async () => {
-    if (showCamera && videoRef.current) {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { 
-            facingMode: 'user',
-            width: { ideal: 640 },
-            height: { ideal: 480 }
-          }
-        });
-        
-        // Ensure video element is ready
-        const video = videoRef.current;
-        video.srcObject = stream;
-        
-        // Wait for video to be ready before playing
-        video.onloadedmetadata = () => {
-          video.play().catch(err => {
-            console.error("❌ Failed to play video:", err);
-            setError("Could not start video playback");
+    const startCamera = async () => {
+      if (showCamera && videoRef.current) {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({
+            video: {
+              facingMode: "user",
+              width: { ideal: 640 },
+              height: { ideal: 480 },
+            },
           });
-        };
-        
-        setVideoStream(stream);
-        console.log("✅ Camera started successfully");
-      } catch (err) {
-        console.error("❌ Failed to start camera:", err);
-        setError("Could not access camera. Please check permissions.");
+
+          const video = videoRef.current;
+          video.srcObject = stream;
+          video.onloadedmetadata = () => {
+            video.play().catch((err) => {
+              console.error("❌ Failed to play video:", err);
+              setError("Could not start video playback");
+            });
+          };
+
+          setVideoStream(stream);
+        } catch (err) {
+          console.error("❌ Failed to start camera:", err);
+          setError("Could not access camera. Please check permissions.");
+        }
       }
-    }
-  };
+    };
 
-  if (showCamera) {
-    startCamera();
-  }
-
-  // Cleanup when camera is closed
-  return () => {
-    if (videoStream && !showCamera) {
-      videoStream.getTracks().forEach(track => track.stop());
+    if (showCamera) {
+      startCamera();
     }
-  };
-}, [showCamera]);
 
-useEffect(() => {
-  // Cleanup blob URLs to prevent memory leaks
-  return () => {
-    if (rawImage && rawImage.startsWith('blob:')) {
-      URL.revokeObjectURL(rawImage);
-    }
-    if (previewUrl && previewUrl.startsWith('blob:')) {
-      URL.revokeObjectURL(previewUrl);
-    }
-  };
-}, [rawImage, previewUrl]);
+    return () => {
+      if (videoStream && !showCamera) {
+        videoStream.getTracks().forEach((track) => track.stop());
+      }
+    };
+  }, [showCamera]);
 
-useEffect(() => {
-  console.log("🔍 State - cropping:", cropping, "rawImage:", rawImage ? "present" : "null");
-}, [cropping, rawImage]);
+  useEffect(() => {
+    return () => {
+      if (rawImage && rawImage.startsWith("blob:")) {
+        URL.revokeObjectURL(rawImage);
+      }
+      if (previewUrl && previewUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [rawImage, previewUrl]);
 
   const handleImageSelect = (e) => {
-  const file = e.target.files[0];
-  if (file) {
-    const imageUrl = URL.createObjectURL(file);
-    console.log("📁 File selected:", file.name, "URL:", imageUrl);
-    console.log("🔄 Setting cropping to true");
-    setRawImage(imageUrl);
-    setCropping(true);
-  }
-};
+    const file = e.target.files[0];
+    if (file) {
+      const imageUrl = URL.createObjectURL(file);
+      setRawImage(imageUrl);
+      setCropping(true);
+    }
+  };
 
   const handleCropComplete = (blob, fileUrl) => {
     setProfileImage(blob);
@@ -163,133 +149,121 @@ useEffect(() => {
   };
 
   const capturePhoto = () => {
-  const video = videoRef.current;
-  console.log("🎬 capturePhoto called, video element:", video);
-  
-  if (!video || !video.videoWidth || !video.videoHeight) {
-    console.log("❌ Video not ready:", { video, videoWidth: video?.videoWidth, videoHeight: video?.videoHeight });
-    setError("Camera not ready. Please wait a moment and try again.");
-    return;
-  }
+    const video = videoRef.current;
 
-  try {
-    const canvas = document.createElement("canvas");
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    const ctx = canvas.getContext("2d");
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    if (!video || !video.videoWidth || !video.videoHeight) {
+      setError("Camera not ready. Please wait a moment and try again.");
+      return;
+    }
 
-    canvas.toBlob((blob) => {
-      if (!blob) {
-        console.log("❌ No blob created");
-        setError("Failed to capture photo. Please try again.");
-        return;
-      }
-      
-      // Cleanup previous blob URL
-      if (rawImage && rawImage.startsWith('blob:')) {
-        URL.revokeObjectURL(rawImage);
-      }
-      
-      const imageUrl = URL.createObjectURL(blob);
-      console.log("📸 Setting rawImage:", imageUrl);
-      console.log("🔄 Setting cropping to true");
-      
-      setRawImage(imageUrl);
-      setCropping(true);
-      stopCamera();
-      console.log("✅ Photo captured successfully");
-    }, "image/jpeg", 0.9);
-  } catch (err) {
-    console.error("❌ Error capturing photo:", err);
-    setError("Failed to capture photo. Please try again.");
-  }
-};
+    try {
+      const canvas = document.createElement("canvas");
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) {
+            setError("Failed to capture photo. Please try again.");
+            return;
+          }
+          if (rawImage && rawImage.startsWith("blob:")) {
+            URL.revokeObjectURL(rawImage);
+          }
+          const imageUrl = URL.createObjectURL(blob);
+          setRawImage(imageUrl);
+          setCropping(true);
+          stopCamera();
+        },
+        "image/jpeg",
+        0.9
+      );
+    } catch (err) {
+      console.error("❌ Error capturing photo:", err);
+      setError("Failed to capture photo. Please try again.");
+    }
+  };
 
   const stopCamera = () => {
-  if (videoStream) {
-    videoStream.getTracks().forEach((track) => {
-      track.stop();
-      console.log("🛑 Camera track stopped");
-    });
-    setVideoStream(null);
-  }
-  if (videoRef.current) {
-    videoRef.current.srcObject = null;
-  }
-  setShowCamera(false);
-};
+    if (videoStream) {
+      videoStream.getTracks().forEach((track) => {
+        track.stop();
+      });
+      setVideoStream(null);
+    }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+    setShowCamera(false);
+  };
 
   const cancelCamera = () => {
     stopCamera();
     setCapturedPhoto(null);
   };
 
-  // Save all profile data - keeping your exact logic
   const handleSave = async (e) => {
-  e.preventDefault();
-  setLoading(true);
-  setError("");
+    e.preventDefault();
+    setLoading(true);
+    setError("");
 
-  try {
-    const user = auth.currentUser;
-    const userRef = doc(db, "users", user.uid);
-    const updates = { displayName, birthdate, gender };
+    try {
+      const user = auth.currentUser;
+      const userRef = doc(db, "users", user.uid);
+      const updates = { displayName, birthdate, gender };
 
-    if (email !== user.email) {
-      try {
-        await updateEmail(user, email);
-        updates.email = email;
-      } catch (error) {
-        if (error.code === "auth/requires-recent-login") {
-          setError("Please re-login to update your email.");
-          setLoading(false);
-          return;
-        } else {
-          throw error;
+      if (email !== user.email) {
+        try {
+          await updateEmail(user, email);
+          updates.email = email;
+        } catch (error) {
+          if (error.code === "auth/requires-recent-login") {
+            setError("Please re-login to update your email.");
+            setLoading(false);
+            return;
+          } else {
+            throw error;
+          }
         }
       }
-    }
 
-    if (password) {
-      try {
-        await updatePassword(user, password);
-      } catch (error) {
-        if (error.code === "auth/requires-recent-login") {
-          setError("Please re-login to update your password.");
-          setLoading(false);
-          return;
-        } else {
-          throw error;
+      if (password) {
+        try {
+          await updatePassword(user, password);
+        } catch (error) {
+          if (error.code === "auth/requires-recent-login") {
+            setError("Please re-login to update your password.");
+            setLoading(false);
+            return;
+          } else {
+            throw error;
+          }
         }
       }
-    }
 
-    if (profileImage) { 
-      const imageUrl = await handleImageUpload();
-      if (imageUrl) {
-        updates.photoURL = imageUrl;
-        await updateUserProfile({ photoURL: imageUrl });
-        // Removed the problematic setCurrentUser line
+      if (profileImage) {
+        const imageUrl = await handleImageUpload();
+        if (imageUrl) {
+          updates.photoURL = imageUrl;
+          await updateUserProfile({ photoURL: imageUrl });
+        }
       }
+
+      await updateDoc(userRef, updates);
+      setSuccessMessage("Profile updated successfully! ✨");
+      setShowSuccess(true);
+      setTimeout(() => {
+        setShowSuccess(false);
+        onClose();
+      }, 2000);
+    } catch (err) {
+      console.error("❌ Error saving profile:", err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
-
-    await updateDoc(userRef, updates);
-    setSuccessMessage("Profile updated successfully! ✨");
-    setShowSuccess(true);
-    setTimeout(() => {
-      setShowSuccess(false);
-      onClose();
-    }, 2000);
-  } catch (err) {
-    console.error("❌ Error saving profile:", err);
-    setError(err.message);
-  } finally {
-    setLoading(false);
-  }
-};
-
-  // Don't render modal if it's closed
+  };
   if (!isOpen) return null;
 
   return (
@@ -337,14 +311,14 @@ useEffect(() => {
 
       {/* Image Cropper - keeping your exact component */}
       {cropping && (
-      <div className="fixed inset-0" style={{ zIndex: 10001 }}>
-        <ProfileImageCropper
-          imageSrc={rawImage}
-          onCropComplete={handleCropComplete}
-          onCancel={() => setCropping(false)}
-        />
-      </div>
-    )}
+        <div className="fixed inset-0" style={{ zIndex: 10001 }}>
+          <ProfileImageCropper
+            imageSrc={rawImage}
+            onCropComplete={handleCropComplete}
+            onCancel={() => setCropping(false)}
+          />
+        </div>
+      )}
 
       {/* Main Modal - Redesigned with Dashboard styling */}
       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-40 p-4">

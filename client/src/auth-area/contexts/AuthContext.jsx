@@ -236,157 +236,157 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
-const signInWithGoogle = useCallback(async () => {
-  const provider = new GoogleAuthProvider();
-  try {
-    const result = await signInWithPopup(auth, provider);
-    const user = result.user;
-    
-    // Check if user document already exists
-    const userDoc = await getDoc(doc(db, "users", user.uid));
-    const isNewUser = !userDoc.exists();
-    
-    // Check if email-based account exists (for linking scenarios)
-    let existingEmailUser = null;
-    if (isNewUser) {
-      try {
-        const usersRef = collection(db, "users");
-        const emailQuery = query(usersRef, where("email", "==", user.email));
-        const emailSnapshot = await getDocs(emailQuery);
-        
-        if (!emailSnapshot.empty) {
-          existingEmailUser = emailSnapshot.docs[0];
-        }
-      } catch (error) {
-        console.warn("Error checking for existing email user:", error);
-      }
-    }
-
-    // Determine the type of Google sign-in
-    let registrationType = 'login'; // default
-    
-    if (isNewUser && !existingEmailUser) {
-      registrationType = 'new';
-    } else if (isNewUser && existingEmailUser) {
-      registrationType = 'linked';
-    } else {
-      registrationType = 'returning';
-    }
-
-    // Store registration type for toast messages
-    localStorage.setItem('groupify_google_registration_type', registrationType);
-
-    // Handle new user registration
-    if (isNewUser && !existingEmailUser) {
-      await setDoc(doc(db, "users", user.uid), {
-        uid: user.uid,
-        email: user.email,
-        displayName: user.displayName,
-        gender: "other",
-        createdAt: new Date().toISOString(),
-        emailVerified: true,
-        friends: [],
-        profilePicture: user.photoURL,
-        bio: "",
-        location: "",
-        joinedAt: new Date().toISOString(),
-        authMethod: "google",
-        subscription: {
-          plan: "free",
-          status: "active",
-          createdAt: new Date().toISOString(),
-        },
-        usage: {
-          events: 0,
-          photos: 0,
-          storage: 0,
-          albums: 0,
-        },
-      });
-
-      subscriptionService.updateSubscription({
-        plan: "free",
-        status: "active",
-        purchaseDate: new Date().toISOString(),
-        metadata: {
-          signupMethod: "google",
-          initializedAt: new Date().toISOString(),
-        },
-      });
-    } 
-    // Handle linking Google to existing email account
-    else if (isNewUser && existingEmailUser) {
-      try {
-        const existingData = existingEmailUser.data();
-        
-        // Create new document with Google UID, preserve existing data
-        await setDoc(doc(db, "users", user.uid), {
-          ...existingData,
-          uid: user.uid, // Update to new Google UID
-          emailVerified: true,
-          profilePicture: user.photoURL || existingData.profilePicture,
-          authMethod: "email_google_linked",
-          linkedAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        });
-
-        // Delete the old email-only document
-        await deleteDoc(doc(db, "users", existingEmailUser.id));
-        
-        console.log("Successfully linked Google account for user", user.email);
-      } catch (linkingError) {
-        console.error("Error during account linking:", linkingError);
-        registrationType = 'new'; // Fallback to new user
-        localStorage.setItem('groupify_google_registration_type', 'new');
-      }
-    }
-    // Handle returning user
-    else {
-      try {
-        await updateDoc(doc(db, "users", user.uid), {
-          lastLoginAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        });
-      } catch (updateError) {
-        console.warn("Could not update last login time:", updateError);
-      }
-    }
-
-    // Try to call cloud function (but don't fail if it doesn't work)
+  const signInWithGoogle = useCallback(async () => {
+    const provider = new GoogleAuthProvider();
     try {
-      const response = await fetch(
-        "https://us-central1-groupify-77202.cloudfunctions.net/enableGoogleAuth",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            data: {
-              uid: user.uid,
-              email: user.email,
-              displayName: user.displayName,
-              photoURL: user.photoURL,
-              isNewUser,
-              existingEmailUserId: existingEmailUser?.id || null,
-            },
-          }),
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+
+      // Check if user document already exists
+      const userDoc = await getDoc(doc(db, "users", user.uid));
+      const isNewUser = !userDoc.exists();
+
+      // Check if email-based account exists (for linking scenarios)
+      let existingEmailUser = null;
+      if (isNewUser) {
+        try {
+          const usersRef = collection(db, "users");
+          const emailQuery = query(usersRef, where("email", "==", user.email));
+          const emailSnapshot = await getDocs(emailQuery);
+
+          if (!emailSnapshot.empty) {
+            existingEmailUser = emailSnapshot.docs[0];
+          }
+        } catch (error) {
+          console.warn("Error checking for existing email user:", error);
         }
+      }
+
+      // Determine the type of Google sign-in
+      let registrationType = "login"; // default
+
+      if (isNewUser && !existingEmailUser) {
+        registrationType = "new";
+      } else if (isNewUser && existingEmailUser) {
+        registrationType = "linked";
+      } else {
+        registrationType = "returning";
+      }
+
+      // Store registration type for toast messages
+      localStorage.setItem(
+        "groupify_google_registration_type",
+        registrationType
       );
 
-      if (!response.ok) {
-        console.warn("EnableGoogleAuth function failed, but continuing with client-side logic");
-      }
-    } catch (cloudFunctionError) {
-      console.warn("EnableGoogleAuth function failed, but continuing with client-side logic:", cloudFunctionError);
-    }
+      // Handle new user registration
+      if (isNewUser && !existingEmailUser) {
+        await setDoc(doc(db, "users", user.uid), {
+          uid: user.uid,
+          email: user.email,
+          displayName: user.displayName,
+          gender: "other",
+          createdAt: new Date().toISOString(),
+          emailVerified: true,
+          friends: [],
+          profilePicture: user.photoURL,
+          bio: "",
+          location: "",
+          joinedAt: new Date().toISOString(),
+          authMethod: "google",
+          subscription: {
+            plan: "free",
+            status: "active",
+            createdAt: new Date().toISOString(),
+          },
+          usage: {
+            events: 0,
+            photos: 0,
+            storage: 0,
+            albums: 0,
+          },
+        });
 
-    return result;
-  } catch (error) {
-    console.error("Google sign-in error:", error);
-    throw error;
-  }
-}, []);
+        subscriptionService.updateSubscription({
+          plan: "free",
+          status: "active",
+          purchaseDate: new Date().toISOString(),
+          metadata: {
+            signupMethod: "google",
+            initializedAt: new Date().toISOString(),
+          },
+        });
+      }
+      // Handle linking Google to existing email account
+      else if (isNewUser && existingEmailUser) {
+        try {
+          const existingData = existingEmailUser.data();
+
+          await setDoc(doc(db, "users", user.uid), {
+            ...existingData,
+            uid: user.uid,
+            emailVerified: true,
+            profilePicture: user.photoURL || existingData.profilePicture,
+            authMethod: "email_google_linked",
+            linkedAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          });
+
+          await deleteDoc(doc(db, "users", existingEmailUser.id));
+        } catch (linkingError) {
+          console.error("Error during account linking:", linkingError);
+          registrationType = "new";
+          localStorage.setItem("groupify_google_registration_type", "new");
+        }
+      } else {
+        try {
+          await updateDoc(doc(db, "users", user.uid), {
+            lastLoginAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          });
+        } catch (updateError) {
+          console.warn("Could not update last login time:", updateError);
+        }
+      }
+      try {
+        const response = await fetch(
+          "https://us-central1-groupify-77202.cloudfunctions.net/enableGoogleAuth",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              data: {
+                uid: user.uid,
+                email: user.email,
+                displayName: user.displayName,
+                photoURL: user.photoURL,
+                isNewUser,
+                existingEmailUserId: existingEmailUser?.id || null,
+              },
+            }),
+          }
+        );
+
+        if (!response.ok) {
+          console.warn(
+            "EnableGoogleAuth function failed, but continuing with client-side logic"
+          );
+        }
+      } catch (cloudFunctionError) {
+        console.warn(
+          "EnableGoogleAuth function failed, but continuing with client-side logic:",
+          cloudFunctionError
+        );
+      }
+
+      return result;
+    } catch (error) {
+      console.error("Google sign-in error:", error);
+      throw error;
+    }
+  }, []);
 
   const logout = useCallback(async () => {
     try {
