@@ -121,10 +121,7 @@ export default defineConfig({
             "firebase/firestore",
             "firebase/storage",
           ],
-          // Area-based chunks
-          auth: ["./src/auth-area"],
-          dashboard: ["./src/dashboard-area"],
-          public: ["./src/public-area"],
+          // Removed problematic area-based chunks
         },
       },
     },

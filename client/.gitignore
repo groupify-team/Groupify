@@ -67,3 +67,9 @@ node_modules/
 
 # dataconnect generated files
 .dataconnect
+
+# Ignore thiings-icons directory and all its contents
+client/public/thiings-icons/
+client/public/thiings-icons/*
+public/thiings-icons/
+public/thiings-icons/*

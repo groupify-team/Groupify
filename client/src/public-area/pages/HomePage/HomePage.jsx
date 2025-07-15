@@ -17,8 +17,9 @@ import PublicFooter from "../../components/layout/PublicFooter";
 import HomeHeader from "../../components/layout/HomeHeader";
 import AccessibilityModal from "@/shared/components/accessibility/AccessibilityModal";
 import { usePublicNavigation } from "../../hooks/usePublicNavigation";
-import AccessibilityButton from "@shared/components/accessibility/AccessibilityButton";
 import FloatingAccessibilityButton from "@shared/components/accessibility/FloatingAccessibilityButton";
+import InteractiveThiingsGrid from '../../components/ui/InteractiveThiingsGrid';
+
 
 // Launch Animation Component
 const LaunchAnimation = ({ onAnimationComplete }) => {
@@ -401,38 +402,56 @@ const HomePage = () => {
                 {benefits.map((benefit, index) => (
                   <div
                     key={benefit}
-                    className={`flex items-center p-4 bg-white/40 dark:bg-gray-800/40 backdrop-blur-sm rounded-lg border border-white/20 dark:border-gray-700/50 transition-all duration-300 ${
+                    className={`group flex items-center p-4 bg-white/40 dark:bg-gray-800/40 backdrop-blur-sm rounded-lg border border-white/20 dark:border-gray-700/50 transition-all duration-300 hover:bg-white/60 dark:hover:bg-gray-800/60 hover:scale-[1.02] hover:shadow-lg cursor-pointer ${
                       isLoaded
                         ? `opacity-100 translate-x-0 delay-${index * 100}`
                         : "opacity-0 -translate-x-8"
                     }`}
+                    onMouseEnter={() => {
+                      // Dispatch custom event for icon grid
+                      window.dispatchEvent(new CustomEvent('benefitHover', { 
+                        detail: { index } 
+                      }));
+                    }}
+                    onMouseLeave={() => {
+                      // Dispatch custom event to return to scroll-based
+                      window.dispatchEvent(new CustomEvent('benefitLeave'));
+                    }}
                   >
-                    <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
+                    <div className="w-6 h-6 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full flex items-center justify-center mr-4 flex-shrink-0 shadow-lg group-hover:scale-110 transition-transform duration-200">
                       <CheckIcon className="w-4 h-4 text-white" />
                     </div>
-                    <span className="text-gray-700 dark:text-gray-300 font-medium">
+                    <span className="text-gray-700 dark:text-gray-300 font-medium group-hover:text-gray-900 dark:group-hover:text-white transition-colors">
                       {benefit}
                     </span>
                   </div>
                 ))}
               </div>
+              
+              {/* Call to action button in the features section */}
+              <div className="mt-8">
+                <Link
+                  to="/signup"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleSmoothNavigation("/signup");
+                  }}
+                  className="inline-flex items-center bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105"
+                >
+                  Try Groupify Free
+                  <ArrowRightIcon className="ml-2 w-4 h-4" />
+                </Link>
+              </div>
             </div>
 
+            {/* Interactive Thiings Grid */}
             <div className="relative">
-              <div className="aspect-square bg-gradient-to-br from-indigo-500/20 to-purple-500/20 rounded-3xl flex items-center justify-center backdrop-blur-sm border border-white/20 dark:border-gray-700/50">
-                <div className="grid grid-cols-3 gap-4 p-8">
-                  {[...Array(9)].map((_, i) => (
-                    <div
-                      key={i}
-                      className={`aspect-square bg-gradient-to-br from-indigo-400 to-purple-500 rounded-lg shadow-lg transition-all duration-500 hover:scale-110 ${
-                        isLoaded
-                          ? `opacity-100 scale-100 delay-${i * 50}`
-                          : "opacity-0 scale-95"
-                      }`}
-                    />
-                  ))}
-                </div>
-              </div>
+              <InteractiveThiingsGrid isLoaded={isLoaded} />
+              
+              {/* Optional floating elements around the grid */}
+              <div className="absolute -top-4 -left-4 w-8 h-8 bg-gradient-to-br from-indigo-400/30 to-purple-400/30 rounded-full blur-sm animate-pulse" />
+              <div className="absolute -bottom-4 -right-4 w-6 h-6 bg-gradient-to-br from-purple-400/30 to-pink-400/30 rounded-full blur-sm animate-pulse" style={{ animationDelay: '1s' }} />
+              <div className="absolute top-1/2 -right-6 w-4 h-4 bg-gradient-to-br from-blue-400/40 to-indigo-400/40 rounded-full blur-sm animate-ping" style={{ animationDelay: '2s' }} />
             </div>
           </div>
         </div>

@@ -633,3 +633,20 @@ div[data-testid="toast-container"] {
 }
 
 /* Loading Toast */
+
+
+/* Add these utilities for the Thiings grid */
+@layer utilities {
+  .bg-gradient-radial {
+    background: radial-gradient(circle, var(--tw-gradient-stops));
+  }
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite;
+}
