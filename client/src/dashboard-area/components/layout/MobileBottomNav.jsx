@@ -51,11 +51,7 @@ const MobileBottomNav = () => {
             <button
               key={item.id}
               onClick={() => {
-                if (item.id === "profile") {
-                  navigateToSection("settings"); // Temporary redirect to settings
-                } else {
-                  navigateToSection(item.id);
-                }
+                navigateToSection(item.id);
               }}
               className={`flex flex-col items-center px-3 py-2 rounded-xl transition-all duration-200 relative min-w-0 flex-1 ${
                 isActive

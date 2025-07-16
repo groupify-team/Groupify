@@ -75,6 +75,9 @@ const SettingsSection = React.lazy(() =>
 const FriendsSection = React.lazy(() =>
   import("@/dashboard-area/features/friends/FriendsSection")
 );
+const ProfileSection = React.lazy(() =>
+  import("@/dashboard-area/features/profile/components/sections/ProfileSection")
+);
 
 const AppRoutes = () => {
   return (
@@ -280,6 +283,14 @@ const AppRoutes = () => {
             element={
               <SuspenseWrapper useSkeleton={true}>
                 <FriendsSection />
+              </SuspenseWrapper>
+            }
+          />
+          <Route
+            path="profile"
+            element={
+              <SuspenseWrapper useSkeleton={true}>
+                <ProfileSection />
               </SuspenseWrapper>
             }
           />

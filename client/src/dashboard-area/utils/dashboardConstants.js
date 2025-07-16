@@ -1,4 +1,4 @@
-// Dashboard Constants and Configuration
+// src/dashboard-area/utils/dashboardConstants.js - UPDATED
 import {
   ArrowRightOnRectangleIcon,
   Cog6ToothIcon,
@@ -13,7 +13,7 @@ import {
 import { BREAKPOINTS, ANIMATIONS } from "@/shared/constants/ui";
 import { TOAST_MESSAGES, ERROR_MESSAGES } from "@/shared/constants/messages";
 
-// Navigation Configuration
+// UPDATED Navigation Configuration - Added Profile section
 export const NAVIGATION_ITEMS = [
   {
     id: "events",
@@ -30,11 +30,18 @@ export const NAVIGATION_ITEMS = [
     description: "Manage your friends and friend requests",
   },
   {
+    id: "profile",
+    name: "Profile",
+    icon: UserIcon,
+    href: "/dashboard/profile",
+    description: "Manage your account and face recognition profile",
+  },
+  {
     id: "settings",
     name: "Settings",
     icon: Cog6ToothIcon,
     href: "/dashboard/settings",
-    description: "Configure your account and preferences",
+    description: "Configure billing, data, and advanced preferences",
   },
 ];
 
@@ -58,7 +65,7 @@ export const DEFAULT_STATE = {
   error: null,
 };
 
-// User Menu Items
+// UPDATED User Menu Items - Added Profile
 export const USER_MENU_ITEMS = [
   {
     id: "profile",
@@ -86,7 +93,7 @@ export const USER_MENU_ITEMS = [
   },
 ];
 
-// Bottom Navigation Items (Mobile)
+// UPDATED Bottom Navigation Items (Mobile) - Added Profile
 export const BOTTOM_NAV_ITEMS = [
   { id: "events", name: "Events", icon: MapIcon },
   { id: "friends", name: "Friends", icon: UserPlusIcon },

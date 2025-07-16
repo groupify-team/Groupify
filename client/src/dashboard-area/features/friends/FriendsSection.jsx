@@ -56,7 +56,6 @@ const FriendsSection = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [processingRequest, setProcessingRequest] = useState(null);
 
-
   // Check if mobile
   useEffect(() => {
     const checkMobile = () => {
@@ -146,31 +145,31 @@ const FriendsSection = () => {
   ];
 
   // Handler functions
-const handleAcceptRequest = async (request) => {
-  try {
-    setProcessingRequest(`accept-${request.id}`);
-    await acceptFriendRequest(request.id, request.from);
-    toast.success("Friend request accepted! 🎉");
-  } catch (error) {
-    console.error("Error accepting friend request:", error);
-    toast.error("Failed to accept friend request");
-  } finally {
-    setProcessingRequest(null);
-  }
-};
+  const handleAcceptRequest = async (request) => {
+    try {
+      setProcessingRequest(`accept-${request.id}`);
+      await acceptFriendRequest(request.id, request.from);
+      toast.success("Friend request accepted! 🎉");
+    } catch (error) {
+      console.error("Error accepting friend request:", error);
+      toast.error("Failed to accept friend request");
+    } finally {
+      setProcessingRequest(null);
+    }
+  };
 
-const handleRejectRequest = async (request) => {
-  try {
-    setProcessingRequest(`reject-${request.id}`);
-    await rejectFriendRequest(request.id, request.from);
-    toast.success("Friend request declined");
-  } catch (error) {
-    console.error("Error rejecting friend request:", error);
-    toast.error("Failed to decline friend request");
-  } finally {
-    setProcessingRequest(null);
-  }
-};
+  const handleRejectRequest = async (request) => {
+    try {
+      setProcessingRequest(`reject-${request.id}`);
+      await rejectFriendRequest(request.id, request.from);
+      toast.success("Friend request declined");
+    } catch (error) {
+      console.error("Error rejecting friend request:", error);
+      toast.error("Failed to decline friend request");
+    } finally {
+      setProcessingRequest(null);
+    }
+  };
 
   const handleRemoveFriendLocal = async (friendUid) => {
     try {
@@ -424,9 +423,9 @@ const handleRejectRequest = async (request) => {
       <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6">
         {/* Enhanced Header Section */}
         <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl border border-gray-200/50 dark:border-gray-700/50 shadow-xl p-4 sm:p-6 mb-6 sm:mb-8">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 sm:gap-6">
+          <div className="flex items-start justify-between gap-4">
             {/* Title Section */}
-            <div className="flex items-center gap-3 sm:gap-4">
+            <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
               <div className="p-2 sm:p-3 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl sm:rounded-2xl shadow-lg">
                 <UsersIcon className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
               </div>
@@ -446,15 +445,18 @@ const handleRejectRequest = async (request) => {
               </div>
             </div>
 
-            {/* Action Button */}
-            <button
-              onClick={() => setShowAddFriendModal(true)}
-              className="inline-flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-xl font-semibold shadow-lg transform transition-all duration-200 hover:scale-105 hover:shadow-xl text-sm sm:text-base"
-            >
-              <UserPlusIcon className="w-4 h-4 sm:w-5 sm:h-5" />
-              <span className="hidden sm:inline">Add Friend</span>
-              <span className="sm:hidden">Add</span>
-            </button>
+            {/* Action Button - Top Right */}
+            <div className="flex-shrink-0">
+              <button
+                onClick={() => setShowAddFriendModal(true)}
+                className="inline-flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 rounded-xl font-semibold text-white shadow-lg transform transition-all duration-200 text-sm bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 hover:scale-105 hover:shadow-xl"
+              >
+                <UserPlusIcon className="w-4 h-4" />
+                <span className="sm:hidden">Add</span>
+                <span className="hidden sm:inline lg:hidden">+ Add</span>
+                <span className="hidden lg:inline">Add Friend</span>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -551,7 +553,10 @@ const handleRejectRequest = async (request) => {
                       <div className="flex gap-2">
                         <button
                           onClick={() => handleAcceptRequest(request)}
-                          disabled={processingRequest === `accept-${request.id}` || processingRequest === `reject-${request.id}`}
+                          disabled={
+                            processingRequest === `accept-${request.id}` ||
+                            processingRequest === `reject-${request.id}`
+                          }
                           className="flex-1 flex items-center justify-center gap-1 sm:gap-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white py-2 px-2 sm:px-3 rounded-lg text-xs font-medium transition-all"
                         >
                           {processingRequest === `accept-${request.id}` ? (
@@ -560,15 +565,22 @@ const handleRejectRequest = async (request) => {
                             <CheckCircleIcon className="w-3 h-3 sm:w-4 sm:h-4" />
                           )}
                           <span className="hidden sm:inline">
-                            {processingRequest === `accept-${request.id}` ? "Accepting..." : "Accept"}
+                            {processingRequest === `accept-${request.id}`
+                              ? "Accepting..."
+                              : "Accept"}
                           </span>
                           <span className="sm:hidden">
-                            {processingRequest === `accept-${request.id}` ? "..." : "✓"}
+                            {processingRequest === `accept-${request.id}`
+                              ? "..."
+                              : "✓"}
                           </span>
                         </button>
                         <button
                           onClick={() => handleRejectRequest(request)}
-                          disabled={processingRequest === `accept-${request.id}` || processingRequest === `reject-${request.id}`}
+                          disabled={
+                            processingRequest === `accept-${request.id}` ||
+                            processingRequest === `reject-${request.id}`
+                          }
                           className="flex-1 flex items-center justify-center gap-1 sm:gap-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white py-2 px-2 sm:px-3 rounded-lg text-xs font-medium transition-all"
                         >
                           {processingRequest === `reject-${request.id}` ? (
@@ -577,10 +589,14 @@ const handleRejectRequest = async (request) => {
                             <XMarkIcon className="w-3 h-3 sm:w-4 sm:h-4" />
                           )}
                           <span className="hidden sm:inline">
-                            {processingRequest === `reject-${request.id}` ? "Declining..." : "Decline"}
+                            {processingRequest === `reject-${request.id}`
+                              ? "Declining..."
+                              : "Decline"}
                           </span>
                           <span className="sm:hidden">
-                            {processingRequest === `reject-${request.id}` ? "..." : "✗"}
+                            {processingRequest === `reject-${request.id}`
+                              ? "..."
+                              : "✗"}
                           </span>
                         </button>
                       </div>

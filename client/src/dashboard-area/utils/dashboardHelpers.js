@@ -134,6 +134,10 @@ export const getNavigationItemBadge = (
       return pendingRequests.length;
     case "events":
       return events.length;
+    case "profile":
+      return 0; // Profile doesn't have badges for now
+    case "settings":
+      return 0; // Settings doesn't have badges for now
     default:
       return 0;
   }
@@ -145,6 +149,10 @@ export const hasNotifications = (itemId, pendingRequests, eventInvites) => {
       return pendingRequests.length > 0;
     case "events":
       return eventInvites.length > 0;
+    case "profile":
+      return false; // Profile doesn't have notifications for now
+    case "settings":
+      return false; // Settings doesn't have notifications for now
     default:
       return false;
   }
