@@ -269,9 +269,9 @@ const EventsSection = () => {
       <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6">
         {/* Enhanced Header Section */}
         <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl border border-gray-200/50 dark:border-gray-700/50 shadow-xl p-4 sm:p-6 mb-6 sm:mb-8">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 sm:gap-6">
+          <div className="flex items-start justify-between gap-4">
             {/* Title Section */}
-            <div className="flex items-center gap-3 sm:gap-4">
+            <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
               <div className="p-2 sm:p-3 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl sm:rounded-2xl shadow-lg">
                 <CalendarIcon className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
               </div>
@@ -291,20 +291,23 @@ const EventsSection = () => {
               </div>
             </div>
 
-            {/* Action Button */}
-            <button
-              onClick={handleCreateEvent}
-              disabled={isAtLimit}
-              className={`inline-flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-semibold text-white shadow-lg transform transition-all duration-200 text-sm sm:text-base ${
-                isAtLimit
-                  ? "bg-gray-400 cursor-not-allowed"
-                  : "bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 hover:scale-105 hover:shadow-xl"
-              }`}
-            >
-              <PlusIcon className="w-4 h-4 sm:w-5 sm:h-5" />
-              <span className="hidden sm:inline">Create Event</span>
-              <span className="sm:hidden">Create</span>
-            </button>
+            {/* Action Button - Top Right */}
+            <div className="flex-shrink-0">
+              <button
+                onClick={handleCreateEvent}
+                disabled={isAtLimit}
+                className={`inline-flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 rounded-xl font-semibold text-white shadow-lg transform transition-all duration-200 text-sm ${
+                  isAtLimit
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 hover:scale-105 hover:shadow-xl"
+                }`}
+              >
+                <PlusIcon className="w-4 h-4" />
+                <span className="sm:hidden">Create</span>
+                <span className="hidden sm:inline lg:hidden">Create Event</span>
+                <span className="hidden lg:inline">Create Event</span>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -338,9 +341,7 @@ const EventsSection = () => {
 
         {/* Limit Banner */}
         {isAtLimit && (
-          <EventsLimitBanner
-            currentEventCount={currentEventCount}
-          />
+          <EventsLimitBanner currentEventCount={currentEventCount} />
         )}
 
         {/* Event Invitations Section */}
@@ -472,22 +473,46 @@ const EventsSection = () => {
                 />
               </div>
 
-              {/* Filters */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <FilterDropdown
-                  value={filterStatus}
-                  onChange={setFilterStatus}
-                  options={statusOptions}
-                  placeholder="Filter by status"
-                  icon={FunnelIcon}
-                />
-                <FilterDropdown
-                  value={filterDate}
-                  onChange={setFilterDate}
-                  options={dateOptions}
-                  placeholder="Filter by date"
-                  icon={CalendarIcon}
-                />
+              {/* Filters - Side by Side */}
+              <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                <div>
+                  <select
+                    value={filterStatus}
+                    onChange={(e) => setFilterStatus(e.target.value)}
+                    className="w-full px-3 py-3 bg-white/80 dark:bg-gray-700/80 border border-gray-300/50 dark:border-gray-600/50 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-gray-900 dark:text-white text-sm appearance-none bg-no-repeat bg-right bg-[length:20px] pr-10"
+                    style={{
+                      backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
+                      backgroundPosition: "right 0.75rem center",
+                      backgroundRepeat: "no-repeat",
+                      backgroundSize: "1.5em 1.5em",
+                    }}
+                  >
+                    {statusOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <select
+                    value={filterDate}
+                    onChange={(e) => setFilterDate(e.target.value)}
+                    className="w-full px-3 py-3 bg-white/80 dark:bg-gray-700/80 border border-gray-300/50 dark:border-gray-600/50 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-gray-900 dark:text-white text-sm appearance-none bg-no-repeat bg-right bg-[length:20px] pr-10"
+                    style={{
+                      backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
+                      backgroundPosition: "right 0.75rem center",
+                      backgroundRepeat: "no-repeat",
+                      backgroundSize: "1.5em 1.5em",
+                    }}
+                  >
+                    {dateOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
             </div>
           </div>

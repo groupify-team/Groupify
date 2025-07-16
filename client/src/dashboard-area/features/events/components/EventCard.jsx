@@ -18,9 +18,10 @@ const EventCard = memo(({ event, onViewEvent }) => {
     <div className="group relative" data-event-id={event.id}>
       {/* Compact Responsive Glass morphism card */}
       <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl rounded-xl border border-gray-200/50 dark:border-gray-700/50 shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl hover:scale-[1.01] hover:bg-white/80 dark:hover:bg-gray-800/80 relative z-10">
-        <div className="flex flex-col sm:flex-row h-auto sm:h-28 lg:h-32">
-          {/* Event Image/Cover - Responsive sizing */}
-          <div className="relative w-full sm:w-32 lg:w-40 h-32 sm:h-full flex-shrink-0 overflow-hidden">
+        <div className="flex flex-row h-28 sm:h-28 lg:h-32">
+          {" "}
+          {/* Event Image/Cover - Consistent sizing across all screens */}
+          <div className="relative w-20 sm:w-32 lg:w-40 h-full flex-shrink-0 overflow-hidden">
             {event.coverPhoto ? (
               <img
                 src={event.coverPhoto}
@@ -65,43 +66,40 @@ const EventCard = memo(({ event, onViewEvent }) => {
               </span>
             </div>
           </div>
-
-          {/* Event Content - Responsive layout with more details */}
-          <div className="flex-1 p-3 sm:p-4 lg:p-5 flex flex-col sm:flex-row sm:items-center justify-between min-w-0">
-            {/* Left side - Event info with better typography */}
-            <div className="flex-1 min-w-0 mb-3 sm:mb-0 sm:mr-4">
-              {/* Event Title - Responsive sizing */}
-              <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 dark:text-white mb-2 sm:mb-3 line-clamp-1 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors leading-tight">
+          {/* Event Content - Responsive layout with better data organization */}
+          <div className="flex-1 p-3 sm:p-5 lg:p-6 flex flex-row items-center justify-between min-w-0">
+            {/* Left side - Event info with responsive typography */}
+            <div className="flex-1 min-w-0 mr-2 sm:mr-4">
+              {/* Event Title - No truncation on larger screens */}
+              <h3 className="text-base sm:text-xl lg:text-2xl font-bold text-gray-900 dark:text-white mb-1 sm:mb-3 lg:mb-4 line-clamp-1 sm:line-clamp-none group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors leading-tight">
                 {event.name}
               </h3>
 
-              {/* Description on mobile, location on desktop */}
+              {/* Description on mobile only */}
               <div className="mb-2 sm:hidden">
                 <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2 leading-relaxed">
                   {event.description || "No description provided"}
                 </p>
               </div>
 
-              {/* Responsive details layout */}
-              <div className="space-y-1 sm:space-y-0 sm:flex sm:items-center sm:gap-4 lg:gap-6">
-                {/* Location - Always visible */}
+              {/* Use all available space - no wrapping on larger screens */}
+              <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 sm:gap-4 lg:gap-6">
+                {/* Location - No truncation, use available space */}
                 {event.location && (
-                  <div className="flex items-center gap-1.5 text-sm sm:text-xs lg:text-sm text-gray-600 dark:text-gray-300">
-                    <MapPinIcon className="w-4 h-4 sm:w-3 sm:h-3 lg:w-4 lg:h-4 text-indigo-500 flex-shrink-0" />
-                    <span className="truncate font-medium sm:max-w-20 lg:max-w-32">
-                      {event.location}
-                    </span>
+                  <div className="flex items-center gap-1.5 sm:gap-2 lg:gap-3 text-sm sm:text-sm lg:text-base text-gray-600 dark:text-gray-300">
+                    <MapPinIcon className="w-4 h-4 sm:w-4 sm:h-4 lg:w-5 lg:h-5 text-indigo-500 flex-shrink-0" />
+                    <span className="font-medium">{event.location}</span>
                   </div>
                 )}
 
-                {/* Date - Responsive formatting */}
-                <div className="flex items-center gap-1.5 text-sm sm:text-xs lg:text-sm text-gray-600 dark:text-gray-300">
-                  <CalendarIcon className="w-4 h-4 sm:w-3 sm:h-3 lg:w-4 lg:h-4 text-indigo-500 flex-shrink-0" />
-                  <span className="truncate">
+                {/* Date - Better formatting and sizing */}
+                <div className="flex items-center gap-1.5 sm:gap-2 lg:gap-3 text-sm sm:text-sm lg:text-base text-gray-600 dark:text-gray-300">
+                  <CalendarIcon className="w-4 h-4 sm:w-4 sm:h-4 lg:w-5 lg:h-5 text-indigo-500 flex-shrink-0" />
+                  <span className="truncate font-medium">
                     {event.startDate ? (
                       <>
                         <span className="sm:hidden">
-                          {formatEventDate(event.startDate)}
+                          {formatEventDate(event.startDate).split(",")[0]}
                         </span>
                         <span className="hidden sm:inline lg:hidden">
                           {formatEventDate(event.startDate).split(",")[0]}
@@ -116,11 +114,11 @@ const EventCard = memo(({ event, onViewEvent }) => {
                   </span>
                 </div>
 
-                {/* Members - Always visible */}
-                <div className="flex items-center gap-1.5 text-sm sm:text-xs lg:text-sm text-gray-600 dark:text-gray-300">
-                  <UserGroupIcon className="w-4 h-4 sm:w-3 sm:h-3 lg:w-4 lg:h-4 text-indigo-500 flex-shrink-0" />
-                  <span>
-                    <span className="font-medium">
+                {/* Members - Better sizing for larger screens */}
+                <div className="flex items-center gap-1.5 sm:gap-2 lg:gap-3 text-sm sm:text-sm lg:text-base text-gray-600 dark:text-gray-300">
+                  <UserGroupIcon className="w-4 h-4 sm:w-4 sm:h-4 lg:w-5 lg:h-5 text-indigo-500 flex-shrink-0" />
+                  <span className="font-medium">
+                    <span className="font-bold">
                       {event.members?.length || 1}
                     </span>
                     <span className="hidden sm:inline lg:hidden"> mbr</span>
@@ -133,34 +131,33 @@ const EventCard = memo(({ event, onViewEvent }) => {
                   </span>
                 </div>
 
-                {/* Photos - Show on larger screens */}
-                <div className="hidden lg:flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-300">
-                  <PhotoIcon className="w-4 h-4 text-purple-500 flex-shrink-0" />
-                  <span>
-                    <span className="font-medium">{event.photoCount || 0}</span>{" "}
+                {/* Photos - Better presentation on larger screens */}
+                <div className="hidden lg:flex items-center gap-3 text-base text-gray-600 dark:text-gray-300">
+                  <PhotoIcon className="w-5 h-5 text-purple-500 flex-shrink-0" />
+                  <span className="font-medium">
+                    <span className="font-bold">{event.photoCount || 0}</span>{" "}
                     photos
                   </span>
                 </div>
               </div>
 
-              {/* Additional details on larger screens */}
-              <div className="hidden sm:block mt-2 lg:mt-3">
-                <p className="text-xs lg:text-sm text-gray-600 dark:text-gray-300 line-clamp-1 lg:line-clamp-2 leading-relaxed">
+              {/* Additional details - better spacing and sizing */}
+              <div className="hidden sm:block mt-3 lg:mt-4">
+                <p className="text-sm lg:text-base text-gray-600 dark:text-gray-300 line-clamp-1 lg:line-clamp-2 leading-relaxed">
                   {event.description || "No description provided"}
                 </p>
               </div>
             </div>
 
-            {/* Right side - Action button with responsive sizing */}
-            <div className="flex-shrink-0 flex justify-end sm:justify-center">
+            {/* Right side - Action button consistent sizing */}
+            <div className="flex-shrink-0 flex justify-center">
               <button
                 onClick={() => onViewEvent && onViewEvent(event.id)}
-                className="inline-flex items-center gap-1.5 sm:gap-1 lg:gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-4 py-2 sm:px-3 sm:py-1.5 lg:px-4 lg:py-2 rounded-lg font-medium transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg text-sm sm:text-xs lg:text-sm"
+                className="inline-flex items-center gap-1 sm:gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 rounded-lg font-medium transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg text-xs sm:text-sm"
               >
-                <EyeIcon className="w-4 h-4 sm:w-3 sm:h-3 lg:w-4 lg:h-4" />
-                <span className="sm:hidden lg:inline">View Event</span>
-                <span className="hidden sm:inline lg:hidden">View</span>
-                <ChevronRightIcon className="w-3 h-3 sm:w-2.5 sm:h-2.5 lg:w-3 lg:h-3 transition-transform group-hover:translate-x-0.5" />
+                <EyeIcon className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">View</span>
+                <ChevronRightIcon className="w-2.5 h-2.5 sm:w-3 sm:h-3 transition-transform group-hover:translate-x-0.5" />
               </button>
             </div>
           </div>

@@ -425,8 +425,6 @@ class SubscriptionService {
       localStorage.setItem("userPlan", JSON.stringify(updated));
       this.clearCache();
       this.notifyListeners("subscriptionUpdated", updated);
-
-      toast.success(`Successfully updated to ${updated.plan} plan!`);
       return updated;
     } catch (error) {
       console.error("Failed to update subscription:", error);
