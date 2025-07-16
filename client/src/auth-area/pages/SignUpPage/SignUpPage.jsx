@@ -198,67 +198,84 @@ const SignUpPage = () => {
   };
 
   const handleGoogleSignUp = async () => {
-  if (!agreedToTerms) {
-    toast.error("Please agree to the Terms of Service and Privacy Policy");
-    return;
-  }
+    if (!agreedToTerms) {
+      toast.error("Please agree to the Terms of Service and Privacy Policy");
+      return;
+    }
 
-  try {
-    setLoading(true);
-    await signInWithGoogle();
+    try {
+      setLoading(true);
+      await signInWithGoogle();
 
-    // Check registration type and show appropriate message
-    const registrationType = localStorage.getItem('groupify_google_registration_type');
-    
-    // Clean up flag
-    localStorage.removeItem('groupify_google_registration_type');
-    
-    switch (registrationType) {
-      case 'new':
-        if (redirectAfter === "billing" && selectedPlan && selectedPlan !== "free") {
-          toast.success("🎉 Account created successfully! Redirecting to checkout...");
-          setTimeout(() => {
-            navigate(`/billing?plan=${selectedPlan}&billing=${billingCycle || "monthly"}`);
-          }, 1000);
-        } else {
-          toast.success("🎉 Account created successfully! Welcome to Groupify!");
+      // Check registration type and show appropriate message
+      const registrationType = localStorage.getItem(
+        "groupify_google_registration_type"
+      );
+
+      // Clean up flag
+      localStorage.removeItem("groupify_google_registration_type");
+
+      switch (registrationType) {
+        case "new":
+          if (
+            redirectAfter === "billing" &&
+            selectedPlan &&
+            selectedPlan !== "free"
+          ) {
+            toast.success(
+              "🎉 Account created successfully! Redirecting to checkout..."
+            );
+            setTimeout(() => {
+              navigate(
+                `/billing?plan=${selectedPlan}&billing=${
+                  billingCycle || "monthly"
+                }`
+              );
+            }, 1000);
+          } else {
+            toast.success(
+              "🎉 Account created successfully! Welcome to Groupify!"
+            );
+            navigate("/dashboard");
+          }
+          break;
+        case "linked":
+          toast.success("✅ Google account linked successfully! Welcome back!");
           navigate("/dashboard");
-        }
-        break;
-      case 'linked':
-        toast.success("✅ Google account linked successfully! Welcome back!");
-        navigate("/dashboard");
-        break;
-      case 'returning':
-        toast.success("👋 Welcome back! You already have an account.");
-        navigate("/dashboard");
-        break;
-      default:
-        toast.success("Welcome to Groupify!");
-        navigate("/dashboard");
-    }
-  } catch (error) {
-    console.error("Google sign up error:", error);
+          break;
+        case "returning":
+          toast.success("👋 Welcome back! You already have an account.");
+          navigate("/dashboard");
+          break;
+        default:
+          toast.success("Welcome to Groupify!");
+          navigate("/dashboard");
+      }
+    } catch (error) {
+      console.error("Google sign up error:", error);
 
-    const errorMessages = {
-      "auth/popup-closed-by-user": "Sign up was cancelled",
-      "auth/popup-blocked": "Popup was blocked. Please allow popups and try again",
-      "auth/account-exists-with-different-credential": "Account linked successfully! Welcome to Groupify!",
-    };
+      const errorMessages = {
+        "auth/popup-closed-by-user": "Sign up was cancelled",
+        "auth/popup-blocked":
+          "Popup was blocked. Please allow popups and try again",
+        "auth/account-exists-with-different-credential":
+          "Account linked successfully! Welcome to Groupify!",
+      };
 
-    const errorMessage = errorMessages[error.code] || "Failed to create account with Google";
-    
-    // If it's an account linking situation, show success instead of error
-    if (error.code === "auth/account-exists-with-different-credential") {
-      toast.success(errorMessage);
-      navigate("/dashboard");
-    } else {
-      toast.error(errorMessage);
+      const errorMessage =
+        errorMessages[error.code] || "Failed to create account with Google";
+
+      // If it's an account linking situation, show success instead of error
+      if (error.code === "auth/account-exists-with-different-credential") {
+        toast.success(errorMessage);
+        navigate("/dashboard");
+      } else {
+        toast.error(errorMessage);
+      }
+    } finally {
+      setLoading(false);
     }
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   const passwordStrength = getPasswordStrength(formData.password);
 
@@ -329,8 +346,8 @@ const SignUpPage = () => {
     <AuthLayout layoutType="split" leftContent={leftContent} showHeader={false}>
       <PageTransition variant="fadeIn" trigger={isLoaded}>
         {/* Form Container */}
-        <div className="flex-1 flex flex-col justify-center py-2 sm:py-4 md:py-6 lg:py-8 px-3 sm:px-4 md:px-6 lg:px-12 xl:px-20 2xl:px-24 bg-white dark:bg-gray-900 min-h-0">
-          <div className="mx-auto w-full max-w-[280px] sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-md">
+        <div className="flex-1 flex flex-col justify-center items-center py-4 px-4 sm:py-6 sm:px-6 md:py-8 md:px-8 lg:py-8 lg:px-12 xl:px-16 2xl:px-20 bg-white dark:bg-gray-900 min-h-screen">
+          <div className="w-full min-w-[280px] max-w-[320px] xs:max-w-[340px] sm:max-w-[380px] md:max-w-[420px] lg:max-w-[460px] xl:max-w-[400px]">
             {/* Plan Info Banner */}
             {showPlanInfo && (
               <div className="mb-6 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 border border-indigo-200 dark:border-indigo-800 rounded-xl p-4">
@@ -368,17 +385,17 @@ const SignUpPage = () => {
 
             {/* Form Section */}
             <SectionTransition variant="slideInFromBottom" delay={0.2}>
-              <div className="space-y-3 sm:space-y-4 md:space-y-5 text-sm md:text-base">
+              <div className="space-y-4 sm:space-y-5 md:space-y-6 text-sm sm:text-base">
                 {/* Form */}
                 <form
                   onSubmit={handleSubmit}
-                  className="space-y-3 sm:space-y-4 md:space-y-5"
+                  className="space-y-4 sm:space-y-5 md:space-y-6"
                 >
                   {/* Display Name */}
                   <div>
                     <label
                       htmlFor="displayName"
-                      className="block text-xs sm:text-sm md:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 sm:mb-2"
+                      className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 sm:mb-2"
                     >
                       Full Name *
                     </label>
@@ -390,7 +407,7 @@ const SignUpPage = () => {
                       required
                       value={formData.displayName}
                       onChange={handleInputChange}
-                      className="input-primary py-1.5 sm:py-2 md:py-3"
+                      className="input-primary py-2 sm:py-2.5 md:py-3"
                       placeholder="John Doe"
                       disabled={loading}
                     />
@@ -400,7 +417,7 @@ const SignUpPage = () => {
                   <div>
                     <label
                       htmlFor="email"
-                      className="block text-xs sm:text-sm md:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 sm:mb-2"
+                      className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 sm:mb-2"
                     >
                       Email Address *
                     </label>
@@ -412,7 +429,7 @@ const SignUpPage = () => {
                       required
                       value={formData.email}
                       onChange={handleInputChange}
-                      className="input-primary py-1.5 sm:py-2 md:py-3"
+                      className="input-primary py-2 sm:py-2.5 md:py-3"
                       placeholder="you@example.com"
                       disabled={loading}
                     />
@@ -422,7 +439,7 @@ const SignUpPage = () => {
                   <div>
                     <label
                       htmlFor="password"
-                      className="block text-xs sm:text-sm md:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 sm:mb-2"
+                      className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 sm:mb-2"
                     >
                       Password *
                     </label>
@@ -435,7 +452,7 @@ const SignUpPage = () => {
                         required
                         value={formData.password}
                         onChange={handleInputChange}
-                        className="input-primary py-1.5 sm:py-2 md:py-3"
+                        className="input-primary py-2 sm:py-2.5 md:py-3"
                         placeholder="••••••••"
                         disabled={loading}
                         style={{
@@ -633,7 +650,7 @@ const SignUpPage = () => {
                   <div>
                     <label
                       htmlFor="confirmPassword"
-                      className="block text-xs sm:text-sm md:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 sm:mb-2"
+                      className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 sm:mb-2"
                     >
                       Confirm Password *
                     </label>
@@ -646,7 +663,7 @@ const SignUpPage = () => {
                         required
                         value={formData.confirmPassword}
                         onChange={handleInputChange}
-                        className="input-primary py-1.5 sm:py-2 md:py-3"
+                        className="input-primary py-2 sm:py-2.5 md:py-3"
                         placeholder="••••••••"
                         disabled={loading}
                         style={{
@@ -691,7 +708,7 @@ const SignUpPage = () => {
 
                   {/* Gender Selection */}
                   <div>
-                    <p className="block text-xs sm:text-sm md:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 sm:mb-3">
+                    <p className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 sm:mb-3">
                       Gender (Optional)
                     </p>
                     <div className="flex space-x-2 sm:space-x-3">
@@ -703,11 +720,11 @@ const SignUpPage = () => {
                             setFormData((prev) => ({ ...prev, gender: option }))
                           }
                           disabled={loading}
-                          className={`flex-1 py-1.5 sm:py-2 px-2 sm:px-4 rounded-lg border text-xs sm:text-sm font-medium transition-all ${
+                          className={`flex-1 py-2 sm:py-2.5 px-2 sm:px-4 rounded-lg border text-xs sm:text-sm font-medium transition-all ${
                             formData.gender === option
                               ? "bg-indigo-600 text-white border-indigo-600"
                               : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
-                          }`}
+                          } ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
                         >
                           {option.charAt(0).toUpperCase() + option.slice(1)}
                         </button>
@@ -755,7 +772,7 @@ const SignUpPage = () => {
                   <button
                     type="submit"
                     disabled={loading || !agreedToTerms}
-                    className={`w-full flex items-center justify-center py-2 sm:py-2.5 md:py-3 text-xs sm:text-sm md:text-base relative overflow-hidden rounded-lg font-medium transition-all duration-300 ease-in-out transform ${
+                    className={`w-full flex items-center justify-center py-2.5 sm:py-3 md:py-3.5 text-sm sm:text-base relative overflow-hidden rounded-lg font-medium transition-all duration-300 ease-in-out transform ${
                       loading || !agreedToTerms
                         ? "bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed opacity-50 scale-95"
                         : "bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl scale-100 hover:scale-[1.02]"
@@ -778,7 +795,7 @@ const SignUpPage = () => {
                 </form>
 
                 {/* Social Login */}
-                <div className="mt-4 sm:mt-6 md:mt-8">
+                <div className="mt-6 sm:mt-7 md:mt-8">
                   <div className="relative">
                     <div className="absolute inset-0 flex items-center">
                       <div className="w-full border-t border-gray-300 dark:border-gray-600" />
@@ -794,7 +811,7 @@ const SignUpPage = () => {
                     type="button"
                     onClick={handleGoogleSignUp}
                     disabled={loading || !agreedToTerms}
-                    className={`mt-3 sm:mt-4 md:mt-6 w-full flex justify-center items-center py-2 sm:py-2.5 md:py-3 px-3 sm:px-4 border rounded-lg shadow-sm text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-300 ease-in-out transform ${
+                    className={`mt-4 sm:mt-5 md:mt-6 w-full flex justify-center items-center py-2.5 sm:py-3 md:py-3.5 px-4 border rounded-lg shadow-sm text-sm sm:text-base font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-300 ease-in-out transform ${
                       loading || !agreedToTerms
                         ? "border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed opacity-50 scale-95"
                         : "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 scale-100 hover:scale-[1.02] hover:shadow-md"
@@ -832,7 +849,7 @@ const SignUpPage = () => {
                 </div>
 
                 {/* Sign In Link */}
-                <p className="mt-4 sm:mt-6 md:mt-8 text-center text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                <p className="mt-6 sm:mt-7 md:mt-8 text-center text-xs sm:text-sm text-gray-600 dark:text-gray-400">
                   Already have an account?{" "}
                   <button
                     onClick={() => navigate("/signin")}

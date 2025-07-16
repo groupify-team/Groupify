@@ -386,8 +386,8 @@ const ConfirmEmailPage = () => {
 
   return (
     <AuthLayout layoutType="split" leftContent={leftContent} showHeader={false}>
-      <div className="flex-1 flex flex-col justify-center py-2 sm:py-4 md:py-6 lg:py-8 px-3 sm:px-4 md:px-6 lg:px-12 xl:px-20 2xl:px-24 bg-white dark:bg-gray-900 min-h-0">
-        <div className="mx-auto w-full max-w-[280px] sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-md">
+      <div className="flex-1 flex flex-col justify-center items-center py-4 px-4 sm:py-6 sm:px-6 md:py-8 md:px-8 lg:py-8 lg:px-12 xl:px-16 2xl:px-20 bg-white dark:bg-gray-900 min-h-screen">
+        <div className="w-full min-w-[280px] max-w-[320px] xs:max-w-[340px] sm:max-w-[380px] md:max-w-[420px] lg:max-w-[460px] xl:max-w-[400px]">
           <AuthHeader
             title="Verify your email"
             subtitle="Enter the 6-digit code we sent to your email address"
@@ -412,7 +412,7 @@ const ConfirmEmailPage = () => {
             </div>
           )}
 
-          <div className="space-y-3 sm:space-y-4 md:space-y-5 text-sm md:text-base">
+          <div className="space-y-4 sm:space-y-5 md:space-y-6 text-sm sm:text-base">
             <form
               onSubmit={handleVerify}
               className="space-y-4 sm:space-y-5 md:space-y-6"
@@ -465,7 +465,7 @@ const ConfirmEmailPage = () => {
               <button
                 type="submit"
                 disabled={loading || verificationCode.join("").length !== 6}
-                className={`w-full flex justify-center items-center py-2 sm:py-2.5 md:py-3 px-3 sm:px-4 border border-transparent rounded-lg shadow-sm text-xs sm:text-sm md:text-base font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-300 ease-in-out transform relative overflow-hidden ${
+                className={`w-full flex justify-center items-center py-2.5 sm:py-3 md:py-3.5 px-4 border border-transparent rounded-lg shadow-sm text-sm sm:text-base font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-300 ease-in-out transform relative overflow-hidden ${
                   loading || verificationCode.join("").length !== 6
                     ? "bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed opacity-50 scale-95"
                     : "bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white scale-100 hover:scale-[1.02] hover:shadow-md"
@@ -473,7 +473,7 @@ const ConfirmEmailPage = () => {
               >
                 {loading ? (
                   <>
-                    <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-b-2 border-white mr-2"></div>
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
                     Verifying...
                   </>
                 ) : redirectToBilling ? (
@@ -483,7 +483,7 @@ const ConfirmEmailPage = () => {
                 )}
               </button>
             </form>
-            <div className="mt-4 sm:mt-5 md:mt-6">
+            <div className="mt-6 sm:mt-7 md:mt-8">
               <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 sm:p-4">
                 <div className="flex">
                   <ExclamationCircleIcon className="h-4 w-4 sm:h-5 sm:w-5 text-blue-400 mr-2 sm:mr-3 mt-0.5 flex-shrink-0" />
@@ -501,7 +501,7 @@ const ConfirmEmailPage = () => {
                 </div>
               </div>
             </div>
-            <p className="mt-4 sm:mt-5 md:mt-6 text-center text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+            <p className="mt-6 sm:mt-7 md:mt-8 text-center text-xs sm:text-sm text-gray-600 dark:text-gray-400">
               Need help?{" "}
               <Link
                 to="/contact"

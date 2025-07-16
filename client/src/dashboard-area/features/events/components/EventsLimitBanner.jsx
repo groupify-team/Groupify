@@ -1,54 +1,39 @@
 import React, { useState } from "react";
-import { ExclamationTriangleIcon, XMarkIcon, StarIcon } from "@heroicons/react/24/outline";
+import {
+  ExclamationTriangleIcon,
+  XMarkIcon,
+  StarIcon,
+} from "@heroicons/react/24/outline";
 import { useNavigate } from "react-router-dom";
 import { usePlanLimits } from "@shared/hooks/usePlanLimits";
 
 const EventsLimitBanner = ({ currentEventCount, onUpgrade }) => {
   const navigate = useNavigate();
   const [isVisible, setIsVisible] = useState(true);
-  const { subscription, getUsageInfo, isFreePlan, isPremiumPlan } = usePlanLimits();
-
-  // Get the event limit from subscription
+  const { subscription, getUsageInfo, isFreePlan, isPremiumPlan } =
+    usePlanLimits();
   const usageInfo = getUsageInfo();
   const maxEvents = usageInfo?.events?.limit;
   const isUnlimited = maxEvents === "unlimited";
-  const eventLimit = isUnlimited ? Infinity : (maxEvents || 5);
-
-  // Calculate if we're approaching or at the limit
+  const eventLimit = isUnlimited ? Infinity : maxEvents || 5;
   const isAtLimit = !isUnlimited && currentEventCount >= eventLimit;
-  const isNearLimit = !isUnlimited && currentEventCount >= eventLimit * 0.8; // 80% of limit
+  const isNearLimit = !isUnlimited && currentEventCount >= eventLimit * 0.8;
 
-  // Only show banner when limit is reached (not when approaching)
   if (isUnlimited || !isVisible || currentEventCount < eventLimit) {
     return null;
   }
 
   const handleUpgrade = () => {
-    console.log("🚀 EventsLimitBanner: Upgrade button clicked");
-    
     if (onUpgrade) {
-      console.log("🚀 EventsLimitBanner: Using onUpgrade callback");
       onUpgrade();
     } else {
-      console.log("🚀 EventsLimitBanner: Navigating to pricing page");
-      
-      // FIXED: Direct navigation instead of using navigationService
       const targetPlan = subscription?.plan === "free" ? "premium" : "pro";
       const pricingUrl = `/pricing?plan=${targetPlan}&from=events-limit-banner`;
-      
-      console.log("🚀 EventsLimitBanner: Navigating to:", pricingUrl);
-      
-      // Try multiple navigation methods
       try {
-        // Method 1: React Router navigate
         navigate(pricingUrl);
-        console.log("✅ EventsLimitBanner: React Router navigation attempted");
       } catch (error) {
         console.warn("❌ EventsLimitBanner: React Router failed:", error);
-        
-        // Method 2: Fallback to window.location
         window.location.href = pricingUrl;
-        console.log("✅ EventsLimitBanner: Window.location navigation attempted");
       }
     }
   };
@@ -56,7 +41,9 @@ const EventsLimitBanner = ({ currentEventCount, onUpgrade }) => {
   const getBannerContent = () => {
     return {
       title: "Event Limit Reached",
-      message: `You've reached your ${subscription?.plan || 'free'} plan limit of ${eventLimit} events.`,
+      message: `You've reached your ${
+        subscription?.plan || "free"
+      } plan limit of ${eventLimit} events.`,
       action: "Upgrade Now",
       bgColor: "bg-yellow-50 dark:bg-yellow-900/20",
       borderColor: "border-yellow-200 dark:border-yellow-800",
@@ -79,7 +66,9 @@ const EventsLimitBanner = ({ currentEventCount, onUpgrade }) => {
             className={`w-5 h-5 ${bannerContent.iconColor} mt-0.5 mr-3 flex-shrink-0`}
           />
           <div className="flex-1">
-            <h3 className={`text-sm font-semibold ${bannerContent.textColor} mb-1`}>
+            <h3
+              className={`text-sm font-semibold ${bannerContent.textColor} mb-1`}
+            >
               {bannerContent.title}
             </h3>
             <p className={`text-sm ${bannerContent.textColor}`}>
@@ -87,7 +76,7 @@ const EventsLimitBanner = ({ currentEventCount, onUpgrade }) => {
             </p>
           </div>
         </div>
-        
+
         <div className="flex items-center gap-3 ml-4">
           <button
             onClick={handleUpgrade}
@@ -96,7 +85,7 @@ const EventsLimitBanner = ({ currentEventCount, onUpgrade }) => {
             <StarIcon className="w-4 h-4" />
             {bannerContent.action}
           </button>
-          
+
           <button
             onClick={() => setIsVisible(false)}
             className={`${bannerContent.textColor} hover:bg-black/10 dark:hover:bg-white/10 rounded-full p-1.5 transition-all flex-shrink-0`}
