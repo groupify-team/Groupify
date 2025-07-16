@@ -171,13 +171,13 @@ const PublicFooter = ({
       className={`py-16 bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm border-t border-white/20 dark:border-gray-700/50 ${className}`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 mb-12">
           {/* Brand Section */}
-          <div className="col-span-1 md:col-span-2">
+          <div className="col-span-2 md:col-span-2 text-center md:text-left">
             <Link
               to="/"
               onClick={(e) => handleLinkClick(e, "/")}
-              className="flex items-center mb-4"
+              className="flex items-center justify-center md:justify-start mb-4"
             >
               <div className="w-8 h-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
                 <CameraIcon className="w-5 h-5 text-white" />
@@ -186,11 +186,11 @@ const PublicFooter = ({
                 Groupify
               </span>
             </Link>
-            <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-md">
+            <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-md text-center md:text-left mx-auto md:mx-0">
               The smartest way to organize and share your travel memories using
               AI-powered face recognition and seamless photo management.
             </p>
-            <div className="flex space-x-4">
+            <div className="flex space-x-4 justify-center md:justify-start mb-8">
               <a
                 href="mailto:groupify.ltd@gmail.com"
                 className="text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
@@ -274,8 +274,8 @@ const PublicFooter = ({
           </div>
 
           {/* Product Links */}
-          <div>
-            <h3 className="text-sm font-semibold text-gray-900 dark:text-white tracking-wider uppercase mb-4">
+          <div className="text-center md:text-left">
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-white tracking-wider uppercase mb-4 text-center md:text-left">
               Product
             </h3>
             <ul className="space-y-3">
@@ -319,8 +319,8 @@ const PublicFooter = ({
           </div>
 
           {/* Company Links */}
-          <div>
-            <h3 className="text-sm font-semibold text-gray-900 dark:text-white tracking-wider uppercase mb-4">
+          <div className="text-center md:text-left">
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-white tracking-wider uppercase mb-4 text-center md:text-left">
               Company
             </h3>
             <ul className="space-y-3">
@@ -367,32 +367,32 @@ const PublicFooter = ({
         {/* Bottom Section */}
         <div className="pt-8 border-t border-gray-200 dark:border-gray-700">
           <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="flex flex-wrap justify-center md:justify-start space-x-6 mb-4 md:mb-0">
+            <div className="flex flex-wrap justify-center md:justify-start space-x-3 md:space-x-6 mb-4 md:mb-0">
               <Link
                 to="/privacy-policy"
                 onClick={(e) => handleLinkClick(e, "/privacy-policy")}
-                className="text-sm text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                className="text-sm sm:text-xs md:text-sm text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors whitespace-nowrap"
               >
                 Privacy Policy
               </Link>
               <Link
                 to="/terms"
                 onClick={(e) => handleLinkClick(e, "/terms")}
-                className="text-sm text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                className="text-sm sm:text-xs md:text-sm text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors whitespace-nowrap"
               >
                 Terms of Service
               </Link>
               <Link
                 to="/help"
                 onClick={(e) => handleLinkClick(e, "/help")}
-                className="text-sm text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                className="text-sm sm:text-xs md:text-sm text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors whitespace-nowrap"
               >
                 Help Center
               </Link>
               <Link
                 to="/status"
                 onClick={(e) => handleLinkClick(e, "/status")}
-                className="text-sm text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                className="text-sm sm:text-xs md:text-sm text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors whitespace-nowrap"
               >
                 Status
               </Link>

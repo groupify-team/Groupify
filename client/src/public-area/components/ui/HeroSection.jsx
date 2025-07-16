@@ -66,9 +66,8 @@ const HeroSection = ({
         <h1
           className={`text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6 ${textClasses.title}`}
         >
-          {typeof title === "string"
-            ? title
-            : title // JSX element with custom styling
+          {
+            typeof title === "string" ? title : title // JSX element with custom styling
           }
         </h1>
 
@@ -95,7 +94,7 @@ const HeroSection = ({
 
         {/* CTA Buttons */}
         {(primaryCTA || secondaryCTA) && (
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 sm:gap-3 px-3 sm:px-0">
+          <div className="flex flex-row items-center justify-center gap-2.5 sm:gap-3 px-3 sm:px-0">
             {primaryCTA && (
               <button
                 onClick={primaryCTA.onClick}

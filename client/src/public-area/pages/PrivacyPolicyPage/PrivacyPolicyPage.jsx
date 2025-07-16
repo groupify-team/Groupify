@@ -29,15 +29,17 @@ const PrivacyHighlights = ({ highlights }) => (
         {highlights.map((highlight, index) => (
           <div
             key={index}
-            className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-xl border border-white/20 dark:border-gray-700/50 p-4 sm:p-6 text-center hover:shadow-lg transition-all duration-300"
+            className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-xl border border-white/20 dark:border-gray-700/50 p-4 sm:p-6 hover:shadow-lg transition-all duration-300"
           >
-            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center mx-auto mb-3 sm:mb-4">
-              <highlight.icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+            <div className="flex items-center sm:flex-col sm:items-center mb-4">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center sm:mb-3 flex-shrink-0">
+                <highlight.icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+              </div>
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white ml-4 sm:ml-0 sm:mb-2 sm:text-center">
+                {highlight.title}
+              </h3>
             </div>
-            <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-2">
-              {highlight.title}
-            </h3>
-            <p className="text-gray-600 dark:text-gray-300 text-xs sm:text-sm">
+            <p className="text-gray-600 dark:text-gray-300 text-xs sm:text-sm text-center">
               {highlight.description}
             </p>
           </div>
@@ -78,7 +80,7 @@ const ContactSection = () => (
           We're committed to transparency. If you have any questions about this
           privacy policy or how we handle your data, please reach out to us.
         </p>
-        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+        <div className="flex flex-row gap-3 sm:gap-4 justify-center sm:justify-start">
           <Link
             to="/contact"
             className="inline-flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 sm:px-6 sm:py-3 rounded-lg font-medium transition-colors text-sm sm:text-base"
@@ -107,7 +109,7 @@ const DataControlSection = ({ handleGetStarted, handleSignIn }) => (
         You have complete control over your data. Manage your privacy settings,
         export your photos, or delete your account at any time.
       </p>
-      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
+      <div className="flex flex-row gap-3 sm:gap-4 justify-center">
         <button
           onClick={handleGetStarted}
           className="inline-flex items-center justify-center bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-2.5 sm:px-8 sm:py-3 rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl text-sm sm:text-base"

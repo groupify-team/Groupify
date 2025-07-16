@@ -272,7 +272,7 @@ const ContactSupportSection = () => (
         Can't find what you're looking for? Our support team is here to help you
         with any questions or issues you might have.
       </p>
-      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
+      <div className="flex flex-row gap-3 sm:gap-4 justify-center">
         <Link
           to="/contact"
           className="inline-flex items-center justify-center bg-white text-indigo-600 px-6 py-3 sm:px-8 sm:py-4 rounded-xl text-base sm:text-lg font-semibold hover:bg-gray-50 transition-all duration-200 shadow-xl hover:shadow-2xl hover:scale-105"

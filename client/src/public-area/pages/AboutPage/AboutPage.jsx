@@ -385,12 +385,30 @@ const AboutPage = () => {
                 </p>
               </div>
 
-              <FeatureGrid
-                features={values}
-                columns={4}
-                variant="simple"
-                isLoaded={isLoaded}
-              />
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
+                {values.map((value, index) => (
+                  <div
+                    key={value.id}
+                    className={`bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-xl border border-white/20 dark:border-gray-700/50 p-4 sm:p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-2 ${
+                      isLoaded
+                        ? `opacity-100 translate-y-0 delay-${index * 100}`
+                        : "opacity-0 translate-y-8"
+                    }`}
+                  >
+                    <div className="flex items-center justify-center sm:block mb-4">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center sm:mb-4 flex-shrink-0">
+                        <value.icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                      </div>
+                      <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white ml-4 sm:ml-0 sm:mb-3">
+                        {value.title}
+                      </h3>
+                    </div>
+                    <p className="text-gray-600 dark:text-gray-300 leading-relaxed text-sm sm:text-base text-center sm:text-left">
+                      {value.description}
+                    </p>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </SectionTransition>
@@ -460,7 +478,7 @@ const AboutPage = () => {
                 you love? Join thousands of users who trust Groupify with their
                 precious moments.
               </p>
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
+              <div className="flex flex-row gap-3 sm:gap-4 justify-center">
                 <button
                   onClick={handleGetStarted}
                   className="inline-flex items-center justify-center bg-white text-indigo-600 px-6 py-3 sm:px-8 sm:py-4 rounded-xl text-base sm:text-lg font-semibold hover:bg-gray-50 transition-all duration-200 shadow-xl hover:shadow-2xl hover:scale-105"

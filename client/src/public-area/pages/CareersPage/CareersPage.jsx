@@ -38,17 +38,16 @@ const CultureSection = ({ cultureValues }) => (
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 md:gap-8">
         {cultureValues.map((value, index) => (
-          <div
-            key={index}
-            className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-xl border border-white/20 dark:border-gray-700/50 p-4 sm:p-6 text-center hover:shadow-lg transition-all duration-300 hover:-translate-y-2"
-          >
-            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-3 sm:mb-4">
-              <value.icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+          <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-xl border border-white/20 dark:border-gray-700/50 p-4 sm:p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-2">
+            <div className="flex items-center sm:block mb-4">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center sm:mx-auto sm:mb-3 flex-shrink-0">
+                <value.icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+              </div>
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white ml-4 sm:ml-0 sm:mb-3 sm:text-center">
+                {value.title}
+              </h3>
             </div>
-            <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-2 sm:mb-3">
-              {value.title}
-            </h3>
-            <p className="text-gray-600 dark:text-gray-300 text-xs sm:text-sm leading-relaxed">
+            <p className="text-gray-600 dark:text-gray-300 text-xs sm:text-sm leading-relaxed text-center">
               {value.description}
             </p>
           </div>
@@ -73,17 +72,16 @@ const BenefitsSection = ({ benefits }) => (
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
         {benefits.map((benefit, index) => (
-          <div
-            key={index}
-            className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-2xl border border-white/20 dark:border-gray-700/50 p-4 sm:p-6 hover:shadow-xl transition-all duration-300 text-center sm:text-left"
-          >
-            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center mb-3 sm:mb-4 mx-auto sm:mx-0">
-              <benefit.icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+          <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-2xl border border-white/20 dark:border-gray-700/50 p-4 sm:p-6 hover:shadow-xl transition-all duration-300">
+            <div className="flex items-center sm:block mb-4">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center sm:mx-auto sm:mb-3 flex-shrink-0">
+                <benefit.icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+              </div>
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white ml-4 sm:ml-0 sm:mb-3 sm:text-center">
+                {benefit.title}
+              </h3>
             </div>
-            <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-2 sm:mb-3">
-              {benefit.title}
-            </h3>
-            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 leading-relaxed">
+            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 leading-relaxed text-left">
               {benefit.description}
             </p>
           </div>
@@ -133,7 +131,7 @@ const JobCard = ({ job, onApply }) => (
 
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
       <div>
-        <h4 className="font-semibold text-gray-900 dark:text-white mb-2 sm:mb-3 text-sm sm:text-base text-center sm:text-left">
+        <h4 className="font-semibold text-gray-900 dark:text-white mb-2 sm:mb-3 text-sm sm:text-base text-left">
           Requirements
         </h4>
         <ul className="space-y-1 sm:space-y-2">
@@ -149,7 +147,7 @@ const JobCard = ({ job, onApply }) => (
         </ul>
       </div>
       <div>
-        <h4 className="font-semibold text-gray-900 dark:text-white mb-2 sm:mb-3 text-sm sm:text-base text-center sm:text-left">
+        <h4 className="font-semibold text-gray-900 dark:text-white mb-2 sm:mb-3 text-sm sm:text-base text-left">
           What We Offer
         </h4>
         <ul className="space-y-1 sm:space-y-2">
@@ -276,11 +274,11 @@ const HiringProcessSection = () => (
           <div key={index} className="flex items-center">
             <div className="flex-1">
               <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-xl border border-white/20 dark:border-gray-700/50 p-4 sm:p-6 mr-4 sm:mr-8">
-                <div className="flex flex-col items-center sm:flex-row sm:items-center mb-2 sm:mb-3">
-                  <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full flex items-center justify-center text-white text-xs sm:text-sm font-bold mr-2 sm:mr-3">
+                <div className="flex items-center sm:flex-row sm:items-center mb-2 sm:mb-3">
+                  <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full flex items-center justify-center text-white text-xs sm:text-sm font-bold mr-2 sm:mr-3 flex-shrink-0">
                     {step.step}
                   </div>
-                  <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white text-center sm:text-left">
+                  <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
                     {step.title}
                   </h3>
                 </div>
@@ -312,7 +310,7 @@ const CallToActionSection = ({
           Join our mission to help people organize and share their most precious
           memories. Apply today and be part of something amazing.
         </p>
-        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
+        <div className="flex flex-row gap-3 sm:gap-4 justify-center">
           <a
             href="#open-positions"
             className="inline-flex items-center justify-center bg-white text-indigo-600 px-6 py-3 sm:px-8 sm:py-4 rounded-xl text-base sm:text-lg font-semibold hover:bg-gray-50 transition-all duration-200 shadow-xl hover:shadow-2xl hover:scale-105"

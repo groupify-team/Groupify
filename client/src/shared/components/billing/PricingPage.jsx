@@ -47,21 +47,17 @@ const PricingPage = () => {
     const initializeComponent = async () => {
       try {
         setIsLoading(true);
-
-        // Get navigation context and subscription data
         const context = navigationService.getContext();
         const subscription = subscriptionService.getCurrentSubscription();
-
         setNavigationContext(context);
         setCurrentSubscription(subscription);
 
-        // Small delay to ensure all data is loaded
         await new Promise((resolve) => setTimeout(resolve, 100));
 
         setIsLoaded(true);
       } catch (error) {
         console.error("Error initializing pricing page:", error);
-        setIsLoaded(true); // Still show the page even if there's an error
+        setIsLoaded(true);
       } finally {
         setIsLoading(false);
       }
@@ -646,19 +642,21 @@ const PricingPage = () => {
                 {features.map((feature, index) => (
                   <div
                     key={index}
-                    className={`text-center p-6 sm:p-8 bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-xl border border-white/20 dark:border-gray-700/50 hover:shadow-lg transition-all duration-300 hover:-translate-y-2 ${
+                    className={`p-6 sm:p-8 bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-xl border border-white/20 dark:border-gray-700/50 hover:shadow-lg transition-all duration-300 hover:-translate-y-2 ${
                       isLoaded
                         ? `opacity-100 translate-y-0 delay-${index * 100}`
                         : "opacity-0 translate-y-8"
                     }`}
                   >
-                    <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-4 sm:mb-6">
-                      <feature.icon className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+                    <div className="flex items-center sm:flex-col sm:items-center mb-4">
+                      <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center sm:mb-4 flex-shrink-0">
+                        <feature.icon className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+                      </div>
+                      <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white ml-4 sm:ml-0 sm:mb-2 sm:text-center">
+                        {feature.title}
+                      </h3>
                     </div>
-                    <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-2 sm:mb-3">
-                      {feature.title}
-                    </h3>
-                    <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
+                    <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 text-center">
                       {feature.description}
                     </p>
                   </div>

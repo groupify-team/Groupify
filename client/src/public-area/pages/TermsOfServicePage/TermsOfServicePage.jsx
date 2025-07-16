@@ -81,8 +81,11 @@ const TermsOfServicePage = () => {
     <PublicLayout
       headerType="public"
       headerProps={{ ...headerProps, handleSmoothNavigation }}
-      footerType="simple"
-      footerProps={{ handleSmoothNavigation }}
+      footerType="extended"
+      footerProps={{
+        customText: "© 2025 Groupify. Your agreement matters to us.",
+        handleSmoothNavigation,
+      }}
     >
       {/* Hero Section */}
       <HeroSection
@@ -150,7 +153,7 @@ const TermsOfServicePage = () => {
                 don't hesitate to contact us. We're here to help clarify any
                 concerns you may have.
               </p>
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+              <div className="flex flex-row gap-3 sm:gap-4 justify-center sm:justify-start">
                 <Link
                   to="/contact"
                   className="inline-flex items-center justify-center bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 sm:px-6 sm:py-3 rounded-lg font-medium transition-colors text-sm sm:text-base"
@@ -178,7 +181,7 @@ const TermsOfServicePage = () => {
               By creating an account, you agree to these terms and our Privacy
               Policy.
             </p>
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
+            <div className="flex flex-row gap-3 sm:gap-4 justify-center">
               <button
                 onClick={handleGetStarted}
                 className="inline-flex items-center justify-center bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-6 py-2.5 sm:px-8 sm:py-3 rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl text-sm sm:text-base"
