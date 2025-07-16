@@ -195,9 +195,11 @@ const ResetPasswordPage = () => {
       </div>
     );
   }
+
   if (!tokenValid) {
     return null;
   }
+
   const formConfig = {
     submitText: loading ? "Resetting password..." : "Reset Password",
     submitDisabled: loading || !isPasswordValid || !passwordsMatch,
@@ -321,8 +323,8 @@ const ResetPasswordPage = () => {
 
   return (
     <AuthLayout layoutType="split" leftContent={leftContent} showHeader={false}>
-      <div className="flex-1 flex flex-col justify-center py-2 sm:py-4 md:py-6 lg:py-8 px-3 sm:px-4 md:px-6 lg:px-12 xl:px-20 2xl:px-24 bg-white dark:bg-gray-900 min-h-0">
-        <div className="mx-auto w-full max-w-[280px] sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-md">
+      <div className="flex-1 flex items-center justify-center py-4 px-4 sm:py-6 sm:px-6 md:py-8 md:px-8 lg:py-8 lg:px-12 xl:px-16 2xl:px-20 bg-white dark:bg-gray-900 min-h-screen">
+        <div className="w-full min-w-[280px] max-w-[320px] xs:max-w-[340px] sm:max-w-[380px] md:max-w-[420px] lg:max-w-[460px] xl:max-w-[400px]">
           <AuthHeader
             title="Reset your password"
             subtitle={`Creating a new password for ${email}`}
@@ -330,7 +332,7 @@ const ResetPasswordPage = () => {
             backTo="/signin"
             backText="Back to Sign In"
           />
-          <div className="space-y-3 sm:space-y-4 md:space-y-5 text-sm md:text-base">
+          <div className="space-y-4 sm:space-y-5 md:space-y-6 text-sm sm:text-base">
             <AuthForm
               config={formConfig}
               formData={formData}
@@ -341,7 +343,7 @@ const ResetPasswordPage = () => {
               onSubmit={handleSubmit}
               loading={loading}
             />
-            <div className="mt-4 sm:mt-5 md:mt-6 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3 sm:p-4">
+            <div className="mt-6 sm:mt-7 md:mt-8 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3 sm:p-4">
               <div className="flex">
                 <ExclamationTriangleIcon className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-600 dark:text-yellow-400 mt-0.5 mr-2 sm:mr-3 flex-shrink-0" />
                 <div>

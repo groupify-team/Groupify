@@ -138,46 +138,53 @@ const SignInPage = () => {
   };
 
   const handleGoogleSignIn = async () => {
-  try {
-    setLoading(true);
-    await signInWithGoogle();
-    
-    // Check registration type and show appropriate message
-    const registrationType = localStorage.getItem('groupify_google_registration_type');
-    
-    // Clean up flag
-    localStorage.removeItem('groupify_google_registration_type');
-    
-    switch (registrationType) {
-      case 'new':
-        toast.success("🎉 Welcome to Groupify! Your account has been created successfully!");
-        break;
-      case 'linked':
-        toast.success("✅ Google account linked successfully! Welcome back!");
-        break;
-      case 'returning':
-        toast.success("👋 Welcome back!");
-        break;
-      default:
-        toast.success("Welcome to Groupify!");
+    try {
+      setLoading(true);
+      await signInWithGoogle();
+
+      // Check registration type and show appropriate message
+      const registrationType = localStorage.getItem(
+        "groupify_google_registration_type"
+      );
+
+      // Clean up flag
+      localStorage.removeItem("groupify_google_registration_type");
+
+      switch (registrationType) {
+        case "new":
+          toast.success(
+            "🎉 Welcome to Groupify! Your account has been created successfully!"
+          );
+          break;
+        case "linked":
+          toast.success("✅ Google account linked successfully! Welcome back!");
+          break;
+        case "returning":
+          toast.success("👋 Welcome back!");
+          break;
+        default:
+          toast.success("Welcome to Groupify!");
+      }
+
+      navigate("/dashboard", { replace: true });
+    } catch (error) {
+      console.error("Google sign in error:", error);
+
+      const errorMessages = {
+        "auth/popup-closed-by-user": "Sign in was cancelled",
+        "auth/popup-blocked":
+          "Popup was blocked. Please allow popups and try again",
+        "auth/account-exists-with-different-credential":
+          "An account already exists with this email. The accounts have been linked successfully!",
+      };
+
+      const errorMessage =
+        errorMessages[error.code] || "Failed to sign in with Google";
+      toast.error(errorMessage);
+    } finally {
+      setLoading(false);
     }
-    
-    navigate("/dashboard", { replace: true });
-  } catch (error) {
-    console.error("Google sign in error:", error);
-
-    const errorMessages = {
-      "auth/popup-closed-by-user": "Sign in was cancelled",
-      "auth/popup-blocked": "Popup was blocked. Please allow popups and try again",
-      "auth/account-exists-with-different-credential": "An account already exists with this email. The accounts have been linked successfully!",
-    };
-
-    const errorMessage = errorMessages[error.code] || "Failed to sign in with Google";
-    toast.error(errorMessage);
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   const handleNavigateToForgotPassword = () => {
     const overlay = document.createElement("div");
@@ -348,8 +355,9 @@ const SignInPage = () => {
   return (
     <AuthLayout layoutType="split" leftContent={leftContent} showHeader={false}>
       <PageTransition variant="fadeIn" trigger={isLoaded}>
-        <div className="flex-1 flex flex-col justify-center py-2 sm:py-4 md:py-6 lg:py-8 px-3 sm:px-4 md:px-6 lg:px-12 xl:px-20 2xl:px-24 bg-white dark:bg-gray-900 min-h-0">
-          <div className="mx-auto w-full max-w-[280px] sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-md">
+        <div className="flex-1 flex flex-col justify-center items-center py-4 px-4 sm:py-6 sm:px-6 md:py-8 md:px-8 lg:py-8 lg:px-12 xl:px-16 2xl:px-20 bg-white dark:bg-gray-900 min-h-screen">
+          {/* Responsive container with fluid width */}
+          <div className="mx-auto w-full min-w-[280px] max-w-[320px] xs:max-w-[340px] sm:max-w-[380px] md:max-w-[420px] lg:max-w-[460px] xl:max-w-[400px]">
             {/* Reusable Header */}
             <SectionTransition variant="slideInFromTop" delay={0.1}>
               <AuthHeader
@@ -363,7 +371,7 @@ const SignInPage = () => {
 
             {/* Form Section */}
             <SectionTransition variant="slideInFromBottom" delay={0.2}>
-              <div className="space-y-3 sm:space-y-4 md:space-y-5 text-sm md:text-base">
+              <div className="space-y-4 sm:space-y-5 md:space-y-6 text-sm sm:text-base">
                 <AuthForm
                   config={formConfig}
                   formData={formData}
@@ -399,7 +407,7 @@ const SignInPage = () => {
                 )}
 
                 {/* Social Login */}
-                <div className="mt-4 sm:mt-6 md:mt-8">
+                <div className="mt-6 sm:mt-7 md:mt-8">
                   <div className="relative">
                     <div className="absolute inset-0 flex items-center">
                       <div className="w-full border-t border-gray-300 dark:border-gray-600" />
@@ -415,7 +423,7 @@ const SignInPage = () => {
                     type="button"
                     onClick={handleGoogleSignIn}
                     disabled={loading}
-                    className={`mt-3 sm:mt-4 md:mt-6 w-full flex justify-center items-center py-2 sm:py-2.5 md:py-3 px-3 sm:px-4 border rounded-lg shadow-sm text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-300 ease-in-out transform ${
+                    className={`mt-4 sm:mt-5 md:mt-6 w-full flex justify-center items-center py-2.5 sm:py-3 md:py-3.5 px-4 border rounded-lg shadow-sm text-sm sm:text-base font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-300 ease-in-out transform ${
                       loading
                         ? "border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed opacity-50 scale-95"
                         : "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 scale-100 hover:scale-[1.02] hover:shadow-md"
@@ -453,7 +461,7 @@ const SignInPage = () => {
                 </div>
 
                 {/* Sign Up Link */}
-                <p className="mt-4 sm:mt-6 md:mt-8 text-center text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                <p className="mt-6 sm:mt-7 md:mt-8 text-center text-xs sm:text-sm text-gray-600 dark:text-gray-400">
                   Don't have an account?{" "}
                   <button
                     onClick={() => navigate("/signup")}

@@ -174,8 +174,8 @@ const ForgotPasswordPage = () => {
         showHeader={false}
       >
         <PageTransition variant="fadeIn" trigger={isLoaded}>
-          <div className="flex-1 flex flex-col justify-center py-2 sm:py-4 md:py-6 lg:py-8 px-3 sm:px-4 md:px-6 lg:px-12 xl:px-20 2xl:px-24 bg-white dark:bg-gray-900 min-h-0">
-            <div className="mx-auto w-full max-w-[280px] sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-md">
+          <div className="flex-1 flex flex-col justify-center items-center py-4 px-4 sm:py-6 sm:px-6 md:py-8 md:px-8 lg:py-8 lg:px-12 xl:px-16 2xl:px-20 bg-white dark:bg-gray-900 min-h-screen">
+            <div className="w-full min-w-[280px] max-w-[320px] xs:max-w-[340px] sm:max-w-[380px] md:max-w-[420px] lg:max-w-[460px] xl:max-w-[400px]">
               <SectionTransition variant="slideInFromTop" delay={0.1}>
                 <AuthHeader
                   title="Email sent!"
@@ -213,7 +213,7 @@ const ForgotPasswordPage = () => {
                     <button
                       onClick={handleResendEmail}
                       disabled={loading}
-                      className={`w-full flex justify-center items-center py-2 sm:py-2.5 md:py-3 px-3 sm:px-4 border rounded-lg shadow-sm text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-300 ease-in-out transform ${
+                      className={`w-full flex justify-center items-center py-2.5 sm:py-3 md:py-3.5 px-4 border rounded-lg shadow-sm text-sm sm:text-base font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-300 ease-in-out transform ${
                         loading
                           ? "border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed opacity-50 scale-95"
                           : "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 scale-100 hover:scale-[1.02] hover:shadow-md"
@@ -224,13 +224,13 @@ const ForgotPasswordPage = () => {
 
                     <button
                       onClick={() => navigate("/signin")}
-                      className="w-full flex justify-center items-center py-2 sm:py-2.5 md:py-3 px-3 sm:px-4 border border-transparent rounded-lg shadow-sm text-xs sm:text-sm font-medium bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-300 ease-in-out transform scale-100 hover:scale-[1.02] hover:shadow-md"
+                      className="w-full flex justify-center items-center py-2.5 sm:py-3 md:py-3.5 px-4 border border-transparent rounded-lg shadow-sm text-sm sm:text-base font-medium bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-300 ease-in-out transform scale-100 hover:scale-[1.02] hover:shadow-md"
                     >
                       Back to Sign In
                     </button>
                   </div>
 
-                  <div className="mt-4 sm:mt-6 text-center">
+                  <div className="mt-6 sm:mt-7 md:mt-8 text-center">
                     <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                       Didn't receive the email? Check your spam folder or{" "}
                       <button
@@ -304,8 +304,8 @@ const ForgotPasswordPage = () => {
   return (
     <AuthLayout layoutType="split" leftContent={leftContent} showHeader={false}>
       <PageTransition variant="fadeIn" trigger={isLoaded}>
-        <div className="flex-1 flex flex-col justify-center py-2 sm:py-4 md:py-6 lg:py-8 px-3 sm:px-4 md:px-6 lg:px-12 xl:px-20 2xl:px-24 bg-white dark:bg-gray-900 min-h-0">
-          <div className="mx-auto w-full max-w-[280px] sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-md">
+        <div className="flex-1 flex flex-col justify-center items-center py-4 px-4 sm:py-6 sm:px-6 md:py-8 md:px-8 lg:py-8 lg:px-12 xl:px-16 2xl:px-20 bg-white dark:bg-gray-900 min-h-screen">
+          <div className="w-full min-w-[280px] max-w-[320px] xs:max-w-[340px] sm:max-w-[380px] md:max-w-[420px] lg:max-w-[460px] xl:max-w-[400px]">
             <SectionTransition variant="slideInFromTop" delay={0.1}>
               <AuthHeader
                 title="Forgot your password?"
@@ -317,7 +317,7 @@ const ForgotPasswordPage = () => {
             </SectionTransition>
 
             <SectionTransition variant="slideInFromBottom" delay={0.2}>
-              <div className="space-y-3 sm:space-y-4 md:space-y-5 text-sm md:text-base">
+              <div className="space-y-4 sm:space-y-5 md:space-y-6 text-sm sm:text-base">
                 <AuthForm
                   config={formConfig}
                   formData={formData}
@@ -325,7 +325,7 @@ const ForgotPasswordPage = () => {
                   onSubmit={handleSubmit}
                   loading={loading}
                 />
-                <div className="mt-4 sm:mt-6 text-center">
+                <div className="mt-6 sm:mt-7 md:mt-8 text-center">
                   <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
                     Remember your password?{" "}
                     <button
