@@ -126,7 +126,7 @@ const DashboardSidebar = ({ sidebarOpen, onSidebarClose, onLogoutClick }) => {
   const { userData, eventInvites } = useDashboardData(); // Keep only userData and eventInvites from here
   const { pendingRequests } = useFriendsContext(); // Live friend requests
   const { events } = useEventContext(); // ADDED: Live events data
-  
+
   const {
     navigate: { toEvent: _navigateToEvent },
   } = useDashboardNavigation();
@@ -300,12 +300,7 @@ const DashboardSidebar = ({ sidebarOpen, onSidebarClose, onLogoutClick }) => {
                   {/* Main navigation button */}
                   <button
                     onClick={() => {
-                      // Handle Profile navigation (redirect to settings for now)
-                      if (item.id === "profile") {
-                        navigateToSection("settings");
-                      } else {
-                        navigateToSection(item.id);
-                      }
+                      navigateToSection(item.id);
                       if (isMobile) closeSidebar();
                     }}
                     className={`flex-1 flex items-center px-4 py-3 rounded-xl font-medium transition-all duration-200 ${

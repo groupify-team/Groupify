@@ -1,5 +1,5 @@
 // useDashboardLayout.js - Layout and navigation state management
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   DEFAULT_STATE,
@@ -52,6 +52,8 @@ export const useDashboardLayout = () => {
   // Search and filter states
   const [searchTerm, setSearchTerm] = useState(DEFAULT_STATE.searchTerm);
   const [dateFilter, setDateFilter] = useState(DEFAULT_STATE.dateFilter);
+
+  const VALID_SECTIONS = ["events", "friends", "profile", "settings"];
 
   /**
    * Handle window resize for responsive behavior
@@ -133,18 +135,30 @@ export const useDashboardLayout = () => {
   /**
    * Navigation actions
    */
-  const navigateToSection = (sectionId) => {
-    setActiveSection(sectionId);
-    setCurrentView("home");
-    setSelectedeventId(null);
 
-    navigate(`/dashboard/${sectionId}`);
+  const navigateToSection = useCallback(
+    (sectionId, options = {}) => {
+      if (!VALID_SECTIONS.includes(sectionId)) {
+        console.warn(`Invalid section: ${sectionId}`);
+        return;
+      }
 
-    // Close sidebar on mobile when changing sections
-    if (isMobile) {
-      setSidebarOpen(false);
-    }
-  };
+      // Handle navigation to profile
+      if (sectionId === "profile") {
+        navigate("/dashboard/profile");
+      } else if (sectionId === "settings") {
+        navigate("/dashboard/settings");
+      } else if (sectionId === "friends") {
+        navigate("/dashboard/friends");
+      } else {
+        navigate("/dashboard/events");
+      }
+
+      // Update active section
+      setActiveSection(sectionId);
+    },
+    [navigate]
+  );
 
   const navigateToEvent = (eventId) => {
     setCurrentView("event");
