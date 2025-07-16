@@ -604,14 +604,14 @@ const BlogSidebar = ({
 
       {/* Popular Tags */}
       <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-xl border border-white/20 dark:border-gray-700/50 p-4 sm:p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-bold text-gray-900 dark:text-white text-center lg:text-left">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white text-center md:text-left mb-2 md:mb-0">
             Popular Tags
           </h3>
           {isTagFiltered && (
             <button
               onClick={onClearTagFilter}
-              className="text-xs text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 transition-colors font-medium"
+              className="text-xs text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 transition-colors font-medium self-center md:self-auto"
             >
               Clear Filter
             </button>

@@ -18,8 +18,7 @@ import HomeHeader from "../../components/layout/HomeHeader";
 import AccessibilityModal from "@/shared/components/accessibility/AccessibilityModal";
 import { usePublicNavigation } from "../../hooks/usePublicNavigation";
 import FloatingAccessibilityButton from "@shared/components/accessibility/FloatingAccessibilityButton";
-import InteractiveThiingsGrid from '../../components/ui/InteractiveThiingsGrid';
-
+import InteractiveThiingsGrid from "../../components/ui/InteractiveThiingsGrid";
 
 // Launch Animation Component
 const LaunchAnimation = ({ onAnimationComplete }) => {
@@ -377,12 +376,14 @@ const HomePage = () => {
                     : "opacity-0 translate-y-8"
                 }`}
               >
-                <div className="w-12 h-12 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                  <feature.icon className="w-6 h-6 text-white" />
+                <div className="flex items-center mb-4 md:block">
+                  <div className="w-12 h-12 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center md:mb-4 group-hover:scale-110 transition-transform flex-shrink-0">
+                    <feature.icon className="w-6 h-6 text-white" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white ml-4 md:ml-0 md:mb-3">
+                    {feature.title}
+                  </h3>
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
-                  {feature.title}
-                </h3>
                 <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
                   {feature.description}
                 </p>
@@ -395,7 +396,7 @@ const HomePage = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <div>
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-8">
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-8 text-center md:text-left">
                 Why choose Groupify?
               </h2>
               <div className="space-y-4">
@@ -409,13 +410,15 @@ const HomePage = () => {
                     }`}
                     onMouseEnter={() => {
                       // Dispatch custom event for icon grid
-                      window.dispatchEvent(new CustomEvent('benefitHover', { 
-                        detail: { index } 
-                      }));
+                      window.dispatchEvent(
+                        new CustomEvent("benefitHover", {
+                          detail: { index },
+                        })
+                      );
                     }}
                     onMouseLeave={() => {
                       // Dispatch custom event to return to scroll-based
-                      window.dispatchEvent(new CustomEvent('benefitLeave'));
+                      window.dispatchEvent(new CustomEvent("benefitLeave"));
                     }}
                   >
                     <div className="w-6 h-6 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full flex items-center justify-center mr-4 flex-shrink-0 shadow-lg group-hover:scale-110 transition-transform duration-200">
@@ -427,9 +430,9 @@ const HomePage = () => {
                   </div>
                 ))}
               </div>
-              
+
               {/* Call to action button in the features section */}
-              <div className="mt-8">
+              <div className="mt-8 text-center md:text-left">
                 <Link
                   to="/signup"
                   onClick={(e) => {
@@ -447,11 +450,17 @@ const HomePage = () => {
             {/* Interactive Thiings Grid */}
             <div className="relative">
               <InteractiveThiingsGrid isLoaded={isLoaded} />
-              
+
               {/* Optional floating elements around the grid */}
               <div className="absolute -top-4 -left-4 w-8 h-8 bg-gradient-to-br from-indigo-400/30 to-purple-400/30 rounded-full blur-sm animate-pulse" />
-              <div className="absolute -bottom-4 -right-4 w-6 h-6 bg-gradient-to-br from-purple-400/30 to-pink-400/30 rounded-full blur-sm animate-pulse" style={{ animationDelay: '1s' }} />
-              <div className="absolute top-1/2 -right-6 w-4 h-4 bg-gradient-to-br from-blue-400/40 to-indigo-400/40 rounded-full blur-sm animate-ping" style={{ animationDelay: '2s' }} />
+              <div
+                className="absolute -bottom-4 -right-4 w-6 h-6 bg-gradient-to-br from-purple-400/30 to-pink-400/30 rounded-full blur-sm animate-pulse"
+                style={{ animationDelay: "1s" }}
+              />
+              <div
+                className="absolute top-1/2 -right-6 w-4 h-4 bg-gradient-to-br from-blue-400/40 to-indigo-400/40 rounded-full blur-sm animate-ping"
+                style={{ animationDelay: "2s" }}
+              />
             </div>
           </div>
         </div>

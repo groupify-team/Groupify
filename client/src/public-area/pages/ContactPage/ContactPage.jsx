@@ -29,23 +29,27 @@ const ContactMethods = ({ contactInfo }) => (
         {contactInfo.map((info, index) => (
           <div
             key={index}
-            className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-xl border border-white/20 dark:border-gray-700/50 p-4 sm:p-6 text-center hover:shadow-lg transition-all duration-300 hover:-translate-y-2"
+            className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-xl border border-white/20 dark:border-gray-700/50 p-4 sm:p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-2"
           >
-            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-3 sm:mb-4">
-              <info.icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+            <div className="flex items-center justify-center sm:block mb-4">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center sm:mx-auto sm:mb-3 flex-shrink-0">
+                <info.icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+              </div>
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white ml-4 sm:ml-0 sm:mb-2 sm:text-center">
+                {info.title}
+              </h3>
             </div>
-            <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-2">
-              {info.title}
-            </h3>
-            <p className="text-gray-600 dark:text-gray-400 text-xs sm:text-sm mb-2 sm:mb-3">
-              {info.description}
-            </p>
-            <a
-              href={info.action}
-              className="text-indigo-600 dark:text-indigo-400 font-medium hover:text-indigo-500 dark:hover:text-indigo-300 transition-colors text-sm sm:text-base"
-            >
-              {info.contact}
-            </a>
+            <div className="text-center">
+              <p className="text-gray-600 dark:text-gray-400 text-xs sm:text-sm mb-2 sm:mb-3">
+                {info.description}
+              </p>
+              <a
+                href={info.action}
+                className="text-indigo-600 dark:text-indigo-400 font-medium hover:text-indigo-500 dark:hover:text-indigo-300 transition-colors text-sm sm:text-base"
+              >
+                {info.contact}
+              </a>
+            </div>
           </div>
         ))}
       </div>
