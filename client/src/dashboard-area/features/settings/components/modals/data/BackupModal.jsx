@@ -2,12 +2,7 @@
 import React from "react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 
-const BackupModal = ({ 
-  isOpen, 
-  onClose, 
-  exportLoading, 
-  onCreateBackup 
-}) => {
+const BackupModal = ({ isOpen, onClose, exportLoading, onCreateBackup }) => {
   if (!isOpen) return null;
 
   const handleCreateBackup = async () => {
@@ -21,8 +16,14 @@ const BackupModal = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 w-full max-w-md">
+    <div
+      className="modal-backdrop-standard animate-fade-in"
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <div
+        className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 w-full max-w-md animate-slide-in-scale"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
             Create Backup
@@ -85,7 +86,3 @@ const BackupModal = ({
 };
 
 export default BackupModal;
-
-
-
-

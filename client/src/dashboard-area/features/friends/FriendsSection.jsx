@@ -682,8 +682,16 @@ const FriendsSection = () => {
 
       {/* Add Friend Modal */}
       {showAddFriendModal && (
-        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-xl rounded-2xl max-w-md w-full shadow-2xl border border-gray-200/80 dark:border-gray-700/80 max-h-[90vh] overflow-y-auto">
+        <div
+          className="modal-backdrop-standard animate-fade-in"
+          onClick={(e) =>
+            e.target === e.currentTarget && setShowAddFriendModal(false)
+          }
+        >
+          <div
+            className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-xl rounded-2xl max-w-md w-full shadow-2xl border border-gray-200/80 dark:border-gray-700/80 max-h-[90vh] overflow-y-auto animate-slide-in-scale"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200/50 dark:border-gray-700/50">
               <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
                 Add Friend
@@ -707,21 +715,31 @@ const FriendsSection = () => {
 
       {/* User Profile Modal */}
       {showUserProfileModal && selectedUser && (
-        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-60 flex items-center justify-center p-4">
-          <UserProfileModal
-            isOpen={showUserProfileModal}
-            user={selectedUser}
-            currentUserId={currentUser?.uid}
-            friends={friendIds}
-            pendingRequests={pendingRequests}
-            onAddFriend={handleAddFriendDirect}
-            onRemoveFriend={handleRemoveFriendLocal}
-            onCancelRequest={handleCancelRequestLocal}
-            onClose={() => {
-              setSelectedUser(null);
-              setShowUserProfileModal(false);
-            }}
-          />
+        <div
+          className="modal-backdrop-standard animate-fade-in"
+          onClick={(e) =>
+            e.target === e.currentTarget && setShowUserProfileModal(false)
+          }
+        >
+          <div
+            className="animate-slide-in-scale"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <UserProfileModal
+              isOpen={showUserProfileModal}
+              user={selectedUser}
+              currentUserId={currentUser?.uid}
+              friends={friendIds}
+              pendingRequests={pendingRequests}
+              onAddFriend={handleAddFriendDirect}
+              onRemoveFriend={handleRemoveFriendLocal}
+              onCancelRequest={handleCancelRequestLocal}
+              onClose={() => {
+                setSelectedUser(null);
+                setShowUserProfileModal(false);
+              }}
+            />
+          </div>
         </div>
       )}
     </div>

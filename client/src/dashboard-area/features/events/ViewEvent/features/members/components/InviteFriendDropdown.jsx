@@ -433,11 +433,13 @@ const InviteFriendDropdown = ({
       {/* Upgrade Prompt Modal */}
       {showUpgradePrompt && (
         <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[99999] p-4"
-          onClick={() => setShowUpgradePrompt(false)}
+          className="modal-backdrop-standard animate-fade-in"
+          onClick={(e) =>
+            e.target === e.currentTarget && setShowUpgradePrompt(false)
+          }
         >
           <div
-            className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md border border-gray-200 dark:border-gray-700 transform transition-all duration-300 animate-slide-in-scale"
+            className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md border border-gray-200 dark:border-gray-700 animate-slide-in-scale"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="bg-gradient-to-r from-purple-500 to-indigo-500 p-4 rounded-t-2xl text-center">

@@ -1,13 +1,12 @@
-// src/dashboard-area/features/settings/components/modals/data/ExportModal.jsx
 import React from "react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 
-const ExportModal = ({ 
-  isOpen, 
-  onClose, 
-  exportLoading, 
-  onExportData, 
-  onExportCSV 
+const ExportModal = ({
+  isOpen,
+  onClose,
+  exportLoading,
+  onExportData,
+  onExportCSV,
 }) => {
   if (!isOpen) return null;
 
@@ -17,7 +16,6 @@ const ExportModal = ({
       onClose();
     } catch (error) {
       console.error("Export error:", error);
-      // Modal stays open on error so user can retry
     }
   };
 
@@ -27,13 +25,18 @@ const ExportModal = ({
       onClose();
     } catch (error) {
       console.error("CSV export error:", error);
-      // Modal stays open on error so user can retry
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 w-full max-w-md">
+    <div
+      className="modal-backdrop-standard animate-fade-in"
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <div
+        className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 w-full max-w-md animate-slide-in-scale"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
             Export Your Data
@@ -104,7 +107,3 @@ const ExportModal = ({
 };
 
 export default ExportModal;
-
-
-
-

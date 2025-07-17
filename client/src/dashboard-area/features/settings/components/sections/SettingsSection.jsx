@@ -66,9 +66,21 @@ const SettingsSection = () => {
       <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6">
         {/* Enhanced Header Section - Similar to Events */}
         <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl border border-gray-200/50 dark:border-gray-700/50 shadow-xl p-4 sm:p-6 mb-6 sm:mb-8">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 sm:gap-6">
+          <div className="relative">
+            {/* Action Button - Positioned absolutely in top-right */}
+            <div className="absolute top-0 right-0">
+              <button
+                onClick={() => openModal(SETTINGS_MODAL_TYPES.USAGE)}
+                className="inline-flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-semibold text-white shadow-lg transform transition-all duration-200 text-sm sm:text-base bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 hover:scale-105 hover:shadow-xl"
+              >
+                <SparklesIcon className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span className="hidden sm:inline">View Usage</span>
+                <span className="sm:hidden">Usage</span>
+              </button>
+            </div>
+
             {/* Title Section */}
-            <div className="flex items-center gap-3 sm:gap-4">
+            <div className="flex items-center gap-3 sm:gap-4 pr-20 sm:pr-32">
               <div className="p-2 sm:p-3 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl sm:rounded-2xl shadow-lg">
                 <Cog6ToothIcon className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
               </div>
@@ -86,16 +98,6 @@ const SettingsSection = () => {
                 </p>
               </div>
             </div>
-
-            {/* Action Button */}
-            <button
-              onClick={() => openModal(SETTINGS_MODAL_TYPES.USAGE)}
-              className="inline-flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-semibold text-white shadow-lg transform transition-all duration-200 text-sm sm:text-base bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 hover:scale-105 hover:shadow-xl"
-            >
-              <SparklesIcon className="w-4 h-4 sm:w-5 sm:h-5" />
-              <span className="hidden sm:inline">View Usage</span>
-              <span className="sm:hidden">Usage</span>
-            </button>
           </div>
         </div>
 

@@ -1,12 +1,11 @@
-// src/dashboard-area/features/profile/components/sections/ProfileSection.jsx
 import React, { useState } from "react";
 import { useAuth } from "@auth/hooks/useAuth";
 import { useDashboardData } from "@dashboard/hooks/useDashboardData";
 import { useSettings } from "@dashboard/features/settings/hooks/useSettings";
 
-// Import sections that are moving from Settings
 import AccountSection from "@dashboard/features/settings/components/sections/AccountSection";
 import FaceProfileSection from "@dashboard/features/settings/components/sections/FaceProfileSection";
+import Modal from "@shared/components/ui/Modal";
 
 // Import modals
 import {
@@ -21,8 +20,6 @@ import { UserCircleIcon, SparklesIcon } from "@heroicons/react/24/outline";
 const ProfileSection = () => {
   const { currentUser } = useAuth();
   const { settings, toggleSetting, loading: settingsLoading } = useSettings();
-
-  // Consolidated modal state
   const [activeModal, setActiveModal] = useState(null);
 
   const {
@@ -34,14 +31,11 @@ const ProfileSection = () => {
     loadDashboardData: refreshData,
   } = useDashboardData();
 
-  // Check if face recognition is enabled
   const faceRecognitionEnabled = settings.privacy?.faceRecognition ?? false;
-
-  // Generic modal handlers
-  const openModal = (modalType) => setActiveModal(modalType);
   const closeModal = () => setActiveModal(null);
 
-  // Specific modal handlers with additional logic
+  const openModal = (modalType) => setActiveModal(modalType);
+
   const handleOpenFaceProfileModal = () => {
     if (!faceRecognitionEnabled) {
       alert("Please enable Face Recognition in Privacy Settings first.");
@@ -58,7 +52,6 @@ const ProfileSection = () => {
     openModal(SETTINGS_MODAL_TYPES.FACE_PROFILE_MANAGE);
   };
 
-  // Data refresh handlers
   const handleFaceProfileCreated = async (success) => {
     if (success) {
       closeModal();
@@ -88,7 +81,6 @@ const ProfileSection = () => {
     }
   };
 
-  // Section props
   const accountSectionProps = {
     userData,
     currentUser,
@@ -112,11 +104,21 @@ const ProfileSection = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-blue-900 dark:to-indigo-900">
       <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6">
-        {/* Enhanced Header Section - Similar to Events */}
         <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl border border-gray-200/50 dark:border-gray-700/50 shadow-xl p-4 sm:p-6 mb-6 sm:mb-8">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 sm:gap-6">
+          <div className="relative">
+            <div className="absolute top-0 right-0">
+              <button
+                onClick={() => openModal(SETTINGS_MODAL_TYPES.EDIT_PROFILE)}
+                className="inline-flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-semibold text-white shadow-lg transform transition-all duration-200 text-sm sm:text-base bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 hover:scale-105 hover:shadow-xl"
+              >
+                <SparklesIcon className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span className="hidden sm:inline">Edit Profile</span>
+                <span className="sm:hidden">Edit</span>
+              </button>
+            </div>
+
             {/* Title Section */}
-            <div className="flex items-center gap-3 sm:gap-4">
+            <div className="flex items-center gap-3 sm:gap-4 pr-20 sm:pr-32">
               <div className="p-2 sm:p-3 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl sm:rounded-2xl shadow-lg">
                 <UserCircleIcon className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
               </div>
@@ -134,25 +136,12 @@ const ProfileSection = () => {
                 </p>
               </div>
             </div>
-
-            {/* Action Button */}
-            <button
-              onClick={() => openModal(SETTINGS_MODAL_TYPES.EDIT_PROFILE)}
-              className="inline-flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-semibold text-white shadow-lg transform transition-all duration-200 text-sm sm:text-base bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 hover:scale-105 hover:shadow-xl"
-            >
-              <SparklesIcon className="w-4 h-4 sm:w-5 sm:h-5" />
-              <span className="hidden sm:inline">Edit Profile</span>
-              <span className="sm:hidden">Edit</span>
-            </button>
           </div>
         </div>
 
         {/* Profile Content - Using Events-like spacing */}
         <div className="space-y-6 sm:space-y-8">
-          {/* Account Information Block */}
           <AccountSection {...accountSectionProps} />
-
-          {/* Face Profile Management Block */}
           <FaceProfileSection {...faceProfileSectionProps} />
         </div>
       </div>
