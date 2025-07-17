@@ -321,8 +321,14 @@ const EditProfileModal = ({ isOpen, onClose }) => {
       )}
 
       {/* Main Modal - Redesigned with Dashboard styling */}
-      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-40 p-4">
-        <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg shadow-2xl rounded-2xl w-full max-w-2xl relative transform transition-all duration-300 scale-100 max-h-[90vh] overflow-hidden border border-white/20 dark:border-gray-700/50">
+      <div
+        className="modal-backdrop-standard animate-fade-in"
+        onClick={(e) => e.target === e.currentTarget && onClose()}
+      >
+        <div
+          className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg shadow-2xl rounded-2xl w-full max-w-2xl relative max-h-[90vh] overflow-hidden border border-white/20 dark:border-gray-700/50 animate-slide-in-scale"
+          onClick={(e) => e.stopPropagation()}
+        >
           {/* Header - Enhanced with glassmorphism */}
           <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 px-4 [@media(min-width:375px)]:px-6 py-2 [@media(min-width:375px)]:py-4 rounded-t-2xl relative overflow-hidden">
             {/* Background decoration */}

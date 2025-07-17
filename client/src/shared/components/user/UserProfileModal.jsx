@@ -327,22 +327,22 @@ const UserProfileModal = ({
 
   return (
     <div
-      className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+      className="modal-backdrop-standard animate-fade-in"
       onClick={handleBackdropClick}
     >
       <div className="flex items-center justify-center w-full h-full p-4">
         <div
-          className="relative bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto border border-gray-200 dark:border-slate-600"
+          className="relative bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto border border-gray-200 dark:border-slate-600 animate-slide-in-scale"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Header */}
-          <div className="relative flex justify-between items-center p-4 border-b border-gray-100 dark:border-slate-700">
+          {/* Floating Action Buttons - No Header Bar */}
+          <div className="absolute top-4 left-4 right-4 flex justify-between items-start z-10 pointer-events-none">
             {/* Action Menu Button */}
             {shouldShowActionMenu && (
-              <div className="relative">
+              <div className="relative pointer-events-auto">
                 <button
                   onClick={toggleActionMenu}
-                  className="flex items-center justify-center w-10 h-10 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white transition-colors duration-200 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700"
+                  className="flex items-center justify-center w-10 h-10 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white transition-colors duration-200 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm shadow-lg"
                 >
                   <EllipsisVerticalIcon className="w-5 h-5" />
                 </button>
@@ -412,7 +412,7 @@ const UserProfileModal = ({
             {/* Close Button */}
             <button
               onClick={handleClose}
-              className="flex items-center justify-center w-10 h-10 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white transition-colors duration-200 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 ml-auto"
+              className="flex items-center justify-center w-10 h-10 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white transition-colors duration-200 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 ml-auto bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm shadow-lg pointer-events-auto"
             >
               <XMarkIcon className="w-5 h-5" />
             </button>
@@ -590,12 +590,12 @@ const UserProfileModal = ({
       {/* Confirmation Dialog */}
       {confirmAction && (
         <div
-          className="fixed inset-0 bg-black/50 z-60 flex items-center justify-center p-4"
+          className="modal-backdrop-standard animate-fade-in"
           onClick={(e) =>
             e.target === e.currentTarget && setConfirmAction(null)
           }
         >
-          <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 w-full max-w-sm border border-gray-200 dark:border-slate-600">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 w-full max-w-sm border border-gray-200 dark:border-slate-600 animate-slide-in-scale">
             <div className="text-center mb-6">
               <div className="w-16 h-16 bg-amber-500 rounded-full flex items-center justify-center mx-auto mb-4">
                 <SparklesIcon className="w-8 h-8 text-white" />

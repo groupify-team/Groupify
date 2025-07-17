@@ -143,15 +143,6 @@ const AccountSection = ({
                 </span>
               </div>
             </div>
-
-            {/* Edit Profile Button */}
-            <button
-              onClick={onOpenEditProfile}
-              className="w-full sm:w-auto bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white px-4 sm:px-5 py-2 sm:py-2.5 rounded-full font-semibold text-sm sm:text-base flex items-center justify-center gap-2 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300 border border-white/20"
-            >
-              <UserCircleIcon className="w-4 h-4 sm:w-5 sm:h-5" />
-              Edit Profile
-            </button>
           </div>
         </div>
       </div>

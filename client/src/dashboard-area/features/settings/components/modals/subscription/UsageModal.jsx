@@ -1,4 +1,3 @@
-// src/dashboard-area/components/modals/UsageModal.jsx - Professional usage tracking modal
 import React, { useState, useEffect } from "react";
 import {
   XMarkIcon,
@@ -17,14 +16,11 @@ const UsageModal = ({ isOpen, onClose }) => {
   useEffect(() => {
     if (isOpen) {
       loadUsageData();
-
-      // Subscribe to subscription updates
       const unsubscribe = subscriptionService.subscribe((event, data) => {
         if (event === "subscriptionUpdated" || event === "usageUpdated") {
           loadUsageData();
         }
       });
-
       return unsubscribe;
     }
   }, [isOpen]);
@@ -61,8 +57,14 @@ const UsageModal = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] border border-white/20 dark:border-gray-700/50 flex flex-col">
+    <div
+      className="modal-backdrop-standard animate-fade-in"
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <div
+        className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] border border-white/20 dark:border-gray-700/50 flex flex-col animate-slide-in-scale"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-600">
           <div className="flex items-center gap-3">
@@ -572,7 +574,3 @@ const UsageModal = ({ isOpen, onClose }) => {
 };
 
 export default UsageModal;
-
-
-
-

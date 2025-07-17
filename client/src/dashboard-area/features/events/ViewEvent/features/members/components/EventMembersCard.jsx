@@ -368,8 +368,13 @@ const EventMembersCard = ({
 
       {/* Confirmation Dialog */}
       {confirmAction && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-slate-800 rounded-3xl p-8 max-w-sm w-full border border-gray-200 dark:border-slate-700 shadow-2xl transform transition-all duration-300">
+        <div
+          className="modal-backdrop-standard animate-fade-in"
+          onClick={(e) =>
+            e.target === e.currentTarget && setConfirmAction(null)
+          }
+        >
+          <div className="bg-white dark:bg-slate-800 rounded-3xl p-8 max-w-sm w-full border border-gray-200 dark:border-slate-700 shadow-2xl animate-slide-in-scale">
             <div className="text-center mb-6">
               <div className="w-16 h-16 bg-gradient-to-br from-red-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-4">
                 {confirmAction.action === "leave" ? (
