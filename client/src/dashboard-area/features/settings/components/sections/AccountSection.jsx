@@ -81,14 +81,14 @@ const AccountSection = ({
     <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6 border border-white/20 dark:border-gray-700/50">
       <div className="flex items-center justify-center gap-2 mb-4 sm:mb-6">
         <UserCircleIcon className="w-6 h-6 sm:w-7 sm:h-7 text-indigo-600 dark:text-indigo-400" />
-        <h2 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-white">
+        <h2 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-white text-center">
           Account Information
         </h2>
       </div>
 
       {/* Profile Section */}
       <div className="bg-gray-50/50 dark:bg-gray-700/30 rounded-xl p-4 sm:p-6 mb-6">
-        <div className="flex flex-col items-center text-center sm:flex-row sm:text-left sm:items-start gap-4 sm:gap-6">
+        <div className="flex flex-col items-center text-center gap-4 sm:gap-6">
           {/* Profile Image */}
           <div className="relative flex-shrink-0 group">
             <div className="relative">
@@ -151,18 +151,22 @@ const AccountSection = ({
       <div className="bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-800 dark:to-blue-900/20 rounded-xl p-3 sm:p-4 lg:p-6 border border-gray-200/50 dark:border-gray-700/50">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
           {/* Notifications Section */}
-          <NotificationSection
-            settings={settings}
-            toggleSetting={toggleSetting}
-            settingsLoading={settingsLoading}
-          />
+          <div className="text-center md:text-left">
+            <NotificationSection
+              settings={settings}
+              toggleSetting={toggleSetting}
+              settingsLoading={settingsLoading}
+            />
+          </div>
 
           {/* Privacy Section */}
-          <PrivacySection
-            settings={settings}
-            toggleSetting={toggleSetting}
-            settingsLoading={settingsLoading}
-          />
+          <div className="text-center md:text-left">
+            <PrivacySection
+              settings={settings}
+              toggleSetting={toggleSetting}
+              settingsLoading={settingsLoading}
+            />
+          </div>
         </div>
       </div>
     </div>

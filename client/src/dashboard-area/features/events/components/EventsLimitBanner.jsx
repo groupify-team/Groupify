@@ -58,14 +58,14 @@ const EventsLimitBanner = ({ currentEventCount, onUpgrade }) => {
 
   return (
     <div
-      className={`relative ${bannerContent.bgColor} ${bannerContent.borderColor} border rounded-xl p-4 mb-6 animate-slide-down shadow-sm`}
+      className={`relative ${bannerContent.bgColor} ${bannerContent.borderColor} border rounded-xl p-3 sm:p-4 mb-6 animate-slide-down shadow-sm`}
     >
-      <div className="flex items-start justify-between">
-        <div className="flex">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+        <div className="flex items-start gap-3 flex-1 min-w-0">
           <ExclamationTriangleIcon
-            className={`w-5 h-5 ${bannerContent.iconColor} mt-0.5 mr-3 flex-shrink-0`}
+            className={`w-5 h-5 ${bannerContent.iconColor} mt-0.5 flex-shrink-0`}
           />
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <h3
               className={`text-sm font-semibold ${bannerContent.textColor} mb-1`}
             >
@@ -77,13 +77,13 @@ const EventsLimitBanner = ({ currentEventCount, onUpgrade }) => {
           </div>
         </div>
 
-        <div className="flex items-center gap-3 ml-4">
+        <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto flex-shrink-0">
           <button
             onClick={handleUpgrade}
-            className={`${bannerContent.buttonColor} text-white px-4 py-2 rounded-lg text-sm font-medium transition-all hover:shadow-md flex items-center gap-2 flex-shrink-0 cursor-pointer`}
+            className={`${bannerContent.buttonColor} text-white px-3 sm:px-4 py-2 rounded-lg text-sm font-medium transition-all hover:shadow-md flex items-center justify-center gap-2 flex-1 sm:flex-initial min-w-0`}
           >
-            <StarIcon className="w-4 h-4" />
-            {bannerContent.action}
+            <StarIcon className="w-4 h-4 flex-shrink-0" />
+            <span className="truncate">{bannerContent.action}</span>
           </button>
 
           <button

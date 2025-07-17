@@ -1,28 +1,22 @@
-// Improved Friends Section with better mobile responsiveness and matching colors
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@auth/hooks/useAuth";
+import { useFriendsContext } from "@shared/contexts/FriendsContext";
+import { useUserPresence } from "@shared/hooks/useUserPresence";
+import toast from "react-hot-toast";
+
 import {
   UserPlusIcon,
   UsersIcon,
   CheckCircleIcon,
   XMarkIcon,
-  ChevronDownIcon,
-  ChevronUpIcon,
   MagnifyingGlassIcon,
   FunnelIcon,
   EyeIcon,
-  UserIcon,
-  HeartIcon,
+  ChevronDownIcon,
+  ChevronRightIcon,
   ClockIcon,
-  SparklesIcon,
   BellIcon,
 } from "@heroicons/react/24/outline";
-import { useFriendsContext } from "@shared/contexts/FriendsContext";
-import { useUserPresence } from "@shared/hooks/useUserPresence";
-// TODO: Import these hooks once you tell me their names
-// import { useSharedEvents } from "@shared/hooks/useSharedEvents";
-// import { useSharedPhotos } from "@shared/hooks/useSharedPhotos";
-import toast from "react-hot-toast";
 
 import AddFriend from "@dashboard/features/friends/components/AddFriend";
 import UserProfileModal from "@shared/components/user/UserProfileModal";
@@ -52,9 +46,10 @@ const FriendsSection = () => {
   const [showUserProfileModal, setShowUserProfileModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
-  const [activeTab, setActiveTab] = useState("friends"); // for mobile tabs
+  const [activeTab, setActiveTab] = useState("friends");
   const [isMobile, setIsMobile] = useState(false);
   const [processingRequest, setProcessingRequest] = useState(null);
+  const [showEmptyRequestsBlock, setShowEmptyRequestsBlock] = useState(false); // Default closed
 
   // Check if mobile
   useEffect(() => {
@@ -67,17 +62,13 @@ const FriendsSection = () => {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  // Filter friends based on search and status
   const filteredFriends = friends.filter((friend) => {
     const matchesSearch =
       friend.displayName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       friend.email?.toLowerCase().includes(searchTerm.toLowerCase());
-
-    // Status filter would go here when implemented
     return matchesSearch;
   });
 
-  // Enhanced Filter Dropdown Component with proper z-index
   const FilterDropdown = ({
     value,
     onChange,
@@ -213,22 +204,23 @@ const FriendsSection = () => {
       __isFriend: relationshipData.isFriend,
       __isPending: relationshipData.isPending,
     };
+
+    // Set both states immediately in the same render cycle
     setSelectedUser(enhancedFriend);
     setShowUserProfileModal(true);
   };
 
   const handleUserSelect = (userOrUid) => {
     setShowAddFriendModal(false);
-    setTimeout(() => {
-      if (typeof userOrUid === "object" && userOrUid.uid) {
-        handleViewProfile(userOrUid);
-      } else {
-        const userData = friends.find((f) => f.uid === userOrUid);
-        if (userData) {
-          handleViewProfile(userData);
-        }
+    // Remove the setTimeout - execute immediately
+    if (typeof userOrUid === "object" && userOrUid.uid) {
+      handleViewProfile(userOrUid);
+    } else {
+      const userData = friends.find((f) => f.uid === userOrUid);
+      if (userData) {
+        handleViewProfile(userData);
       }
-    }, 100);
+    }
   };
 
   // Friend Card Component with Real Presence and working stats
@@ -489,131 +481,197 @@ const FriendsSection = () => {
         )}
 
         {/* Friend Requests Section */}
-        {(!isMobile || activeTab === "requests") &&
-          pendingRequests.length > 0 && (
-            <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl rounded-2xl border border-blue-200/50 dark:border-blue-700/50 shadow-xl p-4 sm:p-6 mb-6 sm:mb-8">
-              <button
-                onClick={() => setShowFriendRequests(!showFriendRequests)}
-                className="w-full flex items-center justify-between mb-4 sm:mb-6 hover:bg-gray-50/50 dark:hover:bg-gray-700/50 transition-colors rounded-xl p-3 -m-3"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-xl">
-                    <BellIcon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+        {(!isMobile || activeTab === "requests") && (
+          <>
+            {pendingRequests.length > 0 ? (
+              <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl rounded-2xl border border-blue-200/50 dark:border-blue-700/50 shadow-xl p-4 sm:p-6 mb-6 sm:mb-8">
+                <button
+                  onClick={() => setShowFriendRequests(!showFriendRequests)}
+                  className="w-full flex items-center justify-between mb-4 sm:mb-6 hover:bg-gray-50/50 dark:hover:bg-gray-700/50 transition-colors rounded-xl p-3 -m-3"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-xl">
+                      <BellIcon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                    </div>
+                    <div className="text-left min-w-0 flex-1">
+                      <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
+                        Friend Requests
+                      </h2>
+                      <p className="text-gray-600 dark:text-gray-300 text-sm">
+                        {pendingRequests.length} pending request
+                        {pendingRequests.length !== 1 ? "s" : ""}
+                      </p>
+                    </div>
                   </div>
-                  <div className="text-left min-w-0 flex-1">
-                    <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
-                      Friend Requests
-                    </h2>
-                    <p className="text-gray-600 dark:text-gray-300 text-sm">
-                      {pendingRequests.length} pending request
-                      {pendingRequests.length !== 1 ? "s" : ""}
-                    </p>
-                  </div>
-                </div>
-                {!isMobile &&
-                  (showFriendRequests ? (
-                    <ChevronUpIcon className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-                  ) : (
-                    <ChevronDownIcon className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-                  ))}
-              </button>
+                  {!isMobile &&
+                    (showFriendRequests ? (
+                      <ChevronRightIcon className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                    ) : (
+                      <ChevronDownIcon className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                    ))}
+                </button>
 
-              {(isMobile || showFriendRequests) && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-                  {pendingRequests.map((request) => (
-                    <div
-                      key={request.id}
-                      className="bg-white/90 dark:bg-gray-700/90 rounded-xl border border-gray-200/50 dark:border-gray-600/50 p-3 sm:p-4 shadow-md"
-                    >
-                      <div className="flex items-center gap-3 mb-3 sm:mb-4">
-                        <img
-                          src={
-                            request.photoURL ||
-                            "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg"
-                          }
-                          alt="User avatar"
-                          className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover border-2 border-gray-300 dark:border-gray-600 flex-shrink-0"
-                        />
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-gray-900 dark:text-white text-sm truncate">
-                            {request.displayName || "Unknown User"}
-                          </h3>
-                          <p className="text-gray-600 dark:text-gray-300 text-xs truncate">
-                            {request.email}
-                          </p>
-                          <div className="flex items-center gap-1 mt-1">
-                            <ClockIcon className="w-3 h-3 text-blue-500 flex-shrink-0" />
-                            <span className="text-xs text-blue-600 dark:text-blue-400 truncate">
-                              Wants to be friends
-                            </span>
+                {(isMobile || showFriendRequests) && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                    {pendingRequests.map((request) => (
+                      <div
+                        key={request.id}
+                        className="bg-white/90 dark:bg-gray-700/90 rounded-xl border border-gray-200/50 dark:border-gray-600/50 p-3 sm:p-4 shadow-md"
+                      >
+                        <div className="flex items-center gap-3 mb-3 sm:mb-4">
+                          <img
+                            src={
+                              request.photoURL ||
+                              "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg"
+                            }
+                            alt="User avatar"
+                            className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover border-2 border-gray-300 dark:border-gray-600 flex-shrink-0"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold text-gray-900 dark:text-white text-sm truncate">
+                              {request.displayName || "Unknown User"}
+                            </h3>
+                            <p className="text-gray-600 dark:text-gray-300 text-xs truncate">
+                              {request.email}
+                            </p>
+                            <div className="flex items-center gap-1 mt-1">
+                              <ClockIcon className="w-3 h-3 text-blue-500 flex-shrink-0" />
+                              <span className="text-xs text-blue-600 dark:text-blue-400 truncate">
+                                Wants to be friends
+                              </span>
+                            </div>
                           </div>
                         </div>
-                      </div>
 
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => handleAcceptRequest(request)}
-                          disabled={
-                            processingRequest === `accept-${request.id}` ||
-                            processingRequest === `reject-${request.id}`
-                          }
-                          className="flex-1 flex items-center justify-center gap-1 sm:gap-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white py-2 px-2 sm:px-3 rounded-lg text-xs font-medium transition-all"
-                        >
-                          {processingRequest === `accept-${request.id}` ? (
-                            <div className="w-3 h-3 sm:w-4 sm:h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                          ) : (
-                            <CheckCircleIcon className="w-3 h-3 sm:w-4 sm:h-4" />
-                          )}
-                          <span className="hidden sm:inline">
-                            {processingRequest === `accept-${request.id}`
-                              ? "Accepting..."
-                              : "Accept"}
-                          </span>
-                          <span className="sm:hidden">
-                            {processingRequest === `accept-${request.id}`
-                              ? "..."
-                              : "✓"}
-                          </span>
-                        </button>
-                        <button
-                          onClick={() => handleRejectRequest(request)}
-                          disabled={
-                            processingRequest === `accept-${request.id}` ||
-                            processingRequest === `reject-${request.id}`
-                          }
-                          className="flex-1 flex items-center justify-center gap-1 sm:gap-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white py-2 px-2 sm:px-3 rounded-lg text-xs font-medium transition-all"
-                        >
-                          {processingRequest === `reject-${request.id}` ? (
-                            <div className="w-3 h-3 sm:w-4 sm:h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                          ) : (
-                            <XMarkIcon className="w-3 h-3 sm:w-4 sm:h-4" />
-                          )}
-                          <span className="hidden sm:inline">
-                            {processingRequest === `reject-${request.id}`
-                              ? "Declining..."
-                              : "Decline"}
-                          </span>
-                          <span className="sm:hidden">
-                            {processingRequest === `reject-${request.id}`
-                              ? "..."
-                              : "✗"}
-                          </span>
-                        </button>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleAcceptRequest(request)}
+                            disabled={
+                              processingRequest === `accept-${request.id}` ||
+                              processingRequest === `reject-${request.id}`
+                            }
+                            className="flex-1 flex items-center justify-center gap-1 sm:gap-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white py-2 px-2 sm:px-3 rounded-lg text-xs font-medium transition-all"
+                          >
+                            {processingRequest === `accept-${request.id}` ? (
+                              <div className="w-3 h-3 sm:w-4 sm:h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            ) : (
+                              <CheckCircleIcon className="w-3 h-3 sm:w-4 sm:h-4" />
+                            )}
+                            <span className="hidden sm:inline">
+                              {processingRequest === `accept-${request.id}`
+                                ? "Accepting..."
+                                : "Accept"}
+                            </span>
+                            <span className="sm:hidden">
+                              {processingRequest === `accept-${request.id}`
+                                ? "..."
+                                : "✓"}
+                            </span>
+                          </button>
+                          <button
+                            onClick={() => handleRejectRequest(request)}
+                            disabled={
+                              processingRequest === `accept-${request.id}` ||
+                              processingRequest === `reject-${request.id}`
+                            }
+                            className="flex-1 flex items-center justify-center gap-1 sm:gap-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white py-2 px-2 sm:px-3 rounded-lg text-xs font-medium transition-all"
+                          >
+                            {processingRequest === `reject-${request.id}` ? (
+                              <div className="w-3 h-3 sm:w-4 sm:h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            ) : (
+                              <XMarkIcon className="w-3 h-3 sm:w-4 sm:h-4" />
+                            )}
+                            <span className="hidden sm:inline">
+                              {processingRequest === `reject-${request.id}`
+                                ? "Declining..."
+                                : "Decline"}
+                            </span>
+                            <span className="sm:hidden">
+                              {processingRequest === `reject-${request.id}`
+                                ? "..."
+                                : "✗"}
+                            </span>
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : (
+              /* Empty State for No Friend Requests */
+              <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl rounded-2xl border border-gray-200/50 dark:border-gray-700/50 shadow-xl mb-6 sm:mb-8 overflow-hidden">
+                {/* Header with Arrow Toggle - Only show on desktop */}
+                {!isMobile && (
+                  <div className="flex items-center justify-between p-4 border-b border-gray-200/50 dark:border-gray-700/50">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-xl">
+                        <BellIcon className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                          Friend Requests
+                        </h3>
+                        <p className="text-gray-600 dark:text-gray-300 text-sm">
+                          No pending requests
+                        </p>
                       </div>
                     </div>
-                  ))}
+                    <button
+                      onClick={() =>
+                        setShowEmptyRequestsBlock(!showEmptyRequestsBlock)
+                      }
+                      className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200"
+                    >
+                      <div
+                        className={`transform transition-transform duration-300 ${
+                          showEmptyRequestsBlock ? "rotate-90" : ""
+                        }`}
+                      >
+                        <ChevronRightIcon className="w-5 h-5" />
+                      </div>
+                    </button>
+                  </div>
+                )}
+
+                {/* Content - Always visible on mobile, collapsible on desktop with smooth animation */}
+                <div
+                  className={`transition-all duration-300 ease-out ${
+                    isMobile || showEmptyRequestsBlock
+                      ? "max-h-96 opacity-100"
+                      : "max-h-0 opacity-0"
+                  } ${!isMobile ? "overflow-hidden" : ""}`}
+                >
+                  <div className="p-8 sm:p-12 text-center">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900/30 dark:to-purple-900/30 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6 transform transition-transform duration-300">
+                      <BellIcon className="w-8 h-8 sm:w-10 sm:h-10 text-blue-400 dark:text-blue-500" />
+                    </div>
+                    <h3 className="text-lg sm:text-xl font-semibold text-gray-600 dark:text-gray-300 mb-2 sm:mb-3 transition-opacity duration-300">
+                      No Friend Requests
+                    </h3>
+                    <p className="text-gray-500 dark:text-gray-400 mb-4 sm:mb-6 max-w-md mx-auto text-sm sm:text-base transition-opacity duration-300">
+                      You don't have any pending friend requests right now. When
+                      someone sends you a request, it will appear here.
+                    </p>
+                    <button
+                      onClick={() => setShowAddFriendModal(true)}
+                      className="inline-flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-xl font-semibold transition-all duration-300 hover:scale-105 text-sm sm:text-base"
+                    >
+                      <UserPlusIcon className="w-4 h-4 sm:w-5 sm:h-5" />
+                      <span>Find Friends Instead</span>
+                    </button>
+                  </div>
                 </div>
-              )}
-            </div>
-          )}
+              </div>
+            )}
+          </>
+        )}
 
         {/* Search and Filter Section - Updated Layout */}
         {(!isMobile || activeTab === "friends") && (
           <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl rounded-2xl border border-gray-200/50 dark:border-gray-700/50 shadow-xl p-4 sm:p-6 mb-6 sm:mb-8 relative z-30">
             <div className="space-y-4">
-              {/* Search and Filter Row */}
               <div className="flex flex-col sm:flex-row gap-4">
-                {/* Search - Takes more space */}
                 <div className="relative flex-1">
                   <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                   <input
@@ -721,10 +779,7 @@ const FriendsSection = () => {
             e.target === e.currentTarget && setShowUserProfileModal(false)
           }
         >
-          <div
-            className="animate-slide-in-scale"
-            onClick={(e) => e.stopPropagation()}
-          >
+          <div onClick={(e) => e.stopPropagation()}>
             <UserProfileModal
               isOpen={showUserProfileModal}
               user={selectedUser}
